@@ -56,6 +56,7 @@ dependencies {
 	compile('mysql:mysql-connector-java')
 	compile("org.flywaydb:flyway-core:5.0.7")
 	compile("net.bramp.ffmpeg:ffmpeg:0.6.2")
+    compile("org:jaudiotagger:2.0.3")
 	runtime('com.h2database:h2')
 	testCompile('org.springframework.boot:spring-boot-starter-test') {
 		exclude module: 'junit'

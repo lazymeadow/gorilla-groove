@@ -1,4 +1,4 @@
-package com.example.groove.service
+package com.example.groove.services
 
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.User
