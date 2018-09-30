@@ -14,7 +14,7 @@ Then edit `spring.flyway.user` and `spring.flyway.password` to have the same MyS
 
 ### FFmpeg
 
-FFmpeg is used to convert files to OGG format. It will need to be installed from https://ffmpeg.zeranoe.com/builds/
+FFmpeg is used to convert files to OGG format. It will need to be installed from https://www.ffmpeg.org/download.html
 Once installed, edit `/config.application.properties` and setup `spring.data.ffmpeg.binary.location` to be the location to the FFmpeg binaries.
 Setup `spring.data.ffmpeg.output.location` to be some value for music to be exported to when converted
 
