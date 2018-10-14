@@ -5,6 +5,9 @@ import com.example.groove.db.model.Track
 import com.example.groove.services.FFmpegService
 import com.example.groove.services.FileMetadataService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
@@ -18,10 +21,16 @@ class TrackController(
 		@Autowired val trackRepository: TrackRepository
 ) {
 
+	//http://localhost:8080/track?page=0&size=1&sort=name,asc
     @Transactional(readOnly = true)
 	@GetMapping
-    fun getTracks(@RequestParam(value = "name") name: String): List<Track> {
-		return trackRepository.findTracks(name)
+    fun getTracks(
+			@RequestParam(value = "name") name: String?,
+			@RequestParam(value = "artist") artist: String?,
+			@RequestParam(value = "album") album: String?,
+			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
+	): Page<Track> {
+		return trackRepository.findTracks(name, artist, album, pageable)
     }
 
     @Transactional
