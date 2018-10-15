@@ -4,14 +4,16 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.services.FFmpegService
 import com.example.groove.services.FileMetadataService
+import com.example.groove.util.unwrap
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
+import java.sql.Timestamp
+import java.util.*
 
 @RestController
 @RequestMapping("track")
@@ -21,7 +23,7 @@ class TrackController(
 		@Autowired val trackRepository: TrackRepository
 ) {
 
-	//http://localhost:8080/track?page=0&size=1&sort=name,asc
+	//example: http://localhost:8080/track?page=0&size=1&sort=name,asc
     @Transactional(readOnly = true)
 	@GetMapping
     fun getTracks(
@@ -33,6 +35,23 @@ class TrackController(
 		return trackRepository.findTracks(name, artist, album, pageable)
     }
 
+	@Transactional
+	@PostMapping("/mark-track-as-listened-to")
+	fun markTrackAsListenedTo(@RequestBody markTrackAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
+		val track = trackRepository.findById(markTrackAsReadDTO.trackId)
+				.unwrap() ?: throw IllegalArgumentException("No track found by ID ${markTrackAsReadDTO.trackId}!")
+		// In making this endpoint I realized that both playCount and lastPlayed do not belong on a Track, but rather,
+		// a yet-to-be-made Library, or UserTrack, or something. Multiple users can have the same track in their library
+
+		// Probably not a big deal since a song should never be marked as read multiple times back to back,
+		// but technically possible for a race condition here with two increments at once
+		track.playCount++
+		track.lastPlayed = Timestamp(Date().time)
+
+		return ResponseEntity(HttpStatus.OK)
+	}
+
+	// TODO this is a test endpoint. Not intended to be used forever
     @Transactional
     @GetMapping("/convert")
     fun getSup(): String {
@@ -40,6 +59,8 @@ class TrackController(
         return "donezo"
     }
 
+	// TODO this isn't really intended to stick around. Mostly for testing
+	// When song upload is put into place we no longer need this.
 	@Transactional
 	@PostMapping("/add-track")
 	fun addTrack(@RequestBody addTrackDTO: AddTrackDTO): ResponseEntity<String> {
@@ -49,14 +70,11 @@ class TrackController(
 	}
 
 
-    @GetMapping("/metadata")
-    fun someTest(
-			@RequestParam(value = "fileName") fileName: String
-	): Track {
-        return fileMetadataService.createTrackFromFileName(fileName)
-    }
-
 	data class AddTrackDTO(
 			val fileName: String
+	)
+
+	data class MarkTrackAsListenedToDTO(
+			val trackId: Long
 	)
 }

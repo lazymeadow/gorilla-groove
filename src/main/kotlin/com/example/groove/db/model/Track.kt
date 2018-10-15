@@ -9,38 +9,38 @@ data class Track(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		val id: Long = 0,
+		var id: Long = 0,
 
 		@Column(nullable = false)
-		val name: String,
+		var name: String,
 
 		@Column(nullable = false)
-		val artist: String = "",
+		var artist: String = "",
 
 		@Column(nullable = false)
-		val album: String = "",
+		var album: String = "",
 
 		@Column(name = "file_name", nullable = false)
-		val fileName: String,
+		var fileName: String,
 
 		@Column(name = "play_count", nullable = false)
-		val playCount: Int = 0,
+		var playCount: Int = 0,
 
 		@Column(name = "bit_rate", nullable = false)
-		val bitRate: Long,
+		var bitRate: Long,
 
 		@Column(name = "sample_rate", nullable = false)
-		val sampleRate: Int,
+		var sampleRate: Int,
 
 		@Column(nullable = false)
-		val length: Int,
+		var length: Int,
 
 		@Column(name = "release_year")
-		val releaseYear: Int?,
+		var releaseYear: Int?,
 
 		@Column(name = "created_at", nullable = false)
-		val createdAt: Timestamp = Timestamp(Date().time),
+		var createdAt: Timestamp = Timestamp(Date().time),
 
 		@Column(name = "last_played")
-		val lastPlayed: Timestamp?
+		var lastPlayed: Timestamp?
 )
