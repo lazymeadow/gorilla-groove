@@ -15,7 +15,7 @@ class FileMetadataService(
 ) {
 
 	fun createTrackFromFileName(fileName: String): Track {
-		val path = "${musicProperties.musicDirectoryLocation}$fileName.ogg"
+		val path = "${musicProperties.musicDirectoryLocation}$fileName"
 		val file = File(path)
 		if (!file.exists()) {
 			logger.error("File was not found using the path '$path'")
