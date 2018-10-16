@@ -2,7 +2,7 @@
 
 ## Installation
 
-Copy `/config/application.properties.cfg` to `/config/application.properties`. Environment specific setup will go in here.
+Copy `/config/application.properties.cfg` to `/config/application.properties`. Environment specific setup will go in here, and likely every item in it will need to be configured for the server to run successfully.
 
 ### Database
 Gorilla Groove uses MySQL. Right now there isn't a hard version requirement. Likely any modern MySQL will work.
@@ -10,12 +10,13 @@ Gorilla Groove uses MySQL. Right now there isn't a hard version requirement. Lik
 Create a database called "groovatron"
 
 Edit `/config/application.properties` and set `spring.datasource.username` and `spring.datasource.password` to be a MySQL user with access to the new `groovatron` database
-Then edit `spring.flyway.user` and `spring.flyway.password` to have the same MySQL user credentials
+Then edit `spring.datasource.url` to be accurate for your database's IP and port
+Finally edit `spring.flyway.user` and `spring.flyway.password` to have the same MySQL user credentials from before
 
 ### FFmpeg
 
 FFmpeg is used to convert files to OGG format. It will need to be installed from https://www.ffmpeg.org/download.html
-Once installed, edit `/config.application.properties` and setup `spring.data.ffmpeg.binary.location` to be the location to the FFmpeg binaries.
+Once installed, edit `/config/application.properties` and setup `spring.data.ffmpeg.binary.location` to be the location to the FFmpeg binaries.
 Setup `spring.data.ffmpeg.output.location` to be some value for music to be exported to when converted
 
 ## Running
