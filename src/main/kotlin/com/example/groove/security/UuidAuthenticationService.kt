@@ -7,6 +7,7 @@ import com.example.groove.db.model.UserToken
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -26,7 +27,7 @@ class UuidAuthenticationService @Autowired constructor(
 			throw BadCredentialsException("No user found with the email $email")
 		}
 
-		if (password != user.encryptedPassword) {
+		if (!BCrypt.checkpw(password, user.encryptedPassword)) {
 			logger.info("A user attempted to log in to the email address $email but provided the wrong password")
 			logger.info("$password ${user.encryptedPassword}")
 			throw BadCredentialsException("The password provided was invalid")

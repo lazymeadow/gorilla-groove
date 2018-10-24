@@ -15,3 +15,10 @@ CREATE TABLE `groovatron`.`user_token` (
 
 ALTER TABLE `groovatron`.`user`
 ADD UNIQUE INDEX `unique_email` (`email` ASC);
+
+-- The first user has to be made directly in the DB, as there is no user creation for anonymous users
+-- This is mostly for the aid of future tests, and development. But the user should be deleted when deployed
+-- Password unencrypted is "dude"
+INSERT INTO user(id, name, email, password)
+  VALUES ('2', 'dude', 'dude@dude.dude', '$2a$10$tYEIuYjlND8TzgwD5sdShuktlQIALkNHtET3yiT6iyROyPgMhtSJK')
+

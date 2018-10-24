@@ -3,6 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.User
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -14,7 +15,7 @@ class UserService @Autowired constructor(
 
 	@Transactional
 	fun saveUser(user: User) {
-		// TODO maybe something called encryption
+		user.encryptedPassword = BCrypt.hashpw(user.password, BCrypt.gensalt())
 		userRepository.save(user)
 	}
 

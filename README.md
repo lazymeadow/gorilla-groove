@@ -30,10 +30,25 @@ A (basic) webpage can be found at `localhost:8080`
 ### Creating a user
 
 User accounts are invite only, and the first user has to be created by hand in the DB
-Add an entry to the `user` table. The password is, for now, plain text
+By default the migrations add a user with the email "dude@dude.dude" and the password "dude"
+
+You may, however, add your own user. 
+The first way is to add it directly to the `user` DB table. The password will need to be encoded with BCrypt
+The second way is to use the default user and use the user creation endpoint
+
+`http://localhost:8080/api/user`
+
+using the POST body
+```$xslt
+{ 
+  "username": "best-user"
+  "email": "the@best.email",
+  "password": "plaintext-is-the-best"
+}
+```
 
 ### Logging in and sending requests
-With the user created, authenticate by sending a POST to:
+With the user created (or the default user), authenticate by sending a POST to:
 
 `http://localhost:8080/api/authentication/login`
 
