@@ -31,8 +31,7 @@ class FileMetadataService(
 				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
 				length = audioFile.audioHeader.trackLength,
 				bitRate = audioFile.audioHeader.bitRateAsNumber,
-				sampleRate = audioFile.audioHeader.sampleRateAsNumber,
-				lastPlayed = null
+				sampleRate = audioFile.audioHeader.sampleRateAsNumber
 		)
 	}
 

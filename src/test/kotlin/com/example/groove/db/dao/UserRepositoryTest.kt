@@ -18,7 +18,7 @@ class RepositoriesTests(@Autowired val entityManager: TestEntityManager,
     // with Java 10 + @DataJpaTest issue. https://github.com/spring-guides/tut-spring-boot-kotlin/issues/8
     @Test
     fun when_findById_then_return_user() {
-        val user = User(0, "Testy Test")
+        val user = User(0, "Testy Test", "a@b.c", "password")
         entityManager.persist(user)
         entityManager.flush()
 

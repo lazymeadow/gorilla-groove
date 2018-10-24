@@ -9,8 +9,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.data.domain.Pageable
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.sql.Timestamp
-import java.util.*
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
@@ -63,18 +61,13 @@ class TrackRepositoryTest(@Autowired val entityManager: TestEntityManager,
 			album: String = "Final Fantasy X OST"
 	): Track {
 		return Track(
-				0,
-				name,
-				artist,
-				album,
-				"Besaid Island",
-				0,
-				112,
-				44100,
-				284,
-				null,
-				Timestamp(Date().time),
-				null
+				name = name,
+				artist = artist,
+				album = album,
+				fileName = "Besaid Island",
+				bitRate = 112,
+				sampleRate = 44100,
+				length = 284
 		)
 	}
 }

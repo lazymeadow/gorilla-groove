@@ -2,24 +2,20 @@ package com.example.groove.services
 
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.User
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-import javax.persistence.EntityManager
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
-@Component
-class UserService(
-        @Autowired val userRepository: UserRepository,
-        @Autowired val entityManager: EntityManager
+
+@Service
+class UserService @Autowired constructor(
+		private val userRepository: UserRepository
 ) {
-    fun goodThings() {
-        logger.info("Good things!")
-                val user = User(0, "Test User")
-        entityManager.persist(user)
-        entityManager.flush()
-    }
 
-    companion object {
-        val logger = LoggerFactory.getLogger(UserService::class.java)!!
-    }
+	@Transactional
+	fun saveUser(user: User) {
+		// TODO maybe something called encryption
+		userRepository.save(user)
+	}
+
 }

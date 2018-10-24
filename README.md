@@ -26,3 +26,26 @@ If using Java 10, add `--add-modules java.xml.bind` to the JVM arguments or you 
 When the projects starts up, it will use Flyway to migrate the database to the latest version.
 
 A (basic) webpage can be found at `localhost:8080` 
+
+### Creating a user
+
+User accounts are invite only, and the first user has to be created by hand in the DB
+Add an entry to the `user` table. The password is, for now, plain text
+
+### Logging in and sending requests
+With the user created, authenticate by sending a POST to:
+
+`http://localhost:8080/api/authentication/login`
+
+using the POST body
+```$xslt
+{ 
+  "email": "the@best.email",
+  "password": "plaintext-is-the-best"
+}
+```
+
+This will return a UUID as an authentication token. You can then access authenticated resources by using the Authorization header like so:
+```
+Authorization: Bearer e9bedd3a-f476-46d9-aa31-92729342a3c3
+```

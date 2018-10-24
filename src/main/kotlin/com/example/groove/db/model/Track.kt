@@ -9,7 +9,7 @@ data class Track(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		var id: Long = 0,
+		val id: Long = 0,
 
 		@Column(nullable = false)
 		var name: String,
@@ -36,11 +36,11 @@ data class Track(
 		var length: Int,
 
 		@Column(name = "release_year")
-		var releaseYear: Int?,
+		var releaseYear: Int? = null,
 
 		@Column(name = "created_at", nullable = false)
 		var createdAt: Timestamp = Timestamp(Date().time),
 
 		@Column(name = "last_played")
-		var lastPlayed: Timestamp?
+		var lastPlayed: Timestamp? = null
 )
