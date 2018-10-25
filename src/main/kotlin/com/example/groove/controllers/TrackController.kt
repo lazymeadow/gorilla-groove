@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*
 import java.sql.Timestamp
 import java.util.*
 
+
 @RestController
 @RequestMapping("track")
 class TrackController(
@@ -50,14 +51,6 @@ class TrackController(
 
 		return ResponseEntity(HttpStatus.OK)
 	}
-
-	// TODO this is a test endpoint. Not intended to be used forever
-    @Transactional
-    @GetMapping("/convert")
-    fun getSup(): String {
-        ffmpegService.test()
-        return "donezo"
-    }
 
 	// TODO this isn't really intended to stick around. Mostly for testing
 	// When song upload is put into place we no longer need this.
