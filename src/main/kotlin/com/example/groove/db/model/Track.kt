@@ -23,9 +23,6 @@ data class Track(
 		@Column(name = "file_name", nullable = false)
 		var fileName: String,
 
-		@Column(name = "play_count", nullable = false)
-		var playCount: Int = 0,
-
 		@Column(name = "bit_rate", nullable = false)
 		var bitRate: Long,
 
@@ -39,8 +36,5 @@ data class Track(
 		var releaseYear: Int? = null,
 
 		@Column(name = "created_at", nullable = false)
-		var createdAt: Timestamp = Timestamp(Date().time),
-
-		@Column(name = "last_played")
-		var lastPlayed: Timestamp? = null
+		var createdAt: Timestamp = Timestamp(Date().time)
 )

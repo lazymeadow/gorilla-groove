@@ -14,6 +14,7 @@ class WebMvcConfig : WebMvcConfigurer {
 
 	override fun configureContentNegotiation(configurer: ContentNegotiationConfigurer) {
 		// Prevent clients of the API from needing to specify the Content-Type header since everything will be JSON
+		// Actually maybe this didn't actually accomplish that goal... Dangit Spring
 		configurer.defaultContentType(MediaType.APPLICATION_JSON)
 	}
 }

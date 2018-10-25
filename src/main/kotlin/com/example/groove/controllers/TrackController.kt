@@ -40,13 +40,12 @@ class TrackController(
 	fun markTrackAsListenedTo(@RequestBody markTrackAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
 		val track = trackRepository.findById(markTrackAsReadDTO.trackId)
 				.unwrap() ?: throw IllegalArgumentException("No track found by ID ${markTrackAsReadDTO.trackId}!")
-		// In making this endpoint I realized that both playCount and lastPlayed do not belong on a Track, but rather,
-		// a yet-to-be-made Library, or UserTrack, or something. Multiple users can have the same track in their library
 
-		// Probably not a big deal since a song should never be marked as read multiple times back to back,
-		// but technically possible for a race condition here with two increments at once
-		track.playCount++
-		track.lastPlayed = Timestamp(Date().time)
+		// May want to do some sanity checks / server side validation here to prevent this incrementing too often.
+		// We know the last played date of a track and can see if it's even possible to have listened to this song again
+		// FIXME need to get the current user, grab this from the UserLibrary, and increment it
+//		track.playCount++
+//		track.lastPlayed = Timestamp(Date().time)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
