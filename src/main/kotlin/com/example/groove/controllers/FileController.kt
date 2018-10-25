@@ -43,12 +43,13 @@ class FileController {
 
 
         // convert to .ogg
-        System.out.println("Converting")
         fFmpegService!!.convertTrack(fileName)
-        System.out.println("Converting Success")
+
+        //Strip current file extension and append .ogg
+        val convertedFileName = fileName.substringBeforeLast('.') + ".ogg"
 
         // add to track to database
-        val track = fileMetadataService!!.createTrackFromFileName(fileName)
+        val track = fileMetadataService!!.createTrackFromFileName(convertedFileName)
         trackRepository!!.save(track)
 
 
