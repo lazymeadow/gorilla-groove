@@ -1,5 +1,6 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.TrackRepository
 import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FileStorageProperties
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
 import java.io.IOException
@@ -18,7 +20,10 @@ import java.nio.file.StandardCopyOption
 
 @Service
 class FileStorageService @Autowired constructor(
-        fileStorageProperties: FileStorageProperties
+        fileStorageProperties: FileStorageProperties,
+        private val fFmpegService: FFmpegService,
+        private val fileMetadataService: FileMetadataService,
+        private val trackRepository: TrackRepository
 ) {
 
     private val fileStorageLocation: Path
@@ -32,7 +37,6 @@ class FileStorageService @Autowired constructor(
         } catch (ex: Exception) {
             throw FileStorageException("Could not create the directory where the uploaded files will be stored.", ex)
         }
-
     }
 
     fun storeFile(file: MultipartFile): String {
@@ -50,11 +54,25 @@ class FileStorageService @Autowired constructor(
             val targetLocation = this.fileStorageLocation.resolve(fileName)
             Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
 
-            return fileName
+            return convertAndSaveTrack(fileName)
         } catch (ex: IOException) {
             throw FileStorageException("Could not store file $fileName. Please try again!", ex)
         }
+    }
 
+    @Transactional
+    fun convertAndSaveTrack(fileName: String): String {
+        // convert to .ogg
+        fFmpegService.convertTrack(fileName)
+
+        //Strip current file extension and append .ogg
+        val convertedFileName = fileName.substringBeforeLast('.') + ".ogg"
+
+        // add to track to database
+        val track = fileMetadataService.createTrackFromFileName(convertedFileName)
+        trackRepository.save(track)
+
+        return convertedFileName
     }
 
     fun loadFileAsResource(fileName: String): Resource {
@@ -69,6 +87,5 @@ class FileStorageService @Autowired constructor(
         } catch (ex: MalformedURLException) {
             throw MyFileNotFoundException("File not found $fileName", ex)
         }
-
     }
 }

@@ -13,25 +13,25 @@ import org.springframework.beans.factory.annotation.Autowired
 @Component
 
 class FFmpegService @Autowired constructor(
-		val ffmpegProperties: FFmpegProperties,
-		val fileStorageProperties: FileStorageProperties
+        val ffmpegProperties: FFmpegProperties,
+        val fileStorageProperties: FileStorageProperties
 ) {
 
-	fun convertTrack(fileName:String) {
+    fun convertTrack(fileName: String) {
 
-		val convertedFileName = fileName.substringBeforeLast('.') + ".ogg"
+        val convertedFileName = fileName.substringBeforeLast('.') + ".ogg"
 
-		val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
+        val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
 
-		val ffprobe = FFprobe(ffmpegProperties.ffmpegBinaryLocation + "ffprobe")
+        val ffprobe = FFprobe(ffmpegProperties.ffmpegBinaryLocation + "ffprobe")
 
-		val builder = FFmpegBuilder()
-				.addInput(fileStorageProperties.uploadDir + fileName)
-				.addOutput(ffmpegProperties.ffmpegOutputLocation + convertedFileName)
-				.done()
+        val builder = FFmpegBuilder()
+                .addInput(fileStorageProperties.uploadDir + fileName)
+                .addOutput(ffmpegProperties.ffmpegOutputLocation + convertedFileName)
+                .done()
 
-		val executor = FFmpegExecutor(ffmpeg, ffprobe)
-		executor.createJob(builder).run()
-	}
+        val executor = FFmpegExecutor(ffmpeg, ffprobe)
+        executor.createJob(builder).run()
+    }
 
 }

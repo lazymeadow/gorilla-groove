@@ -14,7 +14,7 @@ class UserService(
 ) {
     fun goodThings() {
         logger.info("Good things!")
-                val user = User(0, "Test User")
+        val user = User(0, "Test User")
         entityManager.persist(user)
         entityManager.flush()
     }
