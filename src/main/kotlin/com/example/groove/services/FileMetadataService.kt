@@ -23,18 +23,17 @@ class FileMetadataService(
         }
         val audioFile = AudioFileIO.read(file)
 
-        return Track(
-                fileName = fileName,
-                name = audioFile.tag.getFirst(FieldKey.TITLE),
-                artist = audioFile.tag.getFirst(FieldKey.ARTIST),
-                album = audioFile.tag.getFirst(FieldKey.ALBUM),
-                releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
-                length = audioFile.audioHeader.trackLength,
-                bitRate = audioFile.audioHeader.bitRateAsNumber,
-                sampleRate = audioFile.audioHeader.sampleRateAsNumber,
-                lastPlayed = null
-        )
-    }
+		return Track(
+				fileName = fileName,
+				name = audioFile.tag.getFirst(FieldKey.TITLE),
+				artist = audioFile.tag.getFirst(FieldKey.ARTIST),
+				album = audioFile.tag.getFirst(FieldKey.ALBUM),
+				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
+				length = audioFile.audioHeader.trackLength,
+				bitRate = audioFile.audioHeader.bitRateAsNumber,
+				sampleRate = audioFile.audioHeader.sampleRateAsNumber
+		)
+	}
 
     companion object {
         val logger = LoggerFactory.getLogger(FileMetadataService::class.java)!!
