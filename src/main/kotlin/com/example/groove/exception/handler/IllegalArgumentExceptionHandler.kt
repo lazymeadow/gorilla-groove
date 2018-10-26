@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.example.groove.controllers.exceptionhandler
+package com.example.groove.exception.handler
 
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
