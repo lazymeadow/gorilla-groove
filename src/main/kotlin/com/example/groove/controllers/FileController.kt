@@ -13,26 +13,27 @@ import org.springframework.web.multipart.MultipartFile
 import javax.servlet.http.HttpServletRequest
 import java.io.IOException
 
+@RestController
 @RequestMapping("file")
 class FileController @Autowired constructor(
         private val fileStorageService: FileStorageService
 ) {
 
-    @PostMapping("/upload/")
+    @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
         fileStorageService.storeFile(file)
 
         return ResponseEntity(HttpStatus.CREATED)
     }
 
-    @PostMapping("/upload-multiple-files/")
+    @PostMapping("/upload-multiple-files")
     fun uploadMultipleFiles(@RequestParam("files") files: Array<MultipartFile>): ResponseEntity<String> {
         files.map { uploadFile(it) }
 
         return ResponseEntity(HttpStatus.CREATED)
     }
 
-    @GetMapping("/download/")
+    @GetMapping("/download")
     fun downloadFile(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
         // Load file as Resource
         val resource = fileStorageService.loadFileAsResource(fileName)
