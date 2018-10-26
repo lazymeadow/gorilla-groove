@@ -19,6 +19,9 @@ class FileController @Autowired constructor(
         private val fileStorageService: FileStorageService
 ) {
 
+	// Example cURL command for uploading a file
+	// curl -H "Content-Type: multipart/form-data" -H "Authorization: Bearer df86c467-d940-4239-889f-4d72329f0ba4"
+	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
         fileStorageService.storeFile(file)
