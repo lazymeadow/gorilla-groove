@@ -10,16 +10,4 @@ import org.springframework.data.repository.query.Param
 
 interface TrackRepository : CrudRepository<Track, Long> {
 
-	@Query("SELECT t " +
-			"FROM Track t " +
-			"WHERE (:name IS NULL OR t.name LIKE %:name%) " +
-			"AND (:artist IS NULL OR t.artist LIKE %:artist%)" +
-			"AND (:album IS NULL OR t.album LIKE %:album%)"
-	)
-	fun findTracks(
-			@Param("name") name: String?,
-			@Param("artist") artist: String?,
-			@Param("album") album: String?,
-			pageable: Pageable
-	): Page<Track>
 }

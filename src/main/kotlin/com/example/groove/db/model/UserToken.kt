@@ -4,7 +4,8 @@ import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 
-@Entity(name = "user_token")
+@Entity
+@Table(name = "user_token")
 data class UserToken(
 
 		@Id

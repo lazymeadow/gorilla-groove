@@ -1,15 +1,9 @@
 package com.example.groove.controllers
 
-import com.example.groove.db.dao.UserRepository
-import com.example.groove.db.dao.UserTokenRepository
-import com.example.groove.db.model.UserToken
 import com.example.groove.security.UserAuthenticationService
-import com.example.groove.services.UserService
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping

@@ -1,16 +1,19 @@
 package com.example.groove.db.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 
-@Entity(name = "user_library")
+@Entity
+@Table(name = "user_library")
 data class UserLibrary(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		val id: Long = 0,
 
+		@JsonIgnore
 		@ManyToOne
 		@JoinColumn(name = "user_id", nullable = false)
 		val user: User,

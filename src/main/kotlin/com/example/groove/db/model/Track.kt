@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
@@ -35,6 +36,7 @@ data class Track(
 		@Column(name = "release_year")
 		var releaseYear: Int? = null,
 
+		@JsonIgnore
 		@Column(name = "created_at", nullable = false)
 		var createdAt: Timestamp = Timestamp(Date().time)
 )
