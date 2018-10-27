@@ -24,7 +24,7 @@ class FileController @Autowired constructor(
 	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
-        fileStorageService.storeFile(file)
+        fileStorageService.storeSong(file)
 
         return ResponseEntity(HttpStatus.CREATED)
     }
@@ -43,7 +43,7 @@ class FileController @Autowired constructor(
 
         // Try to determine file's content type
         val contentType = try {
-            request.servletContext.getMimeType(resource.getFile().getAbsolutePath())
+            request.servletContext.getMimeType(resource.file.absolutePath)
         } catch (ex: IOException) {
             logger.info("Could not determine file type.")
             "application/octet-stream"

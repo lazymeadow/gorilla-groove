@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 
 @ControllerAdvice
-class IllegalArgumentExceptionHandler : ResponseEntityExceptionHandler() {
+class BadRequestExceptionHandler : ResponseEntityExceptionHandler() {
 
 	// These exceptions should return a 400 to the client
 	@ExceptionHandler(

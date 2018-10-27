@@ -17,8 +17,7 @@ class FFmpegService @Autowired constructor(
         val fileStorageProperties: FileStorageProperties
 ) {
 
-    fun convertTrack(fileName: String) {
-
+    fun convertTrack(fileName: String): String {
         val convertedFileName = fileName.substringBeforeLast('.') + ".ogg"
 
         val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
@@ -32,6 +31,8 @@ class FFmpegService @Autowired constructor(
 
         val executor = FFmpegExecutor(ffmpeg, ffprobe)
         executor.createJob(builder).run()
+
+		return convertedFileName
     }
 
 }
