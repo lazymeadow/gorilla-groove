@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Something} from './components';
+import {LibraryLayout} from "./components/library-layout/library-layout";
 
 ReactDOM.render(
-  <Something/>,
+  <LibraryLayout/>,
   document.getElementById('root')
 );
