@@ -21,6 +21,9 @@ import org.springframework.security.web.util.matcher.NegatedRequestMatcher
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.OrRequestMatcher
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler
+import org.springframework.web.servlet.config.annotation.CorsRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+
 
 // This class (and other security-oriented ones) were heavily borrowed from the guide:
 // https://octoperf.com/blog/2018/03/08/securing-rest-api-spring-security/
@@ -35,6 +38,7 @@ class SecurityConfiguration @Autowired constructor(
 
 	private val publicUrls = OrRequestMatcher(
 			AntPathRequestMatcher("/authentication/login**")
+//			AntPathRequestMatcher("/**", HttpMethod.OPTIONS.toString(), false) // allow CORS option calls
 	)
 	private val protectedUrls = NegatedRequestMatcher(publicUrls)
 
@@ -90,6 +94,17 @@ class SecurityConfiguration @Autowired constructor(
 	fun forbiddenEntryPoint(): AuthenticationEntryPoint {
 		logger.info("TRIGGERED FORBIDDEN ENTRY POINT")
 		return HttpStatusEntryPoint(FORBIDDEN)
+	}
+
+	@Bean
+	fun corsConfigurer(): WebMvcConfigurer {
+		return object : WebMvcConfigurer {
+			override fun addCorsMappings(registry: CorsRegistry) {
+				registry
+						.addMapping("/**")
+						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
+			}
+		}
 	}
 
 	companion object {
