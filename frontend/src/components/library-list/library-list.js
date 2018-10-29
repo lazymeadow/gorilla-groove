@@ -1,7 +1,9 @@
 import React from 'react';
 
-export class LibraryList extends React.Component {
-  render() {
-    return <div>I list some library schtauff</div>;
-  }
+export function LibraryList(props) {
+	return (
+		props.tracks.map((track) => {
+			return <div key={track.id}>{track.track.name} {track.track.artist}</div>
+		})
+	);
 }
