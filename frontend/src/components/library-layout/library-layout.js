@@ -1,5 +1,6 @@
 import React from 'react';
 import {LibraryList, PlaybackControls} from "..";
+import {Link} from "react-router-dom";
 
 export class LibraryLayout extends React.Component {
 	constructor(props) {
@@ -30,7 +31,9 @@ export class LibraryLayout extends React.Component {
 	render() {
 		return <div className="full-screen border-layout">
 			<div className="border-layout-north">
-				Some dope ass header stuff
+				<Link to={'/login'}>
+					Logout
+				</Link>
 			</div>
 			<div className="border-layout-west">
 				West
