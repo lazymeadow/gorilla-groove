@@ -1,14 +1,15 @@
 import React from 'react';
-import {BrowserRouter as Router, Route} from 'react-router-dom'
+import {BrowserRouter, Route, Switch} from 'react-router-dom'
 import {LoginPage, LibraryLayout} from "../../components";
 
 export function PageRouter() {
 	return (
-		<Router>
-			<div>
-				<Route exact path="/login" render={props => <LoginPage {...props}/>}/>
-				<Route exact path="/" component={LibraryLayout}/>
-			</div>
-		</Router>
+		<BrowserRouter>
+			<Switch>
+				<Route path="/login" component={LoginPage}/>
+				<Route path="/" component={LibraryLayout}/>
+				<Route render={() => <h1>Yo dawg where the page at</h1>}/>
+			</Switch>
+		</BrowserRouter>
 	)
 }
