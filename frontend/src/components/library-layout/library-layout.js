@@ -7,7 +7,7 @@ export class LibraryLayout extends React.Component {
 		super(props);
 		this.state = {
 			isLoaded: false, // TODO use this to actually indicate loading
-			tracks: []
+			userTracks: []
 		}
 	}
 
@@ -20,7 +20,7 @@ export class LibraryLayout extends React.Component {
 		}).then(res => res.json())
 			.then(
 				(result) => {
-					this.setState({tracks: result.content});
+					this.setState({userTracks: result.content});
 				},
 				(error) => {
 					console.error(error)
@@ -39,7 +39,7 @@ export class LibraryLayout extends React.Component {
 				West
 			</div>
 			<div className="border-layout-center">
-				<LibraryList tracks={this.state.tracks}/>
+				<LibraryList userTracks={this.state.userTracks}/>
 			</div>
 			<div className="border-layout-east">
 				East
