@@ -1,5 +1,5 @@
 import React from 'react';
-import {LibraryList, PlaybackControls} from "..";
+import {LibraryList, PlaybackControls, SongUpload} from "..";
 import {Link} from "react-router-dom";
 
 export class LibraryLayout extends React.Component {
@@ -34,6 +34,7 @@ export class LibraryLayout extends React.Component {
 				<Link to={'/login'}>
 					Logout
 				</Link>
+				<SongUpload/>
 			</div>
 			<div className="border-layout-west">
 				West
