@@ -1,6 +1,9 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.dao.UserLibraryRepository
+import com.example.groove.db.model.UserLibrary
 import com.example.groove.services.FileStorageService
+import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.Resource
@@ -16,7 +19,8 @@ import java.io.IOException
 @RestController
 @RequestMapping("file")
 class FileController @Autowired constructor(
-        private val fileStorageService: FileStorageService
+        private val fileStorageService: FileStorageService,
+		private val userLibraryRepository: UserLibraryRepository
 ) {
 
 	// Example cURL command for uploading a file
@@ -24,7 +28,8 @@ class FileController @Autowired constructor(
 	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
-        fileStorageService.storeSong(file)
+        val track = fileStorageService.storeSong(file)
+		userLibraryRepository.save(UserLibrary(user = loadLoggedInUser(), track = track))
 
         return ResponseEntity(HttpStatus.CREATED)
     }
