@@ -16,10 +16,14 @@ class AuthenticationController @Autowired constructor(
 ) {
 
 	@PostMapping("/login")
-	fun login(@RequestBody userAuthenticationDTO: UserAuthenticationDTO): ResponseEntity<String> {
+	fun login(@RequestBody userAuthenticationDTO: UserAuthenticationDTO): ResponseEntity<AuthResponse> {
 		val token = userAuthenticationService.login(userAuthenticationDTO.email, userAuthenticationDTO.password)
-		return ResponseEntity.ok(token)
+		return ResponseEntity.ok(AuthResponse(token))
 	}
+
+	data class AuthResponse(
+			val token: String
+	)
 
 	data class UserAuthenticationDTO(
 			val email: String,
