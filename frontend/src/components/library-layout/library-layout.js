@@ -1,5 +1,5 @@
 import React from 'react';
-import {LibraryList, PlaybackControls, SongUpload} from "..";
+import {LibraryList, PlaybackControls, SongUpload, Api} from "..";
 import {Link} from "react-router-dom";
 
 export class LibraryLayout extends React.Component {
@@ -12,20 +12,14 @@ export class LibraryLayout extends React.Component {
 	}
 
 	componentDidMount() {
-		fetch("http://localhost:8080/api/library", {
-			method: 'get',
-			headers: new Headers({
-				'Authorization': 'Bearer df86c467-d940-4239-889f-4d72329f0ba4' // TODO actually authenticate
-			})
-		}).then(res => res.json())
-			.then(
-				(result) => {
-					this.setState({userTracks: result.content});
-				},
-				(error) => {
-					console.error(error)
-				}
-			)
+		Api.get("library").then(
+			(result) => {
+				this.setState({userTracks: result.content});
+			},
+			(error) => {
+				console.error(error)
+			}
+		)
 	}
 
 	render() {

@@ -4,5 +4,6 @@ import {PageRouter} from "./page-router/page-router";
 import {LoginPage} from "./login-page/login-page";
 import {LibraryLayout} from "./library-layout/library-layout";
 import {SongUpload} from "./song-upload/song-upload";
+import {Api} from "../api"
 
-export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout, SongUpload};
+export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout, SongUpload, Api};
