@@ -42,14 +42,24 @@ class UuidAuthenticationService @Autowired constructor(
 		return uuid
 	}
 
+	@Transactional
+	override fun logout(user: User, token: String) {
+		val dbToken = userTokenRepository.findByToken(token)
+				?: throw BadCredentialsException("User not found with the provided token $token")
+
+		if (dbToken.user.id == user.id) {
+			userTokenRepository.deleteByToken(token)
+		} else {
+			logger.warn("User attempted to log out with another user's token. Hacking is bad mmkay")
+			throw BadCredentialsException("User deleting the found token was not the token's owner")
+		}
+	}
+
+	@Transactional(readOnly = true)
 	override fun findByToken(token: String): User {
 		val dbToken = userTokenRepository.findByToken(token)
 				?: throw BadCredentialsException("User not found with the provided token $token")
 		return dbToken.user
-	}
-
-	override fun logout() {
-		TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 	}
 
 	companion object {

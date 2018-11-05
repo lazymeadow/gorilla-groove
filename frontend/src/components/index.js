@@ -5,5 +5,6 @@ import {LoginPage} from "./login-page/login-page";
 import {LibraryLayout} from "./library-layout/library-layout";
 import {SongUpload} from "./song-upload/song-upload";
 import {Api} from "../api"
+import {LogoutButton} from "./logout-button/logout-button";
 
-export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout, SongUpload, Api};
+export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout, SongUpload, Api, LogoutButton};

@@ -15,13 +15,20 @@ export class Api {
 
 	static post(url, params) {
 		return fetch(baseUrl + url, {
-			method: 'get',
+			method: 'post',
 			headers: new Headers({
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
 			}),
 			body: JSON.stringify(params)
-		}).then(res => res.json())
+		}).then(res => {
+			// There isn't always a response body for POSTs, and calling res.json() will create a parse error
+			// in the console, even within a try / catch. Really this is probably an issue with the server
+			// and it probably shouldn't return empty responses. But that sounds more difficult to tackle
+			res.text().then(function(text) {
+				return text ? JSON.parse(text) : {}
+			})
+		})
 	}
 
 	static upload(url, file) {

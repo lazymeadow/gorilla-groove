@@ -1,13 +1,11 @@
 package com.example.groove.controllers
 
 import com.example.groove.security.UserAuthenticationService
+import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("authentication")
@@ -16,12 +14,18 @@ class AuthenticationController @Autowired constructor(
 ) {
 
 	@PostMapping("/login")
-	fun login(@RequestBody userAuthenticationDTO: UserAuthenticationDTO): ResponseEntity<AuthResponse> {
+	fun login(@RequestBody userAuthenticationDTO: UserAuthenticationDTO): ResponseEntity<AuthTokenDTO> {
 		val token = userAuthenticationService.login(userAuthenticationDTO.email, userAuthenticationDTO.password)
-		return ResponseEntity.ok(AuthResponse(token))
+		return ResponseEntity.ok(AuthTokenDTO(token))
 	}
 
-	data class AuthResponse(
+	@PostMapping("/logout")
+	fun logout(@RequestBody userLogoutDTO: AuthTokenDTO): ResponseEntity<String> {
+		userAuthenticationService.logout(loadLoggedInUser(), userLogoutDTO.token)
+		return ResponseEntity.ok().build()
+	}
+
+	data class AuthTokenDTO(
 			val token: String
 	)
 
@@ -29,4 +33,5 @@ class AuthenticationController @Autowired constructor(
 			val email: String,
 			val password: String
 	)
+
 }

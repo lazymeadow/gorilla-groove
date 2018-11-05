@@ -1,6 +1,5 @@
 import React from 'react';
-import {LibraryList, PlaybackControls, SongUpload, Api} from "..";
-import {Link} from "react-router-dom";
+import {LibraryList, LogoutButton, PlaybackControls, SongUpload, Api} from "..";
 
 export class LibraryLayout extends React.Component {
 	constructor(props) {
@@ -25,9 +24,7 @@ export class LibraryLayout extends React.Component {
 	render() {
 		return <div className="full-screen border-layout">
 			<div className="border-layout-north">
-				<Link to={'/login'}>
-					Logout
-				</Link>
+				<LogoutButton/>
 				<SongUpload/>
 			</div>
 			<div className="border-layout-west">

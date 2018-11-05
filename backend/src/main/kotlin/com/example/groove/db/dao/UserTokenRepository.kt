@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface UserTokenRepository : CrudRepository<UserToken, Long> {
 	fun findByToken(token: String): UserToken?
+	fun deleteByToken(token: String)
 }
