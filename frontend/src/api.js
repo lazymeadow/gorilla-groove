@@ -43,4 +43,8 @@ export class Api {
 			body: body
 		})
 	}
+
+	static songResourceLink(fileName) {
+		return `${baseUrl}music/${fileName}?t=${sessionStorage.getItem('token')}`;
+	}
 }

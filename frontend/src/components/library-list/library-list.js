@@ -21,7 +21,7 @@ export function LibraryList(props) {
 			<tbody>
 			{props.userTracks.map((userTrack) => {
 				return (
-					<tr key={userTrack.id}>
+					<tr onClick={() => {props.playSong(userTrack)}} key={userTrack.id}>
 						<td>{userTrack.track.name}</td>
 						<td>{userTrack.track.artist}</td>
 						<td>{userTrack.track.album}</td>
