@@ -1,13 +1,37 @@
+// These three gross !importants override styles in the column-resizer library
+#track-table { // ID selector to increase specificity on THEIR !important...
+  width: 100% !important; // Without this rule the columns can't be smaller than the content they contain (aka useless)
+}
+
+.grip-lastgrip {
+  margin-left: -5px !important; // Bring the last grip selector in, so we don't have a scroll bar without content to scroll
+  .grip-resizable {
+    width: 4px !important; // The last grip selector for resizing is unnecessarily large. Shrink it
+  }
+}
+
 .track-table {
-  width: 100%;
   text-align: left;
   border-collapse: collapse;
+  table-layout: fixed;
+  overflow-x: scroll;
 
   thead {
+    font-size: 0.90em;
     border-bottom: 3px solid black;
+  }
+
+  tbody {
+    font-size: 0.85em;
   }
 
   tr {
     border-bottom: 1px solid black;
+  }
+
+  td, th {
+    white-space: pre;
+    overflow: hidden;
+    border-left: 2px solid black;
   }
 }

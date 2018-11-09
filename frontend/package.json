@@ -19,6 +19,7 @@
     "babel-loader": "^8.0.4",
     "circular-dependency-plugin": "^5.0.2",
     "clean-webpack-plugin": "^0.1.19",
+    "column-resizer": "^1.1.2",
     "css-loader": "^1.0.0",
     "less": "^3.8.1",
     "less-loader": "^4.1.0",
