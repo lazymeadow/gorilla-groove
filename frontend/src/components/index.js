@@ -6,5 +6,7 @@ import {LibraryLayout} from "./library-layout/library-layout";
 import {SongUpload} from "./song-upload/song-upload";
 import {Api} from "../api"
 import {LogoutButton} from "./logout-button/logout-button";
+import {TableRow} from "./table-row";
 
-export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout, SongUpload, Api, LogoutButton};
+export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout,
+	SongUpload, Api, LogoutButton, TableRow};

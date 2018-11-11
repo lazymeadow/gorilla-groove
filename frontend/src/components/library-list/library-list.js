@@ -1,11 +1,15 @@
 import React from 'react';
 import ColumnResizer from 'column-resizer';
-import {formatDateFromUnixTime, formatTimeFromSeconds} from "../../formatters";
 import * as ReactDOM from "react-dom";
+import {TableRow} from "../table-row";
 
 export class LibraryList extends React.Component {
 	constructor(props) {
 		super(props);
+
+		this.state = {
+			selected: {}
+		}
 	}
 
 	componentDidMount() {
@@ -42,6 +46,12 @@ export class LibraryList extends React.Component {
 		}
 	}
 
+	handleRowClick(userTrack) {
+		let selected = this.state.selected;
+		selected[userTrack.id] = !selected[userTrack.id];
+		this.setState({selected: selected});
+	}
+
 	render() {
 		return (
 			<div>
@@ -63,18 +73,12 @@ export class LibraryList extends React.Component {
 					<tbody>
 					{this.props.userTracks.map((userTrack) => {
 						return (
-							<tr onClick={() => {this.props.playSong(userTrack)}} key={userTrack.id}>
-								<td>{userTrack.track.name}</td>
-								<td>{userTrack.track.artist}</td>
-								<td>{userTrack.track.album}</td>
-								<td>{formatTimeFromSeconds(userTrack.track.length)}</td>
-								<td>{userTrack.playCount}</td>
-								<td>{userTrack.track.releaseYear}</td>
-								<td>{userTrack.track.bitRate}</td>
-								<td>{userTrack.track.sampleRate}</td>
-								<td>{formatDateFromUnixTime(userTrack.createdAt)}</td>
-								<td>{formatDateFromUnixTime(userTrack.lastPlayed)}</td>
-							</tr>
+							<TableRow
+								key={userTrack.id}
+								userTrack={userTrack}
+								selected={this.state.selected[userTrack.id.toString()]}
+								onClick={this.handleRowClick.bind(this)}
+							/>
 						);
 					})}
 					</tbody>
