@@ -25,13 +25,37 @@
     font-size: 0.85em;
   }
 
-  tr {
-    border-bottom: 1px solid black;
-  }
-
   td, th {
     white-space: pre;
+  }
+
+  th {
     overflow: hidden;
     border-left: 2px solid black;
+
+    &:first-child {
+      border-left: none;
+    }
+  }
+}
+
+.song-row {
+  &.selected.selected { // Double up the selector so it's more specific and overrides the unselected colors
+    background-color: #626FAB;
+    color: white;
+  }
+
+  &:nth-child(even) {
+    background-color: #99D5F1;
+  }
+
+  &:nth-child(odd) {
+    background-color: #B0DEF4;
+  }
+
+  td > div {
+    margin-left: 5px;
+    margin-right: 5px;
+    overflow-x: hidden;
   }
 }

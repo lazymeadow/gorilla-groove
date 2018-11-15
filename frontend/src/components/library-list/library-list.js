@@ -1,7 +1,7 @@
 import React from 'react';
 import ColumnResizer from 'column-resizer';
 import * as ReactDOM from "react-dom";
-import {TableRow} from "../table-row";
+import {TableRow} from "../table-row/table-row";
 
 export class LibraryList extends React.Component {
 	constructor(props) {
