@@ -16,7 +16,7 @@ export class TableRow extends React.Component {
 		let selected = this.props.selected ? "selected" : "";
 		return (
 			<tr
-				onClick={() => {this.props.onClick(this.props.userTrack)}}
+				onClick={(event) => {this.props.onClick(event, this.props.userTrack)}}
 				className={`song-row ${selected}`}
 			>
 				<td><div>{this.props.userTrack.track.name}</div></td>

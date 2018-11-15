@@ -8,7 +8,8 @@ export class LibraryList extends React.Component {
 		super(props);
 
 		this.state = {
-			selected: {}
+			selected: {},
+			firstSelected: null
 		}
 	}
 
@@ -46,10 +47,37 @@ export class LibraryList extends React.Component {
 		}
 	}
 
-	handleRowClick(userTrack) {
+	handleRowClick(event, userTrack) {
+		console.log(event);
 		let selected = this.state.selected;
-		selected[userTrack.id] = !selected[userTrack.id];
-		this.setState({selected: selected});
+
+		// Always set the first selected if there wasn't one
+		if (!this.state.firstSelected) {
+			this.setState({ firstSelected: userTrack.id })
+		}
+
+		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
+		if (!event.ctrlKey && !event.shiftKey) {
+			selected = {};
+			this.setState({ firstSelected: userTrack.id })
+		}
+
+		// If we're holding shift, we should select only have selected the rows between this click and the first click
+		if (event.shiftKey && this.state.firstSelected) {
+			selected = {};
+			let startingRow = Math.min(this.state.firstSelected, userTrack.id);
+			let endingRow = Math.max(this.state.firstSelected, userTrack.id);
+			if (startingRow < endingRow) {
+				endingRow++
+			}
+
+			for (let i = startingRow; i < endingRow; i++) {
+				selected[i] = true;
+			}
+		}
+
+		selected[userTrack.id] = true;
+		this.setState({ selected: selected });
 	}
 
 	render() {
