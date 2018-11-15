@@ -1,19 +1,31 @@
 import React from 'react';
 import {Api} from "../../api";
 
-export function PlaybackControls(props) {
-	let src = props.playedTrack ? Api.songResourceLink(props.playedTrack.track.fileName) : '';
+export class PlaybackControls extends React.Component {
+	constructor(props) {
+		super(props);
+	}
 
-	return (
-		<div>
-			Now Playing: {props.playedTrack ? props.playedTrack.track.name : 'Nothing'}
+	componentDidUpdate() {
+		// Start playing the new song
+		if (this.props.playedTrack) {
+			document.getElementById('audio').play();
+		}
+	}
+
+	render() {
+		let src = this.props.playedTrack ? Api.songResourceLink(this.props.playedTrack.track.fileName) : '';
+		return (
 			<div>
-				<button>Start</button>
-				<button>Stop</button>
-				<audio src={src} controls>
-					Your browser is ancient. Be less ancient.
-				</audio>
+				Now Playing: {this.props.playedTrack ? this.props.playedTrack.track.name : 'Nothing'}
+				<div>
+					<button>Start</button>
+					<button>Stop</button>
+					<audio id="audio" src={src} controls>
+						Your browser is ancient. Be less ancient.
+					</audio>
+				</div>
 			</div>
-		</div>
-	)
+		)
+	}
 }

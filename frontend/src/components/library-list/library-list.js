@@ -9,7 +9,9 @@ export class LibraryList extends React.Component {
 
 		this.state = {
 			selected: {},
-			firstSelected: null
+			firstSelected: null,
+			withinDoubleClick: false,
+			doubleClickTimeout: null
 		}
 	}
 
@@ -48,7 +50,6 @@ export class LibraryList extends React.Component {
 	}
 
 	handleRowClick(event, userTrack) {
-		console.log(event);
 		let selected = this.state.selected;
 
 		// Always set the first selected if there wasn't one
@@ -76,8 +77,41 @@ export class LibraryList extends React.Component {
 			}
 		}
 
+		if (this.state.withinDoubleClick) {
+			this.cancelDoubleClick();
+			this.props.playTrack(userTrack);
+		} else {
+			this.setupDoubleClick();
+		}
+
 		selected[userTrack.id] = true;
 		this.setState({ selected: selected });
+	}
+
+	setupDoubleClick() {
+		// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
+		this.cancelDoubleClick();
+
+		// Set up a timer that will kill our ability to double click if we are too slow
+		let timeout = setTimeout(() => {
+			this.setState({ withinDoubleClick: false });
+		}, 300);
+
+		// Set our double clicking state for the next timeout
+		this.setState({
+			withinDoubleClick: true,
+			doubleClickTimeout: timeout
+		});
+	}
+
+	cancelDoubleClick() {
+		if (this.state.doubleClickTimeout) {
+			window.clearTimeout(this.state.doubleClickTimeout);
+			this.setState({
+				withinDoubleClick: false,
+				doubleClickTimeout: null
+			});
+		}
 	}
 
 	render() {
@@ -105,6 +139,7 @@ export class LibraryList extends React.Component {
 								key={userTrack.id}
 								userTrack={userTrack}
 								selected={this.state.selected[userTrack.id.toString()]}
+								played={this.props.playedTrack && this.props.playedTrack.id === userTrack.id}
 								onClick={this.handleRowClick.bind(this)}
 							/>
 						);

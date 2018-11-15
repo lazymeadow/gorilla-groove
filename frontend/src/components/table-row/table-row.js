@@ -10,14 +10,16 @@ export class TableRow extends React.Component {
 		// We don't want React to re-render every row whenever any row is selected
 		// This might have to be tweaked later to look at more properties
 		return this.props.selected !== nextProps.selected
+			|| this.props.played !== nextProps.played
 	}
 
 	render() {
 		let selected = this.props.selected ? "selected" : "";
+		let played = this.props.played ? "played" : "";
 		return (
 			<tr
 				onClick={(event) => {this.props.onClick(event, this.props.userTrack)}}
-				className={`song-row ${selected}`}
+				className={`song-row ${selected} ${played}`}
 			>
 				<td><div>{this.props.userTrack.track.name}</div></td>
 				<td><div>{this.props.userTrack.track.artist}</div></td>

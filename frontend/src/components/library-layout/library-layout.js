@@ -36,7 +36,10 @@ export class LibraryLayout extends React.Component {
 				West
 			</div>
 			<div className="border-layout-center track-table-container">
-				<LibraryList userTracks={this.state.userTracks} playSong={this.playTrack.bind(this)}/>
+				<LibraryList
+					userTracks={this.state.userTracks}
+					playedTrack={this.state.playedTrack}
+					playTrack={this.playTrack.bind(this)}/>
 			</div>
 			<div className="border-layout-east">
 				East
