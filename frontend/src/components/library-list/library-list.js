@@ -1,7 +1,7 @@
 import React from 'react';
 import ColumnResizer from 'column-resizer';
 import * as ReactDOM from "react-dom";
-import {TableRow} from "../table-row/table-row";
+import {SongRow} from "../table-row/song-row";
 
 export class LibraryList extends React.Component {
 	constructor(props) {
@@ -120,23 +120,17 @@ export class LibraryList extends React.Component {
 				<table id="track-table" className="track-table">
 					<thead>
 					<tr>
-						<th>Title</th>
-						<th>Artist</th>
-						<th>Album</th>
-						<th>Length</th>
-						<th>Plays</th>
-						<th>Year</th>
-						<th>Bit Rate</th>
-						<th>Sample Rate</th>
-						<th>Added</th>
-						<th>Last Played</th>
+						{this.props.columns.map((columnName) => {
+							return <th>{columnName}</th>
+						})}
 					</tr>
 					</thead>
 					<tbody>
 					{this.props.userTracks.map((userTrack, index) => {
 						return (
-							<TableRow
+							<SongRow
 								key={userTrack.id}
+								columns={this.props.columns}
 								rowIndex={index}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
