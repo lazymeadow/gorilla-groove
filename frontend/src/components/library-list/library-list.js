@@ -49,25 +49,25 @@ export class LibraryList extends React.Component {
 		}
 	}
 
-	handleRowClick(event, userTrack) {
+	handleRowClick(event, userTrackIndex) {
 		let selected = this.state.selected;
 
 		// Always set the first selected if there wasn't one
 		if (!this.state.firstSelected) {
-			this.setState({ firstSelected: userTrack.id })
+			this.setState({ firstSelected: userTrackIndex })
 		}
 
 		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
 		if (!event.ctrlKey && !event.shiftKey) {
 			selected = {};
-			this.setState({ firstSelected: userTrack.id })
+			this.setState({ firstSelected: userTrackIndex })
 		}
 
 		// If we're holding shift, we should select only have selected the rows between this click and the first click
 		if (event.shiftKey && this.state.firstSelected) {
 			selected = {};
-			let startingRow = Math.min(this.state.firstSelected, userTrack.id);
-			let endingRow = Math.max(this.state.firstSelected, userTrack.id);
+			let startingRow = Math.min(this.state.firstSelected, userTrackIndex);
+			let endingRow = Math.max(this.state.firstSelected, userTrackIndex);
 			if (startingRow < endingRow) {
 				endingRow++
 			}
@@ -79,12 +79,12 @@ export class LibraryList extends React.Component {
 
 		if (this.state.withinDoubleClick) {
 			this.cancelDoubleClick();
-			this.props.playTrack(userTrack);
+			this.props.playTrack(userTrackIndex);
 		} else {
 			this.setupDoubleClick();
 		}
 
-		selected[userTrack.id] = true;
+		selected[userTrackIndex] = true;
 		this.setState({ selected: selected });
 	}
 
@@ -133,13 +133,14 @@ export class LibraryList extends React.Component {
 					</tr>
 					</thead>
 					<tbody>
-					{this.props.userTracks.map((userTrack) => {
+					{this.props.userTracks.map((userTrack, index) => {
 						return (
 							<TableRow
 								key={userTrack.id}
+								rowIndex={index}
 								userTrack={userTrack}
-								selected={this.state.selected[userTrack.id.toString()]}
-								played={this.props.playedTrack && this.props.playedTrack.id === userTrack.id}
+								selected={this.state.selected[index.toString()]}
+								played={this.props.playedTrackIndex && this.props.playedTrackIndex === index}
 								onClick={this.handleRowClick.bind(this)}
 							/>
 						);

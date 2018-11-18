@@ -7,7 +7,8 @@ export class LibraryLayout extends React.Component {
 		this.state = {
 			isLoaded: false, // TODO use this to actually indicate loading
 			userTracks: [],
-			playedTrack: null
+			nowPlayingTracks: [],
+			playedTrackIndex: 0
 		}
 	}
 
@@ -22,8 +23,11 @@ export class LibraryLayout extends React.Component {
 		)
 	}
 
-	playTrack(userTrack) {
-		this.setState({playedTrack: userTrack});
+	playTrack(trackIndex) {
+		this.setState({
+			nowPlayingTracks: this.state.userTracks,
+			playedTrackIndex: trackIndex
+		});
 	}
 
 	render() {
@@ -38,14 +42,17 @@ export class LibraryLayout extends React.Component {
 			<div className="border-layout-center track-table-container">
 				<LibraryList
 					userTracks={this.state.userTracks}
-					playedTrack={this.state.playedTrack}
+					playedTrackIndex={this.state.playedTrackIndex}
 					playTrack={this.playTrack.bind(this)}/>
 			</div>
 			<div className="border-layout-east">
 				East
 			</div>
 			<div className="border-layout-south">
-				<PlaybackControls playedTrack={this.state.playedTrack}/>
+				<PlaybackControls
+					nowPlayingTracks={this.state.nowPlayingTracks}
+					playedTrackIndex={this.state.playedTrackIndex}
+				/>
 			</div>
 		</div>;
 	}

@@ -8,16 +8,17 @@ export class PlaybackControls extends React.Component {
 
 	componentDidUpdate() {
 		// Start playing the new song
-		if (this.props.playedTrack) {
+		if (this.props.playedTrackIndex) {
 			document.getElementById('audio').play();
 		}
 	}
 
 	render() {
-		let src = this.props.playedTrack ? Api.songResourceLink(this.props.playedTrack.track.fileName) : '';
+		let playedTrack = this.props.playedTrackIndex ? this.props.nowPlayingTracks[this.props.playedTrackIndex] : null;
+		let src = playedTrack ? Api.songResourceLink(playedTrack.track.fileName) : '';
 		return (
 			<div>
-				Now Playing: {this.props.playedTrack ? this.props.playedTrack.track.name : 'Nothing'}
+				Now Playing: {playedTrack ? playedTrack.track.name : 'Nothing'}
 				<div>
 					<button>Start</button>
 					<button>Stop</button>

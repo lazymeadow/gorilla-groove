@@ -18,7 +18,7 @@ export class TableRow extends React.Component {
 		let played = this.props.played ? "played" : "";
 		return (
 			<tr
-				onClick={(event) => {this.props.onClick(event, this.props.userTrack)}}
+				onClick={(event) => {this.props.onClick(event, this.props.rowIndex)}}
 				className={`song-row ${selected} ${played}`}
 			>
 				<td><div>{this.props.userTrack.track.name}</div></td>
