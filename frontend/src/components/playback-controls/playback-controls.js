@@ -15,7 +15,7 @@ export class PlaybackControls extends React.Component {
 
 	render() {
 		let playedTrack = this.props.playedTrackIndex ? this.props.nowPlayingTracks[this.props.playedTrackIndex] : null;
-		let src = playedTrack ? Api.songResourceLink(playedTrack.track.fileName) : '';
+		let src = playedTrack ? Api.getSongResourceLink(playedTrack.track.fileName) : '';
 		return (
 			<div>
 				Now Playing: {playedTrack ? playedTrack.track.name : 'Nothing'}

@@ -5,6 +5,7 @@ import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.properties.MusicProperties
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
@@ -19,17 +20,22 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.util.*
 import javax.imageio.ImageIO
 
 @Service
 class FileStorageService @Autowired constructor(
 		fileStorageProperties: FileStorageProperties,
+		musicProperties: MusicProperties,
 		private val ffmpegService: FFmpegService,
 		private val fileMetadataService: FileMetadataService,
 		private val trackRepository: TrackRepository
 ) {
 
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.uploadDir)
+			.toAbsolutePath().normalize()
+
+	private val albumArtLocation: Path = Paths.get(musicProperties.albumArtDirectoryLocation)
 			.toAbsolutePath().normalize()
 
 	init {
@@ -56,10 +62,16 @@ class FileStorageService @Autowired constructor(
 			val targetLocation = fileStorageLocation.resolve(fileName)
 			Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
 
-			ripAndSaveAlbumArt(fileName)
+			val tmpImageFile = ripAndSaveAlbumArt(fileName)
 
 			// TODO remove old files from the tmp (uploadDir) directory once saving and conversion are finished
-			return convertAndSaveTrack(fileName)
+			val track = convertAndSaveTrack(fileName)
+
+			if (tmpImageFile != null) {
+				moveAlbumArt(tmpImageFile, track.id)
+			}
+
+			return track
 		} catch (ex: IOException) {
 			throw FileStorageException("Could not store file $fileName. Please try again!", ex)
 		}
@@ -68,13 +80,27 @@ class FileStorageService @Autowired constructor(
 	// It's important to rip the album art out PRIOR to running the song
 	// through FFmpeg to be converted to an .ogg. If you don't, you will
 	// get the error "Cannot find comment block (no vorbiscomment header)"
-	private fun ripAndSaveAlbumArt(fileName: String) {
+	private fun ripAndSaveAlbumArt(fileName: String): File? {
 		val image = fileMetadataService.removeAlbumArtFromFile(fileName)
-		if (image != null) {
-			// TODO put this somewhere more intelligent so that we can actually use it
-			val outputFile = File("C:\\Users\\mobius\\tmp\\test.png")
+		return if (image != null) {
+			val tmpImageName = UUID.randomUUID().toString() + ".png"
+			val outputFile = File(fileStorageLocation.toString() + tmpImageName)
 			ImageIO.write(image, "png", outputFile)
+
+			outputFile
+		} else {
+			null
 		}
+	}
+
+	private fun moveAlbumArt(tmpAlbumArtName: File, trackId: Long) {
+		val parentDirectoryName = trackId / 1000 // Only put 1000 album art in a single directory for speed
+		val destinationFile = File("$albumArtLocation/$parentDirectoryName/$trackId.png")
+
+		// The parent directory might not be made. Make it if it doesn't exist
+		destinationFile.parentFile.mkdirs()
+
+		tmpAlbumArtName.renameTo(destinationFile)
 	}
 
 	@Transactional

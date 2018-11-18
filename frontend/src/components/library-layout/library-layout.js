@@ -1,6 +1,7 @@
 import React from 'react';
 import {LibraryList, LogoutButton, PlaybackControls, SongUpload, Api} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
+import {AlbumArt} from "../album-art/album-art";
 
 export class LibraryLayout extends React.Component {
 	constructor(props) {
@@ -9,7 +10,7 @@ export class LibraryLayout extends React.Component {
 			isLoaded: false, // TODO use this to actually indicate loading
 			userTracks: [],
 			nowPlayingTracks: [],
-			playedTrackIndex: 0
+			playedTrackIndex: 0 // Maybe be null?
 		}
 	}
 
@@ -38,7 +39,10 @@ export class LibraryLayout extends React.Component {
 				<SongUpload/>
 			</div>
 			<div className="border-layout-west">
-				West
+				<AlbumArt
+					nowPlayingTracks={this.state.nowPlayingTracks}
+					playedTrackIndex={this.state.playedTrackIndex}
+				/>
 			</div>
 			<div className="border-layout-center track-table-container">
 				<LibraryList

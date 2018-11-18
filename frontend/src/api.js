@@ -44,7 +44,13 @@ export class Api {
 		})
 	}
 
-	static songResourceLink(fileName) {
+	static getSongResourceLink(fileName) {
 		return `${baseUrl}music/${fileName}?t=${sessionStorage.getItem('token')}`;
+	}
+
+	static getAlbumArtResourceLink(userTrack) {
+		let artId = userTrack.track.id;
+		let parentDirectory = parseInt(artId / 1000);
+		return `${baseUrl}album-art/${parentDirectory}/${artId}.png?t=${sessionStorage.getItem('token')}`;
 	}
 }

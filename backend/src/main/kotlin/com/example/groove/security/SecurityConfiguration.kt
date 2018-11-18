@@ -93,7 +93,6 @@ class SecurityConfiguration @Autowired constructor(
 
 	@Bean
 	fun forbiddenEntryPoint(): AuthenticationEntryPoint {
-		logger.info("TRIGGERED FORBIDDEN ENTRY POINT")
 		return HttpStatusEntryPoint(FORBIDDEN)
 	}
 

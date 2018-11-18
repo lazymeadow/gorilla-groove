@@ -16,5 +16,8 @@ class StaticResourceConfiguration @Autowired constructor(
 		registry
 				.addResourceHandler("/music/**")
 				.addResourceLocations("file:${musicProperties.musicDirectoryLocation}")
+		registry
+				.addResourceHandler("/album-art/**")
+				.addResourceLocations("file:${musicProperties.albumArtDirectoryLocation}")
 	}
 }

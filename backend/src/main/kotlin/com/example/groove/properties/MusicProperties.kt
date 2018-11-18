@@ -8,5 +8,7 @@ class MusicProperties {
 	@Value("\${spring.data.music.location}")
 	val musicDirectoryLocation: String? = null
 
+	@Value("\${spring.data.album.art.location}")
+	val albumArtDirectoryLocation: String? = null
 	// There will likely be another property here for an S3 storage location
 }
