@@ -49,9 +49,9 @@ export class SongRow extends React.Component {
 				onClick={(event) => {this.props.onClick(event, this.props.rowIndex)}}
 				className={`song-row ${selected} ${played}`}
 			>
-				{this.props.columns.map((columnName) => {
+				{this.props.columns.map((columnName, index) => {
 					return (
-						<td>
+						<td key={index}>
 							<div>
 								{this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 							</div>

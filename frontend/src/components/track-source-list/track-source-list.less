@@ -1,0 +1,62 @@
+.tree-view {
+  overflow-y: hidden;
+  margin-left: -5px;
+}
+
+.tree-view_children {
+  margin-left: 16px;
+}
+
+.tree-view_children-collapsed {
+  height: 0;
+}
+
+.tree-view_arrow {
+  cursor: pointer;
+  font-size: 1.5em;
+  position: relative;
+  top: 3px;
+  left: 1px;
+  display: inline-block;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.tree-view_arrow:after {
+  content: '▾';
+}
+
+.tree-node, .tree-child {
+  cursor: pointer;
+}
+
+.tree-child {
+  margin-left: 15px;
+}
+
+/* rotate the triangle to close it */
+.tree-view_arrow-collapsed {
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  -ms-transform: rotate(-90deg);
+  transform: rotate(-90deg);
+}
+
+.view-source-list {
+  margin-left: 2px;
+  margin-top: 2px;
+}
+
+.library-option {
+  margin-top: 15px;
+  margin-left: 16px;
+  cursor: pointer;
+}
+
+// TODO this rule really needs to be moved to a generic stylesheet. Quit being a lazy asshole
+.selected {
+  background-color: #626FAB;
+  color: white;
+}

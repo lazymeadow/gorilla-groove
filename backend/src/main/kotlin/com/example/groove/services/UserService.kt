@@ -19,4 +19,8 @@ class UserService @Autowired constructor(
 		userRepository.save(user)
 	}
 
+	@Transactional(readOnly = true)
+	fun getAllUsers(): List<User> {
+		return userRepository.findAll().toList()
+	}
 }

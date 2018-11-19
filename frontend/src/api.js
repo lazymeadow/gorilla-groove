@@ -3,8 +3,10 @@ const baseUrl = 'http://localhost:8080/api/';
 export class Api {
 
   // This will likely need to be modified when we start using URL parameters to filter things
-	static get(url) {
-		return fetch(baseUrl + url, {
+	static get(url, params) {
+		let urlParameters = Api.encodeUriParamsFromObject(params);
+
+		return fetch(baseUrl + url + urlParameters, {
 			method: 'get',
 			headers: new Headers({
 				'Content-Type': 'application/json',
@@ -52,5 +54,19 @@ export class Api {
 		let artId = userTrack.track.id;
 		let parentDirectory = parseInt(artId / 1000);
 		return `${baseUrl}album-art/${parentDirectory}/${artId}.png?t=${sessionStorage.getItem('token')}`;
+	}
+
+	static encodeUriParamsFromObject(params) {
+		if (!params || Object.keys(params).length === 0) {
+			return '';
+		}
+
+		let queryString = Object.keys(params).map(key => {
+			let encodedKey = encodeURIComponent(key);
+			let encodedValue = encodeURIComponent(params[key]);
+			return `${encodedKey}=${encodedValue}`
+		}).join('&');
+
+		return '?' + queryString;
 	}
 }

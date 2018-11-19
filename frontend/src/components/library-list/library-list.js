@@ -120,8 +120,8 @@ export class LibraryList extends React.Component {
 				<table id="track-table" className="track-table">
 					<thead>
 					<tr>
-						{this.props.columns.map((columnName) => {
-							return <th>{columnName}</th>
+						{this.props.columns.map((columnName, index) => {
+							return <th key={index}>{columnName}</th>
 						})}
 					</tr>
 					</thead>

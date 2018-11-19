@@ -2,6 +2,7 @@ import React from 'react';
 import {LibraryList, LogoutButton, PlaybackControls, SongUpload, Api} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
 import {AlbumArt} from "../album-art/album-art";
+import {TrackSourceList} from "../track-source-list/track-source-list";
 
 export class LibraryLayout extends React.Component {
 	constructor(props) {
@@ -10,19 +11,36 @@ export class LibraryLayout extends React.Component {
 			isLoaded: false, // TODO use this to actually indicate loading
 			userTracks: [],
 			nowPlayingTracks: [],
-			playedTrackIndex: 0 // Maybe be null?
+			playedTrackIndex: null,
+			users: []
 		}
 	}
 
 	componentDidMount() {
-		Api.get("library").then(
-			(result) => {
-				this.setState({userTracks: result.content});
-			},
-			(error) => {
+		this.loadSongsForUser(null);
+
+		Api.get("user")
+			.then((result) => {
+				let usersWithoutSelf = result.filter((user) => {
+					return user.email !== sessionStorage.getItem('loggedInEmail');
+				});
+				this.setState({ users: usersWithoutSelf })
+			})
+			.catch((error) => {
 				console.error(error)
-			}
-		)
+			});
+	}
+
+	loadSongsForUser(userId) {
+		// Default to the current user if no user is requested
+		let params = userId ? { userId: userId } : {};
+
+		Api.get("library", params)
+			.then((result) => {
+				this.setState({ userTracks: result.content });
+			}).catch((error) => {
+			console.error(error)
+		});
 	}
 
 	playTrack(trackIndex) {
@@ -39,6 +57,10 @@ export class LibraryLayout extends React.Component {
 				<SongUpload/>
 			</div>
 			<div className="border-layout-west">
+				<TrackSourceList
+					users={this.state.users}
+					loadSongs={this.loadSongsForUser.bind(this)}
+				/>
 				<AlbumArt
 					nowPlayingTracks={this.state.nowPlayingTracks}
 					playedTrackIndex={this.state.playedTrackIndex}

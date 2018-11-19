@@ -27,12 +27,18 @@ class UserLibraryController @Autowired constructor(
     @Transactional(readOnly = true)
 	@GetMapping
     fun getTracks(
+			@RequestParam(value = "userId") userId: Long?,
 			@RequestParam(value = "name") name: String?,
 			@RequestParam(value = "artist") artist: String?,
 			@RequestParam(value = "album") album: String?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<UserLibrary> {
-		return userLibraryRepository.getLibrary(name, artist, album, loadLoggedInUser(), pageable)
+		// The user can pass in an ID of the library they want to view. If omitted, it'll just use their own
+		val idToLoad = userId ?: loadLoggedInUser().id
+
+		// This needs to handle hidden tracks depending on if you are logged in as the userId you're using
+		// Likely should also move into userLibraryService
+		return userLibraryRepository.getLibrary(name, artist, album, idToLoad, pageable)
     }
 
 	@PostMapping

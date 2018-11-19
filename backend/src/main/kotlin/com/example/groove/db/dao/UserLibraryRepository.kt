@@ -15,7 +15,7 @@ interface UserLibraryRepository : CrudRepository<UserLibrary, Long> {
 
 	@Query("SELECT ul " +
 			"FROM UserLibrary ul " +
-			"WHERE ul.user = :user " +
+			"WHERE ul.user.id = :userId " +
 			"AND (:name IS NULL OR ul.track.name LIKE %:name%) " +
 			"AND (:artist IS NULL OR ul.track.artist LIKE %:artist%) " +
 			"AND (:album IS NULL OR ul.track.album LIKE %:album%)"
@@ -24,7 +24,7 @@ interface UserLibraryRepository : CrudRepository<UserLibrary, Long> {
 			@Param("name") name: String? = null,
 			@Param("artist") artist: String? = null,
 			@Param("album") album: String? = null,
-			@Param("user") user: User,
+			@Param("userId") userId: Long,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<UserLibrary>
 }

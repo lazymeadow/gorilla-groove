@@ -8,13 +8,14 @@ export class PlaybackControls extends React.Component {
 
 	componentDidUpdate() {
 		// Start playing the new song
-		if (this.props.playedTrackIndex) {
+		if (this.props.playedTrackIndex != null) {
+			console.log("Play");
 			document.getElementById('audio').play();
 		}
 	}
 
 	render() {
-		let playedTrack = this.props.playedTrackIndex ? this.props.nowPlayingTracks[this.props.playedTrackIndex] : null;
+		let playedTrack = this.props.playedTrackIndex != null ? this.props.nowPlayingTracks[this.props.playedTrackIndex] : null;
 		let src = playedTrack ? Api.getSongResourceLink(playedTrack.track.fileName) : '';
 		return (
 			<div>

@@ -26,7 +26,7 @@ class TrackRepositoryTest @Autowired constructor(
 		val user = createPersistedTestUser()
 		val userLibraryTrack = createPersistedUserLibrary(user = user, track = track)
 
-        val resultPage = userLibraryRepository.getLibrary(user = user)
+        val resultPage = userLibraryRepository.getLibrary(userId = user.id)
 
         assertThat(resultPage.content[0]).isEqualTo(userLibraryTrack)
     }
@@ -40,8 +40,8 @@ class TrackRepositoryTest @Autowired constructor(
 		val user2 = createPersistedTestUser()
 		createPersistedUserLibrary(user = user1, track = track)
 
-		val user1Result = userLibraryRepository.getLibrary(user = user1)
-        val user2Result = userLibraryRepository.getLibrary(user = user2)
+		val user1Result = userLibraryRepository.getLibrary(userId = user1.id)
+        val user2Result = userLibraryRepository.getLibrary(userId = user2.id)
 		assertThat(user1Result.totalElements).isEqualTo(1)
         assertThat(user2Result.totalElements).isEqualTo(0)
     }
@@ -55,21 +55,21 @@ class TrackRepositoryTest @Autowired constructor(
 		val userLibraryTrack1 = createPersistedUserLibrary(user = user, track = track1)
 		val userLibraryTrack2 = createPersistedUserLibrary(user = user, track = track2)
 
-        val resultPage1 = userLibraryRepository.getLibrary(user = user)
+        val resultPage1 = userLibraryRepository.getLibrary(userId = user.id)
         assertThat(resultPage1.totalElements).isEqualTo(2)
 
-		val resultPage2 = userLibraryRepository.getLibrary(user = user, name = "Besaid")
+		val resultPage2 = userLibraryRepository.getLibrary(userId = user.id, name = "Besaid")
 		assertThat(resultPage2.content[0]).isEqualTo(userLibraryTrack1)
 		assertThat(resultPage2.totalElements).isEqualTo(1)
 
-		val resultPage3 = userLibraryRepository.getLibrary(user = user, name = "Nothing! Absolutely Nothing! You so stupid!")
+		val resultPage3 = userLibraryRepository.getLibrary(userId = user.id, name = "Nothing! Absolutely Nothing! You so stupid!")
 		assertThat(resultPage3.totalElements).isEqualTo(0)
 
-		val resultPage4 = userLibraryRepository.getLibrary(user = user, artist = "Mikkas")
+		val resultPage4 = userLibraryRepository.getLibrary(userId = user.id, artist = "Mikkas")
 		assertThat(resultPage4.content[0]).isEqualTo(userLibraryTrack2)
 		assertThat(resultPage4.totalElements).isEqualTo(1)
 
-		val resultPage5 = userLibraryRepository.getLibrary(user = user, album = "Final Fantasy")
+		val resultPage5 = userLibraryRepository.getLibrary(userId = user.id, album = "Final Fantasy")
 		assertThat(resultPage5.content[0]).isEqualTo(userLibraryTrack1)
 		assertThat(resultPage5.totalElements).isEqualTo(1)
     }

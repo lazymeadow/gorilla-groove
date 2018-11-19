@@ -23,6 +23,7 @@ class LoginPageInternal extends React.Component {
 					// Would be a little more secure to store in an httpOnly cookie, but the inconvenience of reworking things at
 					// the moment is really not worth it for a website such as this where an XSS compromise doesn't really matter
 					sessionStorage.setItem('token', result.token);
+					sessionStorage.setItem('loggedInEmail', result.email);
 					this.props.history.push('/'); // Redirect to the main page now that we logged in
 				},
 				(error) => {
