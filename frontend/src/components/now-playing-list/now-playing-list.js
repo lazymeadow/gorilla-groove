@@ -12,6 +12,7 @@ export function NowPlayingList(props) {
 				columns={props.columns}
 				userTracks={props.userTracks}
 				playedTrackIndex={props.playedTrackIndex}
+				playedTrack={props.playedTrack}
 				playTrack={props.playTrack}/>
 		</div>
 	)

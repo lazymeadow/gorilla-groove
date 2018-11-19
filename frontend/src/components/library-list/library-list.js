@@ -79,7 +79,7 @@ export class LibraryList extends React.Component {
 
 		if (this.state.withinDoubleClick) {
 			this.cancelDoubleClick();
-			this.props.playTrack(userTrackIndex);
+			this.props.playTrack(userTrackIndex, this.props.updateNowPlaying);
 		} else {
 			this.setupDoubleClick();
 		}
@@ -134,7 +134,7 @@ export class LibraryList extends React.Component {
 								rowIndex={index}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
-								played={this.props.playedTrackIndex && this.props.playedTrackIndex === index}
+								played={this.props.playedTrack && this.props.playedTrack.id === userTrack.id}
 								onClick={this.handleRowClick.bind(this)}
 							/>
 						);

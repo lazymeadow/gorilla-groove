@@ -11,6 +11,7 @@ export class LibraryLayout extends React.Component {
 			isLoaded: false, // TODO use this to actually indicate loading
 			userTracks: [],
 			nowPlayingTracks: [],
+			playedTrack: null,
 			playedTrackIndex: null,
 			users: []
 		}
@@ -43,11 +44,17 @@ export class LibraryLayout extends React.Component {
 		});
 	}
 
-	playTrack(trackIndex) {
-		this.setState({
-			nowPlayingTracks: this.state.userTracks,
-			playedTrackIndex: trackIndex
-		});
+	playTrack(trackIndex, updateNowPlaying) {
+		let newState = { playedTrackIndex: trackIndex };
+
+		if (updateNowPlaying) {
+			newState.nowPlayingTracks = this.state.userTracks;
+			newState.playedTrack = this.state.userTracks[trackIndex];
+		} else {
+			newState.playedTrack = this.state.nowPlayingTracks[trackIndex];
+		}
+
+		this.setState(newState);
 	}
 
 	render() {
@@ -71,14 +78,20 @@ export class LibraryLayout extends React.Component {
 					columns={["Name", "Artist", "Album", "Length", "Year", "Play Count", "Bit Rate", "Sample Rate", "Added", "Last Played"]}
 					userTracks={this.state.userTracks}
 					playedTrackIndex={this.state.playedTrackIndex}
-					playTrack={this.playTrack.bind(this)}/>
+					playedTrack={this.state.playedTrack}
+					playTrack={this.playTrack.bind(this)}
+					updateNowPlaying={true}
+				/>
 			</div>
 			<div className="border-layout-east track-table-container">
 				<NowPlayingList
 					columns={["#", "Name"]}
 					userTracks={this.state.nowPlayingTracks}
 					playedTrackIndex={this.state.playedTrackIndex}
-					playTrack={this.playTrack.bind(this)}/>
+					playedTrack={this.state.playedTrack}
+					playTrack={this.playTrack.bind(this)}
+					updateNowPlaying={false}
+				/>
 			</div>
 			<div className="border-layout-south">
 				<PlaybackControls

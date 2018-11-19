@@ -9,7 +9,6 @@ export class PlaybackControls extends React.Component {
 	componentDidUpdate() {
 		// Start playing the new song
 		if (this.props.playedTrackIndex != null) {
-			console.log("Play");
 			document.getElementById('audio').play();
 		}
 	}
