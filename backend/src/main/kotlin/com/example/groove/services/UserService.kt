@@ -13,6 +13,11 @@ class UserService @Autowired constructor(
 		private val userRepository: UserRepository
 ) {
 
+	@Transactional(readOnly = true)
+	fun getUserByEmail(email: String): User? {
+		return userRepository.findByEmail(email)
+	}
+
 	@Transactional
 	fun saveUser(user: User) {
 		user.encryptedPassword = BCrypt.hashpw(user.password, BCrypt.gensalt())

@@ -1,8 +1,9 @@
 import React from 'react';
-import {LibraryList, LogoutButton, PlaybackControls, SongUpload, Api} from "..";
+import {LibraryList, UserButton, PlaybackControls, SongUpload, Api} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
 import {AlbumArt} from "../album-art/album-art";
 import {TrackSourceList} from "../track-source-list/track-source-list";
+import {HeaderBar} from "../header-bar/header-bar";
 
 export class LibraryLayout extends React.Component {
 	constructor(props) {
@@ -58,47 +59,48 @@ export class LibraryLayout extends React.Component {
 	}
 
 	render() {
-		return <div className="full-screen border-layout">
-			<div className="border-layout-north">
-				<LogoutButton/>
-				<SongUpload/>
+		return (
+			<div className="full-screen border-layout">
+				<div className="border-layout-north">
+					<HeaderBar/>
+				</div>
+				<div className="border-layout-west">
+					<TrackSourceList
+						users={this.state.users}
+						loadSongs={this.loadSongsForUser.bind(this)}
+					/>
+					<AlbumArt
+						nowPlayingTracks={this.state.nowPlayingTracks}
+						playedTrackIndex={this.state.playedTrackIndex}
+					/>
+				</div>
+				<div className="border-layout-center track-table-container">
+					<LibraryList
+						columns={["Name", "Artist", "Album", "Length", "Year", "Play Count", "Bit Rate", "Sample Rate", "Added", "Last Played"]}
+						userTracks={this.state.userTracks}
+						playedTrackIndex={this.state.playedTrackIndex}
+						playedTrack={this.state.playedTrack}
+						playTrack={this.playTrack.bind(this)}
+						updateNowPlaying={true}
+					/>
+				</div>
+				<div className="border-layout-east track-table-container">
+					<NowPlayingList
+						columns={["#", "Name"]}
+						userTracks={this.state.nowPlayingTracks}
+						playedTrackIndex={this.state.playedTrackIndex}
+						playedTrack={this.state.playedTrack}
+						playTrack={this.playTrack.bind(this)}
+						updateNowPlaying={false}
+					/>
+				</div>
+				<div className="border-layout-south">
+					<PlaybackControls
+						nowPlayingTracks={this.state.nowPlayingTracks}
+						playedTrackIndex={this.state.playedTrackIndex}
+					/>
+				</div>
 			</div>
-			<div className="border-layout-west">
-				<TrackSourceList
-					users={this.state.users}
-					loadSongs={this.loadSongsForUser.bind(this)}
-				/>
-				<AlbumArt
-					nowPlayingTracks={this.state.nowPlayingTracks}
-					playedTrackIndex={this.state.playedTrackIndex}
-				/>
-			</div>
-			<div className="border-layout-center track-table-container">
-				<LibraryList
-					columns={["Name", "Artist", "Album", "Length", "Year", "Play Count", "Bit Rate", "Sample Rate", "Added", "Last Played"]}
-					userTracks={this.state.userTracks}
-					playedTrackIndex={this.state.playedTrackIndex}
-					playedTrack={this.state.playedTrack}
-					playTrack={this.playTrack.bind(this)}
-					updateNowPlaying={true}
-				/>
-			</div>
-			<div className="border-layout-east track-table-container">
-				<NowPlayingList
-					columns={["#", "Name"]}
-					userTracks={this.state.nowPlayingTracks}
-					playedTrackIndex={this.state.playedTrackIndex}
-					playedTrack={this.state.playedTrack}
-					playTrack={this.playTrack.bind(this)}
-					updateNowPlaying={false}
-				/>
-			</div>
-			<div className="border-layout-south">
-				<PlaybackControls
-					nowPlayingTracks={this.state.nowPlayingTracks}
-					playedTrackIndex={this.state.playedTrackIndex}
-				/>
-			</div>
-		</div>;
+		);
 	}
 }
