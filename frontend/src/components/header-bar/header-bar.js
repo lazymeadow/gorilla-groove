@@ -5,7 +5,7 @@ export function HeaderBar() {
 	return (
 		<div className="header-bar">
 			<SongUpload/>
-			<div style={{float: 'right'}}>
+			<div className="user-button-wrapper">
 				<UserButton/>
 			</div>
 		</div>
