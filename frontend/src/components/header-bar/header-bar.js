@@ -3,7 +3,7 @@ import {UserButton, SongUpload} from "..";
 
 export function HeaderBar() {
 	return (
-		<div>
+		<div className="header-bar">
 			<SongUpload/>
 			<div style={{float: 'right'}}>
 				<UserButton/>
