@@ -51,7 +51,7 @@ class UserLibraryController @Autowired constructor(
 	}
 
 	@Transactional
-	@PostMapping("/mark-track-as-listened-to")
+	@PostMapping("/mark-listened")
 	fun markTrackAsListenedTo(@RequestBody markTrackAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
 		val userLibraryTrack = userLibraryRepository.findById(markTrackAsReadDTO.userLibraryId).unwrap()
 

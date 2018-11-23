@@ -1,17 +1,21 @@
 import React from "react";
-import {formatDateFromUnixTime, formatTimeFromSeconds} from "../../formatters";
+import {formatDate, formatTimeFromSeconds} from "../../formatters";
 
 export class SongRow extends React.Component {
 	constructor(props) {
 		super(props);
 	}
 
+	// This is currently causing issues with track-level updates (like updating play count)
+	// Because the value is updated directly on the track, this.props and nextProps already
+	// have the same value for the so we can't detect a change properly
+	/*
 	shouldComponentUpdate(nextProps) {
-		// We don't want React to re-render every row whenever any row is selected
-		// This might have to be tweaked later to look at more properties
 		return this.props.selected !== nextProps.selected
 			|| this.props.played !== nextProps.played
+			|| this.props.userTrack.playCount !== nextProps.userTrack.playCount
 	}
+	*/
 
 	// noinspection JSMethodCanBeStatic
 	getUserTrackPropertyValue(property, userTrack, rowIndex) {
@@ -35,9 +39,9 @@ export class SongRow extends React.Component {
 			case 'Sample Rate':
 				return userTrack.track.sampleRate;
 			case 'Added':
-				return formatDateFromUnixTime(userTrack.createdAt);
+				return formatDate(userTrack.createdAt);
 			case 'Last Played':
-				return formatDateFromUnixTime(userTrack.lastPlayed);
+				return formatDate(userTrack.lastPlayed);
 		}
 	}
 

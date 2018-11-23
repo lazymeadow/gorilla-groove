@@ -1,9 +1,9 @@
-export function formatDateFromUnixTime(unixTime) {
-	if (!unixTime) {
+export function formatDate(dateString) {
+	if (!dateString) {
 		return '';
 	}
 
-	let date = new Date(unixTime);
+	let date = new Date(dateString);
 	return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`
 }
 

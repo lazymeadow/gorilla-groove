@@ -1,5 +1,5 @@
 import React from 'react';
-import {LibraryList, UserButton, PlaybackControls, SongUpload, Api} from "..";
+import {LibraryList, PlaybackControls, Api} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
 import {AlbumArt} from "../album-art/album-art";
 import {TrackSourceList} from "../track-source-list/track-source-list";
@@ -10,7 +10,7 @@ export class LibraryLayout extends React.Component {
 		super(props);
 		this.state = {
 			isLoaded: false, // TODO use this to actually indicate loading
-			userTracks: [],
+			userTracks: [], // LibraryTracks is probably a better name
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
@@ -58,6 +58,13 @@ export class LibraryLayout extends React.Component {
 		this.setState(newState);
 	}
 
+	forceTrackUpdate() {
+		this.setState({
+			nowPlayingTracks: this.state.nowPlayingTracks,
+			userTracks: this.state.userTracks
+		});
+	}
+
 	render() {
 		return (
 			<div className="full-screen border-layout">
@@ -67,7 +74,7 @@ export class LibraryLayout extends React.Component {
 				<div className="border-layout-west">
 					<TrackSourceList
 						users={this.state.users}
-						loadSongs={this.loadSongsForUser.bind(this)}
+						loadSongs={(...args) => this.loadSongsForUser(...args)}
 					/>
 					<AlbumArt
 						nowPlayingTracks={this.state.nowPlayingTracks}
@@ -80,7 +87,7 @@ export class LibraryLayout extends React.Component {
 						userTracks={this.state.userTracks}
 						playedTrackIndex={this.state.playedTrackIndex}
 						playedTrack={this.state.playedTrack}
-						playTrack={this.playTrack.bind(this)}
+						playTrack={(...args) => this.playTrack(...args)}
 						updateNowPlaying={true}
 					/>
 				</div>
@@ -90,7 +97,7 @@ export class LibraryLayout extends React.Component {
 						userTracks={this.state.nowPlayingTracks}
 						playedTrackIndex={this.state.playedTrackIndex}
 						playedTrack={this.state.playedTrack}
-						playTrack={this.playTrack.bind(this)}
+						playTrack={(...args) => this.playTrack(...args)}
 						updateNowPlaying={false}
 					/>
 				</div>
@@ -98,6 +105,7 @@ export class LibraryLayout extends React.Component {
 					<PlaybackControls
 						nowPlayingTracks={this.state.nowPlayingTracks}
 						playedTrackIndex={this.state.playedTrackIndex}
+						forceTrackUpdate={() => this.forceTrackUpdate()}
 					/>
 				</div>
 			</div>

@@ -28,12 +28,11 @@ export class PlaybackControls extends React.Component {
 	// the duration is NOT YET KNOWN when the song changes, because it hasn't fully loaded the metadata. This event
 	// triggers some time after the song change, once the metadata itself is loaded
 	handleDurationChange(duration) {
-		// If someone listens to 51% of a song, we want to mark it as listened to. Keep track of what that target is
-		this.setState({ timeTarget: duration * 0.51 })
+		// If someone listens to 60% of a song, we want to mark it as listened to. Keep track of what that target is
+		this.setState({ timeTarget: duration * 0.60 })
 	}
 
 	handleSongChange() {
-		console.log("Handle song change");
 		// Start playing the new song
 		if (this.props.playedTrackIndex != null) {
 			let audio = document.getElementById('audio');
@@ -54,7 +53,6 @@ export class PlaybackControls extends React.Component {
 		// If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
 		// manually altered the song's progress. Do no other checks or updates
 		if (timeElapsed < 0 || timeElapsed > 1) {
-			console.log("Time was adjusted. Skipping");
 			this.setState(newProperties);
 			return;
 		}
@@ -62,9 +60,23 @@ export class PlaybackControls extends React.Component {
 		newProperties.totalTimeListened = this.state.totalTimeListened + timeElapsed;
 
 		if (this.state.timeTarget && newProperties.totalTimeListened > this.state.timeTarget && !this.state.listenedTo) {
-			// TODO update time listened to on the backend
-			console.log("Song was listened to");
 			newProperties.listenedTo = true;
+
+			let playedTrack = this.props.nowPlayingTracks[this.props.playedTrackIndex];
+			Api.post('library/mark-listened', { userLibraryId: playedTrack.id })
+				.then(() => {
+					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
+					playedTrack.playCount++;
+					playedTrack.lastPlayed = new Date();
+
+					// We updated the reference rather than dealing with the hassle of updating via setState for multiple collections
+					// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
+					this.props.forceTrackUpdate();
+				})
+				.catch((e) => {
+					console.error('Failed to update play count');
+					console.error(e);
+				});
 		}
 
 		this.setState(newProperties);
