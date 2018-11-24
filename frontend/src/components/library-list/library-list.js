@@ -9,7 +9,8 @@ export class LibraryList extends React.Component {
 
 		this.state = {
 			selected: {},
-			firstSelected: null,
+			firstSelectedIndex: null,
+			lastSelectedIndex: null,
 			withinDoubleClick: false,
 			doubleClickTimeout: null
 		}
@@ -51,23 +52,24 @@ export class LibraryList extends React.Component {
 
 	handleRowClick(event, userTrackIndex) {
 		let selected = this.state.selected;
+		this.setState({ lastSelectedIndex: userTrackIndex });
 
 		// Always set the first selected if there wasn't one
-		if (!this.state.firstSelected) {
-			this.setState({ firstSelected: userTrackIndex })
+		if (!this.state.firstSelectedIndex) {
+			this.setState({ firstSelectedIndex: userTrackIndex })
 		}
 
 		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
 		if (!event.ctrlKey && !event.shiftKey) {
 			selected = {};
-			this.setState({ firstSelected: userTrackIndex })
+			this.setState({ firstSelectedIndex: userTrackIndex })
 		}
 
 		// If we're holding shift, we should select only have selected the rows between this click and the first click
-		if (event.shiftKey && this.state.firstSelected) {
+		if (event.shiftKey && this.state.firstSelectedIndex) {
 			selected = {};
-			let startingRow = Math.min(this.state.firstSelected, userTrackIndex);
-			let endingRow = Math.max(this.state.firstSelected, userTrackIndex);
+			let startingRow = Math.min(this.state.firstSelectedIndex, userTrackIndex);
+			let endingRow = Math.max(this.state.firstSelectedIndex, userTrackIndex);
 			if (startingRow < endingRow) {
 				endingRow++
 			}
@@ -134,6 +136,7 @@ export class LibraryList extends React.Component {
 								rowIndex={index}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
+								showContextMenu={index === this.state.lastSelectedIndex}
 								played={this.props.playedTrack && this.props.playedTrack.id === userTrack.id}
 								onClick={this.handleRowClick.bind(this)}
 							/>

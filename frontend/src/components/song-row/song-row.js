@@ -1,5 +1,6 @@
 import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
+import {PopoutMenu} from "../popout-menu/popout-menu";
 
 export class SongRow extends React.Component {
 	constructor(props) {
@@ -56,12 +57,21 @@ export class SongRow extends React.Component {
 				{this.props.columns.map((columnName, index) => {
 					return (
 						<td key={index}>
-							<div>
+							<div className={this.props.showContextMenu && index === 0 ? 'shifted-entry' : ''}>
 								{this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 							</div>
 						</td>
 					)
 				})}
+				{this.props.showContextMenu ? <PopoutMenu
+						mainItem={{
+							className: "song-menu",
+							text: '⚙'
+						}}
+						menuItems={[
+							{ text: "Test", clickHandler: () => alert("Settings") }
+						]}
+					/> : <td/>}
 			</tr>
 		);
 	}
