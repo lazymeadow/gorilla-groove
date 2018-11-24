@@ -21,7 +21,8 @@ export class PopoutMenu extends React.Component {
 		this.setState({expanded: false});
 	}
 
-	toggleExpanded() {
+	toggleExpanded(event) {
+		event.stopPropagation();
 		this.setState({expanded: !this.state.expanded});
 	}
 
@@ -29,7 +30,7 @@ export class PopoutMenu extends React.Component {
 		let menuClass = this.state.expanded ? '' : 'hidden';
 		return (
 			<div>
-				<div onClick={() => this.toggleExpanded()} className={this.props.mainItem.className}>
+				<div onClick={(e) => this.toggleExpanded(e)} className={this.props.mainItem.className}>
 					{this.props.mainItem.text}
 				</div>
 				<div className={`popout-menu ${menuClass}`}>
