@@ -1,30 +1,11 @@
 import React from 'react';
 import {withRouter} from "react-router-dom";
 import {Api} from "../../api";
+import {PopoutMenu} from "../popout-menu/popout-menu";
 
 class LogoutButtonInternal extends React.Component {
 	constructor(props) {
 		super(props);
-
-		this.state = {
-			expanded: false
-		}
-	}
-
-	componentDidMount() {
-		document.body.addEventListener('click', () => this.closeMenu());
-	}
-
-	componentWillUnmount() {
-		document.body.removeEventListener('click', () => this.closeMenu());
-	}
-
-	closeMenu() {
-		this.setState({expanded: false});
-	}
-
-	toggleExpanded() {
-		this.setState({expanded: !this.state.expanded});
 	}
 
 	logout(event) {
@@ -40,18 +21,20 @@ class LogoutButtonInternal extends React.Component {
 	}
 
 	render() {
-		let menuClass = this.state.expanded ? '' : 'hidden';
 		return (
 			<div className="user-menu">
-				<div className="user-button" onClick={() => this.toggleExpanded()}>
-					{sessionStorage.getItem('loggedInUserName')}
-				</div>
-				<div className={`popout-menu ${menuClass}`}>
-					<ul>
-						<li>Settings</li>
-						<li onClick={this.logout.bind(this)}>Logout</li>
-					</ul>
-				</div>
+				<PopoutMenu
+					mainItem={{
+						className: "user-button",
+						text: sessionStorage.getItem('loggedInUserName')
+					}}
+					menuItems={[
+						{ text: "Settings", clickHandler: () => alert("Settings") },
+						{ text: "Logout", clickHandler: (e) => this.logout(e) }
+					]}
+				/>
+				{/*<div className="user-button" onClick={() => this.toggleExpanded()}>*/}
+				{/*</div>*/}
 			</div>
 		)
 	}

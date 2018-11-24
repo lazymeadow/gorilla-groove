@@ -1,0 +1,20 @@
+.popout-menu {
+  position: absolute;
+  right: 1px;
+  z-index: 5;
+  background-color: lighten(@deep-blue, 10);
+
+  ul {
+    padding: 0;
+    margin: 5px 0 5px 0;
+  }
+
+  li {
+    padding-left: 8px;
+    padding-right: 8px;
+    cursor: pointer;
+    &:hover {
+      background-color: @deep-blue;
+    }
+  }
+}
