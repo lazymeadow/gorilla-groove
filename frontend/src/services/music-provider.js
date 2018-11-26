@@ -14,7 +14,8 @@ export class MusicProvider extends React.Component {
 			playedTrackIndex: null,
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
-			playTrackIndex: (...args) => this.playTrackIndex(...args),
+			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
+			playTracks: (...args) => this.playTracks(...args),
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
 		}
@@ -32,7 +33,7 @@ export class MusicProvider extends React.Component {
 		});
 	}
 
-	playTrackIndex(trackIndex, updateNowPlaying) {
+	playFromTrackIndex(trackIndex, updateNowPlaying) {
 		this.setState({ playedTrackIndex: trackIndex });
 
 		if (updateNowPlaying) {
@@ -43,6 +44,14 @@ export class MusicProvider extends React.Component {
 		} else {
 			this.setState({ playedTrack: this.state.nowPlayingTracks[trackIndex] });
 		}
+	}
+
+	playTracks(tracks) {
+		this.setState({
+			nowPlayingTracks: tracks,
+			playedTrack: tracks[0],
+			playedTrackIndex: 0
+		})
 	}
 
 	playTracksNext(tracks) {

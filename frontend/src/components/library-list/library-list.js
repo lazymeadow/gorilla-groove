@@ -82,7 +82,7 @@ export class LibraryList extends React.Component {
 
 		if (this.state.withinDoubleClick) {
 			this.cancelDoubleClick();
-			this.context.playTrackIndex(userTrackIndex, this.props.updateNowPlaying);
+			this.context.playFromTrackIndex(userTrackIndex, this.props.updateNowPlaying);
 		} else {
 			this.setupDoubleClick();
 		}
@@ -121,14 +121,6 @@ export class LibraryList extends React.Component {
 		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
 	}
 
-	playTracksNext() {
-		this.context.playTracksNext(this.getSelectedTracks());
-	}
-
-	playTracksLast() {
-		this.context.playTracksLast(this.getSelectedTracks());
-	}
-
 	render() {
 		return (
 			<div>
@@ -151,10 +143,7 @@ export class LibraryList extends React.Component {
 								selected={this.state.selected[index.toString()]}
 								showContextMenu={index === this.state.lastSelectedIndex}
 								onClick={this.handleRowClick.bind(this)}
-								trackFunctions={{
-									playTracksNext: () => this.playTracksNext(),
-									playTracksLast: () => this.playTracksLast(),
-								}}
+								getSelectedTracks={() => this.getSelectedTracks()}
 							/>
 						);
 					})}

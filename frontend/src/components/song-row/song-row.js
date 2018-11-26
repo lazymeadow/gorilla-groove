@@ -72,15 +72,19 @@ export class SongRow extends React.Component {
 							text: '⚙'
 						}}
 						menuItems={[
-							{ text: "Play Now", clickHandler: () => alert("Settings") },
+							{ text: "Play Now", clickHandler: (e) => {
+									e.stopPropagation();
+									this.context.playTracks(this.props.getSelectedTracks())
+								}
+							},
 							{ text: "Play Next", clickHandler: (e) => {
 									e.stopPropagation();
-									this.props.trackFunctions.playTracksNext()
+									this.context.playTracksNext(this.props.getSelectedTracks())
 								}
 							},
 							{ text: "Play Last", clickHandler: (e) => {
 									e.stopPropagation();
-									this.props.trackFunctions.playTracksLast()
+									this.context.playTracksLast(this.props.getSelectedTracks())
 								}
 							},
 							{ text: "Delete", clickHandler: () => alert("Settings") }
