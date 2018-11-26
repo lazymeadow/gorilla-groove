@@ -1,24 +1,33 @@
 import React from 'react';
 import {Api} from "../../api";
+import {MusicContext} from "../../services/music-provider";
 
-export function AlbumArt(props) {
+let defaultImage = './static/unknown-art.jpg';
 
-	let defaultImage = './static/unknown-art.jpg';
-	let userTrack = props.playedTrackIndex ? props.nowPlayingTracks[props.playedTrackIndex] : null;
-	let imgSrc = userTrack ? Api.getAlbumArtResourceLink(userTrack) : defaultImage;
+export class AlbumArt extends React.Component {
+	constructor(props) {
+		super(props);
+	}
 
-	let addDefaultSrc = function(event){
+	// noinspection JSMethodCanBeStatic
+	addDefaultSrc(event){
 		event.target.src = defaultImage;
 	};
 
-	return (
-		<div className="album-art-container">
-			<div className="album-art-header">Album Art</div>
-			<img
-				className="album-art"
-				src={imgSrc}
-				onError={addDefaultSrc}
-			/>
-		</div>
-	)
+	render() {
+		let userTrack = this.context.playedTrack;
+		let imgSrc = userTrack ? Api.getAlbumArtResourceLink(userTrack) : defaultImage;
+
+		return (
+			<div className="album-art-container">
+				<div className="album-art-header">Album Art</div>
+				<img
+					className="album-art"
+					src={imgSrc}
+					onError={this.addDefaultSrc}
+				/>
+			</div>
+		)
+	}
 }
+AlbumArt.contextType = MusicContext;

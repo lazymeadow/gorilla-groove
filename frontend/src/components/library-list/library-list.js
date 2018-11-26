@@ -2,6 +2,7 @@ import React from 'react';
 import ColumnResizer from 'column-resizer';
 import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
+import {MusicContext} from "../../services/music-provider";
 
 export class LibraryList extends React.Component {
 	constructor(props) {
@@ -81,7 +82,7 @@ export class LibraryList extends React.Component {
 
 		if (this.state.withinDoubleClick) {
 			this.cancelDoubleClick();
-			this.props.playTrack(userTrackIndex, this.props.updateNowPlaying);
+			this.context.playTrackIndex(userTrackIndex, this.props.updateNowPlaying);
 		} else {
 			this.setupDoubleClick();
 		}
@@ -137,7 +138,6 @@ export class LibraryList extends React.Component {
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
 								showContextMenu={index === this.state.lastSelectedIndex}
-								played={this.props.playedTrack && this.props.playedTrack.id === userTrack.id}
 								onClick={this.handleRowClick.bind(this)}
 							/>
 						);
@@ -148,3 +148,4 @@ export class LibraryList extends React.Component {
 		)
 	};
 }
+LibraryList.contextType = MusicContext;

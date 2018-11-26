@@ -1,5 +1,6 @@
 import React from 'react';
 import TreeView from 'react-treeview'
+import {MusicContext} from "../../services/music-provider";
 
 export class TrackSourceList extends React.Component {
 	constructor(props) {
@@ -35,7 +36,7 @@ export class TrackSourceList extends React.Component {
 
 	selectLibrary() {
 		this.setState({ selectedSourceType: 'Library' });
-		this.props.loadSongs(null);
+		this.context.loadSongsForUser(null);
 	}
 
 	selectEntry(entry) {
@@ -45,7 +46,7 @@ export class TrackSourceList extends React.Component {
 			selectedId: entry.id
 		});
 
-		this.props.loadSongs(entry.id);
+		this.context.loadSongsForUser(entry.id);
 	}
 
 	render() {
@@ -91,3 +92,4 @@ export class TrackSourceList extends React.Component {
 		);
 	}
 }
+TrackSourceList.contextType = MusicContext;

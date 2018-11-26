@@ -1,6 +1,7 @@
 import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
 import {PopoutMenu} from "../popout-menu/popout-menu";
+import {MusicContext} from "../../services/music-provider";
 
 export class SongRow extends React.Component {
 	constructor(props) {
@@ -48,11 +49,13 @@ export class SongRow extends React.Component {
 
 	render() {
 		let selected = this.props.selected ? "selected" : "";
-		let played = this.props.played ? "played" : "";
+		let isPlayed = this.context.playedTrack && this.context.playedTrack.id === this.props.userTrack.id;
+		let playedClass = isPlayed ? 'played' : '';
+
 		return (
 			<tr
 				onClick={(event) => {this.props.onClick(event, this.props.rowIndex)}}
-				className={`song-row ${selected} ${played}`}
+				className={`song-row ${selected} ${playedClass}`}
 			>
 				{this.props.columns.map((columnName, index) => {
 					return (
@@ -63,7 +66,7 @@ export class SongRow extends React.Component {
 						</td>
 					)
 				})}
-				{this.props.showContextMenu ? <PopoutMenu
+				{this.props.showContextMenu ? <td><PopoutMenu
 						mainItem={{
 							className: "song-menu",
 							text: '⚙'
@@ -71,7 +74,7 @@ export class SongRow extends React.Component {
 						menuItems={[
 							{ text: "Test", clickHandler: () => alert("Settings") }
 						]}
-					/> : <td/>}
+				/></td> : <td/>}
 			</tr>
 		);
 	}
@@ -80,4 +83,5 @@ export class SongRow extends React.Component {
 SongRow.defaultProps = {
 	selected: false
 };
+SongRow.contextType = MusicContext;
 

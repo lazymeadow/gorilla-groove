@@ -1,10 +1,12 @@
 import React from 'react';
 import {Api} from "../../api";
+import {MusicContext} from "../../services/music-provider";
 
 export class PlaybackControls extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			playedTrackId: null,
 			lastTime: 0,
 			totalTimeListened: 0,
 			timeTarget: null,
@@ -18,8 +20,8 @@ export class PlaybackControls extends React.Component {
 		audio.addEventListener('durationchange', (e) => { this.handleDurationChange(e.target.duration) });
 	}
 
-	componentDidUpdate(nextProps) {
-		if (nextProps.playedTrackIndex !== this.props.playedTrackIndex) {
+	componentDidUpdate() {
+		if (!this.state.playedTrackId || this.context.playedTrack.id !== this.state.playedTrackId) {
 			this.handleSongChange();
 		}
 	}
@@ -29,16 +31,17 @@ export class PlaybackControls extends React.Component {
 	// triggers some time after the song change, once the metadata itself is loaded
 	handleDurationChange(duration) {
 		// If someone listens to 60% of a song, we want to mark it as listened to. Keep track of what that target is
-		this.setState({ timeTarget: duration * 0.60 })
+		this.setState({ timeTarget: duration * 0.05 })
 	}
 
 	handleSongChange() {
 		// Start playing the new song
-		if (this.props.playedTrackIndex != null) {
+		if (this.context.playedTrackIndex != null) {
 			let audio = document.getElementById('audio');
 			audio.play();
 
 			this.setState({
+				playedTrackId: this.context.playedTrack.id,
 				lastTime: 0,
 				totalTimeListened: 0,
 				listenedTo: false
@@ -62,7 +65,7 @@ export class PlaybackControls extends React.Component {
 		if (this.state.timeTarget && newProperties.totalTimeListened > this.state.timeTarget && !this.state.listenedTo) {
 			newProperties.listenedTo = true;
 
-			let playedTrack = this.props.nowPlayingTracks[this.props.playedTrackIndex];
+			let playedTrack = this.context.playedTrack;
 			Api.post('library/mark-listened', { userLibraryId: playedTrack.id })
 				.then(() => {
 					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
@@ -71,7 +74,7 @@ export class PlaybackControls extends React.Component {
 
 					// We updated the reference rather than dealing with the hassle of updating via setState for multiple collections
 					// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
-					this.props.forceTrackUpdate();
+					this.context.forceTrackUpdate();
 				})
 				.catch((e) => {
 					console.error('Failed to update play count');
@@ -83,7 +86,7 @@ export class PlaybackControls extends React.Component {
 	}
 
 	render() {
-		let playedTrack = this.props.playedTrackIndex != null ? this.props.nowPlayingTracks[this.props.playedTrackIndex] : null;
+		let playedTrack = this.context.playedTrack;
 		let src = playedTrack ? Api.getSongResourceLink(playedTrack.track.fileName) : '';
 		return (
 			<div>
@@ -99,3 +102,4 @@ export class PlaybackControls extends React.Component {
 		)
 	}
 }
+PlaybackControls.contextType = MusicContext;
