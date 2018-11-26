@@ -13,8 +13,10 @@ export class MusicProvider extends React.Component {
 			playedTrack: null,
 			playedTrackIndex: null,
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
+			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playTrackIndex: (...args) => this.playTrackIndex(...args),
-			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args)
+			playTracksNext: (...args) => this.playTracksNext(...args),
+			playTracksLast: (...args) => this.playTracksLast(...args),
 		}
 	}
 
@@ -35,12 +37,23 @@ export class MusicProvider extends React.Component {
 
 		if (updateNowPlaying) {
 			this.setState({
-				nowPlayingTracks: this.state.libraryTracks,
+				nowPlayingTracks: this.state.libraryTracks.slice(0),
 				playedTrack: this.state.libraryTracks[trackIndex]
 			})
 		} else {
 			this.setState({ playedTrack: this.state.nowPlayingTracks[trackIndex] });
 		}
+	}
+
+	playTracksNext(tracks) {
+		// Feels kind of dirty to mutate the original then pass it in as setState
+		this.state.nowPlayingTracks.splice(this.state.playedTrackIndex + 1, 0, ...tracks);
+		this.setState({ nowPlayingTracks: this.state.nowPlayingTracks });
+	}
+
+	playTracksLast(tracks) {
+		this.state.nowPlayingTracks.splice(this.state.nowPlayingTracks.length, 0, ...tracks);
+		this.setState({ nowPlayingTracks: this.state.nowPlayingTracks });
 	}
 
 	forceTrackUpdate() {

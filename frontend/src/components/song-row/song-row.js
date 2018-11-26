@@ -49,7 +49,7 @@ export class SongRow extends React.Component {
 
 	render() {
 		let selected = this.props.selected ? "selected" : "";
-		let isPlayed = this.context.playedTrack && this.context.playedTrack.id === this.props.userTrack.id;
+		let isPlayed = this.context.playedTrackIndex && this.context.playedTrackIndex === this.props.rowIndex;
 		let playedClass = isPlayed ? 'played' : '';
 
 		return (
@@ -72,7 +72,18 @@ export class SongRow extends React.Component {
 							text: '⚙'
 						}}
 						menuItems={[
-							{ text: "Test", clickHandler: () => alert("Settings") }
+							{ text: "Play Now", clickHandler: () => alert("Settings") },
+							{ text: "Play Next", clickHandler: (e) => {
+									e.stopPropagation();
+									this.props.trackFunctions.playTracksNext()
+								}
+							},
+							{ text: "Play Last", clickHandler: (e) => {
+									e.stopPropagation();
+									this.props.trackFunctions.playTracksLast()
+								}
+							},
+							{ text: "Delete", clickHandler: () => alert("Settings") }
 						]}
 				/></td> : <td/>}
 			</tr>

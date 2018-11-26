@@ -117,6 +117,18 @@ export class LibraryList extends React.Component {
 		}
 	}
 
+	getSelectedTracks() {
+		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
+	}
+
+	playTracksNext() {
+		this.context.playTracksNext(this.getSelectedTracks());
+	}
+
+	playTracksLast() {
+		this.context.playTracksLast(this.getSelectedTracks());
+	}
+
 	render() {
 		return (
 			<div>
@@ -132,13 +144,17 @@ export class LibraryList extends React.Component {
 					{this.props.userTracks.map((userTrack, index) => {
 						return (
 							<SongRow
-								key={userTrack.id}
+								key={index}
 								columns={this.props.columns}
 								rowIndex={index}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
 								showContextMenu={index === this.state.lastSelectedIndex}
 								onClick={this.handleRowClick.bind(this)}
+								trackFunctions={{
+									playTracksNext: () => this.playTracksNext(),
+									playTracksLast: () => this.playTracksLast(),
+								}}
 							/>
 						);
 					})}
