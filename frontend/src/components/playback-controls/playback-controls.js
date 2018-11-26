@@ -18,6 +18,7 @@ export class PlaybackControls extends React.Component {
 		let audio = document.getElementById('audio');
 		audio.addEventListener('timeupdate', (e) => { this.handleTimeTick(e.target.currentTime) });
 		audio.addEventListener('durationchange', (e) => { this.handleDurationChange(e.target.duration) });
+		audio.addEventListener('ended', (e) => { this.handleSongEnd() });
 	}
 
 	componentDidUpdate() {
@@ -31,7 +32,7 @@ export class PlaybackControls extends React.Component {
 	// triggers some time after the song change, once the metadata itself is loaded
 	handleDurationChange(duration) {
 		// If someone listens to 60% of a song, we want to mark it as listened to. Keep track of what that target is
-		this.setState({ timeTarget: duration * 0.05 })
+		this.setState({ timeTarget: duration * 0.60 })
 	}
 
 	handleSongChange() {
@@ -83,6 +84,13 @@ export class PlaybackControls extends React.Component {
 		}
 
 		this.setState(newProperties);
+	}
+
+	handleSongEnd() {
+		// TODO logic for repeat / shuffle
+		if (this.context.playedTrackIndex + 1 < this.context.nowPlayingTracks.length) {
+			this.context.playNext()
+		}
 	}
 
 	render() {

@@ -18,6 +18,7 @@ export class MusicProvider extends React.Component {
 			playTracks: (...args) => this.playTracks(...args),
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
+			playNext: (...args) => this.playNext(...args)
 		}
 	}
 
@@ -70,6 +71,14 @@ export class MusicProvider extends React.Component {
 			nowPlayingTracks: this.state.nowPlayingTracks,
 			libraryTracks: this.state.libraryTracks
 		});
+	}
+
+	playNext() {
+		let newTrackIndex = this.state.playedTrackIndex + 1;
+		this.setState({
+			playedTrackIndex: newTrackIndex,
+			playedTrack: this.state.nowPlayingTracks[newTrackIndex]
+		})
 	}
 
 	render() {
