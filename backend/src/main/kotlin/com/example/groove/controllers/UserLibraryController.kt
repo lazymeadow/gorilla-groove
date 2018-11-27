@@ -33,12 +33,7 @@ class UserLibraryController @Autowired constructor(
 			@RequestParam(value = "album") album: String?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<UserLibrary> {
-		// The user can pass in an ID of the library they want to view. If omitted, it'll just use their own
-		val idToLoad = userId ?: loadLoggedInUser().id
-
-		// This needs to handle hidden tracks depending on if you are logged in as the userId you're using
-		// Likely should also move into userLibraryService
-		return userLibraryRepository.getLibrary(name, artist, album, idToLoad, pageable)
+		return userLibraryService.getUserLibrary(name, artist, album, userId, pageable)
     }
 
 	@PostMapping
@@ -67,11 +62,24 @@ class UserLibraryController @Autowired constructor(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
+	@Transactional
+	@PostMapping("/set-hidden")
+	fun setHidden(@RequestBody setHiddenDTO: SetHiddenDTO): ResponseEntity<String> {
+		userLibraryRepository.setHiddenForUser(setHiddenDTO.userLibraryIds, loadLoggedInUser().id, setHiddenDTO.isHidden)
+
+		return ResponseEntity(HttpStatus.OK)
+	}
+
 	data class AddToLibraryDTO(
 			val trackId: Long
 	)
 
 	data class MarkTrackAsListenedToDTO(
 			val userLibraryId: Long
+	)
+
+	data class SetHiddenDTO(
+			val userLibraryIds: List<Long>,
+			val isHidden: Boolean
 	)
 }

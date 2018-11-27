@@ -87,6 +87,16 @@ export class SongRow extends React.Component {
 									this.context.playTracksLast(this.props.getSelectedTracks())
 								}
 							},
+							{ text: "Make Private", clickHandler: (e) => {
+									e.stopPropagation();
+									this.context.setHidden(this.props.getSelectedTracks(), true);
+								}
+							},
+							{ text: "Make Public", clickHandler: (e) => {
+									e.stopPropagation();
+									this.context.setHidden(this.props.getSelectedTracks(), false);
+								}
+							},
 							{ text: "Delete", clickHandler: () => alert("Settings") }
 						]}
 				/></td> : <td/>}

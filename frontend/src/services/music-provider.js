@@ -18,7 +18,8 @@ export class MusicProvider extends React.Component {
 			playTracks: (...args) => this.playTracks(...args),
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
-			playNext: (...args) => this.playNext(...args)
+			playNext: (...args) => this.playNext(...args),
+			setHidden: (...args) => this.setHidden(...args)
 		}
 	}
 
@@ -79,6 +80,18 @@ export class MusicProvider extends React.Component {
 			playedTrackIndex: newTrackIndex,
 			playedTrack: this.state.nowPlayingTracks[newTrackIndex]
 		})
+	}
+
+	setHidden(tracks, isHidden) {
+		Api.post('library/set-hidden', {
+			userLibraryIds: tracks.map(track => track.id),
+			isHidden: isHidden
+		}).then(() => {
+			tracks.forEach(track => track.hidden = isHidden);
+			this.forceTrackUpdate();
+		}).catch(error => {
+			console.error(error);
+		});
 	}
 
 	render() {

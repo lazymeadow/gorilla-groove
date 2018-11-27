@@ -5,8 +5,12 @@ import com.example.groove.db.dao.UserLibraryRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.UserLibrary
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
+
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.crossstore.ChangeSetPersister
 import org.springframework.stereotype.Service
@@ -18,6 +22,21 @@ class UserLibraryService @Autowired constructor(
 		private val userLibraryRepository: UserLibraryRepository,
 		private val trackRepository: TrackRepository
 ) {
+
+	@Transactional
+	fun getUserLibrary(
+			name: String?,
+			artist: String?,
+			album: String?,
+			userId: Long?,
+			pageable: Pageable
+	): Page<UserLibrary> {
+		val loggedInId = loadLoggedInUser().id
+		val idToLoad = userId ?: loggedInId
+		val loadHidden = loggedInId == idToLoad
+
+		return userLibraryRepository.getLibrary(name, artist, album, idToLoad, loadHidden, pageable)
+	}
 
 	@Transactional
 	fun addTrack(user: User, trackId: Long) {
