@@ -5,7 +5,6 @@ import com.example.groove.db.model.UserLibrary
 import com.example.groove.services.FileStorageService
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -18,8 +17,8 @@ import java.io.IOException
 
 @RestController
 @RequestMapping("file")
-class FileController @Autowired constructor(
-        private val fileStorageService: FileStorageService,
+class FileController(
+		private val fileStorageService: FileStorageService,
 		private val userLibraryRepository: UserLibraryRepository
 ) {
 

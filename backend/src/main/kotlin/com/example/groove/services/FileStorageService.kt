@@ -6,7 +6,6 @@ import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
@@ -24,7 +23,7 @@ import java.util.*
 import javax.imageio.ImageIO
 
 @Service
-class FileStorageService @Autowired constructor(
+class FileStorageService(
 		fileStorageProperties: FileStorageProperties,
 		musicProperties: MusicProperties,
 		private val ffmpegService: FFmpegService,

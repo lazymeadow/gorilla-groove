@@ -6,7 +6,6 @@ import com.example.groove.services.UserLibraryService
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -18,7 +17,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("library")
-class UserLibraryController @Autowired constructor(
+class UserLibraryController(
 		private val userLibraryService: UserLibraryService,
 		private val userLibraryRepository: UserLibraryRepository
 ) {

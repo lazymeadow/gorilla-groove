@@ -4,13 +4,12 @@ import com.example.groove.security.UserAuthenticationService
 import com.example.groove.services.UserService
 import com.example.groove.util.loadLoggedInUser
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("authentication")
-class AuthenticationController @Autowired constructor(
+class AuthenticationController(
 		private val userAuthenticationService: UserAuthenticationService,
 		private val userService: UserService
 ) {

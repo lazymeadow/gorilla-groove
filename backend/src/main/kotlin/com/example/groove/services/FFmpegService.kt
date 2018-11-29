@@ -7,14 +7,12 @@ import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
 import org.springframework.stereotype.Component
 import net.bramp.ffmpeg.FFmpegExecutor
-import org.springframework.beans.factory.annotation.Autowired
 
 
 @Component
-
-class FFmpegService @Autowired constructor(
-        val ffmpegProperties: FFmpegProperties,
-        val fileStorageProperties: FileStorageProperties
+class FFmpegService(
+        private val ffmpegProperties: FFmpegProperties,
+        private val fileStorageProperties: FileStorageProperties
 ) {
 
     fun convertTrack(fileName: String): String {

@@ -1,14 +1,13 @@
 package com.example.groove.security
 
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 
 @Component
-class TokenAuthenticationProvider @Autowired constructor(
+class TokenAuthenticationProvider(
 		private val auth: UserAuthenticationService
 ) : AbstractUserDetailsAuthenticationProvider() {
 

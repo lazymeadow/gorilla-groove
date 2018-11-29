@@ -6,15 +6,14 @@ import com.example.groove.properties.MusicProperties
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.awt.image.BufferedImage
 import java.io.File
 
 @Component
-class FileMetadataService @Autowired constructor(
-		val musicProperties: MusicProperties,
-		val fileStorageProperties: FileStorageProperties
+class FileMetadataService(
+		private val musicProperties: MusicProperties,
+		private val fileStorageProperties: FileStorageProperties
 ) {
 
 	// Removing the album artwork (and getting the image out of it) is useful for a couple of reasons

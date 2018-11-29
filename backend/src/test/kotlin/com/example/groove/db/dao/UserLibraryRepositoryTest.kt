@@ -7,7 +7,6 @@ import com.example.groove.util.unwrap
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -15,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional
 
 @ExtendWith(SpringExtension::class)
 @DataJpaTest
-class UserLibraryRepositoryTest @Autowired constructor(
-		val entityManager: TestEntityManager,
-		val userLibraryRepository: UserLibraryRepository
+class UserLibraryRepositoryTest(
+		private val entityManager: TestEntityManager,
+		private val userLibraryRepository: UserLibraryRepository
 ) {
 
 	// This method --should-- be able to be named with backticks + spaces, as is standard Kotlin. But there is a problem

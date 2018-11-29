@@ -5,7 +5,6 @@ import com.example.groove.db.dao.UserTokenRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.UserToken
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
@@ -14,7 +13,7 @@ import java.util.*
 
 @Suppress("unused")
 @Service
-class UuidAuthenticationService @Autowired constructor(
+class UuidAuthenticationService(
 		private val userRepository: UserRepository,
 		private val userTokenRepository: UserTokenRepository
 ) : UserAuthenticationService {

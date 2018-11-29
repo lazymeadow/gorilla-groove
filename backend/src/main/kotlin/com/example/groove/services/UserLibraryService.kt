@@ -11,14 +11,12 @@ import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.crossstore.ChangeSetPersister
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 
 @Service
-class UserLibraryService @Autowired constructor(
+class UserLibraryService(
 		private val userLibraryRepository: UserLibraryRepository,
 		private val trackRepository: TrackRepository
 ) {

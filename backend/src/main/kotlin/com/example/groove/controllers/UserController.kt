@@ -3,13 +3,12 @@ package com.example.groove.controllers
 import com.example.groove.db.model.User
 import com.example.groove.services.UserService
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("user")
-class UserController @Autowired constructor(
+class UserController(
 		private val userService: UserService
 ) {
 
