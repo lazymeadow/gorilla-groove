@@ -1,10 +1,11 @@
 package com.example.groove.services
 
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.dao.UserLibraryHistoryRepository
 import com.example.groove.db.dao.UserLibraryRepository
-import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.UserLibrary
+import com.example.groove.db.model.UserLibraryHistory
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -13,12 +14,15 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.sql.Timestamp
+import java.util.*
 
 
 @Service
 class UserLibraryService(
 		private val userLibraryRepository: UserLibraryRepository,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val userLibraryHistoryRepository: UserLibraryHistoryRepository
 ) {
 
 	@Transactional
@@ -34,6 +38,22 @@ class UserLibraryService(
 		val loadHidden = loggedInId == idToLoad
 
 		return userLibraryRepository.getLibrary(name, artist, album, idToLoad, loadHidden, pageable)
+	}
+
+	fun markSongListenedTo(userLibraryId: Long) {
+		val userLibrary = userLibraryRepository.findById(userLibraryId).unwrap()
+
+		if (userLibrary == null || userLibrary.user != loadLoggedInUser()) {
+			throw IllegalArgumentException("No user library found by ID $userLibraryId!")
+		}
+
+		// May want to do some sanity checks / server side validation here to prevent this incrementing too often.
+		// We know the last played date of a track and can see if it's even possible to have listened to this song
+		userLibrary.playCount++
+		userLibrary.lastPlayed = Timestamp(Date().time)
+
+		val userLibraryHistory = UserLibraryHistory(userLibrary = userLibrary)
+		userLibraryHistoryRepository.save(userLibraryHistory)
 	}
 
 	@Transactional
