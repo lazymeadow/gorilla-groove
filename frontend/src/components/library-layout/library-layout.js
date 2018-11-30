@@ -5,6 +5,7 @@ import {AlbumArt} from "../album-art/album-art";
 import {TrackSourceList} from "../track-source-list/track-source-list";
 import {HeaderBar} from "../header-bar/header-bar";
 import {MusicContext} from "../../services/music-provider";
+import {Modal} from "../modal/moda";
 
 export class LibraryLayout extends React.Component {
 	constructor(props) {

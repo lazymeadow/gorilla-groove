@@ -26,6 +26,7 @@
     "less-plugin-clean-css": "^1.5.1",
     "mini-css-extract-plugin": "^0.4.4",
     "react-dom": "^16.6.0",
+    "react-modal": "^3.6.1",
     "react-router-dom": "^4.3.1",
     "react-treeview": "^0.4.7",
     "webpack": "^4.23.1",

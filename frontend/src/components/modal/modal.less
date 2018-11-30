@@ -1,0 +1,16 @@
+.modal-close {
+  position: absolute;
+  right: 3px;
+  top: 0;
+  cursor: pointer;
+  &:hover {
+    color: #ff441c;
+  }
+}
+
+// Even though the modal could visually seem on top, some things (like the column resizing) was
+// still clickable from underneath the modal. Give it a high z-index to avoid this problem
+.ReactModalPortal {
+  position: relative;
+  z-index: 100;
+}
