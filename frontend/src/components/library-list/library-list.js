@@ -13,8 +13,13 @@ export class LibraryList extends React.Component {
 			firstSelectedIndex: null,
 			lastSelectedIndex: null,
 			withinDoubleClick: false,
-			doubleClickTimeout: null
-		}
+			doubleClickTimeout: null,
+			id: 'library-list' + LibraryList.count
+		};
+
+		// There's more than one library-list component in view, and the column resizing needs a unique ID in order
+		// to attach to the tables. So increment this count and use it in the ID whenever we create a library list
+		LibraryList.count++;
 	}
 
 	componentDidMount() {
@@ -36,7 +41,7 @@ export class LibraryList extends React.Component {
 	enableResize() {
 		const options = {resizeMode: 'overflow'};
 		if (!this.resizer) {
-			let tableElement = ReactDOM.findDOMNode(this).querySelector('#track-table');
+			let tableElement = ReactDOM.findDOMNode(this).querySelector('#' + this.state.id);
 			this.resizer = new ColumnResizer(tableElement, options);
 		} else {
 			this.resizer.reset(options);
@@ -124,7 +129,7 @@ export class LibraryList extends React.Component {
 	render() {
 		return (
 			<div>
-				<table id="track-table" className="track-table">
+				<table id={this.state.id} className="track-table">
 					<thead>
 					<tr>
 						{this.props.columns.map((columnName, index) => {
@@ -154,3 +159,4 @@ export class LibraryList extends React.Component {
 	};
 }
 LibraryList.contextType = MusicContext;
+LibraryList.count = 0;
