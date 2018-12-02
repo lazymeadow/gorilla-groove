@@ -1,7 +1,7 @@
 import React from 'react';
 import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
-import {Modal} from "../modal/moda";
+import {Modal} from "../modal/modal";
 
 let defaultImage = './static/unknown-art.jpg';
 
