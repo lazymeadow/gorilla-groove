@@ -87,7 +87,7 @@ export class LibraryList extends React.Component {
 
 		if (this.state.withinDoubleClick) {
 			this.cancelDoubleClick();
-			this.context.playFromTrackIndex(userTrackIndex, this.props.updateNowPlaying);
+			this.context.playFromTrackIndex(userTrackIndex, this.props.libraryView);
 		} else {
 			this.setupDoubleClick();
 		}
@@ -126,6 +126,41 @@ export class LibraryList extends React.Component {
 		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
 	}
 
+	handleHeaderClick(event) {
+		// We don't want the 'now playing' view to be able to sort things (at least for now). It gets messy
+		if (!this.props.libraryView) {
+			return;
+		}
+
+		let sortColumn = event.target.querySelector('.column-name').innerHTML.trim();
+		let sortDir;
+
+		if (this.context.librarySortColumn === sortColumn) {
+			sortDir = this.context.librarySortDir === 'desc' ? 'asc' : 'desc';
+		} else {
+			sortDir = 'asc';
+		}
+
+		this.setState({
+			selected: {},
+			lastSelectedIndex: null
+		});
+
+		this.context.loadSongsForUser(null, sortColumn, sortDir)
+	}
+
+	getSortIndicator(columnName) {
+		if (!this.props.libraryView) {
+			return;
+		}
+
+		if (columnName === this.context.librarySortColumn) {
+			return this.context.librarySortDir === 'asc' ? ' ▲' : ' ▼';
+		} else {
+			return '';
+		}
+	}
+
 	render() {
 		return (
 			<div>
@@ -133,17 +168,33 @@ export class LibraryList extends React.Component {
 					<thead>
 					<tr>
 						{this.props.columns.map((columnName, index) => {
-							return <th key={index}>{columnName}</th>
+							return <th key={index} onClick={(e) => this.handleHeaderClick(e)}>
+								<span className="column-name">{columnName}</span>
+								<span className="sort-direction">{this.getSortIndicator(columnName)}</span>
+							</th>
 						})}
 					</tr>
 					</thead>
 					<tbody>
 					{this.props.userTracks.map((userTrack, index) => {
+						// We determine if a song in the view is the currently playing song differently based off which view we are in
+						// Because we can sort the main library view, and there are no duplicates, it makes sense to calculate this based
+						// on the ID of the currently playing track. We can't do this with the "now playing" list, as the same track
+						// could be on the list multiple times
+						// TODO a more elegant solution IS going to be required though. When playlists are implemented, a song could
+						// repeat multiple times in the playlist. The frontend might need to assign its own ID independent of the backend
+						let played;
+						if (this.props.libraryView) {
+							played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
+						} else {
+							played = this.context.playedTrackIndex === index;
+						}
 						return (
 							<SongRow
 								key={index}
 								columns={this.props.columns}
 								rowIndex={index}
+								played={played}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
 								showContextMenu={index === this.state.lastSelectedIndex}

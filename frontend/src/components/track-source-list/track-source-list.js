@@ -10,7 +10,7 @@ export class TrackSourceList extends React.Component {
 			selectedSourceType: 'Library',
 			selectedId: 0,
 			dataSource: [
-				{section: 'Users', data: props.users},
+				{section: 'Users', data: props.otherUsers},
 				{section: 'Playlists', data: [{id: 1337, username: 'Playlist'}]}
 			]
 		}
@@ -23,7 +23,7 @@ export class TrackSourceList extends React.Component {
 
 		// Update the data to have the latest user data
 		let dataSource = this.state.dataSource;
-		dataSource[userIndex].data = props.users;
+		dataSource[userIndex].data = props.otherUsers;
 
 		this.setState({ dataSource: dataSource });
 	}
@@ -36,7 +36,7 @@ export class TrackSourceList extends React.Component {
 
 	selectLibrary() {
 		this.setState({ selectedSourceType: 'Library' });
-		this.context.loadSongsForUser(null);
+		this.context.loadSongsForUser(this.props.ownUser.id);
 	}
 
 	selectEntry(entry) {

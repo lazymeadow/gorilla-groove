@@ -49,8 +49,7 @@ export class SongRow extends React.Component {
 
 	render() {
 		let selected = this.props.selected ? "selected" : "";
-		let isPlayed = this.context.playedTrackIndex && this.context.playedTrackIndex === this.props.rowIndex;
-		let playedClass = isPlayed ? 'played' : '';
+		let playedClass = this.props.played ? 'played' : '';
 
 		return (
 			<tr

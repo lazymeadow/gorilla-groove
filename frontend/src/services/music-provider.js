@@ -9,9 +9,12 @@ export class MusicProvider extends React.Component {
 
 		this.state = {
 			libraryTracks: [],
+			librarySortColumn: 'Artist',
+			librarySortDir: 'asc',
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
+			lastLoadedUserId: null, // This won't work when playlists are a thing... Works for now though
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
@@ -20,12 +23,43 @@ export class MusicProvider extends React.Component {
 			playTracksLast: (...args) => this.playTracksLast(...args),
 			playNext: (...args) => this.playNext(...args),
 			setHidden: (...args) => this.setHidden(...args)
-		}
+		};
+
+		this.userLibraryKeyConversions = {
+			'Name': 'track.name',
+			'Artist': 'track.artist',
+			'Album': 'track.album',
+			'Length': 'track.length',
+			'Year': 'track.releaseYear',
+			'Play Count': 'playCount',
+			'Bit Rate': 'track.bitRate',
+			'Sample Rate': 'track.sampleRate',
+			'Added': 'createdAt',
+			'Last Played': 'lastPlayed',
+		};
 	}
 
-	loadSongsForUser(userId) {
-		// Default to the current user if no user is requested
-		let params = userId ? { userId: userId } : {};
+	loadSongsForUser(userId, sortColumn, sortDir) {
+		let params = {};
+
+		// Default to the last loaded user if no user is present. If null, the backend uses the current user
+		if (userId) {
+			params.userId = userId;
+			this.setState({ lastLoadedUserId: userId })
+		} else if (this.state.lastLoadedUserId) {
+			params.userId = this.state.lastLoadedUserId;
+		}
+
+		if (sortColumn && sortDir) {
+			params.sort = `${this.userLibraryKeyConversions[sortColumn]},${sortDir}`;
+
+			this.setState({
+				librarySortColumn: sortColumn,
+				librarySortDir: sortDir
+			});
+		} else {
+			params.sort = `${this.userLibraryKeyConversions[this.state.librarySortColumn]},${this.state.librarySortDir}`
+		}
 
 		Api.get("library", params)
 			.then((result) => {
