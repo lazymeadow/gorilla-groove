@@ -32,14 +32,17 @@ class UserLibraryController(
 		return userLibraryService.getUserLibrary(name, artist, album, userId, pageable)
     }
 
-	@PostMapping
-	fun addToLibrary(@RequestBody addToLibraryDTO: AddToLibraryDTO): ResponseEntity<String> {
-		userLibraryService.addTrack(loadLoggedInUser(), addToLibraryDTO.trackId)
-
-		return ResponseEntity
-				.ok()
-				.build()
-	}
+	// I don't know that this still makes sense. I think the two ways to add tracks
+	// will be uploading them, and cloning them from another user. Probably both will
+	// have dedicated endpoints
+//	@PostMapping
+//	fun addToLibrary(@RequestBody addToLibraryDTO: AddToLibraryDTO): ResponseEntity<String> {
+//		userLibraryService.addTrack(loadLoggedInUser(), addToLibraryDTO.trackId)
+//
+//		return ResponseEntity
+//				.ok()
+//				.build()
+//	}
 
 	@Transactional
 	@PostMapping("/mark-listened")

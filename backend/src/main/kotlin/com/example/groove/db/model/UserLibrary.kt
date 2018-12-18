@@ -18,9 +18,29 @@ data class UserLibrary(
 		@JoinColumn(name = "user_id", nullable = false)
 		val user: User,
 
-		@ManyToOne
-		@JoinColumn(name = "track_id", nullable = false)
-		val track: Track,
+		@Column(nullable = false)
+		var name: String,
+
+		@Column(nullable = false)
+		var artist: String = "",
+
+		@Column(nullable = false)
+		var album: String = "",
+
+		@Column(name = "file_name", nullable = false)
+		var fileName: String,
+
+		@Column(name = "bit_rate", nullable = false)
+		var bitRate: Long,
+
+		@Column(name = "sample_rate", nullable = false)
+		var sampleRate: Int,
+
+		@Column(nullable = false)
+		var length: Int,
+
+		@Column(name = "release_year")
+		var releaseYear: Int? = null,
 
 		@Column(name = "play_count", nullable = false)
 		var playCount: Int = 0,

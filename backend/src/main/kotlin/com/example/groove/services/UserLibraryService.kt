@@ -1,9 +1,7 @@
 package com.example.groove.services
 
-import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.dao.UserLibraryHistoryRepository
 import com.example.groove.db.dao.UserLibraryRepository
-import com.example.groove.db.model.User
 import com.example.groove.db.model.UserLibrary
 import com.example.groove.db.model.UserLibraryHistory
 import com.example.groove.util.loadLoggedInUser
@@ -21,7 +19,6 @@ import java.util.*
 @Service
 class UserLibraryService(
 		private val userLibraryRepository: UserLibraryRepository,
-		private val trackRepository: TrackRepository,
 		private val userLibraryHistoryRepository: UserLibraryHistoryRepository
 ) {
 
@@ -56,6 +53,8 @@ class UserLibraryService(
 		userLibraryHistoryRepository.save(userLibraryHistory)
 	}
 
+	// I think this should be reworked to be "clone track" or "fork track" or something
+	/*
 	@Transactional
 	fun addTrack(user: User, trackId: Long) {
 		val track = trackRepository.findById(trackId)
@@ -77,6 +76,7 @@ class UserLibraryService(
 		val userLibrary = UserLibrary(user = user, track = track)
 		userLibraryRepository.save(userLibrary)
 	}
+	*/
 
 	companion object {
 		val logger = LoggerFactory.getLogger(UserLibraryService::class.java)!!

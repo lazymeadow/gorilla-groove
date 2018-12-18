@@ -25,21 +25,21 @@ export class SongRow extends React.Component {
 			case '#':
 				return rowIndex;
 			case 'Name':
-				return userTrack.track.name;
+				return userTrack.name;
 			case 'Artist':
-				return userTrack.track.artist;
+				return userTrack.artist;
 			case 'Album':
-				return userTrack.track.album;
+				return userTrack.album;
 			case 'Length':
-				return formatTimeFromSeconds(userTrack.track.length);
+				return formatTimeFromSeconds(userTrack.length);
 			case 'Year':
-				return userTrack.track.releaseYear;
+				return userTrack.releaseYear;
 			case 'Play Count':
 				return userTrack.playCount;
 			case 'Bit Rate':
-				return userTrack.track.bitRate;
+				return userTrack.bitRate;
 			case 'Sample Rate':
-				return userTrack.track.sampleRate;
+				return userTrack.sampleRate;
 			case 'Added':
 				return formatDate(userTrack.createdAt);
 			case 'Last Played':

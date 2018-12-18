@@ -27,8 +27,8 @@ class FileController(
 	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
-        val track = fileStorageService.storeSong(file)
-		userLibraryRepository.save(UserLibrary(user = loadLoggedInUser(), track = track))
+		// TODO I imagine we will return this to the front end so it can add it
+        val track = fileStorageService.storeSongForUser(file, loadLoggedInUser())
 
         return ResponseEntity(HttpStatus.CREATED)
     }

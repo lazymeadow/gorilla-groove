@@ -1,6 +1,7 @@
 package com.example.groove.services
 
-import com.example.groove.db.model.Track
+import com.example.groove.db.model.User
+import com.example.groove.db.model.UserLibrary
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
 import org.jaudiotagger.audio.AudioFileIO
@@ -48,7 +49,7 @@ class FileMetadataService(
 		}
 	}
 
-    fun createTrackFromFileName(fileName: String): Track {
+    fun createUserLibraryFromFileName(fileName: String, user: User): UserLibrary {
         val path = "${musicProperties.musicDirectoryLocation}$fileName"
         val file = File(path)
         if (!file.exists()) {
@@ -57,7 +58,8 @@ class FileMetadataService(
         }
         val audioFile = AudioFileIO.read(file)
 
-		return Track(
+		return UserLibrary(
+				user = user,
 				fileName = fileName,
 				name = audioFile.tag.getFirst(FieldKey.TITLE),
 				artist = audioFile.tag.getFirst(FieldKey.ARTIST),

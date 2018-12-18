@@ -95,10 +95,10 @@ export class PlaybackControls extends React.Component {
 
 	render() {
 		let playedTrack = this.context.playedTrack;
-		let src = playedTrack ? Api.getSongResourceLink(playedTrack.track.fileName) : '';
+		let src = playedTrack ? Api.getSongResourceLink(playedTrack.fileName) : '';
 		return (
 			<div>
-				Now Playing: {playedTrack ? playedTrack.track.name : 'Nothing'}
+				Now Playing: {playedTrack ? playedTrack.name : 'Nothing'}
 				<div>
 					<button>Start</button>
 					<button>Stop</button>

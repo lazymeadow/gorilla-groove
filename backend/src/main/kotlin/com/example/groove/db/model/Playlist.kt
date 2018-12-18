@@ -12,6 +12,12 @@ data class Playlist(
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		val id: Long = 0,
 
+		@OneToMany(mappedBy = "playlist")
+		val tracks: List<PlaylistTrack>,
+
+		@OneToMany(mappedBy = "playlist")
+		val users: List<PlaylistUser>,
+
 		@Column(nullable = false)
 		val name: String,
 

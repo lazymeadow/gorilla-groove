@@ -26,14 +26,14 @@ export class MusicProvider extends React.Component {
 		};
 
 		this.userLibraryKeyConversions = {
-			'Name': 'track.name',
-			'Artist': 'track.artist',
-			'Album': 'track.album',
-			'Length': 'track.length',
-			'Year': 'track.releaseYear',
+			'Name': 'name',
+			'Artist': 'artist',
+			'Album': 'album',
+			'Length': 'length',
+			'Year': 'releaseYear',
 			'Play Count': 'playCount',
-			'Bit Rate': 'track.bitRate',
-			'Sample Rate': 'track.sampleRate',
+			'Bit Rate': 'bitRate',
+			'Sample Rate': 'sampleRate',
 			'Added': 'createdAt',
 			'Last Played': 'lastPlayed',
 		};
