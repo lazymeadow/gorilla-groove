@@ -13,10 +13,10 @@ data class Playlist(
 		val id: Long = 0,
 
 		@OneToMany(mappedBy = "playlist")
-		val tracks: List<PlaylistTrack>,
+		val tracks: List<PlaylistTrack> = emptyList(),
 
 		@OneToMany(mappedBy = "playlist")
-		val users: List<PlaylistUser>,
+		val users: List<PlaylistUser> = emptyList(),
 
 		@Column(nullable = false)
 		val name: String,
