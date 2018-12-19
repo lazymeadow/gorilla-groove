@@ -10,10 +10,10 @@ export class TrackSourceList extends React.Component {
 			selectedSourceType: 'Library',
 			selectedId: 0,
 			dataSource: [
-				{section: 'Users', data: props.otherUsers},
-				{section: 'Playlists', data: [{id: 1337, username: 'Playlist'}]}
+				{section: 'Users', data: []},
+				{section: 'Playlists', data: []}
 			]
-		}
+		};
 	}
 
 	componentWillReceiveProps(props) {
@@ -21,9 +21,14 @@ export class TrackSourceList extends React.Component {
 			return data.section === 'Users'
 		});
 
+		let playlistsIndex = this.state.dataSource.findIndex(data => {
+			return data.section === 'Playlists'
+		});
+
 		// Update the data to have the latest user data
 		let dataSource = this.state.dataSource;
 		dataSource[userIndex].data = props.otherUsers;
+		dataSource[playlistsIndex].data = props.playlists;
 
 		this.setState({ dataSource: dataSource });
 	}
@@ -81,7 +86,7 @@ export class TrackSourceList extends React.Component {
 										key={entry.id}
 										onClick={() => this.selectEntry(entry)}
 									>
-										{entry.username}
+										{entry.username ? entry.username : entry.name}
 									</div>
 								)
 							})}

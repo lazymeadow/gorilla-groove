@@ -15,6 +15,7 @@ export class MusicProvider extends React.Component {
 			playedTrack: null,
 			playedTrackIndex: null,
 			lastLoadedUserId: null, // This won't work when playlists are a thing... Works for now though
+			playlists: [],
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
@@ -22,7 +23,8 @@ export class MusicProvider extends React.Component {
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
 			playNext: (...args) => this.playNext(...args),
-			setHidden: (...args) => this.setHidden(...args)
+			setHidden: (...args) => this.setHidden(...args),
+			loadPlaylists: (...args) => this.loadPlaylists(...args)
 		};
 
 		this.trackKeyConversions = {
@@ -126,6 +128,12 @@ export class MusicProvider extends React.Component {
 		}).catch(error => {
 			console.error(error);
 		});
+	}
+
+	loadPlaylists() {
+		Api.get('playlist').then((playlists) => {
+			this.setState({playlists: playlists});
+		})
 	}
 
 	render() {

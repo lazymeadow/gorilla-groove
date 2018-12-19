@@ -18,6 +18,7 @@ export class SiteLayout extends React.Component {
 
 	componentDidMount() {
 		this.context.loadSongsForUser();
+		this.context.loadPlaylists();
 
 		Api.get("user")
 			.then((result) => {
@@ -43,7 +44,11 @@ export class SiteLayout extends React.Component {
 					<HeaderBar/>
 				</div>
 				<div className="border-layout-west">
-					<TrackSourceList ownUser={this.state.ownUser} otherUsers={this.state.otherUsers}/>
+					<TrackSourceList
+						ownUser={this.state.ownUser}
+						otherUsers={this.state.otherUsers}
+						playlists={this.context.playlists}
+					/>
 					<AlbumArt/>
 				</div>
 				<div className="border-layout-center track-table-container">
