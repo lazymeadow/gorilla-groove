@@ -8,9 +8,9 @@ export class MusicProvider extends React.Component {
 		super(props);
 
 		this.state = {
-			libraryTracks: [],
-			librarySortColumn: 'Artist',
-			librarySortDir: 'asc',
+			viewedTracks: [],
+			trackSortColumn: 'Artist',
+			trackSortDir: 'asc',
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
@@ -25,7 +25,7 @@ export class MusicProvider extends React.Component {
 			setHidden: (...args) => this.setHidden(...args)
 		};
 
-		this.userLibraryKeyConversions = {
+		this.trackKeyConversions = {
 			'Name': 'name',
 			'Artist': 'artist',
 			'Album': 'album',
@@ -51,19 +51,19 @@ export class MusicProvider extends React.Component {
 		}
 
 		if (sortColumn && sortDir) {
-			params.sort = `${this.userLibraryKeyConversions[sortColumn]},${sortDir}`;
+			params.sort = `${this.trackKeyConversions[sortColumn]},${sortDir}`;
 
 			this.setState({
-				librarySortColumn: sortColumn,
-				librarySortDir: sortDir
+				trackSortColumn: sortColumn,
+				trackSortDir: sortDir
 			});
 		} else {
-			params.sort = `${this.userLibraryKeyConversions[this.state.librarySortColumn]},${this.state.librarySortDir}`
+			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
 		}
 
-		Api.get("library", params)
+		Api.get("track", params)
 			.then((result) => {
-				this.setState({ libraryTracks: result.content });
+				this.setState({ viewedTracks: result.content });
 			}).catch((error) => {
 			console.error(error)
 		});
@@ -74,8 +74,8 @@ export class MusicProvider extends React.Component {
 
 		if (updateNowPlaying) {
 			this.setState({
-				nowPlayingTracks: this.state.libraryTracks.slice(0),
-				playedTrack: this.state.libraryTracks[trackIndex]
+				nowPlayingTracks: this.state.viewedTracks.slice(0),
+				playedTrack: this.state.viewedTracks[trackIndex]
 			})
 		} else {
 			this.setState({ playedTrack: this.state.nowPlayingTracks[trackIndex] });
@@ -104,7 +104,7 @@ export class MusicProvider extends React.Component {
 	forceTrackUpdate() {
 		this.setState({
 			nowPlayingTracks: this.state.nowPlayingTracks,
-			libraryTracks: this.state.libraryTracks
+			viewedTracks: this.state.viewedTracks
 		});
 	}
 
@@ -117,8 +117,8 @@ export class MusicProvider extends React.Component {
 	}
 
 	setHidden(tracks, isHidden) {
-		Api.post('library/set-hidden', {
-			userLibraryIds: tracks.map(track => track.id),
+		Api.post('track/set-hidden', {
+			trackIds: tracks.map(track => track.id),
 			isHidden: isHidden
 		}).then(() => {
 			tracks.forEach(track => track.hidden = isHidden);

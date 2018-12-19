@@ -1,7 +1,6 @@
 package com.example.groove.controllers
 
-import com.example.groove.db.dao.UserLibraryRepository
-import com.example.groove.db.model.UserLibrary
+import com.example.groove.db.dao.TrackRepository
 import com.example.groove.services.FileStorageService
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
@@ -19,7 +18,7 @@ import java.io.IOException
 @RequestMapping("file")
 class FileController(
 		private val fileStorageService: FileStorageService,
-		private val userLibraryRepository: UserLibraryRepository
+		private val trackRepository: TrackRepository
 ) {
 
 	// Example cURL command for uploading a file

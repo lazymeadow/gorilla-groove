@@ -34,7 +34,7 @@ export class TrackSourceList extends React.Component {
 		this.setState({collapsedBookkeeping: collapsedBookkeeping});
 	}
 
-	selectLibrary() {
+	selectTrack() {
 		this.setState({ selectedSourceType: 'Library' });
 		this.context.loadSongsForUser(this.props.ownUser.id);
 	}
@@ -56,7 +56,7 @@ export class TrackSourceList extends React.Component {
 				View Songs From:
 				<div
 					className={`library-option ${librarySelected}`}
-					onClick={() => this.selectLibrary()}
+					onClick={() => this.selectTrack()}
 				>
 					Library
 				</div>

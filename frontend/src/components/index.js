@@ -1,12 +1,12 @@
-import {LibraryList} from './library-list/library-list';
+import {TrackList} from './track-list/track-list';
 import {PlaybackControls} from './playback-controls/playback-controls';
 import {PageRouter} from "./page-router/page-router";
 import {LoginPage} from "./login-page/login-page";
-import {LibraryLayout} from "./library-layout/library-layout";
+import {SiteLayout} from "./site-layout/site-layout";
 import {SongUpload} from "./song-upload/song-upload";
 import {Api} from "../api"
 import {UserButton} from "./user-button/user-button";
 import {SongRow} from "./song-row/song-row";
 
-export {LibraryList, PlaybackControls, PageRouter, LoginPage, LibraryLayout,
+export {TrackList, PlaybackControls, PageRouter, LoginPage, SiteLayout,
 	SongUpload, Api, UserButton, SongRow};

@@ -17,6 +17,6 @@ data class PlaylistTrack(
 		val playlist: Playlist,
 
 		@ManyToOne
-		@JoinColumn(name = "user_library_id", nullable = false)
-		val userLibrary: UserLibrary
+		@JoinColumn(name = "track_id", nullable = false)
+		val track: Track
 )

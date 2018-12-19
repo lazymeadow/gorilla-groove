@@ -6,8 +6,8 @@ import java.util.*
 import javax.persistence.*
 
 @Entity
-@Table(name = "user_library")
-data class UserLibrary(
+@Table(name = "track")
+data class Track(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)

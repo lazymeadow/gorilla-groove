@@ -6,8 +6,8 @@ import java.util.*
 import javax.persistence.*
 
 @Entity
-@Table(name = "user_library_history")
-data class UserLibraryHistory(
+@Table(name = "track_history")
+data class TrackHistory(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,8 +15,8 @@ data class UserLibraryHistory(
 
 		@JsonIgnore
 		@ManyToOne
-		@JoinColumn(name = "user_library_id", nullable = false)
-		val userLibrary: UserLibrary,
+		@JoinColumn(name = "track_id", nullable = false)
+		val track: Track,
 
 		@Column(name = "created_at", nullable = false)
 		val createdAt: Timestamp = Timestamp(Date().time)

@@ -1,8 +1,8 @@
 package com.example.groove.services
 
-import com.example.groove.db.dao.UserLibraryRepository
+import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.User
-import com.example.groove.db.model.UserLibrary
+import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FileStorageProperties
@@ -29,7 +29,7 @@ class FileStorageService(
 		musicProperties: MusicProperties,
 		private val ffmpegService: FFmpegService,
 		private val fileMetadataService: FileMetadataService,
-		private val userLibraryRepository: UserLibraryRepository
+		private val trackRepository: TrackRepository
 ) {
 
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.uploadDir)
@@ -47,7 +47,7 @@ class FileStorageService(
 		}
 	}
 
-	fun storeSongForUser(file: MultipartFile, user: User): UserLibrary {
+	fun storeSongForUser(file: MultipartFile, user: User): Track {
 		// Normalize file name
 		val fileName = StringUtils.cleanPath(file.originalFilename!!)
 
@@ -65,13 +65,13 @@ class FileStorageService(
 			val tmpImageFile = ripAndSaveAlbumArt(fileName)
 
 			// TODO remove old files from the tmp (uploadDir) directory once saving and conversion are finished
-			val userLibrary = convertAndSaveTrackForUser(fileName, user)
+			val track = convertAndSaveTrackForUser(fileName, user)
 
 			if (tmpImageFile != null) {
-				moveAlbumArt(tmpImageFile, userLibrary.id)
+				moveAlbumArt(tmpImageFile, track.id)
 			}
 
-			return userLibrary
+			return track
 		} catch (ex: IOException) {
 			throw FileStorageException("Could not store file $fileName. Please try again!", ex)
 		}
@@ -104,17 +104,17 @@ class FileStorageService(
 	}
 
 	@Transactional
-	fun convertAndSaveTrackForUser(fileName: String, user: User): UserLibrary {
+	fun convertAndSaveTrackForUser(fileName: String, user: User): Track {
 		// convert to .ogg
 		// TODO this also moves the file from the uploadDir to its final home in the music dir
 		// TODO we probably don't want the FFmpeg service responsible for moving the file, just converting it
 		val convertedFileName = ffmpegService.convertTrack(fileName)
 
 		// add the track to database
-		val userLibrary = fileMetadataService.createUserLibraryFromFileName(convertedFileName, user)
-		userLibraryRepository.save(userLibrary)
+		val track = fileMetadataService.createTrackFromFileName(convertedFileName, user)
+		trackRepository.save(track)
 
-		return userLibrary
+		return track
 	}
 
 	fun loadFileAsResource(fileName: String): Resource {

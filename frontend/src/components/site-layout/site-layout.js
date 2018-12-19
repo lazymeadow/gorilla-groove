@@ -1,12 +1,12 @@
 import React from 'react';
-import {LibraryList, PlaybackControls, Api} from "..";
+import {TrackList, PlaybackControls, Api} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
 import {AlbumArt} from "../album-art/album-art";
 import {TrackSourceList} from "../track-source-list/track-source-list";
 import {HeaderBar} from "../header-bar/header-bar";
 import {MusicContext} from "../../services/music-provider";
 
-export class LibraryLayout extends React.Component {
+export class SiteLayout extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -47,17 +47,17 @@ export class LibraryLayout extends React.Component {
 					<AlbumArt/>
 				</div>
 				<div className="border-layout-center track-table-container">
-					<LibraryList
+					<TrackList
 						columns={["Name", "Artist", "Album", "Length", "Year", "Play Count", "Bit Rate", "Sample Rate", "Added", "Last Played"]}
-						userTracks={this.context.libraryTracks}
-						libraryView={true}
+						userTracks={this.context.viewedTracks}
+						trackView={true}
 					/>
 				</div>
 				<div className="border-layout-east track-table-container">
 					<NowPlayingList
 						columns={["#", "Name"]}
 						userTracks={this.context.nowPlayingTracks}
-						libraryView={false}
+						trackView={false}
 					/>
 				</div>
 				<div className="border-layout-south">
@@ -67,4 +67,4 @@ export class LibraryLayout extends React.Component {
 		);
 	}
 }
-LibraryLayout.contextType = MusicContext;
+SiteLayout.contextType = MusicContext;

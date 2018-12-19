@@ -67,7 +67,7 @@ export class PlaybackControls extends React.Component {
 			newProperties.listenedTo = true;
 
 			let playedTrack = this.context.playedTrack;
-			Api.post('library/mark-listened', { userLibraryId: playedTrack.id })
+			Api.post('track/mark-listened', { trackId: playedTrack.id })
 				.then(() => {
 					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
 					playedTrack.playCount++;

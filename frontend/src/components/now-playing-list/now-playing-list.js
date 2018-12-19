@@ -1,14 +1,14 @@
 import React from 'react';
-import {LibraryList} from "..";
+import {TrackList} from "..";
 
 export function NowPlayingList(props) {
 	return (
-		// Most of this is just a pass-through of props from the LibraryLayout
+		// Most of this is just a pass-through of props from the SiteLayout
 		<div className="now-playing-wrapper">
 			<div className="now-playing-heading">
 				Now Playing
 			</div>
-			<LibraryList
+			<TrackList
 				columns={props.columns}
 				userTracks={props.userTracks}
 				playedTrackIndex={props.playedTrackIndex}
