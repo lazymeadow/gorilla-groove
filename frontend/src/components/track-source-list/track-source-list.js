@@ -1,28 +1,27 @@
 import React from 'react';
 import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
+import {TrackView} from "../../enums/TrackView";
 
 export class TrackSourceList extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			collapsedBookkeeping: [false, false, false],
-			selectedSourceType: 'Library',
-			selectedId: 0,
 			dataSource: [
-				{section: 'Users', data: []},
-				{section: 'Playlists', data: []}
+				{section: TrackView.USER, data: []},
+				{section: TrackView.PLAYLIST, data: []}
 			]
 		};
 	}
 
 	componentWillReceiveProps(props) {
 		let userIndex = this.state.dataSource.findIndex(data => {
-			return data.section === 'Users'
+			return data.section === TrackView.USER
 		});
 
 		let playlistsIndex = this.state.dataSource.findIndex(data => {
-			return data.section === 'Playlists'
+			return data.section === TrackView.PLAYLIST
 		});
 
 		// Update the data to have the latest user data
@@ -39,29 +38,26 @@ export class TrackSourceList extends React.Component {
 		this.setState({collapsedBookkeeping: collapsedBookkeeping});
 	}
 
-	selectTrack() {
-		this.setState({ selectedSourceType: 'Library' });
-		this.context.loadSongsForUser(this.props.ownUser.id);
+	loadOwnLibrary() {
+		this.context.loadSongsForUser();
 	}
 
-	selectEntry(entry) {
-		// Will need to check if this is a user or a playlist when there are playlists
-		this.setState({
-			selectedSourceType: 'User',
-			selectedId: entry.id
-		});
-
-		this.context.loadSongsForUser(entry.id);
+	selectEntry(section, entry) {
+		if (section === TrackView.USER) {
+			this.context.loadSongsForUser(entry.id);
+		} else {
+			this.context.loadSongsForPlaylist(entry.id);
+		}
 	}
 
 	render() {
-		let librarySelected = this.state.selectedSourceType === 'Library' ? 'selected' : '';
+		let librarySelected = this.context.trackView === TrackView.LIBRARY ? 'selected' : '';
 		return (
 			<div className="view-source-list">
 				View Songs From:
 				<div
 					className={`library-option ${librarySelected}`}
-					onClick={() => this.selectTrack()}
+					onClick={() => this.loadOwnLibrary()}
 				>
 					Library
 				</div>
@@ -78,13 +74,13 @@ export class TrackSourceList extends React.Component {
 							onClick={() => this.handleParentNodeClick(i)}
 						>
 							{node.data.map(entry => {
-								let entrySelected = this.state.selectedSourceType === 'User' & entry.id === this.state.selectedId;
+								let entrySelected = this.context.trackView === node.section & entry.id === this.context.viewedEntityId;
 								let entryClass = entrySelected ? 'selected' : '';
 								return (
 									<div
 										className={`tree-child ${entryClass}`}
 										key={entry.id}
-										onClick={() => this.selectEntry(entry)}
+										onClick={() => this.selectEntry(node.section, entry)}
 									>
 										{entry.username ? entry.username : entry.name}
 									</div>

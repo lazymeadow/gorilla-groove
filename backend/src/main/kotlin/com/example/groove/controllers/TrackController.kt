@@ -20,7 +20,6 @@ class TrackController(
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
-    @Transactional(readOnly = true)
 	@GetMapping
     fun getTracks(
 			@RequestParam(value = "userId") userId: Long?,
@@ -29,7 +28,7 @@ class TrackController(
 			@RequestParam(value = "album") album: String?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
-		return trackService.getTrack(name, artist, album, userId, pageable)
+		return trackService.getTracks(name, artist, album, userId, pageable)
     }
 
 	// I don't know that this still makes sense. I think the two ways to add tracks

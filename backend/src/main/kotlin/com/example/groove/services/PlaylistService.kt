@@ -6,9 +6,12 @@ import com.example.groove.db.dao.PlaylistUserRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.OwnershipType
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
 import org.springframework.dao.PermissionDeniedDataAccessException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -36,6 +39,22 @@ class PlaylistService(
 		playlistUserRepository.save(playlistUser)
 
 		return playlist
+	}
+
+	@Transactional(readOnly = true)
+	fun getTracks(
+			name: String?,
+			artist: String?,
+			album: String?,
+			playlistId: Long,
+			pageable: Pageable
+	): Page<Track> {
+		val playlist = playlistRepository.findById(playlistId).unwrap()
+				?: throw IllegalArgumentException("No playlist with ID: $playlistId found")
+		playlistUserRepository.findByUserAndPlaylist(loadLoggedInUser(), playlist)
+				?: throw IllegalArgumentException("User has insufficient privileges to view playlist with ID: $playlistId")
+
+		return playlistTrackRepository.getTracks(name, artist, album, playlist, pageable)
 	}
 
 	@Transactional

@@ -22,8 +22,8 @@ class TrackService(
 		private val trackHistoryRepository: TrackHistoryRepository
 ) {
 
-	@Transactional
-	fun getTrack(
+	@Transactional(readOnly = true)
+	fun getTracks(
 			name: String?,
 			artist: String?,
 			album: String?,
@@ -34,7 +34,7 @@ class TrackService(
 		val idToLoad = userId ?: loggedInId
 		val loadHidden = loggedInId == idToLoad
 
-		return trackRepository.getTrack(name, artist, album, idToLoad, loadHidden, pageable)
+		return trackRepository.getTracks(name, artist, album, idToLoad, loadHidden, pageable)
 	}
 
 	fun markSongListenedTo(trackId: Long) {

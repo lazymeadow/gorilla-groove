@@ -1,5 +1,6 @@
 import React from "react";
 import {Api} from "../api";
+import {TrackView} from "../enums/TrackView";
 
 export const MusicContext = React.createContext();
 
@@ -9,14 +10,16 @@ export class MusicProvider extends React.Component {
 
 		this.state = {
 			viewedTracks: [],
+			trackView: TrackView.LIBRARY,
+			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
 			trackSortColumn: 'Artist',
 			trackSortDir: 'asc',
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
-			lastLoadedUserId: null, // This won't work when playlists are a thing... Works for now though
 			playlists: [],
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
+			sortTracks: (...args) => this.sortTracks(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
 			playTracks: (...args) => this.playTracks(...args),
@@ -25,6 +28,7 @@ export class MusicProvider extends React.Component {
 			playNext: (...args) => this.playNext(...args),
 			setHidden: (...args) => this.setHidden(...args),
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
+			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args)
 		};
@@ -43,16 +47,31 @@ export class MusicProvider extends React.Component {
 		};
 	}
 
-	loadSongsForUser(userId, sortColumn, sortDir) {
-		let params = {};
-
-		// Default to the last loaded user if no user is present. If null, the backend uses the current user
+	loadSongsForUser(userId, params) {
+		params = params ? params : {};
+		// If userId is null, the backend uses the current user
 		if (userId) {
 			params.userId = userId;
-			this.setState({ lastLoadedUserId: userId })
-		} else if (this.state.lastLoadedUserId) {
-			params.userId = this.state.lastLoadedUserId;
+			this.setState({
+				trackView: TrackView.USER,
+				viewedEntityId: userId
+			});
+		} else {
+			this.setState({
+				trackView: TrackView.LIBRARY,
+				viewedEntityId: null
+			});
 		}
+
+		Api.get("track", params).then((result) => {
+			this.setState({ viewedTracks: result.content });
+		}).catch((error) => {
+			console.error(error)
+		});
+	}
+
+	sortTracks(sortColumn, sortDir) {
+		let params = {};
 
 		if (sortColumn && sortDir) {
 			params.sort = `${this.trackKeyConversions[sortColumn]},${sortDir}`;
@@ -65,12 +84,17 @@ export class MusicProvider extends React.Component {
 			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
 		}
 
-		Api.get("track", params)
-			.then((result) => {
-				this.setState({ viewedTracks: result.content });
-			}).catch((error) => {
-			console.error(error)
-		});
+		// Messing around with the JPA sorting setup is more hassle than it is worth
+		// For sorting playlists, just append 'track.' in front so the key is correct for playlist tracks
+		if (this.state.trackView === TrackView.PLAYLIST) {
+			params.sort = `track.${params.sort}`;
+		}
+
+		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
+			this.loadSongsForUser(this.state.viewedEntityId, params);
+		} else if (this.state.trackView === TrackView.PLAYLIST) {
+			this.loadSongsForPlaylist(this.state.viewedEntityId, params);
+		}
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
@@ -135,6 +159,20 @@ export class MusicProvider extends React.Component {
 	loadPlaylists() {
 		Api.get('playlist').then((playlists) => {
 			this.setState({playlists: playlists});
+		})
+	}
+
+	loadSongsForPlaylist(playlistId, params) {
+		params = params ? params : {};
+		params.playlistId = playlistId;
+
+		this.setState({
+			trackView: TrackView.PLAYLIST,
+			viewedEntityId: playlistId
+		});
+
+		Api.get('playlist/track', params).then((result) => {
+			this.setState({ viewedTracks: result.content });
 		})
 	}
 

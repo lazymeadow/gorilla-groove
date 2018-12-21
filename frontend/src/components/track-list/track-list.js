@@ -147,7 +147,7 @@ export class TrackList extends React.Component {
 			lastSelectedIndex: null
 		});
 
-		this.context.loadSongsForUser(null, sortColumn, sortDir)
+		this.context.sortTracks(sortColumn, sortDir)
 	}
 
 	getSortIndicator(columnName) {

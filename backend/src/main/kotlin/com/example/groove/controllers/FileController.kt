@@ -17,8 +17,7 @@ import java.io.IOException
 @RestController
 @RequestMapping("file")
 class FileController(
-		private val fileStorageService: FileStorageService,
-		private val trackRepository: TrackRepository
+		private val fileStorageService: FileStorageService
 ) {
 
 	// Example cURL command for uploading a file

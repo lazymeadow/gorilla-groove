@@ -24,7 +24,7 @@ class TrackRepositoryTest(
 		val user = createPersistedTestUser()
 		val track = createPersistedTrack(user = user)
 
-		val resultPage = trackRepository.getTrack(userId = user.id)
+		val resultPage = trackRepository.getTracks(userId = user.id)
 
 		assertThat(resultPage.content[0]).isEqualTo(track)
 	}
@@ -35,8 +35,8 @@ class TrackRepositoryTest(
 		val user2 = createPersistedTestUser()
 		createPersistedTrack(user = user1)
 
-		val user1Result = trackRepository.getTrack(userId = user1.id)
-		val user2Result = trackRepository.getTrack(userId = user2.id)
+		val user1Result = trackRepository.getTracks(userId = user1.id)
+		val user2Result = trackRepository.getTracks(userId = user2.id)
 		assertThat(user1Result.totalElements).isEqualTo(1)
 		assertThat(user2Result.totalElements).isEqualTo(0)
 	}
@@ -47,21 +47,21 @@ class TrackRepositoryTest(
 		val track1 = createPersistedTrack(user)
 		val track2 = createPersistedTrack(user, "My First Love", "Mikkas", "")
 
-		val resultPage1 = trackRepository.getTrack(userId = user.id)
+		val resultPage1 = trackRepository.getTracks(userId = user.id)
 		assertThat(resultPage1.totalElements).isEqualTo(2)
 
-		val resultPage2 = trackRepository.getTrack(userId = user.id, name = "Besaid")
+		val resultPage2 = trackRepository.getTracks(userId = user.id, name = "Besaid")
 		assertThat(resultPage2.content[0]).isEqualTo(track1)
 		assertThat(resultPage2.totalElements).isEqualTo(1)
 
-		val resultPage3 = trackRepository.getTrack(userId = user.id, name = "Nothing! Absolutely Nothing! You so stupid!")
+		val resultPage3 = trackRepository.getTracks(userId = user.id, name = "Nothing! Absolutely Nothing! You so stupid!")
 		assertThat(resultPage3.totalElements).isEqualTo(0)
 
-		val resultPage4 = trackRepository.getTrack(userId = user.id, artist = "Mikkas")
+		val resultPage4 = trackRepository.getTracks(userId = user.id, artist = "Mikkas")
 		assertThat(resultPage4.content[0]).isEqualTo(track2)
 		assertThat(resultPage4.totalElements).isEqualTo(1)
 
-		val resultPage5 = trackRepository.getTrack(userId = user.id, album = "Final Fantasy")
+		val resultPage5 = trackRepository.getTracks(userId = user.id, album = "Final Fantasy")
 		assertThat(resultPage5.content[0]).isEqualTo(track1)
 		assertThat(resultPage5.totalElements).isEqualTo(1)
 	}

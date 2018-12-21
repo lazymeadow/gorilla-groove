@@ -9,15 +9,15 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 
 interface TrackRepository : CrudRepository<Track, Long> {
-	@Query("SELECT ul " +
-			"FROM Track ul " +
-			"WHERE ul.user.id = :userId " +
-			"AND (:loadHidden IS TRUE OR ul.hidden = FALSE) " +
-			"AND (:name IS NULL OR ul.name LIKE %:name%) " +
-			"AND (:artist IS NULL OR ul.artist LIKE %:artist%) " +
-			"AND (:album IS NULL OR ul.album LIKE %:album%)"
+	@Query("SELECT t " +
+			"FROM Track t " +
+			"WHERE t.user.id = :userId " +
+			"AND (:loadHidden IS TRUE OR t.hidden = FALSE) " +
+			"AND (:name IS NULL OR t.name LIKE %:name%) " +
+			"AND (:artist IS NULL OR t.artist LIKE %:artist%) " +
+			"AND (:album IS NULL OR t.album LIKE %:album%)"
 	)
-	fun getTrack(
+	fun getTracks(
 			@Param("name") name: String? = null,
 			@Param("artist") artist: String? = null,
 			@Param("album") album: String? = null,
@@ -27,10 +27,10 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	): Page<Track>
 
 	@Modifying
-	@Query("UPDATE Track ul " +
-			"SET ul.hidden = :isHidden " +
-			"WHERE ul.user.id = :userId " + // This user check is to prevent people hiding / showing
-			"AND ul.id IN :trackIds"  // other users' songs by guessing at IDs
+	@Query("UPDATE Track t " +
+			"SET t.hidden = :isHidden " +
+			"WHERE t.user.id = :userId " + // This user check is to prevent people hiding / showing
+			"AND t.id IN :trackIds"  // other users' songs by guessing at IDs
 	)
 	fun setHiddenForUser(
 			@Param("trackIds") trackIds: List<Long>,

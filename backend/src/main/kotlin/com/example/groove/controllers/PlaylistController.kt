@@ -1,8 +1,11 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Playlist
+import com.example.groove.db.model.Track
 import com.example.groove.services.PlaylistService
 import com.example.groove.util.loadLoggedInUser
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
 import org.springframework.web.bind.annotation.*
 
@@ -26,6 +29,17 @@ class PlaylistController(
 	fun addToPlaylist(@RequestBody addToPlaylistDTO: AddToPlaylistDTO) {
 		playlistService.addTracksToPlaylist(loadLoggedInUser(), addToPlaylistDTO.playlistId, addToPlaylistDTO.trackIds)
 	}
+
+	@GetMapping("/track")
+    fun getPlaylistTracks(
+			@RequestParam(value = "playlistId") playlistId: Long,
+			@RequestParam(value = "name") name: String?,
+			@RequestParam(value = "artist") artist: String?,
+			@RequestParam(value = "album") album: String?,
+			pageable: Pageable
+	): Page<Track> {
+		return playlistService.getTracks(name, artist, album, playlistId, pageable)
+    }
 
 	data class CreatePlaylistDTO(
 			val name: String
