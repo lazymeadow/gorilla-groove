@@ -1,11 +1,12 @@
 import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
-import {PopoutMenu} from "../popout-menu/popout-menu";
 import {MusicContext} from "../../services/music-provider";
+import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 
 export class SongRow extends React.Component {
 	constructor(props) {
 		super(props);
+
 	}
 
 	// This is currently causing issues with track-level updates (like updating play count)
@@ -65,40 +66,11 @@ export class SongRow extends React.Component {
 						</td>
 					)
 				})}
-				{this.props.showContextMenu ? <td><PopoutMenu
-						mainItem={{
-							className: "song-menu",
-							text: '⚙'
-						}}
-						menuItems={[
-							{ text: "Play Now", clickHandler: (e) => {
-									e.stopPropagation();
-									this.context.playTracks(this.props.getSelectedTracks())
-								}
-							},
-							{ text: "Play Next", clickHandler: (e) => {
-									e.stopPropagation();
-									this.context.playTracksNext(this.props.getSelectedTracks())
-								}
-							},
-							{ text: "Play Last", clickHandler: (e) => {
-									e.stopPropagation();
-									this.context.playTracksLast(this.props.getSelectedTracks())
-								}
-							},
-							{ text: "Make Private", clickHandler: (e) => {
-									e.stopPropagation();
-									this.context.setHidden(this.props.getSelectedTracks(), true);
-								}
-							},
-							{ text: "Make Public", clickHandler: (e) => {
-									e.stopPropagation();
-									this.context.setHidden(this.props.getSelectedTracks(), false);
-								}
-							},
-							{ text: "Delete", clickHandler: () => alert("Settings") }
-						]}
-				/></td> : <td/>}
+				{this.props.showContextMenu ? <td>
+					<SongPopoutMenu
+						getSelectedTracks={this.props.getSelectedTracks}
+					/>
+				</td> : <td/>}
 			</tr>
 		);
 	}

@@ -22,7 +22,17 @@ class PlaylistController(
 		return playlistService.createPlaylist(loadLoggedInUser(), createPlaylistDTO.name)
     }
 
+	@PostMapping("/track")
+	fun addToPlaylist(@RequestBody addToPlaylistDTO: AddToPlaylistDTO) {
+		playlistService.addTracksToPlaylist(loadLoggedInUser(), addToPlaylistDTO.playlistId, addToPlaylistDTO.trackIds)
+	}
+
 	data class CreatePlaylistDTO(
 			val name: String
+	)
+
+	data class AddToPlaylistDTO(
+			val playlistId: Long,
+			val trackIds: List<Long>
 	)
 }

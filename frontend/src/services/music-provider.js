@@ -24,7 +24,9 @@ export class MusicProvider extends React.Component {
 			playTracksLast: (...args) => this.playTracksLast(...args),
 			playNext: (...args) => this.playNext(...args),
 			setHidden: (...args) => this.setHidden(...args),
-			loadPlaylists: (...args) => this.loadPlaylists(...args)
+			loadPlaylists: (...args) => this.loadPlaylists(...args),
+			addToPlaylist: (...args) => this.addToPlaylist(...args),
+			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args)
 		};
 
 		this.trackKeyConversions = {
@@ -134,6 +136,19 @@ export class MusicProvider extends React.Component {
 		Api.get('playlist').then((playlists) => {
 			this.setState({playlists: playlists});
 		})
+	}
+
+	addToPlaylist(playlistId, trackIds) {
+		Api.post("playlist/track", {
+			playlistId: playlistId,
+			trackIds: trackIds
+		}).then(() => {
+			console.log("Wow, Ayrton. Great moves. Keep it up. I'm proud of you.");
+		})
+	}
+
+	removeFromPlaylist(trackIds, playlistId) {
+
 	}
 
 	render() {

@@ -17,4 +17,5 @@ interface PlaylistUserRepository : CrudRepository<PlaylistUser, Long> {
 			@Param("user") user: User
 	): List<Playlist>
 
+	fun findByUserAndPlaylist(user: User, playlist: Playlist): PlaylistUser?
 }

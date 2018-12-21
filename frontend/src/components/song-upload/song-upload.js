@@ -9,6 +9,7 @@ export class SongUpload extends React.Component {
 		}
 	}
 
+	// noinspection JSMethodCanBeStatic
 	openFileDialog() {
 		document.getElementById('file-upload').click();
 	}

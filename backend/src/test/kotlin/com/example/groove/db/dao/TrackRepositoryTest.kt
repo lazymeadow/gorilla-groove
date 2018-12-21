@@ -29,8 +29,6 @@ class TrackRepositoryTest(
 		assertThat(resultPage.content[0]).isEqualTo(track)
 	}
 
-	// This method --should-- be able to be named with backticks + spaces, as is standard Kotlin. But there is a problem
-	// with Java 10 + @DataJpaTest issue. https://github.com/spring-guides/tut-spring-boot-kotlin/issues/8
 	@Test
 	fun i_can_grab_tracks_by_user() {
 		val user1 = createPersistedTestUser()
