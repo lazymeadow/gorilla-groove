@@ -31,6 +31,22 @@ class PlaylistService(
 	}
 
 	@Transactional
+	fun renamePlaylist(user: User, playlistId: Long, name: String): Playlist {
+		val playlist = playlistRepository.findById(playlistId).unwrap()
+				?: throw IllegalArgumentException("No playlist with ID: $playlistId found")
+
+		if (userCanEditPlaylist(user, playlist)) {
+			playlist.name = name
+		} else {
+			throw IllegalArgumentException("User has insufficient privileges to view playlist with ID: $playlistId")
+		}
+
+		playlistRepository.save(playlist)
+
+		return playlist
+	}
+
+	@Transactional
 	fun createPlaylist(user: User, name: String): Playlist {
 		val playlist = Playlist(name = name)
 		val playlistUser = PlaylistUser(playlist = playlist, user = user, ownershipType = OwnershipType.OWNER)
@@ -77,14 +93,14 @@ class PlaylistService(
 		}
 	}
 
-	private fun userCanEditPlaylist(user: User, playlist: Playlist, tracks: List<Track>): Boolean {
+	private fun userCanEditPlaylist(user: User, playlist: Playlist, tracks: List<Track>? = null): Boolean {
 		val playlistUser = playlistUserRepository.findByUserAndPlaylist(user, playlist)
 
 		if (playlistUser == null || !playlistUser.ownershipType.hasWritePrivilege) {
 			return false
 		}
 
-		return tracks.all { it.user == user }
+		return tracks == null || tracks.all { it.user == user }
 	}
 
 	companion object {

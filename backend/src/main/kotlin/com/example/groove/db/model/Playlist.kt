@@ -19,7 +19,7 @@ data class Playlist(
 		val users: List<PlaylistUser> = emptyList(),
 
 		@Column(nullable = false)
-		val name: String,
+		var name: String,
 
 		@Column(name = "created_at", nullable = false)
 		var createdAt: Timestamp = Timestamp(Date().time)

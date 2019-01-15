@@ -31,7 +31,8 @@ export class MusicProvider extends React.Component {
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
-			updateTrack: (...args) => this.updateTrack(...args)
+			updateTrack: (...args) => this.updateTrack(...args),
+			renamePlaylist: (...args) => this.renamePlaylist(...args)
 		};
 
 		this.trackKeyConversions = {
@@ -199,7 +200,15 @@ export class MusicProvider extends React.Component {
 		track[columnName] = newValue;
 
 		Api.put('track', params).then(() => {
-			console.log("Song data updated");
+			console.log('Song data updated');
+		})
+	}
+
+	renamePlaylist(playlist, newName) {
+		playlist.name = newName;
+
+		Api.put(`playlist/${playlist.id}`, { name: newName }).then(() => {
+			console.log('Playlist renamed');
 		})
 	}
 

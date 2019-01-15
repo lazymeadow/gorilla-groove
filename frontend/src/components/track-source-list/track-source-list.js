@@ -2,6 +2,7 @@ import React from 'react';
 import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
 import {TrackView} from "../../enums/TrackView";
+import {EditableDiv} from "../editable-div/editable-div";
 
 export class TrackSourceList extends React.Component {
 	constructor(props) {
@@ -11,7 +12,8 @@ export class TrackSourceList extends React.Component {
 			dataSource: [
 				{section: TrackView.USER, data: []},
 				{section: TrackView.PLAYLIST, data: []}
-			]
+			],
+			editedId: null
 		};
 	}
 
@@ -42,7 +44,13 @@ export class TrackSourceList extends React.Component {
 		this.context.loadSongsForUser();
 	}
 
-	selectEntry(section, entry) {
+	selectEntry(section, entry, elementId) {
+		if (section === this.context.trackView && entry.id === this.context.viewedEntityId) {
+			this.setState({ editedId: elementId });
+			return; // User selected the same thing as before
+		}
+		this.setState({ editedId: null });
+
 		if (section === TrackView.USER) {
 			this.context.loadSongsForUser(entry.id);
 		} else {
@@ -76,13 +84,22 @@ export class TrackSourceList extends React.Component {
 							{node.data.map(entry => {
 								let entrySelected = this.context.trackView === node.section & entry.id === this.context.viewedEntityId;
 								let entryClass = entrySelected ? 'selected' : '';
+								let cellId = i + '-' + entry.id;
 								return (
 									<div
 										className={`tree-child ${entryClass}`}
 										key={entry.id}
-										onClick={() => this.selectEntry(node.section, entry)}
+										onClick={() => this.selectEntry(node.section, entry, cellId)}
 									>
-										{entry.username ? entry.username : entry.name}
+										<EditableDiv
+											editable={this.state.editedId === cellId}
+											text={entry.username ? entry.username : entry.name}
+											updateHandler={(newValue) => {
+												this.context.renamePlaylist(entry, newValue);
+												this.forceUpdate();
+											}}
+										/>
+
 									</div>
 								)
 							})}

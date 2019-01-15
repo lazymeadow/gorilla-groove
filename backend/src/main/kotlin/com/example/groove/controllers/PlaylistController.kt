@@ -25,6 +25,14 @@ class PlaylistController(
 		return playlistService.createPlaylist(loadLoggedInUser(), createPlaylistDTO.name)
     }
 
+	@PutMapping("/{playlistId}")
+	fun editPlaylist(
+			@PathVariable playlistId: Long,
+			@RequestBody createPlaylistDTO: CreatePlaylistDTO
+	): Playlist {
+		return playlistService.renamePlaylist(loadLoggedInUser(), playlistId, createPlaylistDTO.name)
+	}
+
 	@PostMapping("/track")
 	fun addToPlaylist(@RequestBody addToPlaylistDTO: AddToPlaylistDTO) {
 		playlistService.addTracksToPlaylist(loadLoggedInUser(), addToPlaylistDTO.playlistId, addToPlaylistDTO.trackIds)
