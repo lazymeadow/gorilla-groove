@@ -17,6 +17,14 @@ export class TrackSourceList extends React.Component {
 		};
 	}
 
+	componentDidMount() {
+		document.body.addEventListener('click', (e) => this.handleEditStop(e));
+	}
+
+	componentWillUnmount() {
+		document.body.removeEventListener('click', (e) => this.handleEditStop(e));
+	}
+
 	componentWillReceiveProps(props) {
 		let userIndex = this.state.dataSource.findIndex(data => {
 			return data.section === TrackView.USER
@@ -32,6 +40,12 @@ export class TrackSourceList extends React.Component {
 		dataSource[playlistsIndex].data = props.playlists;
 
 		this.setState({ dataSource: dataSource });
+	}
+
+	handleEditStop(event) {
+		if (event.target.id !== this.state.editedId) {
+			this.setState({ editedId: null })
+		}
 	}
 
 	handleParentNodeClick(i) {
@@ -87,6 +101,7 @@ export class TrackSourceList extends React.Component {
 								let cellId = i + '-' + entry.id;
 								return (
 									<div
+										id={cellId}
 										className={`tree-child ${entryClass}`}
 										key={entry.id}
 										onClick={() => this.selectEntry(node.section, entry, cellId)}

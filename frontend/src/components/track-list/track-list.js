@@ -26,10 +26,20 @@ export class TrackList extends React.Component {
 
 	componentDidMount() {
 		this.enableResize();
+
+		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
+		if (this.props.trackView) {
+			document.body.addEventListener('click', (e) => this.handleEditStop(e));
+		}
 	}
 
 	componentWillUnmount() {
 		this.disableResize();
+
+		if (!this.props.trackView) {
+			document.body.removeEventListener('click', (e) => this.handleEditStop(e));
+		}
+
 	}
 
 	componentDidUpdate() {
@@ -55,6 +65,12 @@ export class TrackList extends React.Component {
 			// TODO reset returns the state of the options, including column widths
 			// we could save these off somewhere and use them to re-initialize the table
 			this.resizer.reset({ disable: true });
+		}
+	}
+
+	handleEditStop(event) {
+		if (event.target.id !== this.state.editableCell) {
+			this.setState({ editableCell: null })
 		}
 	}
 
