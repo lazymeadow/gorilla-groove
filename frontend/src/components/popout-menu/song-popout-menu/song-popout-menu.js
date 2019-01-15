@@ -43,7 +43,7 @@ export class SongPopoutMenu extends React.Component {
 	}
 
 	componentDidMount() {
-		// I'd rather have these nested in the context menu instead of at the root level
+		// TODO I'd rather have these nested in a 'Playlists' context menu instead of being here at the root level
 		let playlistOptions = this.context.playlists.map(playlist => {
 			return {
 				text: `Add to Playlist: ${playlist.name}`,

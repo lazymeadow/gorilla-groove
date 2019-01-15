@@ -14,12 +14,13 @@ export class TrackList extends React.Component {
 			lastSelectedIndex: null,
 			withinDoubleClick: false,
 			doubleClickTimeout: null,
+			editableCell: null,
 			id: 'track-list' + TrackList.count
 		};
 
 		// There's more than one track-list component in view, and the column resizing needs a unique ID in order
 		// to attach to the tables. So increment this count and use it in the ID whenever we create a track list
-		// UPDATE, not sure that this actually worked...
+		// UPDATE: not sure that this actually worked...
 		TrackList.count++;
 	}
 
@@ -62,7 +63,7 @@ export class TrackList extends React.Component {
 		this.setState({ lastSelectedIndex: userTrackIndex });
 
 		// Always set the first selected if there wasn't one
-		if (!this.state.firstSelectedIndex) {
+		if (this.state.firstSelectedIndex === null) {
 			this.setState({ firstSelectedIndex: userTrackIndex })
 		}
 
@@ -72,7 +73,8 @@ export class TrackList extends React.Component {
 			this.setState({ firstSelectedIndex: userTrackIndex })
 		}
 
-		// If we're holding shift, we should select only have selected the rows between this click and the first click
+		// TODO shift is broken
+		// If we're holding shift, we should select the rows between this click and the first click
 		if (event.shiftKey && this.state.firstSelectedIndex) {
 			selected = {};
 			let startingRow = Math.min(this.state.firstSelectedIndex, userTrackIndex);
@@ -86,14 +88,25 @@ export class TrackList extends React.Component {
 			}
 		}
 
+		// The track we clicked needs to always be selected
+		selected[userTrackIndex] = true;
+
+		// TODO I don't actually make sure you double clicked the SAME row twice. Just that you double clicked. Fix perhaps?
 		if (this.state.withinDoubleClick) {
 			this.cancelDoubleClick();
 			this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
+			this.setState({ editableCell: null })
 		} else {
 			this.setupDoubleClick();
+
+			// If we ALREADY had exactly one thing selected and we clicked the same thing, edit the cell
+			if (Object.keys(selected).length === 1 && this.state.firstSelectedIndex === userTrackIndex) {
+				this.setState({ editableCell: event.target.id })
+			} else {
+				this.setState({ editableCell: null })
+			}
 		}
 
-		selected[userTrackIndex] = true;
 		this.setState({ selected: selected });
 	}
 
@@ -195,6 +208,7 @@ export class TrackList extends React.Component {
 								key={index}
 								columns={this.props.columns}
 								rowIndex={index}
+								editableCell={this.state.editableCell}
 								played={played}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}

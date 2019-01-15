@@ -30,7 +30,8 @@ export class MusicProvider extends React.Component {
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
-			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args)
+			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
+			updateTrack: (...args) => this.updateTrack(...args)
 		};
 
 		this.trackKeyConversions = {
@@ -187,6 +188,19 @@ export class MusicProvider extends React.Component {
 
 	removeFromPlaylist(trackIds, playlistId) {
 
+	}
+
+	updateTrack(track, displayColumnName, newValue) {
+		const columnName = this.trackKeyConversions[displayColumnName];
+
+		let params = { trackId: track.id };
+		params[columnName] = newValue;
+
+		track[columnName] = newValue;
+
+		Api.put('track', params).then(() => {
+			console.log("Song data updated");
+		})
 	}
 
 	render() {

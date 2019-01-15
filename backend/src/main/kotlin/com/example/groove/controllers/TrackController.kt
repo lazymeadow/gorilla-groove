@@ -2,6 +2,7 @@ package com.example.groove.controllers
 
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
+import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.services.TrackService
 import com.example.groove.util.loadLoggedInUser
 
@@ -43,7 +44,6 @@ class TrackController(
 //				.build()
 //	}
 
-	@Transactional
 	@PostMapping("/mark-listened")
 	fun markSongAsListenedTo(@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
 		trackService.markSongListenedTo(markSongAsReadDTO.trackId)
@@ -54,6 +54,14 @@ class TrackController(
 	@PostMapping("/set-hidden")
 	fun setHidden(@RequestBody setHiddenDTO: SetHiddenDTO): ResponseEntity<String> {
 		trackRepository.setHiddenForUser(setHiddenDTO.trackIds, loadLoggedInUser().id, setHiddenDTO.isHidden)
+
+		return ResponseEntity(HttpStatus.OK)
+	}
+
+	// FIXME this should be a PATCH not a PUT. But I was having issues with PATCH failing the OPTIONS check
+	@PutMapping
+	fun updateTrackData(@RequestBody updateTrackDTO: UpdateTrackDTO): ResponseEntity<String> {
+		trackService.updateTrack(loadLoggedInUser(), updateTrackDTO)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -70,4 +78,5 @@ class TrackController(
 			val trackIds: List<Long>,
 			val isHidden: Boolean
 	)
+
 }

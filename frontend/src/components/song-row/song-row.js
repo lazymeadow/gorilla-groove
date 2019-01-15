@@ -2,12 +2,17 @@ import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
 import {MusicContext} from "../../services/music-provider";
 import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
+import {EditableDiv} from "../editable-div/editable-div";
+import {Api} from "../../api";
 
 export class SongRow extends React.Component {
 	constructor(props) {
 		super(props);
-
+		this.state = {
+			updatableColumns: new Set(['Album', 'Artist', 'Name', 'Year'])
+		}
 	}
+
 
 	// This is currently causing issues with track-level updates (like updating play count)
 	// Because the value is updated directly on the track, this.props and nextProps already
@@ -48,6 +53,7 @@ export class SongRow extends React.Component {
 		}
 	}
 
+
 	render() {
 		let selected = this.props.selected ? "selected" : "";
 		let playedClass = this.props.played ? 'played' : '';
@@ -58,10 +64,19 @@ export class SongRow extends React.Component {
 				className={`song-row ${selected} ${playedClass}`}
 			>
 				{this.props.columns.map((columnName, index) => {
+					const cellId = `${this.props.rowIndex}-${index}`;
 					return (
 						<td key={index}>
 							<div className={this.props.showContextMenu && index === 0 ? 'shifted-entry' : ''}>
-								{this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
+								<EditableDiv
+									id={cellId}
+									editable={this.state.updatableColumns.has(columnName) && this.props.editableCell === cellId}
+									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
+									updateHandler={(newValue) => {
+										this.context.updateTrack(this.props.userTrack, columnName, newValue);
+										this.forceUpdate();
+									}}
+								/>
 							</div>
 						</td>
 					)

@@ -1,9 +1,12 @@
 package com.example.groove.services
 
+import com.example.groove.controllers.TrackController
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
+import com.example.groove.db.model.User
+import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -37,6 +40,7 @@ class TrackService(
 		return trackRepository.getTracks(name, artist, album, idToLoad, loadHidden, pageable)
 	}
 
+	@Transactional
 	fun markSongListenedTo(trackId: Long) {
 		val track = trackRepository.findById(trackId).unwrap()
 
@@ -51,6 +55,20 @@ class TrackService(
 
 		val trackHistory = TrackHistory(track = track)
 		trackHistoryRepository.save(trackHistory)
+	}
+
+	@Transactional
+	fun updateTrack(updatingUser: User, updateTrackDTO: UpdateTrackDTO) {
+		val track = trackRepository.findById(updateTrackDTO.trackId).unwrap()
+
+		if (track == null || track.user != loadLoggedInUser()) {
+			throw IllegalArgumentException("No track found by ID ${updateTrackDTO.trackId}!")
+		}
+
+		updateTrackDTO.name?.let { track.name = it }
+		updateTrackDTO.artist?.let { track.artist = it }
+		updateTrackDTO.album?.let { track.album = it }
+		updateTrackDTO.releaseYear?.let { track.releaseYear = it }
 	}
 
 	// I think this should be reworked to be "clone track" or "fork track" or something

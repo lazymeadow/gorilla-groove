@@ -2,7 +2,7 @@ const baseUrl = 'http://localhost:8080/api/';
 
 export class Api {
 
-  // This will likely need to be modified when we start using URL parameters to filter things
+	// This will likely need to be modified when we start using URL parameters to filter things
 	static get(url, params) {
 		let urlParameters = Api.encodeUriParamsFromObject(params);
 
@@ -15,9 +15,17 @@ export class Api {
 		}).then(res => res.json())
 	}
 
+	static put(url, params) {
+		return Api.sendRequest('put', url, params);
+	}
+
 	static post(url, params) {
+		return Api.sendRequest('post', url, params);
+	}
+
+	static sendRequest(requestType, url, params) {
 		return fetch(baseUrl + url, {
-			method: 'post',
+			method: requestType,
 			headers: new Headers({
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
@@ -31,7 +39,8 @@ export class Api {
 				return text ? JSON.parse(text) : {}
 			})
 		})
-	}
+	};
+
 
 	static upload(url, file) {
 		let body = new FormData();
