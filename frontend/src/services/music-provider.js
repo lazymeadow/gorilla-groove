@@ -1,6 +1,7 @@
 import React from "react";
 import {Api} from "../api";
 import {TrackView} from "../enums/TrackView";
+import * as LocalStorage from "../local-storage";
 
 export const MusicContext = React.createContext();
 
@@ -18,6 +19,8 @@ export class MusicProvider extends React.Component {
 			playedTrack: null,
 			playedTrackIndex: null,
 			playlists: [],
+			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
+			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			sortTracks: (...args) => this.sortTracks(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
@@ -32,7 +35,9 @@ export class MusicProvider extends React.Component {
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
 			updateTrack: (...args) => this.updateTrack(...args),
-			renamePlaylist: (...args) => this.renamePlaylist(...args)
+			renamePlaylist: (...args) => this.renamePlaylist(...args),
+			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
+			setShuffleSongs: (...args) => this.setShuffleSongs(...args)
 		};
 
 		this.trackKeyConversions = {
@@ -210,6 +215,16 @@ export class MusicProvider extends React.Component {
 		Api.put(`playlist/${playlist.id}`, { name: newName }).then(() => {
 			console.log('Playlist renamed');
 		})
+	}
+
+	setShuffleSongs(shuffleSongs) {
+		this.setState({ shuffleSongs: shuffleSongs });
+		LocalStorage.setBoolean('shuffleSongs', shuffleSongs);
+	}
+
+	setRepeatSongs(repeatSongs) {
+		this.setState({ repeatSongs: repeatSongs });
+		LocalStorage.setBoolean('repeatSongs', repeatSongs);
 	}
 
 	render() {

@@ -100,11 +100,19 @@ export class PlaybackControls extends React.Component {
 			<div>
 				Now Playing: {playedTrack ? playedTrack.name : 'Nothing'}
 				<div>
-					<button>Start</button>
-					<button>Stop</button>
-					<audio id="audio" src={src} controls>
-						Your browser is ancient. Be less ancient.
-					</audio>
+					<div>
+						<audio id="audio" src={src} controls>
+							Your browser is ancient. Be less ancient.
+						</audio>
+					</div>
+					<div>
+						<button onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}>Repeat</button>
+						Repeat is {this.context.repeatSongs ? 'On' : 'Off'}
+					</div>
+					<div>
+						<button onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}>Shuffle</button>
+						Shuffle is {this.context.shuffleSongs ? 'On' : 'Off'}
+					</div>
 				</div>
 			</div>
 		)
