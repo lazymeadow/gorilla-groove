@@ -87,10 +87,31 @@ export class PlaybackControls extends React.Component {
 	}
 
 	handleSongEnd() {
-		// TODO logic for repeat / shuffle
-		if (this.context.playedTrackIndex + 1 < this.context.nowPlayingTracks.length) {
-			this.context.playNext()
+		if (this.context.shuffleSongs) {
+			// If we're shuffling and have more songs to shuffle through, play a random song
+			if (this.context.songIndexesToShuffle.length > 0) {
+				this.context.playIndex(this.getRandomIndex())
+
+				// If we are out of songs to shuffle through, but ARE repeating, reset the shuffle list and pick a random one
+			} else if (this.context.repeatSongs) {
+				this.context.resetShuffleIndexes();
+				this.context.playIndex(this.getRandomIndex())
+			}
+		} else {
+			// If we aren't shuffling, and we have more songs, just pick the next one
+			if (this.context.playedTrackIndex + 1 < this.context.nowPlayingTracks.length) {
+				this.context.playIndex(this.context.playedTrackIndex + 1);
+
+				// Otherwise, if we have run out of songs, but are repeating, start back over from 0
+			} else if (this.context.repeatSongs) {
+				this.context.playIndex(0);
+			}
 		}
+	}
+
+	getRandomIndex() {
+		let shuffleIndexes = this.context.songIndexesToShuffle;
+		return shuffleIndexes[Math.floor(Math.random() * shuffleIndexes.length)];
 	}
 
 	render() {
