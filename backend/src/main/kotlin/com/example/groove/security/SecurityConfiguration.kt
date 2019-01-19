@@ -37,8 +37,11 @@ class SecurityConfiguration(
 ) : WebSecurityConfigurerAdapter() {
 
 	private val publicUrls = OrRequestMatcher(
-			AntPathRequestMatcher("/authentication/login**"),
+			AntPathRequestMatcher("/api/authentication/login**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
+			AntPathRequestMatcher("/dist/bundle.js"),
+			AntPathRequestMatcher("/dist/index.css"),
+			AntPathRequestMatcher("/images/**"),
 			AntPathRequestMatcher("/**", HttpMethod.OPTIONS.toString(), false) // allow CORS option calls
 	)
 	private val protectedUrls = NegatedRequestMatcher(publicUrls)

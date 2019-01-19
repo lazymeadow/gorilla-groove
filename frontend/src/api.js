@@ -1,4 +1,5 @@
-const baseUrl = 'http://localhost:8080/api/';
+const location = window.location;
+const baseUrl = location + 'api/';
 
 export class Api {
 
@@ -56,7 +57,7 @@ export class Api {
 	}
 
 	static getSongResourceLink(fileName) {
-		return `${baseUrl}music/${fileName}?t=${sessionStorage.getItem('token')}`;
+		return `${location}music/${fileName}?t=${sessionStorage.getItem('token')}`;
 	}
 
 	static getAlbumArtResourceLink(userTrack) {

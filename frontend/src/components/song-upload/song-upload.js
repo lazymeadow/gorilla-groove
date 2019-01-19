@@ -35,7 +35,7 @@ export class SongUpload extends React.Component {
 				<button className={`${buttonClass}`} onClick={() => this.openFileDialog()}>
 					Upload a file
 				</button>
-				<img src="./static/ajax-loader.gif" className={`${loaderClass}`}/>
+				<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
 				<input
 					type="file"
 					id="file-upload"

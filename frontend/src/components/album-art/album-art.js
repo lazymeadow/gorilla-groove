@@ -3,7 +3,7 @@ import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 
-let defaultImage = './static/unknown-art.jpg';
+let defaultImage = './images/unknown-art.jpg';
 
 export class AlbumArt extends React.Component {
 	constructor(props) {

@@ -13,6 +13,11 @@ export class SiteLayout extends React.Component {
 			isLoaded: false, // TODO use this to actually indicate loading
 			ownUser: null,
 			otherUsers: []
+		};
+
+		// TODO perhaps also check that this token is valid, not just that it exists
+		if (!sessionStorage.getItem('token')) {
+			this.props.history.push('/login'); // Redirect to the login page now that we logged out
 		}
 	}
 

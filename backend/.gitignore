@@ -1,5 +1,6 @@
 ### Project ###
 config/application.properties
+src/main/resources/static/*
 
 .gradle
 /build/
