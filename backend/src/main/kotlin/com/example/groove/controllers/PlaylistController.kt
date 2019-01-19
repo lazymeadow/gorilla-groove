@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("playlist")
+@RequestMapping("api/playlist")
 class PlaylistController(
 		private val playlistService: PlaylistService
 ) {

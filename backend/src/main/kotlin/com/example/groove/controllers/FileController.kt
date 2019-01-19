@@ -1,6 +1,5 @@
 package com.example.groove.controllers
 
-import com.example.groove.db.dao.TrackRepository
 import com.example.groove.services.FileStorageService
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
@@ -15,7 +14,7 @@ import javax.servlet.http.HttpServletRequest
 import java.io.IOException
 
 @RestController
-@RequestMapping("file")
+@RequestMapping("api/file")
 class FileController(
 		private val fileStorageService: FileStorageService
 ) {
