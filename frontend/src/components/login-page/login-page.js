@@ -8,7 +8,7 @@ class LoginPageInternal extends React.Component {
 
 	submit(event) {
 		event.preventDefault();
-		fetch('http://localhost:8080/api/authentication/login', {
+		fetch(window.location.host + '/api/authentication/login', {
 			method: 'post',
 			headers: new Headers({
 				'Content-Type': 'application/json'
