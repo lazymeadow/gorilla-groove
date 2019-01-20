@@ -63,7 +63,7 @@ export class Api {
 	static getAlbumArtResourceLink(userTrack) {
 		let artId = userTrack.id;
 		let parentDirectory = parseInt(artId / 1000);
-		return `${baseUrl}album-art/${parentDirectory}/${artId}.png?t=${sessionStorage.getItem('token')}`;
+		return `${location}album-art/${parentDirectory}/${artId}.png?t=${sessionStorage.getItem('token')}`;
 	}
 
 	static encodeUriParamsFromObject(params) {
