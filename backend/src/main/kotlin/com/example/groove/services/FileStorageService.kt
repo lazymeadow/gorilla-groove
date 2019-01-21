@@ -5,6 +5,7 @@ import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
+import com.example.groove.properties.FFmpegProperties
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
 import org.springframework.core.io.Resource
@@ -29,7 +30,8 @@ class FileStorageService(
 		musicProperties: MusicProperties,
 		private val ffmpegService: FFmpegService,
 		private val fileMetadataService: FileMetadataService,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val ffmpegProperties: FFmpegProperties
 ) {
 
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.uploadDir)
@@ -114,7 +116,23 @@ class FileStorageService(
 		val track = fileMetadataService.createTrackFromFileName(convertedFileName, user)
 		trackRepository.save(track)
 
+		// Now that the file has been saved and has an ID, rename the file on disk to use the ID in the name
+		// This way there will never be collision problems with names
+		renameSongFile(track)
+
 		return track
+	}
+
+	// TODO group the songs in folders of 1000 as with album art
+	private fun renameSongFile(track: Track) {
+		val outputDir = ffmpegProperties.ffmpegOutputLocation
+		val sourceFile = File(outputDir + track.fileName)
+
+		val destinationFile = File("$outputDir" + "${track.id}.ogg")
+		sourceFile.renameTo(destinationFile)
+
+		track.fileName = "${track.id}.ogg"
+		trackRepository.save(track)
 	}
 
 	fun loadFileAsResource(fileName: String): Resource {
