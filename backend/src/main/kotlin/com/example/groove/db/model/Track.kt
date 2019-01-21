@@ -45,12 +45,16 @@ data class Track(
 		@Column(name = "play_count", nullable = false)
 		var playCount: Int = 0,
 
-		@Column(columnDefinition="BIT") // MySQL lacks a Boolean type. Need to label it as a BIT column
+		@Column(columnDefinition = "BIT") // MySQL lacks a Boolean type. Need to label it as a BIT column
 		var hidden: Boolean = false,
 
 		@Column(name = "last_played")
 		var lastPlayed: Timestamp? = null,
 
 		@Column(name = "created_at", nullable = false)
-		var createdAt: Timestamp = Timestamp(Date().time)
+		var createdAt: Timestamp = Timestamp(Date().time),
+
+		@JsonIgnore
+		@Column(columnDefinition = "BIT")
+		var deleted: Boolean = false
 )

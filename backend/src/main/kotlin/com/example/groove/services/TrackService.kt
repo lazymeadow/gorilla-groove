@@ -1,12 +1,12 @@
 package com.example.groove.services
 
-import com.example.groove.controllers.TrackController
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.properties.FFmpegProperties
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.File
 import java.sql.Timestamp
 import java.util.*
 
@@ -22,7 +23,8 @@ import java.util.*
 @Service
 class TrackService(
 		private val trackRepository: TrackRepository,
-		private val trackHistoryRepository: TrackHistoryRepository
+		private val trackHistoryRepository: TrackHistoryRepository,
+		private val fFmpegProperties: FFmpegProperties
 ) {
 
 	@Transactional(readOnly = true)
@@ -69,6 +71,29 @@ class TrackService(
 		updateTrackDTO.artist?.let { track.artist = it }
 		updateTrackDTO.album?.let { track.album = it }
 		updateTrackDTO.releaseYear?.let { track.releaseYear = it }
+	}
+
+	fun deleteTracks(loadLoggedInUser: User, trackIds: List<Long>) {
+		trackRepository.findAllById(trackIds).forEach { track ->
+			if (track.user.id == loadLoggedInUser.id) {
+				track.deleted = true
+				trackRepository.save(track)
+
+				deleteFileIfUnused(track.fileName)
+			}
+		}
+	}
+
+	private fun deleteFileIfUnused(fileName: String) {
+		if (trackRepository.findAllByFileName(fileName).isNotEmpty()) {
+			logger.info("The track $fileName was being deleted, but another user has this track. Skipping file delete")
+			return
+		}
+
+		val success = File(fFmpegProperties.ffmpegOutputLocation + fileName).delete()
+		if (!success) {
+			logger.error("The file $fileName should have been deleted, but couldn't be")
+		}
 	}
 
 	// I think this should be reworked to be "clone track" or "fork track" or something

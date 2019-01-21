@@ -31,6 +31,7 @@ export class MusicProvider extends React.Component {
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
 			playIndex: (...args) => this.playIndex(...args),
+			deleteTracks: (...args) => this.deleteTracks(...args),
 			setHidden: (...args) => this.setHidden(...args),
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
@@ -71,6 +72,10 @@ export class MusicProvider extends React.Component {
 				trackView: TrackView.LIBRARY,
 				viewedEntityId: null
 			});
+		}
+
+		if (!params.sort) {
+			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
 		}
 
 		Api.get("track", params).then((result) => {
@@ -186,6 +191,15 @@ export class MusicProvider extends React.Component {
 		}).catch(error => {
 			console.error(error);
 		});
+	}
+
+	deleteTracks(tracks) {
+		Api.delete('track', {
+			trackIds: tracks.map(track => track.id)
+		}).then(() => {
+			// Call sortTracks() with no arguments, which will reload the songs for our view (and flush out the deleted ones)
+			this.sortTracks();
+		})
 	}
 
 	loadPlaylists() {

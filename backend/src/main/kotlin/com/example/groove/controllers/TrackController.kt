@@ -66,6 +66,13 @@ class TrackController(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
+	@DeleteMapping
+	fun deleteTracks(@RequestBody deleteTrackDTO: DeleteTrackDTO): ResponseEntity<String> {
+		trackService.deleteTracks(loadLoggedInUser(), deleteTrackDTO.trackIds)
+
+		return ResponseEntity(HttpStatus.OK)
+	}
+
 	data class AddToLibraryDTO(
 			val trackId: Long
 	)
@@ -79,4 +86,7 @@ class TrackController(
 			val isHidden: Boolean
 	)
 
+	data class DeleteTrackDTO(
+			val trackIds: List<Long>
+	)
 }

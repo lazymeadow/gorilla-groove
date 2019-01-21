@@ -32,12 +32,11 @@ export class SongPopoutMenu extends React.Component {
 						this.context.setHidden(this.props.getSelectedTracks(), false);
 					}
 				},
-				{ text: "Add To Playlist", clickHandler: (e) => {
+				{ text: "Delete", clickHandler: (e) => {
 						e.stopPropagation();
-						this.context.setHidden(this.props.getSelectedTracks(), false);
+						this.context.deleteTracks(this.props.getSelectedTracks(), false);
 					}
-				},
-				{ text: "Delete", clickHandler: () => alert("Settings") }
+				}
 			]
 		};
 	}

@@ -12,6 +12,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Query("SELECT t " +
 			"FROM Track t " +
 			"WHERE t.user.id = :userId " +
+			"AND t.deleted = FALSE " +
 			"AND (:loadHidden IS TRUE OR t.hidden = FALSE) " +
 			"AND (:name IS NULL OR t.name LIKE %:name%) " +
 			"AND (:artist IS NULL OR t.artist LIKE %:artist%) " +
@@ -37,4 +38,13 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("userId") userId: Long,
 			@Param("isHidden") isHidden: Boolean
 	)
+
+	@Query("SELECT t " +
+			"FROM Track t " +
+			"WHERE t.fileName = :fileName " +
+			"AND t.deleted = FALSE"
+	)
+	fun findAllByFileName(
+			@Param("fileName") fileName: String
+	): List<Track>
 }

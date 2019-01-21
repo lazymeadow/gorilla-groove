@@ -24,6 +24,10 @@ export class Api {
 		return Api.sendRequest('post', url, params);
 	}
 
+	static delete(url, params) {
+		return Api.sendRequest('delete', url, params);
+	}
+
 	static sendRequest(requestType, url, params) {
 		return fetch(baseUrl + url, {
 			method: requestType,
