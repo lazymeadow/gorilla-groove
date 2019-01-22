@@ -37,6 +37,12 @@ export class Api {
 			}),
 			body: JSON.stringify(params)
 		}).then(res => {
+			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
+			// I don't like this behavior, since there was an issue. Throw an error so they fall into catch()
+			if (!res.ok) {
+				throw Error(res.statusText)
+			}
+
 			// There isn't always a response body for POSTs, and calling res.json() will create a parse error
 			// in the console, even within a try / catch. Really this is probably an issue with the server
 			// and it probably shouldn't return empty responses. But that sounds more difficult to tackle

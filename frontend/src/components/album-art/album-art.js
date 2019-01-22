@@ -41,8 +41,8 @@ export class AlbumArt extends React.Component {
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
 				>
-				<img className="modal-image" src={this.getImageLink()}/>
-			</Modal>
+					<img className="modal-image" src={this.getImageLink()}/>
+				</Modal>
 			</div>
 		)
 	}
