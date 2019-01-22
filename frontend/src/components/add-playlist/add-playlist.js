@@ -1,5 +1,6 @@
 import React from 'react';
 import {Api} from "../../api";
+import {toast} from "react-toastify";
 
 export class AddPlaylistButton extends React.Component {
 	constructor(props) {
@@ -8,8 +9,11 @@ export class AddPlaylistButton extends React.Component {
 
 	createPlaylist() {
 		Api.post('playlist', {name: 'New Playlist'})
-			.then(result => console.log(result))
-			.catch(error => console.error(error));
+			.then(() => toast.success('New playlist created'))
+			.catch(error => {
+				console.error(error);
+				toast.error('The creation of a new playlist failed');
+			});
 	}
 
 	render() {

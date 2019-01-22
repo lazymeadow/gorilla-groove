@@ -1,6 +1,7 @@
 import React from 'react';
 import {PopoutMenu} from "../popout-menu";
 import {MusicContext} from "../../../services/music-provider";
+import {toast} from "react-toastify";
 
 export class SongPopoutMenu extends React.Component {
 	constructor(props) {
@@ -24,17 +25,47 @@ export class SongPopoutMenu extends React.Component {
 				},
 				{ text: "Make Private", clickHandler: (e) => {
 						e.stopPropagation();
-						this.context.setHidden(this.props.getSelectedTracks(), true);
+						const tracks = this.props.getSelectedTracks();
+						this.context.setHidden(tracks, true).then(() => {
+							if (tracks.length === 1) {
+								toast.success(`'${tracks[0].name}' was made private`)
+							} else {
+								toast.success(`${tracks.length} tracks were made private`)
+							}
+						}).catch((error) => {
+							console.error(error);
+							toast.error('Failed to make the selected tracks private')
+						});
 					}
 				},
 				{ text: "Make Public", clickHandler: (e) => {
 						e.stopPropagation();
-						this.context.setHidden(this.props.getSelectedTracks(), false);
+						const tracks = this.props.getSelectedTracks();
+						this.context.setHidden(tracks, false).then(() => {
+							if (tracks.length === 1) {
+								toast.success(`'${tracks[0].name}' was made public`)
+							} else {
+								toast.success(`${tracks.length} tracks were made public`)
+							}
+						}).catch((error) => {
+							console.error(error);
+							toast.error('Failed to make the selected tracks public')
+						});
 					}
 				},
 				{ text: "Delete", clickHandler: (e) => {
 						e.stopPropagation();
-						this.context.deleteTracks(this.props.getSelectedTracks(), false);
+						const tracks = this.props.getSelectedTracks();
+						this.context.deleteTracks(tracks, false).then(() => {
+							if (tracks.length === 1) {
+								toast.success(`'${tracks[0].name}' was deleted`)
+							} else {
+								toast.success(`${tracks.length} tracks were deleted`)
+							}
+						}).catch((error) => {
+							console.error(error);
+							toast.error('Failed to delete the selected tracks')
+						});
 					}
 				}
 			]
@@ -48,8 +79,18 @@ export class SongPopoutMenu extends React.Component {
 				text: `Add to Playlist: ${playlist.name}`,
 				clickHandler: (e) => {
 					e.stopPropagation();
-					let trackIds = this.props.getSelectedTracks().map(track => track.id);
-					this.context.addToPlaylist(playlist.id, trackIds);
+					let tracks = this.props.getSelectedTracks();
+					let trackIds = tracks.map(track => track.id);
+					this.context.addToPlaylist(playlist.id, trackIds).then(() => {
+						if (tracks.length === 1) {
+							toast.success(`'${tracks[0].name}' was added to '${playlist.name}'`)
+						} else {
+							toast.success(`${tracks.length} tracks were added to '${playlist.name}'`)
+						}
+					}).catch((error) => {
+						console.error(error);
+						toast.error(`Failed to add the selected tracks to '${playlist.name}'`)
+					});
 				}
 			}
 		});

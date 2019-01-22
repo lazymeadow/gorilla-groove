@@ -78,7 +78,7 @@ export class MusicProvider extends React.Component {
 			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
 		}
 
-		Api.get("track", params).then((result) => {
+		return Api.get("track", params).then((result) => {
 			this.setState({ viewedTracks: result.content });
 		}).catch((error) => {
 			console.error(error)
@@ -182,19 +182,17 @@ export class MusicProvider extends React.Component {
 	}
 
 	setHidden(tracks, isHidden) {
-		Api.post('track/set-hidden', {
+		return Api.post('track/set-hidden', {
 			trackIds: tracks.map(track => track.id),
 			isHidden: isHidden
 		}).then(() => {
 			tracks.forEach(track => track.hidden = isHidden);
 			this.forceTrackUpdate();
-		}).catch(error => {
-			console.error(error);
 		});
 	}
 
 	deleteTracks(tracks) {
-		Api.delete('track', {
+		return Api.delete('track', {
 			trackIds: tracks.map(track => track.id)
 		}).then(() => {
 			// Call sortTracks() with no arguments, which will reload the songs for our view (and flush out the deleted ones)
@@ -203,7 +201,7 @@ export class MusicProvider extends React.Component {
 	}
 
 	loadPlaylists() {
-		Api.get('playlist').then((playlists) => {
+		return Api.get('playlist').then((playlists) => {
 			this.setState({playlists: playlists});
 		})
 	}
@@ -223,7 +221,7 @@ export class MusicProvider extends React.Component {
 	}
 
 	addToPlaylist(playlistId, trackIds) {
-		Api.post("playlist/track", {
+		return Api.post("playlist/track", {
 			playlistId: playlistId,
 			trackIds: trackIds
 		}).then(() => {
@@ -243,7 +241,7 @@ export class MusicProvider extends React.Component {
 
 		track[columnName] = newValue;
 
-		Api.put('track', params).then(() => {
+		return Api.put('track', params).then(() => {
 			console.log('Song data updated');
 		})
 	}
@@ -251,7 +249,7 @@ export class MusicProvider extends React.Component {
 	renamePlaylist(playlist, newName) {
 		playlist.name = newName;
 
-		Api.put(`playlist/${playlist.id}`, { name: newName }).then(() => {
+		return Api.put(`playlist/${playlist.id}`, { name: newName }).then(() => {
 			console.log('Playlist renamed');
 		})
 	}

@@ -1,6 +1,7 @@
 import React from 'react';
 import {Api} from "../../api";
 import {Modal} from "../modal/modal";
+import {toast} from "react-toastify";
 
 export class InviteUserButton extends React.Component {
 	constructor(props) {
@@ -22,7 +23,7 @@ export class InviteUserButton extends React.Component {
 		const password2 = document.getElementById('password2').value;
 
 		if (password1 !== password2) {
-			console.error("Passwords do not match");
+			toast.error('The passwords do not match');
 			return;
 		}
 
@@ -32,8 +33,10 @@ export class InviteUserButton extends React.Component {
 			password: password1
 		}).then(() => {
 			this.setModalOpen(false);
+			toast.success(`User ${username} created successfully`);
 		}).catch((error) => {
 			console.error(error);
+			toast.error('The creation of a new user failed');
 		});
 	}
 

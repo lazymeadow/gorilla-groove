@@ -1,5 +1,6 @@
 import React from 'react';
 import {Api} from "../../api";
+import {toast} from "react-toastify";
 
 export class SongUpload extends React.Component {
 	constructor(props) {
@@ -19,10 +20,14 @@ export class SongUpload extends React.Component {
 
 		// This can be altered to be a multi-file upload, and perhaps it should be
 		let file = inputEvent.target.files[0];
+		const name = file.name;
 
 		Api.upload('file/upload', file)
-			.then(result => console.log(result))
-			.catch(error => console.error(error))
+			.then(() => toast.success(`'${name}' uploaded successfully`))
+			.catch(error => {
+				console.error(error);
+				toast.error(`The upload of '${name}' failed`)
+			})
 			.finally(() => this.setState({ uploading: false }));
 	}
 
