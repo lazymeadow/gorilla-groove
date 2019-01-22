@@ -13,6 +13,7 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
 	@Query("SELECT pt.track " +
 			"FROM PlaylistTrack pt " +
 			"WHERE pt.playlist = :playlist " +
+			"AND pt.track.deleted = FALSE " +
 			"AND (:name IS NULL OR pt.track.name LIKE %:name%) " +
 			"AND (:artist IS NULL OR pt.track.artist LIKE %:artist%) " +
 			"AND (:album IS NULL OR pt.track.album LIKE %:album%)"
