@@ -41,6 +41,7 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
 			AntPathRequestMatcher("/dist/bundle.js"),
 			AntPathRequestMatcher("/dist/index.css"),
+			AntPathRequestMatcher("/node_modules/react-toastify/dist/ReactToastify.min.css"), // I hate that I did this, but I didn't want to deal with webpack to combine them
 			AntPathRequestMatcher("/images/**"),
 			AntPathRequestMatcher("/**", HttpMethod.OPTIONS.toString(), false) // allow CORS option calls
 	)
