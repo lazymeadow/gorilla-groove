@@ -48,7 +48,7 @@ export class InviteUserButton extends React.Component {
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
 				>
-					<form className="invite-user-modal" onSubmit={(e) => this.submitInviteForm(e)}>
+					<form className="form-modal" onSubmit={(e) => this.submitInviteForm(e)}>
 						<div>
 							<label htmlFor="username">Username</label>
 							<input id="username" name="username" type="text" maxLength="32" required/>

@@ -3,30 +3,43 @@ package com.example.groove.services
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.dto.YouTubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.properties.YouTubeDlProperties
 import com.example.groove.util.loadLoggedInUser
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
+import java.util.*
 
 
 @Service
 class YouTubeService(
 		private val fileStorageService: FileStorageService,
 		private val fileStorageProperties: FileStorageProperties,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val youTubeDlProperties: YouTubeDlProperties
 ) {
 
-	@Transactional(readOnly = true)
+	@Transactional
 	fun downloadSong(youTubeDownloadDTO: YouTubeDownloadDTO) {
 		val url = youTubeDownloadDTO.url
 
-		val tmpFileName = RandomStringUtils.random(10)
-		val destination = fileStorageProperties.uploadDir + "$tmpFileName.ogg"
-		val command = "youtube-dl --extract-audio $url -o $destination --write-thumbnail"
+		val tmpFileName = UUID.randomUUID().toString()
+		val destination = fileStorageProperties.uploadDir + tmpFileName
 
-		Runtime.getRuntime().exec(command)
+		val pb = ProcessBuilder(
+				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
+				url,
+				"--extract-audio",
+				"-o",
+				"$destination.%(ext)s",
+				"--write-thumbnail"
+		)
+		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
+		val p = pb.start()
+		p.waitFor()
+
 		val newSong = File("$destination.ogg")
 		val newAlbumArt = File("$destination.jpg")
 		if (!newSong.exists()) {
@@ -36,7 +49,7 @@ class YouTubeService(
 			logger.error("Failed to download album art for song at URL: $url. Continuing anyway")
 		}
 
-		val track = fileStorageService.convertAndSaveTrackForUser(tmpFileName, loadLoggedInUser())
+		val track = fileStorageService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser())
 		// If the uploader provided any metadata, add it to the track and save it again
 		youTubeDownloadDTO.name?.let { track.name = it }
 		youTubeDownloadDTO.artist?.let { track.artist = it }
