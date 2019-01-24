@@ -8,6 +8,7 @@ import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FFmpegProperties
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
@@ -23,6 +24,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
 import javax.imageio.ImageIO
+import kotlin.system.measureTimeMillis
 
 @Service
 class FileStorageService(
@@ -95,25 +97,33 @@ class FileStorageService(
 		}
 	}
 
-	private fun moveAlbumArt(tmpAlbumArtName: File, trackId: Long) {
+	fun moveAlbumArt(tmpAlbumArt: File, trackId: Long) {
 		val parentDirectoryName = trackId / 1000 // Only put 1000 album art in a single directory for speed
 		val destinationFile = File("$albumArtLocation/$parentDirectoryName/$trackId.png")
 
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
 
-		tmpAlbumArtName.renameTo(destinationFile)
+		tmpAlbumArt.renameTo(destinationFile)
 	}
 
 	@Transactional
 	fun convertAndSaveTrackForUser(fileName: String, user: User): Track {
-		// convert to .ogg
-		// TODO this also moves the file from the uploadDir to its final home in the music dir
-		// TODO we probably don't want the FFmpeg service responsible for moving the file, just converting it
-		val convertedFileName = ffmpegService.convertTrack(fileName)
+		var convertedFileName: String? = null
+
+		// Timing for benchmarks while messing with AWS. Remove later
+		val timeToConvert = measureTimeMillis {
+			// convert to .ogg
+			// TODO this also moves the file from the uploadDir to its final home in the music dir
+			// TODO we probably don't want the FFmpeg service responsible for moving the file, just converting it
+
+			convertedFileName = ffmpegService.convertTrack(fileName)
+		}
+
+		logger.info("FFmpeg convert of $fileName done in $timeToConvert")
 
 		// add the track to database
-		val track = fileMetadataService.createTrackFromFileName(convertedFileName, user)
+		val track = fileMetadataService.createTrackFromFileName(convertedFileName!!, user)
 		trackRepository.save(track)
 
 		// Now that the file has been saved and has an ID, rename the file on disk to use the ID in the name
@@ -148,4 +158,8 @@ class FileStorageService(
 			throw MyFileNotFoundException("File not found $fileName", ex)
 		}
 	}
+
+	companion object {
+        private val logger = LoggerFactory.getLogger(FileStorageService::class.java)
+    }
 }

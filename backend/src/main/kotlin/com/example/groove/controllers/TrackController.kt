@@ -3,7 +3,9 @@ package com.example.groove.controllers
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.dto.YouTubeDownloadDTO
 import com.example.groove.services.TrackService
+import com.example.groove.services.YouTubeService
 import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.data.domain.Page
@@ -17,7 +19,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val youTubeService: YouTubeService
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
@@ -31,18 +34,6 @@ class TrackController(
 	): Page<Track> {
 		return trackService.getTracks(name, artist, album, userId, pageable)
     }
-
-	// I don't know that this still makes sense. I think the two ways to add tracks
-	// will be uploading them, and cloning them from another user. Probably both will
-	// have dedicated endpoints
-//	@PostMapping
-//	fun addToLibrary(@RequestBody addToLibraryDTO: AddToLibraryDTO): ResponseEntity<String> {
-//		trackService.addTrack(loadLoggedInUser(), addToLibraryDTO.trackId)
-//
-//		return ResponseEntity
-//				.ok()
-//				.build()
-//	}
 
 	@PostMapping("/mark-listened")
 	fun markSongAsListenedTo(@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
@@ -73,6 +64,11 @@ class TrackController(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
+	@PostMapping("/youtube-dl")
+	fun youtubeDownload(@RequestBody youTubeDownloadDTO: YouTubeDownloadDTO) {
+		youTubeService.downloadSong(youTubeDownloadDTO)
+	}
+
 	data class AddToLibraryDTO(
 			val trackId: Long
 	)
@@ -89,4 +85,6 @@ class TrackController(
 	data class DeleteTrackDTO(
 			val trackIds: List<Long>
 	)
+
+
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import javax.servlet.http.HttpServletRequest
 import java.io.IOException
+import kotlin.system.measureTimeMillis
 
 @RestController
 @RequestMapping("api/file")
@@ -24,8 +25,14 @@ class FileController(
 	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
+		logger.info("Beginning file upload: ${file.name}")
+
 		// TODO I imagine we will return this to the front end so it can add it
-        val track = fileStorageService.storeSongForUser(file, loadLoggedInUser())
+		val timeToUpload = measureTimeMillis {
+			val track = fileStorageService.storeSongForUser(file, loadLoggedInUser())
+		}
+
+		logger.info("File upload complete for ${file.name} in $timeToUpload")
 
         return ResponseEntity(HttpStatus.CREATED)
     }
