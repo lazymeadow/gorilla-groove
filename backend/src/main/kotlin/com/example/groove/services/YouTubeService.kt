@@ -31,9 +31,11 @@ class YouTubeService(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
 				url,
 				"--extract-audio",
+				"--audio-format",
+				"vorbis",
 				"-o",
-				"$destination.%(ext)s",
-				"--write-thumbnail"
+				"$destination.ogg"
+//				"--write-thumbnail" // TODO Having some problems with images. Circle back around to this
 		)
 		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
 		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
