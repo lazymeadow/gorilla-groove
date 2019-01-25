@@ -18,6 +18,12 @@ export class EditableDiv extends React.Component {
 		}
 	}
 
+	handleKeyPress(event) {
+		if (event.key === 'Enter') {
+			this.props.stopEdit();
+		}
+	}
+
 	render() {
 		if (this.props.editable) {
 			return (
@@ -25,6 +31,7 @@ export class EditableDiv extends React.Component {
 					id={this.props.id}
 					defaultValue={this.props.text}
 					onChange={(event) => this.setState({ newValue: event.target.value})}
+					onKeyDown={this.handleKeyPress.bind(this)}
 					autoFocus
 				/>
 			)

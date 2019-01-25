@@ -71,6 +71,7 @@ export class SongRow extends React.Component {
 									id={cellId}
 									editable={this.state.updatableColumns.has(columnName) && this.props.editableCell === cellId}
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
+									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={(newValue) => {
 										this.context.updateTrack(this.props.userTrack, columnName, newValue);
 										this.forceUpdate();

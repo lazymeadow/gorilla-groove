@@ -70,7 +70,7 @@ export class TrackList extends React.Component {
 
 	handleEditStop(event) {
 		if (event.target.id !== this.state.editableCell) {
-			this.setState({ editableCell: null })
+			this.stopCellEdits();
 		}
 	}
 
@@ -165,6 +165,10 @@ export class TrackList extends React.Component {
 		}
 	}
 
+	stopCellEdits() {
+		this.setState({ editableCell: null })
+	}
+
 	getSelectedTracks() {
 		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
 	}
@@ -243,7 +247,8 @@ export class TrackList extends React.Component {
 								selected={this.state.selected[index.toString()]}
 								showContextMenu={index === this.state.lastSelectedIndex}
 								onClick={this.handleRowClick.bind(this)}
-								getSelectedTracks={() => this.getSelectedTracks()}
+								getSelectedTracks={this.getSelectedTracks.bind(this)}
+								stopCellEdits={this.stopCellEdits.bind(this)}
 							/>
 						);
 					})}
