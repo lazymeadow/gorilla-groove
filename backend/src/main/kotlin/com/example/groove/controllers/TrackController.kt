@@ -3,9 +3,9 @@ package com.example.groove.controllers
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.dto.UpdateTrackDTO
-import com.example.groove.dto.YouTubeDownloadDTO
+import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.TrackService
-import com.example.groove.services.YouTubeService
+import com.example.groove.services.YoutubeService
 import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.data.domain.Page
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*
 class TrackController(
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository,
-		private val youTubeService: YouTubeService
+		private val youTubeService: YoutubeService
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
@@ -65,7 +65,7 @@ class TrackController(
 	}
 
 	@PostMapping("/youtube-dl")
-	fun youtubeDownload(@RequestBody youTubeDownloadDTO: YouTubeDownloadDTO) {
+	fun youtubeDownload(@RequestBody youTubeDownloadDTO: YoutubeDownloadDTO) {
 		youTubeService.downloadSong(youTubeDownloadDTO)
 	}
 

@@ -1,7 +1,7 @@
 package com.example.groove.services
 
 import com.example.groove.db.dao.TrackRepository
-import com.example.groove.dto.YouTubeDownloadDTO
+import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
 import com.example.groove.util.loadLoggedInUser
@@ -13,7 +13,7 @@ import java.util.*
 
 
 @Service
-class YouTubeService(
+class YoutubeService(
 		private val fileStorageService: FileStorageService,
 		private val fileStorageProperties: FileStorageProperties,
 		private val trackRepository: TrackRepository,
@@ -21,8 +21,8 @@ class YouTubeService(
 ) {
 
 	@Transactional
-	fun downloadSong(youTubeDownloadDTO: YouTubeDownloadDTO) {
-		val url = youTubeDownloadDTO.url
+	fun downloadSong(youtubeDownloadDTO: YoutubeDownloadDTO) {
+		val url = youtubeDownloadDTO.url
 
 		val tmpFileName = UUID.randomUUID().toString()
 		val destination = fileStorageProperties.uploadDir + tmpFileName
@@ -34,8 +34,8 @@ class YouTubeService(
 				"--audio-format",
 				"vorbis",
 				"-o",
-				"$destination.ogg"
-//				"--write-thumbnail" // TODO Having some problems with images. Circle back around to this
+				"$destination.ogg",
+				"--write-thumbnail" // Seems to plop things out as .pngs in my testing. May need to convert it if not always PNGs
 		)
 		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
 		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -53,9 +53,10 @@ class YouTubeService(
 
 		val track = fileStorageService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser())
 		// If the uploader provided any metadata, add it to the track and save it again
-		youTubeDownloadDTO.name?.let { track.name = it }
-		youTubeDownloadDTO.artist?.let { track.artist = it }
-		youTubeDownloadDTO.album?.let { track.album = it }
+		youtubeDownloadDTO.name?.let { track.name = it }
+		youtubeDownloadDTO.artist?.let { track.artist = it }
+		youtubeDownloadDTO.album?.let { track.album = it }
+		youtubeDownloadDTO.releaseYear?.let { track.releaseYear = it }
 		trackRepository.save(track)
 
 		// TODO convert this to a png like the others
@@ -65,7 +66,7 @@ class YouTubeService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(YouTubeService::class.java)!!
+		val logger = LoggerFactory.getLogger(YoutubeService::class.java)!!
 	}
 }
 
