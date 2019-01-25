@@ -120,7 +120,17 @@ export class TrackList extends React.Component {
 
 			// If we ALREADY had exactly one thing selected and we clicked the same thing, edit the cell
 			if (Object.keys(selected).length === 1 && this.state.firstSelectedIndex === userTrackIndex) {
-				this.setState({ editableCell: event.target.id })
+
+				// If a table cell is empty, it clicks on a different element. So just make sure we grab the ID, either
+				// from the current element, or one of its children if the child node was empty and thus not clicked on
+				let cellId = null;
+				if (event.target.id) {
+					cellId = event.target.id;
+				} else {
+					cellId = event.target.querySelectorAll('[id]')[0].id;
+				}
+
+				this.setState({ editableCell: cellId })
 			} else {
 				this.setState({ editableCell: null })
 			}
