@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {PageRouter} from "./components";
+import {SiteWrapper} from "./components/site-wrapper/site-wrapper";
 
 ReactDOM.render(
-  <PageRouter/>,
+  <SiteWrapper/>,
   document.getElementById('root')
 );
