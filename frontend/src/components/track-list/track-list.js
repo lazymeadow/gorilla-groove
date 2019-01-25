@@ -89,9 +89,8 @@ export class TrackList extends React.Component {
 			this.setState({ firstSelectedIndex: userTrackIndex })
 		}
 
-		// TODO shift is broken
 		// If we're holding shift, we should select the rows between this click and the first click
-		if (event.shiftKey && this.state.firstSelectedIndex) {
+		if (event.shiftKey && this.state.firstSelectedIndex !== null) {
 			selected = {};
 			let startingRow = Math.min(this.state.firstSelectedIndex, userTrackIndex);
 			let endingRow = Math.max(this.state.firstSelectedIndex, userTrackIndex);
