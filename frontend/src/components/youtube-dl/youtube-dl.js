@@ -42,7 +42,7 @@ export class YoutubeDlButton extends React.Component {
 			params.album = album;
 		}
 		if (year) {
-			params.year = year;
+			params.releaseYear = year;
 		}
 
 		Api.post('track/youtube-dl', params).then(() => {

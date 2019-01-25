@@ -59,7 +59,7 @@ export class MusicProvider extends React.Component {
 			'Last Played': 'lastPlayed',
 		};
 
-		this.pageSize = 50;
+		this.pageSize = 75;
 	}
 
 	loadSongsForUser(userId, params) {
