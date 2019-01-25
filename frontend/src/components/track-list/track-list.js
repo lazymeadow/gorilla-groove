@@ -75,6 +75,10 @@ export class TrackList extends React.Component {
 	}
 
 	handleRowClick(event, userTrackIndex) {
+		if (event.target.tagName === 'INPUT') {
+			return; // If we clicked an input just ignore the click entirely since we were editing a song
+		}
+
 		let selected = this.state.selected;
 		this.setState({ lastSelectedIndex: userTrackIndex });
 
