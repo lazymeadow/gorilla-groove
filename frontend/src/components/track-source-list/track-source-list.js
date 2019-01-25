@@ -43,7 +43,7 @@ export class TrackSourceList extends React.Component {
 	}
 
 	handleEditStop(event) {
-		if (event.target.id !== this.state.editedId) {
+		if (event.target.tagName !== 'INPUT' && event.target.id !== this.state.editedId) {
 			this.setState({ editedId: null })
 		}
 	}
@@ -109,6 +109,7 @@ export class TrackSourceList extends React.Component {
 										<EditableDiv
 											editable={this.state.editedId === cellId}
 											text={entry.username ? entry.username : entry.name}
+											stopEdit={() => this.setState({ editedId: null })}
 											updateHandler={(newValue) => {
 												this.context.renamePlaylist(entry, newValue);
 												this.forceUpdate();
