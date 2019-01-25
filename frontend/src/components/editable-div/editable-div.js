@@ -25,6 +25,7 @@ export class EditableDiv extends React.Component {
 					id={this.props.id}
 					defaultValue={this.props.text}
 					onChange={(event) => this.setState({ newValue: event.target.value})}
+					autoFocus
 				/>
 			)
 		} else {
