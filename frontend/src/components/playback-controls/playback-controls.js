@@ -6,7 +6,7 @@ export class PlaybackControls extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			playedTrackId: null,
+			currentSessionPlayCounter: 0, // Used to detect when we should play a new song
 			lastTime: 0,
 			totalTimeListened: 0,
 			timeTarget: null,
@@ -18,13 +18,22 @@ export class PlaybackControls extends React.Component {
 		let audio = document.getElementById('audio');
 		audio.addEventListener('timeupdate', (e) => { this.handleTimeTick(e.target.currentTime) });
 		audio.addEventListener('durationchange', (e) => { this.handleDurationChange(e.target.duration) });
-		audio.addEventListener('ended', (e) => { this.handleSongEnd() });
+		audio.addEventListener('ended', () => { this.handleSongEnd() });
 	}
 
-	componentDidUpdate() {
-		if (!this.state.playedTrackId || this.context.playedTrack.id !== this.state.playedTrackId) {
-			this.handleSongChange();
+	componentDidUpdate(prevProps, prevState) {
+		// No track to play. Nothing to do
+		if (!this.context.playedTrack) {
+			return;
 		}
+
+		// If our track and time haven't changed, there is nothing to do
+		// This breaks some problems with infinite re-rendering we can get into otherwise
+		if (this.context.sessionPlayCounter === this.state.currentSessionPlayCounter) {
+			return;
+		}
+
+		this.handleSongChange();
 	}
 
 	// You might think that this could be calculated in handleSongChange() and not need its own function. However,
@@ -36,18 +45,21 @@ export class PlaybackControls extends React.Component {
 	}
 
 	handleSongChange() {
-		// Start playing the new song
-		if (this.context.playedTrackIndex != null) {
-			let audio = document.getElementById('audio');
-			audio.play();
-
-			this.setState({
-				playedTrackId: this.context.playedTrack.id,
-				lastTime: 0,
-				totalTimeListened: 0,
-				listenedTo: false
-			})
+		if (this.context.playedTrackIndex == null) {
+			return;
 		}
+
+		// Start playing the new song
+		let audio = document.getElementById('audio');
+		audio.currentTime = 0;
+		audio.play();
+
+		this.setState({
+			currentSessionPlayCounter: this.context.sessionPlayCounter,
+			lastTime: 0,
+			totalTimeListened: 0,
+			listenedTo: false
+		})
 	}
 
 	handleTimeTick(currentTime) {

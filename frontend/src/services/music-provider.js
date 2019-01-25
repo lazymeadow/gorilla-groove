@@ -3,6 +3,7 @@ import {Api} from "../api";
 import {TrackView} from "../enums/TrackView";
 import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
+import {Toast as toast} from "react-toastify";
 
 export const MusicContext = React.createContext();
 
@@ -23,6 +24,7 @@ export class MusicProvider extends React.Component {
 			songIndexesToShuffle: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
+			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			sortTracks: (...args) => this.sortTracks(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
@@ -117,7 +119,10 @@ export class MusicProvider extends React.Component {
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
-		this.setState({ playedTrackIndex: trackIndex });
+		this.setState({
+			playedTrackIndex: trackIndex,
+			sessionPlayCounter: this.state.sessionPlayCounter + 1
+		});
 
 		if (updateNowPlaying) {
 			this.setState({
@@ -136,7 +141,8 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			nowPlayingTracks: tracks,
 			playedTrack: tracks[startIndex],
-			playedTrackIndex: startIndex
+			playedTrackIndex: startIndex,
+			sessionPlayCounter: this.state.sessionPlayCounter + 1
 		}, () => this.resetShuffleIndexes(startIndex));
 	}
 
@@ -181,7 +187,8 @@ export class MusicProvider extends React.Component {
 
 		this.setState({
 			playedTrackIndex: newTrackIndex,
-			playedTrack: this.state.nowPlayingTracks[newTrackIndex]
+			playedTrack: this.state.nowPlayingTracks[newTrackIndex],
+			sessionPlayCounter: this.state.sessionPlayCounter + 1
 		})
 	}
 
@@ -245,8 +252,9 @@ export class MusicProvider extends React.Component {
 
 		track[columnName] = newValue;
 
-		return Api.put('track', params).then(() => {
-			console.log('Song data updated');
+		return Api.put('track', params).catch((error) => {
+			console.error(error);
+			toast.error("Failed to updated song data")
 		})
 	}
 
