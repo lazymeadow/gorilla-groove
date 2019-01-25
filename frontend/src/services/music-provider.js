@@ -56,6 +56,8 @@ export class MusicProvider extends React.Component {
 			'Added': 'createdAt',
 			'Last Played': 'lastPlayed',
 		};
+
+		this.pageSize = 50;
 	}
 
 	loadSongsForUser(userId, params) {
@@ -77,6 +79,8 @@ export class MusicProvider extends React.Component {
 		if (!params.sort) {
 			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
 		}
+
+		params.size = this.pageSize;
 
 		return Api.get("track", params).then((result) => {
 			this.setState({ viewedTracks: result.content });
