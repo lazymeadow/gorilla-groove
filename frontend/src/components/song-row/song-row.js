@@ -8,7 +8,7 @@ export class SongRow extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			updatableColumns: new Set(['Album', 'Artist', 'Name', 'Year'])
+			updatableColumns: new Set(['Album', 'Artist', 'Name', 'Year', 'Track #'])
 		}
 	}
 
@@ -35,6 +35,8 @@ export class SongRow extends React.Component {
 				return userTrack.artist;
 			case 'Album':
 				return userTrack.album;
+			case 'Track #':
+				return userTrack.trackNumber;
 			case 'Length':
 				return formatTimeFromSeconds(userTrack.length);
 			case 'Year':

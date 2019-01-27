@@ -27,6 +27,9 @@ data class Track(
 		@Column(nullable = false)
 		var album: String = "",
 
+		@Column(name = "track_number")
+		var trackNumber: Int? = null,
+
 		@Column(name = "file_name", nullable = false)
 		var fileName: String,
 

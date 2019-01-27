@@ -3,7 +3,7 @@ import {Api} from "../api";
 import {TrackView} from "../enums/TrackView";
 import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
-import {Toast as toast} from "react-toastify";
+import {toast} from "react-toastify";
 
 export const MusicContext = React.createContext();
 
@@ -60,6 +60,7 @@ export class MusicProvider extends React.Component {
 			'Sample Rate': 'sampleRate',
 			'Added': 'createdAt',
 			'Last Played': 'lastPlayed',
+			'Track #' : 'trackNumber'
 		};
 
 		this.pageSize = 75;

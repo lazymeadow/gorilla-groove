@@ -64,11 +64,22 @@ class FileMetadataService(
 				name = audioFile.tag.getFirst(FieldKey.TITLE),
 				artist = audioFile.tag.getFirst(FieldKey.ARTIST),
 				album = audioFile.tag.getFirst(FieldKey.ALBUM),
+				trackNumber = parseTrackNumber(audioFile.tag.getFirst(FieldKey.TRACK)),
 				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
 				length = audioFile.audioHeader.trackLength,
 				bitRate = audioFile.audioHeader.bitRateAsNumber,
 				sampleRate = audioFile.audioHeader.sampleRateAsNumber
 		)
+	}
+
+	private fun parseTrackNumber(trackNumber: String?): Int? {
+		return when {
+			trackNumber == null -> null
+			trackNumber.isBlank() -> null
+			trackNumber.toIntOrNull() != null -> trackNumber.toIntOrNull()
+			trackNumber.contains('/') -> trackNumber.split('/')[0].toIntOrNull()
+			else -> null
+		}
 	}
 
     companion object {

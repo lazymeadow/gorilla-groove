@@ -30,6 +30,7 @@ export class YoutubeDlButton extends React.Component {
 		const artist = document.getElementById('song-artist').value;
 		const album = document.getElementById('song-album').value;
 		const year = document.getElementById('song-year').value;
+		const trackNumber = document.getElementById('song-track-number').value;
 
 		let params = { url: url };
 		if (name) {
@@ -43,6 +44,9 @@ export class YoutubeDlButton extends React.Component {
 		}
 		if (year) {
 			params.releaseYear = year;
+		}
+		if (trackNumber) {
+			params.trackNumber = trackNumber;
 		}
 
 		Api.post('track/youtube-dl', params).then(() => {
@@ -93,6 +97,11 @@ export class YoutubeDlButton extends React.Component {
 							<div>
 								<label htmlFor="song-year">Release Year</label>
 								<input id="song-year" name="song-year" type="text"/>
+							</div>
+
+							<div>
+								<label htmlFor="song-track-number">Track Number</label>
+								<input id="song-track-number" name="song-track-number" type="text"/>
 							</div>
 
 							<button>Download Song</button>

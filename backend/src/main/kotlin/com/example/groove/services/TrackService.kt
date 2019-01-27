@@ -71,6 +71,7 @@ class TrackService(
 		updateTrackDTO.artist?.let { track.artist = it }
 		updateTrackDTO.album?.let { track.album = it }
 		updateTrackDTO.releaseYear?.let { track.releaseYear = it }
+		updateTrackDTO.trackNumber?.let { track.trackNumber = it }
 	}
 
 	@Transactional
