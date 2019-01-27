@@ -333,7 +333,13 @@ export class MusicProvider extends React.Component {
 	}
 
 	setShuffleSongs(shuffleSongs) {
-		this.setState({ shuffleSongs: shuffleSongs });
+		this.setState({
+			shuffleSongs: shuffleSongs,
+		}, () => {
+			if (shuffleSongs) {
+				this.resetShuffleIndexes(this.state.playedTrackIndex);
+			}
+		});
 		LocalStorage.setBoolean('shuffleSongs', shuffleSongs);
 	}
 
