@@ -82,9 +82,18 @@ export class Api {
 		}
 
 		let queryString = Object.keys(params).map(key => {
-			let encodedKey = encodeURIComponent(key);
-			let encodedValue = encodeURIComponent(params[key]);
-			return `${encodedKey}=${encodedValue}`
+			// Spring wants multiple sort terms passed in like
+			// sort=title,asc&sort=album,asc&sort=artist,asc
+			// so repeat the sort term for each item, if we are dealing with the sort term
+			if (key === 'sort') {
+				return params[key].map(sortItem => {
+					return `sort=${sortItem}`
+				}).join('&')
+			} else {
+				let encodedKey = encodeURIComponent(key);
+				let encodedValue = encodeURIComponent(params[key]);
+				return `${encodedKey}=${encodedValue}`
+			}
 		}).join('&');
 
 		return '?' + queryString;

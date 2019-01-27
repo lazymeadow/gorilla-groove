@@ -63,6 +63,20 @@ export class MusicProvider extends React.Component {
 			'Track #' : 'trackNumber'
 		};
 
+		this.columnSortKeys = {
+			'Name': ['name'],
+			'Artist': ['artist', 'album,asc', 'trackNumber,asc'],
+			'Album': ['album', 'trackNumber,asc'],
+			'Length': ['length'],
+			'Year': ['releaseYear'],
+			'Play Count': ['playCount'],
+			'Bit Rate': ['bitRate'],
+			'Sample Rate': ['sampleRate'],
+			'Added': ['createdAt'],
+			'Last Played': ['lastPlayed'],
+			'Track #' : ['trackNumber']
+		};
+
 		this.pageSize = 75;
 	}
 
@@ -83,7 +97,7 @@ export class MusicProvider extends React.Component {
 		}
 
 		if (!params.sort) {
-			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
+			params.sort = this.buildTrackSortParameter(this.state.trackSortColumn, this.state.trackSortDir);
 		}
 
 		params.size = this.pageSize;
@@ -99,20 +113,14 @@ export class MusicProvider extends React.Component {
 		let params = {};
 
 		if (sortColumn && sortDir) {
-			params.sort = `${this.trackKeyConversions[sortColumn]},${sortDir}`;
+			params.sort = this.buildTrackSortParameter(sortColumn, sortDir);
 
 			this.setState({
 				trackSortColumn: sortColumn,
 				trackSortDir: sortDir
 			});
 		} else {
-			params.sort = `${this.trackKeyConversions[this.state.trackSortColumn]},${this.state.trackSortDir}`
-		}
-
-		// Messing around with the JPA sorting setup is more hassle than it is worth
-		// For sorting playlists, just append 'track.' in front so the key is correct for playlist tracks
-		if (this.state.trackView === TrackView.PLAYLIST) {
-			params.sort = `track.${params.sort}`;
+			params.sort = this.buildTrackSortParameter(this.state.trackSortColumn, this.state.trackSortDir);
 		}
 
 		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
@@ -120,6 +128,14 @@ export class MusicProvider extends React.Component {
 		} else if (this.state.trackView === TrackView.PLAYLIST) {
 			this.loadSongsForPlaylist(this.state.viewedEntityId, params);
 		}
+	}
+
+	buildTrackSortParameter(columnName, sortDir) {
+		let sortString = this.columnSortKeys[columnName].slice(0);
+
+		// The first element in the sorting needs to have the direction applied. The other columns don't. They have their own
+		sortString[0] = sortString[0] + ',' + sortDir;
+		return sortString;
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
@@ -289,6 +305,13 @@ export class MusicProvider extends React.Component {
 	loadSongsForPlaylist(playlistId, params) {
 		params = params ? params : {};
 		params.playlistId = playlistId;
+
+
+		// Messing around with the JPA sorting setup is more hassle than it is worth
+		// For sorting playlists, just append 'track.' in front so the key is correct for playlist tracks
+		if ('sort' in params) {
+			params.sort = params.sort.map(sortTerm => 'track.' + sortTerm);
+		}
 
 		this.setState({
 			trackView: TrackView.PLAYLIST,
