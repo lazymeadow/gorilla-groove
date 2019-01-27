@@ -60,7 +60,8 @@ export class MusicProvider extends React.Component {
 			'Sample Rate': 'sampleRate',
 			'Added': 'createdAt',
 			'Last Played': 'lastPlayed',
-			'Track #' : 'trackNumber'
+			'Track #' : 'trackNumber',
+			'Note' : 'note'
 		};
 
 		this.columnSortKeys = {
@@ -74,7 +75,8 @@ export class MusicProvider extends React.Component {
 			'Sample Rate': ['sampleRate'],
 			'Added': ['createdAt'],
 			'Last Played': ['lastPlayed'],
-			'Track #' : ['trackNumber']
+			'Track #' : ['trackNumber'],
+			'Note' : ['note']
 		};
 
 		this.pageSize = 75;

@@ -25,6 +25,7 @@ class FileController(
 	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
     fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
+		// FIXME file.name does not appear to be anything useful
 		logger.info("Beginning file upload: ${file.name}")
 
 		// TODO I imagine we will return this to the front end so it can add it

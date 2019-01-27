@@ -59,5 +59,8 @@ data class Track(
 
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")
-		var deleted: Boolean = false
+		var deleted: Boolean = false,
+
+		@Column
+		var note: String? = null
 )
