@@ -41,10 +41,9 @@ class TrackController(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
-	@Transactional
 	@PostMapping("/set-hidden")
 	fun setHidden(@RequestBody setHiddenDTO: SetHiddenDTO): ResponseEntity<String> {
-		trackRepository.setHiddenForUser(setHiddenDTO.trackIds, loadLoggedInUser().id, setHiddenDTO.isHidden)
+		trackService.setHidden(setHiddenDTO.trackIds, setHiddenDTO.isHidden)
 
 		return ResponseEntity(HttpStatus.OK)
 	}

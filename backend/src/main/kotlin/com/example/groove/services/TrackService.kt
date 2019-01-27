@@ -73,14 +73,37 @@ class TrackService(
 		updateTrackDTO.releaseYear?.let { track.releaseYear = it }
 	}
 
-	fun deleteTracks(loadLoggedInUser: User, trackIds: List<Long>) {
-		trackRepository.findAllById(trackIds).forEach { track ->
-			if (track.user.id == loadLoggedInUser.id) {
-				track.deleted = true
-				trackRepository.save(track)
+	@Transactional
+	fun setHidden(trackIds: List<Long>, hidden: Boolean) {
+		val user = loadLoggedInUser()
 
-				deleteFileIfUnused(track.fileName)
+		// The DB query is written such that it protects the tracks anyway. So this check is kind
+		// of unnecessary. But it allows us to fail the request for the frontend
+		trackRepository.findAllById(trackIds).forEach { track ->
+			if (track.user.id != user.id) {
+				throw IllegalArgumentException("No track with ID: ${track.id} found")
 			}
+		}
+		trackRepository.setHiddenForUser(trackIds, loadLoggedInUser().id, hidden)
+	}
+
+	@Transactional
+	fun deleteTracks(loadLoggedInUser: User, trackIds: List<Long>) {
+		val tracks = trackRepository.findAllById(trackIds)
+
+		// Check all tracks for permissions FIRST. Otherwise, we might delete a track from disk,
+		// then throw an exception and roll back the DB, but the disk deletion would not be undone
+		tracks.forEach { track ->
+			if (track.user.id != loadLoggedInUser.id) {
+				throw IllegalArgumentException("Track with ID: ${track.id} not found")
+			}
+		}
+
+		tracks.forEach { track ->
+			track.deleted = true
+			trackRepository.save(track)
+
+			deleteFileIfUnused(track.fileName)
 		}
 	}
 
