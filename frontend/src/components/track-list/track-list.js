@@ -15,6 +15,7 @@ export class TrackList extends React.Component {
 			withinDoubleClick: false,
 			doubleClickTimeout: null,
 			editableCell: null,
+			pendingEditableCell: null,
 			id: 'track-list' + TrackList.count
 		};
 
@@ -116,36 +117,27 @@ export class TrackList extends React.Component {
 			this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
 			this.setState({ editableCell: null })
 		} else {
-			this.setupDoubleClick();
+			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
+			this.cancelDoubleClick();
+			let pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
+			this.setupDoubleClick(pendingEditableCell);
 
-			// If we ALREADY had exactly one thing selected and we clicked the same thing, edit the cell
-			if (Object.keys(selected).length === 1 && this.state.firstSelectedIndex === userTrackIndex) {
 
-				// If a table cell is empty, it clicks on a different element. So just make sure we grab the ID, either
-				// from the current element, or one of its children if the child node was empty and thus not clicked on
-				let cellId = null;
-				if (event.target.id) {
-					cellId = event.target.id;
-				} else {
-					cellId = event.target.querySelectorAll('[id]')[0].id;
-				}
-
-				this.setState({ editableCell: cellId })
-			} else {
-				this.setState({ editableCell: null })
-			}
 		}
 
 		this.setState({ selected: selected });
 	}
 
-	setupDoubleClick() {
-		// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
-		this.cancelDoubleClick();
-
+	setupDoubleClick(pendingEditableCell) {
 		// Set up a timer that will kill our ability to double click if we are too slow
 		let timeout = setTimeout(() => {
 			this.setState({ withinDoubleClick: false });
+			if (pendingEditableCell) {
+				this.setState({
+					editableCell: pendingEditableCell,
+					pendingEditableCell: null
+				})
+			}
 		}, 300);
 
 		// Set our double clicking state for the next timeout
@@ -155,12 +147,40 @@ export class TrackList extends React.Component {
 		});
 	}
 
+	setupEdit(event, selectedIndexes, userTrackIndex) {
+		// If we ALREADY had exactly one thing selected and we clicked the same thing, mark the cell
+		// so that it will be edited if the user doesn't click a second time
+		if (Object.keys(selectedIndexes).length === 1 && this.state.firstSelectedIndex === userTrackIndex) {
+
+			// If a table cell is empty, it clicks on a different element. So just make sure we grab the ID, either
+			// from the current element, or one of its children if the child node was empty and thus not clicked on
+			let cellId = null;
+			if (event.target.id) {
+				cellId = event.target.id;
+			} else {
+				cellId = event.target.querySelectorAll('[id]')[0].id;
+			}
+
+			this.setState({ pendingEditableCell: cellId });
+
+			return cellId;
+		} else {
+			this.setState({
+				editableCell: null,
+				pendingEditableCell: null
+			});
+
+			return null;
+		}
+	}
+
 	cancelDoubleClick() {
 		if (this.state.doubleClickTimeout) {
 			window.clearTimeout(this.state.doubleClickTimeout);
 			this.setState({
 				withinDoubleClick: false,
-				doubleClickTimeout: null
+				doubleClickTimeout: null,
+				pendingEditableCell: null
 			});
 		}
 	}
