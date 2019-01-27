@@ -22,6 +22,7 @@ export class MusicProvider extends React.Component {
 			playedTrackIndex: null,
 			playlists: [],
 			songIndexesToShuffle: [],
+			shuffledSongIndexes: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
@@ -33,6 +34,8 @@ export class MusicProvider extends React.Component {
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
 			playIndex: (...args) => this.playIndex(...args),
+			playNext: (...args) => this.playNext(...args),
+			playPrevious: (...args) => this.playPrevious(...args),
 			deleteTracks: (...args) => this.deleteTracks(...args),
 			setHidden: (...args) => this.setHidden(...args),
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
@@ -121,7 +124,7 @@ export class MusicProvider extends React.Component {
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
 		this.setState({
 			playedTrackIndex: trackIndex,
-			sessionPlayCounter: this.state.sessionPlayCounter + 1
+			sessionPlayCounter: this.state.sessionPlayCounter + 1,
 		});
 
 		if (updateNowPlaying) {
@@ -182,7 +185,13 @@ export class MusicProvider extends React.Component {
 			let newShuffleIndexes = this.state.songIndexesToShuffle.slice(0);
 			newShuffleIndexes.splice(indexIndex, 1);
 
-			this.setState({ songIndexesToShuffle: newShuffleIndexes });
+			let newShuffleHistory = this.state.shuffledSongIndexes.slice(0);
+			newShuffleHistory.push(newTrackIndex);
+
+			this.setState({
+				songIndexesToShuffle: newShuffleIndexes,
+				shuffledSongIndexes: newShuffleHistory
+			});
 		}
 
 		this.setState({
@@ -190,6 +199,62 @@ export class MusicProvider extends React.Component {
 			playedTrack: this.state.nowPlayingTracks[newTrackIndex],
 			sessionPlayCounter: this.state.sessionPlayCounter + 1
 		})
+	}
+
+	playNext() {
+		if (this.state.shuffleSongs) {
+			// If we're shuffling and have more songs to shuffle through, play a random song
+			if (this.state.songIndexesToShuffle.length > 0) {
+				this.playIndex(this.getRandomIndex())
+
+				// If we are out of songs to shuffle through, but ARE repeating, reset the shuffle list and pick a random one
+			} else if (this.state.repeatSongs) {
+				this.resetShuffleIndexes();
+				this.playIndex(this.getRandomIndex())
+			}
+		} else {
+			// If we aren't shuffling, and we have more songs, just pick the next one
+			if (this.state.playedTrackIndex + 1 < this.state.nowPlayingTracks.length) {
+				this.playIndex(this.state.playedTrackIndex + 1);
+
+				// Otherwise, if we have run out of songs, but are repeating, start back over from 0
+			} else if (this.context.repeatSongs) {
+				this.playIndex(0);
+			}
+		}
+	}
+
+	getRandomIndex() {
+		let shuffleIndexes = this.state.songIndexesToShuffle;
+		return shuffleIndexes[Math.floor(Math.random() * shuffleIndexes.length)];
+	}
+
+	playPrevious() {
+		if (this.state.shuffleSongs) {
+			let shuffledSongIndexes = this.state.shuffledSongIndexes.slice(0);
+			if (shuffledSongIndexes.length === 1) {
+				// Someone hit play previous on the first song they played. Just start it over
+				this.setState({ sessionPlayCounter: this.state.sessionPlayCounter + 1 });
+			} else if (shuffledSongIndexes.length > 1) {
+				let currentIndex = shuffledSongIndexes.pop();
+				let previousIndex = shuffledSongIndexes.pop();
+
+				let indexesToShuffle = this.state.songIndexesToShuffle.slice(0);
+				indexesToShuffle.push(currentIndex);
+				indexesToShuffle.push(previousIndex);
+
+				this.setState({
+					shuffledSongIndexes: shuffledSongIndexes,
+					songIndexesToShuffle: indexesToShuffle
+				}, () => this.playIndex(previousIndex));
+			}
+		} else {
+			if (this.state.playedTrackIndex > 0) {
+				this.playIndex(this.state.playedTrackIndex - 1);
+			} else if (this.context.repeatSongs) {
+				this.playIndex(this.state.nowPlayingTracks.length - 1);
+			}
+		}
 	}
 
 	setHidden(tracks, isHidden) {
@@ -261,8 +326,9 @@ export class MusicProvider extends React.Component {
 	renamePlaylist(playlist, newName) {
 		playlist.name = newName;
 
-		return Api.put(`playlist/${playlist.id}`, { name: newName }).then(() => {
-			console.log('Playlist renamed');
+		return Api.put(`playlist/${playlist.id}`, { name: newName }).catch((error) => {
+			console.error(error);
+			toast.error("Failed to updated playlist name")
 		})
 	}
 
@@ -286,7 +352,10 @@ export class MusicProvider extends React.Component {
 			indexes.splice(withoutIndex, 1);
 		}
 
-		this.setState({ songIndexesToShuffle: indexes })
+		this.setState({
+			songIndexesToShuffle: indexes,
+			shuffledSongIndexes: [withoutIndex]
+		})
 	}
 
 	// Need to add the new tracks to the shuffle selection or they won't get played until the next run through the playlist
