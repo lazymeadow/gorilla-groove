@@ -251,8 +251,11 @@ export class MusicProvider extends React.Component {
 		} else {
 			if (this.state.playedTrackIndex > 0) {
 				this.playIndex(this.state.playedTrackIndex - 1);
-			} else if (this.context.repeatSongs) {
+			} else if (this.state.repeatSongs) {
 				this.playIndex(this.state.nowPlayingTracks.length - 1);
+			} else {
+				// Someone hit play previous on the first song they played. Just start it over
+				this.setState({ sessionPlayCounter: this.state.sessionPlayCounter + 1 });
 			}
 		}
 	}
