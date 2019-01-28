@@ -82,7 +82,7 @@ export class MusicProvider extends React.Component {
 			'Note' : ['note']
 		};
 
-		this.pageSize = 25;
+		this.pageSize = 75;
 	}
 
 	loadSongsForUser(userId, params, append) {
@@ -340,14 +340,29 @@ export class MusicProvider extends React.Component {
 		if ('sort' in params) {
 			params.sort = params.sort.map(sortTerm => 'track.' + sortTerm);
 		}
+		if (!params.size) {
+			params.size = this.pageSize;
+		}
+		if (!params.page) {
+			params.page = 0;
+		}
+
+		console.log(params.page);
+		this.setState({ lastFetchedPage: params.page });
 
 		this.setState({
 			trackView: TrackView.PLAYLIST,
 			viewedEntityId: playlistId
 		});
 
-		Api.get('playlist/track', params).then((result) => {
-			this.setState({ viewedTracks: result.content });
+		return Api.get('playlist/track', params).then((result) => {
+			this.setState({ totalPages: result.totalPages });
+
+			if (append) {
+				this.setState({ viewedTracks: this.state.viewedTracks.concat(result.content) })
+			} else {
+				this.setState({ viewedTracks: result.content });
+			}
 		})
 	}
 

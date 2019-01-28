@@ -91,7 +91,7 @@ export class TrackList extends React.Component {
 			&& this.context.lastFetchedPage + 1 < this.context.totalPages) {
 
 			this.setState({ loading: true });
-			this.context.loadMoreTracks().then(() => {
+			this.context.loadMoreTracks().finally(() => {
 				this.setState({ loading: false })
 			});
 		}
