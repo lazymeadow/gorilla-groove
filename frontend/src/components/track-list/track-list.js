@@ -3,6 +3,7 @@ import ColumnResizer from 'column-resizer';
 import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
+import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -16,7 +17,12 @@ export class TrackList extends React.Component {
 			doubleClickTimeout: null,
 			editableCell: null,
 			pendingEditableCell: null,
-			id: 'track-list' + TrackList.count
+			id: 'track-list' + TrackList.count,
+			contextMenuOptions: {
+				expanded: false,
+				x: 0,
+				y: 0
+			}
 		};
 
 		// There's more than one track-list component in view, and the column resizing needs a unique ID in order
@@ -158,7 +164,8 @@ export class TrackList extends React.Component {
 			if (event.target.id) {
 				cellId = event.target.id;
 			} else {
-				cellId = event.target.querySelectorAll('[id]')[0].id;
+				let elements = event.target.querySelectorAll('[id]');
+				cellId = elements ? [0].id : null;
 			}
 
 			this.setState({ pendingEditableCell: cellId });
@@ -216,6 +223,20 @@ export class TrackList extends React.Component {
 		this.context.sortTracks(sortColumn, sortDir)
 	}
 
+	handleContextMenuOpen(event) {
+		this.setState({
+			contextMenuOptions: {
+				expanded: true,
+				x: event.clientX - 6,
+				y: event.clientY + 8
+			}
+		})
+	}
+
+	closeContextMenu() {
+		this.setState({ contextMenuOptions: { expanded: false }})
+	}
+
 	getSortIndicator(columnName) {
 		if (!this.props.trackView) {
 			return;
@@ -231,6 +252,15 @@ export class TrackList extends React.Component {
 	render() {
 		return (
 			<div>
+				<div>
+					<SongPopoutMenu
+						closeContextMenu={() => this.closeContextMenu()}
+						getSelectedTracks={() => this.getSelectedTracks()}
+						expanded={this.state.contextMenuOptions.expanded}
+						x={this.state.contextMenuOptions.x}
+						y={this.state.contextMenuOptions.y}
+					/>
+				</div>
 				<table id={this.state.id} className="track-table">
 					<thead>
 					<tr>
@@ -266,8 +296,8 @@ export class TrackList extends React.Component {
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
 								showContextMenu={index === this.state.lastSelectedIndex}
+								openContextMenu={this.handleContextMenuOpen.bind(this)}
 								onClick={this.handleRowClick.bind(this)}
-								getSelectedTracks={this.getSelectedTracks.bind(this)}
 								stopCellEdits={this.stopCellEdits.bind(this)}
 							/>
 						);

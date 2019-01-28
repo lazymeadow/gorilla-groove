@@ -1,7 +1,6 @@
 import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
 import {MusicContext} from "../../services/music-provider";
-import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 import {EditableDiv} from "../editable-div/editable-div";
 
 export class SongRow extends React.Component {
@@ -85,11 +84,7 @@ export class SongRow extends React.Component {
 						</td>
 					)
 				})}
-				{this.props.showContextMenu ? <td>
-					<SongPopoutMenu
-						getSelectedTracks={this.props.getSelectedTracks}
-					/>
-				</td> : <td/>}
+				{this.props.showContextMenu ? <td onClick={this.props.openContextMenu} className="song-menu">⚙</td> : <td/>}
 			</tr>
 		);
 	}
