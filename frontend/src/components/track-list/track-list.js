@@ -240,6 +240,7 @@ export class TrackList extends React.Component {
 	}
 
 	handleContextMenuOpen(event) {
+		event.stopPropagation();
 		this.setState({
 			contextMenuOptions: {
 				expanded: true,
