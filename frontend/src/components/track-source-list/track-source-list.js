@@ -66,9 +66,9 @@ export class TrackSourceList extends React.Component {
 		this.setState({ editedId: null });
 
 		if (section === TrackView.USER) {
-			this.context.loadSongsForUser(entry.id);
+			this.context.loadSongsForUser(entry.id, false);
 		} else {
-			this.context.loadSongsForPlaylist(entry.id);
+			this.context.loadSongsForPlaylist(entry.id, false);
 		}
 	}
 

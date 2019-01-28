@@ -15,6 +15,8 @@ export class MusicProvider extends React.Component {
 			viewedTracks: [],
 			trackView: TrackView.LIBRARY,
 			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
+			lastFetchedPage: 0,
+			totalPages: 0,
 			trackSortColumn: 'Artist',
 			trackSortDir: 'asc',
 			nowPlayingTracks: [],
@@ -27,6 +29,7 @@ export class MusicProvider extends React.Component {
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
+			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
 			sortTracks: (...args) => this.sortTracks(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
@@ -79,10 +82,10 @@ export class MusicProvider extends React.Component {
 			'Note' : ['note']
 		};
 
-		this.pageSize = 75;
+		this.pageSize = 25;
 	}
 
-	loadSongsForUser(userId, params) {
+	loadSongsForUser(userId, params, append) {
 		params = params ? params : {};
 		// If userId is null, the backend uses the current user
 		if (userId) {
@@ -101,14 +104,37 @@ export class MusicProvider extends React.Component {
 		if (!params.sort) {
 			params.sort = this.buildTrackSortParameter(this.state.trackSortColumn, this.state.trackSortDir);
 		}
+		if (!params.size) {
+			params.size = this.pageSize;
+		}
+		if (!params.page) {
+			params.page = 0;
+		}
 
-		params.size = this.pageSize;
+		this.setState({ lastFetchedPage: params.page });
 
 		return Api.get("track", params).then((result) => {
-			this.setState({ viewedTracks: result.content });
+			this.setState({ totalPages: result.totalPages });
+
+			if (append) {
+				this.setState({ viewedTracks: this.state.viewedTracks.concat(result.content) })
+			} else {
+				this.setState({ viewedTracks: result.content });
+			}
+
 		}).catch((error) => {
 			console.error(error)
 		});
+	}
+
+	loadMoreTracks() {
+		let page = this.state.lastFetchedPage + 1;
+
+		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
+			return this.loadSongsForUser(this.state.viewedEntityId, { page: page }, true);
+		} else if (this.state.trackView === TrackView.PLAYLIST) {
+			return this.loadSongsForPlaylist(this.state.viewedEntityId, { page: page }, true);
+		}
 	}
 
 	sortTracks(sortColumn, sortDir) {
@@ -126,9 +152,9 @@ export class MusicProvider extends React.Component {
 		}
 
 		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
-			this.loadSongsForUser(this.state.viewedEntityId, params);
+			this.loadSongsForUser(this.state.viewedEntityId, params, false);
 		} else if (this.state.trackView === TrackView.PLAYLIST) {
-			this.loadSongsForPlaylist(this.state.viewedEntityId, params);
+			this.loadSongsForPlaylist(this.state.viewedEntityId, params, false);
 		}
 	}
 
@@ -304,7 +330,7 @@ export class MusicProvider extends React.Component {
 		})
 	}
 
-	loadSongsForPlaylist(playlistId, params) {
+	loadSongsForPlaylist(playlistId, params, append) {
 		params = params ? params : {};
 		params.playlistId = playlistId;
 

@@ -22,7 +22,8 @@ export class TrackList extends React.Component {
 				expanded: false,
 				x: 0,
 				y: 0
-			}
+			},
+			loading: false
 		};
 
 		// There's more than one track-list component in view, and the column resizing needs a unique ID in order
@@ -37,6 +38,8 @@ export class TrackList extends React.Component {
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
 			document.body.addEventListener('click', (e) => this.handleEditStop(e));
+			document.getElementsByClassName('border-layout-center')[0]
+				.addEventListener('scroll', () => this.handleScroll());
 		}
 	}
 
@@ -78,6 +81,19 @@ export class TrackList extends React.Component {
 	handleEditStop(event) {
 		if (event.target.id !== this.state.editableCell) {
 			this.stopCellEdits();
+		}
+	}
+
+	handleScroll() {
+		let container = document.getElementsByClassName('border-layout-center')[0];
+		if (!this.state.loading
+			&& container.scrollHeight < container.offsetHeight + container.scrollTop + 5
+			&& this.context.lastFetchedPage + 1 < this.context.totalPages) {
+
+			this.setState({ loading: true });
+			this.context.loadMoreTracks().then(() => {
+				this.setState({ loading: false })
+			});
 		}
 	}
 
