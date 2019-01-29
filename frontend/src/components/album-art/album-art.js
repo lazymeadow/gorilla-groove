@@ -16,14 +16,20 @@ export class AlbumArt extends React.Component {
 		}
 	}
 
-	shouldComponentUpdate() {
-		return this.context.playedTrack && this.context.playedTrack.id !== this.state.playedTrackId;
+	shouldComponentUpdate(nextProps, nextState) {
+		return (this.context.playedTrack && this.context.playedTrack.id !== this.state.playedTrackId)
+			|| this.state.imageUrl !== nextState.imageUrl
+			|| this.state.modalOpen !== nextState.modalOpen;
 	}
 
 	// Because we're using a background-image and not a <img>, we need to be creative about
 	// falling back to our default image. Create an image element and check if the image loads.
 	// Depending on if it does, set the URL we want in our state
 	componentDidUpdate() {
+		if (this.context.playedTrack) {
+			this.setState({ playedTrackId: this.context.playedTrack.id });
+		}
+
 		const albumImageLink = this.getImageLink();
 		let img = new Image();
 		img.src = albumImageLink;
