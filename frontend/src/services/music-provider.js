@@ -83,7 +83,7 @@ export class MusicProvider extends React.Component {
 			'Note' : [{ key: 'note' }]
 		};
 
-		this.pageSize = 25;
+		this.pageSize = 75;
 	}
 
 	loadSongsForUser(userId, params, append) {

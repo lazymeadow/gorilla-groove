@@ -9,6 +9,6 @@ class VersionController {
 
 	@GetMapping
 	fun login(): ResponseEntity<Map<String, String>> {
-		return ResponseEntity.ok(mapOf("version" to "1.0.3"))
+		return ResponseEntity.ok(mapOf("version" to "1.0.4"))
 	}
 }
