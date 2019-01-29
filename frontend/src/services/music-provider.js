@@ -4,6 +4,7 @@ import {TrackView} from "../enums/TrackView";
 import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
 import {toast} from "react-toastify";
+import {findSpotInSortedArray} from "../util";
 
 export const MusicContext = React.createContext();
 
@@ -15,8 +16,7 @@ export class MusicProvider extends React.Component {
 			viewedTracks: [],
 			trackView: TrackView.LIBRARY,
 			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
-			lastFetchedPage: 0,
-			totalPages: 0,
+			totalTracksToFetch: 0,
 			trackSortColumn: 'Artist',
 			trackSortDir: 'asc',
 			nowPlayingTracks: [],
@@ -31,6 +31,7 @@ export class MusicProvider extends React.Component {
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
 			sortTracks: (...args) => this.sortTracks(...args),
+			addUploadToExistingLibraryView: (...args) => this.addUploadToExistingLibraryView(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
 			playTracks: (...args) => this.playTracks(...args),
@@ -68,21 +69,21 @@ export class MusicProvider extends React.Component {
 		};
 
 		this.columnSortKeys = {
-			'Name': ['name'],
-			'Artist': ['artist', 'album,asc', 'trackNumber,asc'],
-			'Album': ['album', 'trackNumber,asc'],
-			'Length': ['length'],
-			'Year': ['releaseYear'],
-			'Play Count': ['playCount'],
-			'Bit Rate': ['bitRate'],
-			'Sample Rate': ['sampleRate'],
-			'Added': ['createdAt'],
-			'Last Played': ['lastPlayed'],
-			'Track #' : ['trackNumber'],
-			'Note' : ['note']
+			'Name': [{ key: 'name' }],
+			'Artist': [{ key: 'artist' }, { key: 'album', dir: 'asc' }, { key: 'trackNumber', dir: 'asc' }],
+			'Album': [{ key: 'album' }, { key: 'trackNumber', dir: 'asc' }],
+			'Length': [{ key: 'length' }],
+			'Year': [{ key: 'releaseYear' }],
+			'Play Count': [{ key: 'playCount' }],
+			'Bit Rate': [{ key: 'bitRate' }],
+			'Sample Rate': [{ key: 'sampleRate' }],
+			'Added': [{ key: 'createdAt' }],
+			'Last Played': [{ key: 'lastPlayed' }],
+			'Track #' : [{ key: 'trackNumber' }],
+			'Note' : [{ key: 'note' }]
 		};
 
-		this.pageSize = 75;
+		this.pageSize = 25;
 	}
 
 	loadSongsForUser(userId, params, append) {
@@ -111,24 +112,15 @@ export class MusicProvider extends React.Component {
 			params.page = 0;
 		}
 
-		this.setState({ lastFetchedPage: params.page });
-
-		return Api.get("track", params).then((result) => {
-			this.setState({ totalPages: result.totalPages });
-
-			if (append) {
-				this.setState({ viewedTracks: this.state.viewedTracks.concat(result.content) })
-			} else {
-				this.setState({ viewedTracks: result.content });
-			}
-
+		return Api.get('track', params).then(result => {
+			this.addTracksToView(result, append);
 		}).catch((error) => {
 			console.error(error)
 		});
 	}
 
 	loadMoreTracks() {
-		let page = this.state.lastFetchedPage + 1;
+		let page = parseInt(this.state.viewedTracks.length / this.pageSize);
 
 		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
 			return this.loadSongsForUser(this.state.viewedEntityId, { page: page }, true);
@@ -159,11 +151,26 @@ export class MusicProvider extends React.Component {
 	}
 
 	buildTrackSortParameter(columnName, sortDir) {
-		let sortString = this.columnSortKeys[columnName].slice(0);
+		let sort = this.columnSortKeys[columnName].slice(0);
 
 		// The first element in the sorting needs to have the direction applied. The other columns don't. They have their own
-		sortString[0] = sortString[0] + ',' + sortDir;
-		return sortString;
+		sort[0].dir = sortDir;
+
+		return sort.map(sortObject => sortObject.key + ',' + sortObject.dir);
+	}
+
+	addUploadToExistingLibraryView(track) {
+		if (this.state.trackView !== TrackView.LIBRARY) {
+			return;
+		}
+
+		let sort = this.columnSortKeys[this.state.trackSortColumn].slice(0);
+		sort[0].dir = this.state.trackSortDir;
+
+		const newTrackIndex = findSpotInSortedArray(track, this.state.viewedTracks, sort);
+		this.state.viewedTracks.splice(newTrackIndex, 0, track);
+
+		this.setState({ viewedTracks: this.state.viewedTracks });
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
@@ -347,23 +354,34 @@ export class MusicProvider extends React.Component {
 			params.page = 0;
 		}
 
-		console.log(params.page);
-		this.setState({ lastFetchedPage: params.page });
-
 		this.setState({
 			trackView: TrackView.PLAYLIST,
 			viewedEntityId: playlistId
 		});
 
-		return Api.get('playlist/track', params).then((result) => {
-			this.setState({ totalPages: result.totalPages });
+		return Api.get('playlist/track', params).then(result => { this.addTracksToView(result, append); })
+	}
 
-			if (append) {
-				this.setState({ viewedTracks: this.state.viewedTracks.concat(result.content) })
-			} else {
-				this.setState({ viewedTracks: result.content });
-			}
-		})
+	addTracksToView(result, append) {
+		this.setState({ totalTracksToFetch: result.totalElements });
+
+		if (append) {
+			// IF WE ARE APPENDING
+			// Assuming we have 75 as our page size, we could have loaded in 1 page, giving us 75 tracks
+			// We could have then uploaded a track, that was automatically added to our library if it was
+			// sorted into those first 75 tracks. This would give us 76 tracks. We now fetch the 2nd page
+			// of tracks, giving us 75 more. However, the 1st track in this request, will actually be the
+			// 75th track from before, as it got bumped up with the newly added track. Thus, we mod our
+			// total tracks by the page size here, and drop the appropriate number from the beginning of
+			// the result. This will give us 2 pages, 150 tracks, with no duplication
+
+			let tracksToDrop = this.state.viewedTracks.length % this.pageSize;
+			result.content.splice(0, tracksToDrop);
+
+			this.setState({ viewedTracks: this.state.viewedTracks.concat(result.content) })
+		} else {
+			this.setState({ viewedTracks: result.content });
+		}
 	}
 
 	addToPlaylist(playlistId, trackIds) {

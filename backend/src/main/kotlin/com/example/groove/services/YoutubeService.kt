@@ -1,6 +1,7 @@
 package com.example.groove.services
 
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.Track
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
@@ -21,7 +22,7 @@ class YoutubeService(
 ) {
 
 	@Transactional
-	fun downloadSong(youtubeDownloadDTO: YoutubeDownloadDTO) {
+	fun downloadSong(youtubeDownloadDTO: YoutubeDownloadDTO): Track {
 		val url = youtubeDownloadDTO.url
 
 		val tmpFileName = UUID.randomUUID().toString()
@@ -64,6 +65,7 @@ class YoutubeService(
 		fileStorageService.moveAlbumArt(newAlbumArt, track.id)
 
 		// TODO cleanup tmp files?
+		return track
 	}
 
 	companion object {

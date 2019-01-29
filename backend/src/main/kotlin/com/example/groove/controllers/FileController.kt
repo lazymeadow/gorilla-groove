@@ -1,5 +1,6 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.model.Track
 import com.example.groove.services.FileStorageService
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
@@ -24,18 +25,18 @@ class FileController(
 	// curl -H "Content-Type: multipart/form-data" -H "Authorization: Bearer df86c467-d940-4239-889f-4d72329f0ba4"
 	// -F "file=@C:/Users/user/Music/Song.mp3"  http://localhost:8080/api/file/upload
     @PostMapping("/upload")
-    fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
+    fun uploadFile(@RequestParam("file") file: MultipartFile): Track {
 		// FIXME file.name does not appear to be anything useful
 		logger.info("Beginning file upload: ${file.name}")
 
 		// TODO I imagine we will return this to the front end so it can add it
+		var track: Track? = null
 		val timeToUpload = measureTimeMillis {
-			val track = fileStorageService.storeSongForUser(file, loadLoggedInUser())
+			track = fileStorageService.storeSongForUser(file, loadLoggedInUser())
 		}
 
 		logger.info("File upload complete for ${file.name} in $timeToUpload")
-
-        return ResponseEntity(HttpStatus.CREATED)
+		return track!!
     }
 
     @PostMapping("/upload-multiple-files")

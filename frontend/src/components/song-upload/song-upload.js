@@ -1,6 +1,7 @@
 import React from 'react';
 import {Api} from "../../api";
 import {toast} from "react-toastify";
+import {MusicContext} from "../../services/music-provider";
 
 export class SongUpload extends React.Component {
 	constructor(props) {
@@ -22,13 +23,18 @@ export class SongUpload extends React.Component {
 		let file = inputEvent.target.files[0];
 		const name = file.name;
 
-		Api.upload('file/upload', file)
-			.then(() => toast.success(`'${name}' uploaded successfully`))
-			.catch(error => {
+		Api.upload('file/upload', file).then((response) => {
+			response.json().then(track => {
+				this.context.addUploadToExistingLibraryView(track);
+				toast.success(`'${name}' uploaded successfully`)
+			}).catch(error => {
 				console.error(error);
-				toast.error(`The upload of '${name}' failed`)
-			})
-			.finally(() => this.setState({ uploading: false }));
+				toast.info('The song upload succeeded, but the new song could not be loaded');
+			});
+		}).catch(error => {
+			console.error(error);
+			toast.error(`The upload of '${name}' failed`)
+		}).finally(() => this.setState({ uploading: false }));
 	}
 
 	render() {
@@ -51,3 +57,4 @@ export class SongUpload extends React.Component {
 		)
 	}
 }
+SongUpload.contextType = MusicContext;

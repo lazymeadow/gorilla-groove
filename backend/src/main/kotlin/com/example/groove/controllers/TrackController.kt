@@ -1,6 +1,5 @@
 package com.example.groove.controllers
 
-import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.dto.YoutubeDownloadDTO
@@ -12,14 +11,12 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val trackRepository: TrackRepository,
 		private val youTubeService: YoutubeService
 ) {
 
@@ -64,13 +61,9 @@ class TrackController(
 	}
 
 	@PostMapping("/youtube-dl")
-	fun youtubeDownload(@RequestBody youTubeDownloadDTO: YoutubeDownloadDTO) {
-		youTubeService.downloadSong(youTubeDownloadDTO)
+	fun youtubeDownload(@RequestBody youTubeDownloadDTO: YoutubeDownloadDTO): Track {
+		return youTubeService.downloadSong(youTubeDownloadDTO)
 	}
-
-	data class AddToLibraryDTO(
-			val trackId: Long
-	)
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long

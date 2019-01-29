@@ -88,7 +88,7 @@ export class TrackList extends React.Component {
 		let container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.state.loading
 			&& container.scrollHeight < container.offsetHeight + container.scrollTop + 5
-			&& this.context.lastFetchedPage + 1 < this.context.totalPages) {
+			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
 
 			this.setState({ loading: true });
 			this.context.loadMoreTracks().finally(() => {

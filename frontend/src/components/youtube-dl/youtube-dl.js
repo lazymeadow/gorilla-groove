@@ -2,6 +2,7 @@ import React from 'react';
 import {Api} from "../../api";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
+import {MusicContext} from "../../services/music-provider";
 
 export class YoutubeDlButton extends React.Component {
 	constructor(props) {
@@ -49,10 +50,10 @@ export class YoutubeDlButton extends React.Component {
 			params.trackNumber = trackNumber;
 		}
 
-		Api.post('track/youtube-dl', params).then(() => {
-			this.setModalOpen(false);
+		Api.post('track/youtube-dl', params).then(track => {
+			this.context.addUploadToExistingLibraryView(track);
 			toast.success(`YouTube song downloaded successfully`);
-		}).catch((error) => {
+		}).catch(error => {
 			console.error(error);
 			toast.error('The download from YouTube failed');
 		}).finally(() => {
@@ -113,3 +114,4 @@ export class YoutubeDlButton extends React.Component {
 		)
 	}
 }
+YoutubeDlButton.contextType = MusicContext;

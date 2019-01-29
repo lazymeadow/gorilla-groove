@@ -9,6 +9,7 @@ export class EditableDiv extends React.Component {
 	}
 
 	componentDidUpdate(prevProps) {
+		// TODO need to clear out this old state so it doesn't pop back
 		// Make sure we just stopped editing the data
 		if (prevProps.editable === true && this.props.editable === false) {
 			// Make sure the value is new
