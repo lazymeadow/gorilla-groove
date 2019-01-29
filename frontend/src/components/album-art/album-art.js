@@ -3,21 +3,37 @@ import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 
-let defaultImage = './images/unknown-art.jpg';
+let defaultImageLink = './images/unknown-art.jpg';
 
 export class AlbumArt extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			modalOpen: false
+			modalOpen: false,
+			playedTrackId: null,
+			imageUrl: defaultImageLink
 		}
 	}
 
-	// noinspection JSMethodCanBeStatic
-	addDefaultSrc(event){
-		event.target.src = defaultImage;
-	};
+	shouldComponentUpdate() {
+		return this.context.playedTrack && this.context.playedTrack.id !== this.state.playedTrackId;
+	}
+
+	// Because we're using a background-image and not a <img>, we need to be creative about
+	// falling back to our default image. Create an image element and check if the image loads.
+	// Depending on if it does, set the URL we want in our state
+	componentDidUpdate() {
+		const albumImageLink = this.getImageLink();
+		let img = new Image();
+		img.src = albumImageLink;
+		img.onload = () => {
+			this.setState({ imageUrl: albumImageLink })
+		};
+		img.onerror = () => {
+			this.setState({ imageUrl: defaultImageLink })
+		};
+	}
 
 	setModalOpen(isOpen) {
 		this.setState({ modalOpen: isOpen })
@@ -25,23 +41,22 @@ export class AlbumArt extends React.Component {
 
 	getImageLink() {
 		let userTrack = this.context.playedTrack;
-		return userTrack ? Api.getAlbumArtResourceLink(userTrack) : defaultImage;
+		return userTrack ? Api.getAlbumArtResourceLink(userTrack) : defaultImageLink;
 	}
 
 	render() {
 		return (
 			<div onClick={() => this.setModalOpen(true)} className="album-art-container">
-				<div className="album-art-header">Album Art</div>
-				<img
+				{/* Use a background image here because it behaves better at staying within boundaries */}
+				<div
 					className="album-art"
-					src={this.getImageLink()}
-					onError={this.addDefaultSrc}
+					style={{ backgroundImage: 'url(' + this.state.imageUrl + ')' }}
 				/>
 				<Modal
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
 				>
-					<img className="modal-image" src={this.getImageLink()}/>
+					<img className="modal-image" src={this.state.imageUrl}/>
 				</Modal>
 			</div>
 		)

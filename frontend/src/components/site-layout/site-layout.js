@@ -54,7 +54,6 @@ export class SiteLayout extends React.Component {
 						otherUsers={this.state.otherUsers}
 						playlists={this.context.playlists}
 					/>
-					<AlbumArt/>
 				</div>
 				<div className="border-layout-center track-table-container">
 					<TrackList
@@ -69,6 +68,9 @@ export class SiteLayout extends React.Component {
 						userTracks={this.context.nowPlayingTracks}
 						trackView={false}
 					/>
+				</div>
+				<div className="border-layout-southwest">
+					<AlbumArt/>
 				</div>
 				<div className="border-layout-south">
 					<PlaybackControls/>

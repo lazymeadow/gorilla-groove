@@ -1,12 +1,15 @@
 .album-art-container {
-  position: absolute;
-  bottom: -3px;
-  border-top: 2px black solid;
   cursor: pointer;
+  height: 100%;
 }
 
+// For whatever reason, Firefox didn't load in the "background-size: contain" rule if these were optimized
+//noinspection CssOptimizeSimilarProperties
 .album-art {
-  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .modal-image {
