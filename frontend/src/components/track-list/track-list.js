@@ -181,7 +181,7 @@ export class TrackList extends React.Component {
 				cellId = event.target.id;
 			} else {
 				let elements = event.target.querySelectorAll('[id]');
-				cellId = elements ? [0].id : null;
+				cellId = elements ? elements[0].id : null;
 			}
 
 			this.setState({ pendingEditableCell: cellId });
