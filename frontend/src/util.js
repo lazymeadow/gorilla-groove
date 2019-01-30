@@ -4,6 +4,14 @@ export function range(start, count) {
 		.map((_, index) => { return index + start;});
 }
 
+// FIXME
+// I had a feeling this wouldn't work that well, and it doesn't really. It could be made to work,
+// but it's sure a hassle, and it's unlikely that the frontend will sort EXACTLY like the DB when
+// it comes to things like special characters.
+
+// Instead of doing this, I think I should have the backend return the index of the song after it
+// gets inserted. That seems like it'd be a lot simpler. Wish I had thought of that before
+
 // sortKeys is something like [{key: artist, dir: asc}, {key: album, dir: desc}]
 export function findSpotInSortedArray(item, array, sortKeys) {
 	// For each item in our sorted array

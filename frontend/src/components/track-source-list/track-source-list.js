@@ -1,7 +1,7 @@
 import React from 'react';
 import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
-import {TrackView} from "../../enums/TrackView";
+import {TrackView} from "../../enums/track-view";
 import {EditableDiv} from "../editable-div/editable-div";
 
 export class TrackSourceList extends React.Component {
