@@ -57,7 +57,7 @@ export class SiteLayout extends React.Component {
 				</div>
 				<div className="border-layout-center track-table-container">
 					<TrackList
-						columns={["Name", "Artist", "Album", "Track #", "Length", "Year", "Play Count", "Bit Rate", "Sample Rate", "Added", "Last Played", "Note"]}
+						columns={["Name", "Artist", "Album", "Track #", "Length", "Year", "Genre", "Play Count", "Bit Rate", "Sample Rate", "Added", "Last Played", "Note"]}
 						userTracks={this.context.viewedTracks}
 						trackView={true}
 					/>

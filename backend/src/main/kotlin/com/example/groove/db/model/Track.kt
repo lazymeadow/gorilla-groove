@@ -45,6 +45,9 @@ data class Track(
 		@Column(name = "release_year")
 		var releaseYear: Int? = null,
 
+		@Column
+		var genre: String? = null,
+
 		@Column(name = "play_count", nullable = false)
 		var playCount: Int = 0,
 

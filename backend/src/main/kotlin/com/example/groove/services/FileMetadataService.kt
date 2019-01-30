@@ -66,6 +66,7 @@ class FileMetadataService(
 				album = audioFile.tag.getFirst(FieldKey.ALBUM),
 				trackNumber = parseTrackNumber(audioFile.tag.getFirst(FieldKey.TRACK)),
 				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
+				genre = audioFile.tag.getFirst(FieldKey.GENRE),
 				length = audioFile.audioHeader.trackLength,
 				bitRate = audioFile.audioHeader.bitRateAsNumber,
 				sampleRate = audioFile.audioHeader.sampleRateAsNumber

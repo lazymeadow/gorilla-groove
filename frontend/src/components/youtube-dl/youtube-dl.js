@@ -105,6 +105,11 @@ export class YoutubeDlButton extends React.Component {
 								<input id="song-track-number" name="song-track-number" type="text"/>
 							</div>
 
+							<div>
+								<label htmlFor="song-genre">Genre</label>
+								<input id="song-genre" name="song-genre" type="text"/>
+							</div>
+
 							<button>Download Song</button>
 						</form>
 					</Modal>
