@@ -25,6 +25,9 @@ export class EditableDiv extends React.Component {
 	handleKeyPress(event) {
 		if (event.key === 'Enter') {
 			this.props.stopEdit();
+		} else if (event.key === 'Escape') {
+			this.setState({ newValue: this.props.text });
+			this.props.stopEdit();
 		}
 	}
 
