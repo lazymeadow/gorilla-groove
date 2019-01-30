@@ -45,6 +45,7 @@ export class MusicProvider extends React.Component {
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
+			createPlaylist: (...args) => this.createPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
 			updateTrack: (...args) => this.updateTrack(...args),
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
@@ -397,6 +398,22 @@ export class MusicProvider extends React.Component {
 
 	removeFromPlaylist(trackIds, playlistId) {
 
+	}
+
+	createPlaylist() {
+		Api.post('playlist', {name: 'New Playlist'})
+			.then((playlist) => {
+				let playlists = this.state.playlists.slice(0);
+				playlists.push(playlist);
+
+				this.setState({ playlists: playlists });
+
+				toast.success('New playlist created')
+			})
+			.catch(error => {
+				console.error(error);
+				toast.error('The creation of a new playlist failed');
+			});
 	}
 
 	updateTrack(track, displayColumnName, newValue) {
