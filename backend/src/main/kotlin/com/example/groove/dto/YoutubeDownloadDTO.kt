@@ -6,5 +6,6 @@ data class YoutubeDownloadDTO(
 		val artist: String?,
 		val album: String?,
 		val releaseYear: Int?,
-		val trackNumber: Int?
+		val trackNumber: Int?,
+		val genre: String?
 )

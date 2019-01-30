@@ -59,6 +59,7 @@ class YoutubeService(
 		youtubeDownloadDTO.album?.let { track.album = it }
 		youtubeDownloadDTO.releaseYear?.let { track.releaseYear = it }
 		youtubeDownloadDTO.trackNumber?.let { track.trackNumber = it }
+		youtubeDownloadDTO.genre?.let { track.genre = it }
 		trackRepository.save(track)
 
 		// TODO convert this to a png like the others

@@ -32,6 +32,7 @@ export class YoutubeDlButton extends React.Component {
 		const album = document.getElementById('song-album').value;
 		const year = document.getElementById('song-year').value;
 		const trackNumber = document.getElementById('song-track-number').value;
+		const genre = document.getElementById('song-genre').value;
 
 		let params = { url: url };
 		if (name) {
@@ -48,6 +49,9 @@ export class YoutubeDlButton extends React.Component {
 		}
 		if (trackNumber) {
 			params.trackNumber = trackNumber;
+		}
+		if (genre) {
+			params.genre = genre;
 		}
 
 		Api.post('track/youtube-dl', params).then(track => {
@@ -73,39 +77,39 @@ export class YoutubeDlButton extends React.Component {
 						closeFunction={() => this.setModalOpen(false)}
 					>
 						<form className="form-modal youtube-dl-modal" onSubmit={(e) => this.submitDownloadForm(e)}>
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-url">URL</label>
 								<input id="song-url" name="song-url" type="text" required/>
 							</div>
 
 							<h4>Optional Metadata</h4>
 
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-name">Name</label>
 								<input id="song-name" name="song-name" type="text"/>
 							</div>
 
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-artist">Artist</label>
 								<input id="song-artist" name="song-artist" type="text"/>
 							</div>
 
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-album">Album</label>
 								<input id="song-album" name="song-album" type="text"/>
 							</div>
 
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-year">Release Year</label>
 								<input id="song-year" name="song-year" type="text"/>
 							</div>
 
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-track-number">Track Number</label>
 								<input id="song-track-number" name="song-track-number" type="text"/>
 							</div>
 
-							<div>
+							<div className="flex-label">
 								<label htmlFor="song-genre">Genre</label>
 								<input id="song-genre" name="song-genre" type="text"/>
 							</div>
