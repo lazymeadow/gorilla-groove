@@ -49,22 +49,22 @@ export class InviteUserButton extends React.Component {
 					closeFunction={() => this.setModalOpen(false)}
 				>
 					<form className="form-modal" onSubmit={(e) => this.submitInviteForm(e)}>
-						<div>
+						<div className="flex-label">
 							<label htmlFor="username">Username</label>
 							<input id="username" name="username" type="text" maxLength="32" required/>
 						</div>
 
-						<div>
+						<div className="flex-label">
 							<label htmlFor="email">Email</label>
 							<input id="email" name="email" type="email" required/>
 						</div>
 
-						<div>
+						<div className="flex-label">
 							<label htmlFor="password">Password</label>
 							<input id="password" name="password" type="password" minLength="10" required/>
 						</div>
 
-						<div>
+						<div className="flex-label">
 							<label htmlFor="password2">Password... again</label>
 							<input id="password2" name="password2" type="password" minLength="10" required/>
 						</div>

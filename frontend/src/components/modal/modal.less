@@ -9,19 +9,29 @@
 }
 
 .form-modal {
+  text-align: center;
+
   div {
     margin-bottom: 7px;
   }
 
   input {
     margin-left: 10px;
-    float: right;
+    padding: 0 0 0 4px;
+    height: 22px;
+    width: 200px;
+    line-height: 16px;
   }
 
   button {
     margin-top: 15px;
-    float: right;
   }
+}
+
+.flex-label {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 // Even though the modal could visually seem on top, some things (like the column resizing) was

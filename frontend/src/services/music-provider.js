@@ -1,6 +1,6 @@
 import React from "react";
 import {Api} from "../api";
-import {TrackView} from "../enums/TrackView";
+import {TrackView} from "../enums/track-view";
 import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
 import {toast} from "react-toastify";
