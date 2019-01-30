@@ -270,7 +270,7 @@ export class MusicProvider extends React.Component {
 				this.playIndex(this.state.playedTrackIndex + 1);
 
 				// Otherwise, if we have run out of songs, but are repeating, start back over from 0
-			} else if (this.context.repeatSongs) {
+			} else if (this.state.repeatSongs) {
 				this.playIndex(0);
 			}
 		}
