@@ -52,14 +52,6 @@ export class TrackList extends React.Component {
 
 	}
 
-	componentDidUpdate() {
-		this.enableResize();
-	}
-
-	componentWillUpdate() {
-		this.disableResize();
-	}
-
 	enableResize() {
 		const options = {resizeMode: 'overflow'};
 		if (!this.resizer) {
