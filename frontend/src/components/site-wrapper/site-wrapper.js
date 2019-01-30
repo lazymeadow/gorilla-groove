@@ -8,7 +8,7 @@ export class SiteWrapper extends React.Component {
 
 	componentDidMount() {
 		Api.get('version').then((serverVersion) => {
-			const clientVersion = "1.0.6";
+			const clientVersion = "1.0.7";
 			if (serverVersion.version !== clientVersion) {
 				toast.info("Your Gorilla Groove is out of date. Please hard-reload your web page.")
 			}

@@ -28,9 +28,15 @@ export class SiteLayout extends React.Component {
 		Api.get("user")
 			.then((result) => {
 				let ownUserIndex = result.findIndex((user) => {
-					return user.email === sessionStorage.getItem('loggedInEmail');
+					return user.email.toLowerCase() === sessionStorage.getItem('loggedInEmail').toLowerCase();
 				});
-				let ownUser = result.splice(ownUserIndex, 1)[0];
+				let ownUser = null;
+				if (ownUserIndex === -1) {
+					console.error("Could not locate own user within Gorilla Groove's users");
+					ownUser = result[0];
+				} else {
+					ownUser = result.splice(ownUserIndex, 1)[0];
+				}
 
 				this.setState({
 					ownUser: ownUser,
