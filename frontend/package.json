@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "react": "^16.6.0"
+    "react": "^16.6.0",
+    "react-reorder": "^3.0.0-alpha.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.2",

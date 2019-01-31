@@ -1,9 +1,7 @@
 import React from 'react';
-import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
-
-let defaultImageLink = './images/unknown-art.jpg';
+import Reorder from 'react-reorder';
 
 export class Settings extends React.Component {
 	constructor(props) {
@@ -11,7 +9,7 @@ export class Settings extends React.Component {
 
 		this.state = {
 			modalOpen: false,
-		}
+		};
 	}
 
 	componentDidUpdate() {
@@ -20,6 +18,14 @@ export class Settings extends React.Component {
 
 	setModalOpen(isOpen) {
 		this.setState({ modalOpen: isOpen })
+	}
+
+	handleColumnReorder(stuff, startingIndex, endingIndex) {
+		let columnPreferences = this.context.columnPreferences.slice(0);
+		let movedPreference = columnPreferences.splice(startingIndex, 1)[0];
+		columnPreferences.splice(endingIndex, 0, movedPreference);
+
+		this.context.setColumnPreferences(columnPreferences);
 	}
 
 	render() {
@@ -31,23 +37,25 @@ export class Settings extends React.Component {
 					closeFunction={() => this.setModalOpen(false)}
 				>
 					<h2>Settings</h2>
-					<div>
-						<ul>
-							<li>Name</li>
-							<li>Artist</li>
-							<li>Album</li>
-							<li>Track #</li>
-							<li>Length</li>
-							<li>Year</li>
-							<li>Genre</li>
-							<li>Play Count</li>
-							<li>Bit Rate</li>
-							<li>Sample Rate</li>
-							<li>Added</li>
-							<li>Last Played</li>
-							<li>Note</li>
-						</ul>
+					<div className="column-reorder-list">
+						<h3>Click and drag to reorder</h3>
+						<Reorder
+							reorderId="column-settings-list"
+							component="ul"
+							onReorder={this.handleColumnReorder.bind(this)}
+						>
+							{this.context.columnPreferences.map((columnPreference, index) => {
+								return (
+									<li key={index}>
+										<div className="column-preference">
+											{columnPreference.name}
+										</div>
+									</li>
+								)
+							})}
+						</Reorder>
 					</div>
+					<button onClick={() => this.context.resetColumnPreferences()}>Reset</button>
 				</Modal>
 			</div>
 		)

@@ -85,7 +85,9 @@ export class MusicProvider extends React.Component {
 			updateTrack: (...args) => this.updateTrack(...args),
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
-			setShuffleSongs: (...args) => this.setShuffleSongs(...args)
+			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
+			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
+			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args)
 		};
 	}
 
@@ -491,6 +493,19 @@ export class MusicProvider extends React.Component {
 	setRepeatSongs(repeatSongs) {
 		this.setState({ repeatSongs: repeatSongs });
 		LocalStorage.setBoolean('repeatSongs', repeatSongs);
+	}
+
+	setColumnPreferences(columnPreferences) {
+		this.setState({
+			columnPreferences: columnPreferences,
+		});
+		LocalStorage.setObject('columnPreferences', columnPreferences);
+	}
+
+	resetColumnPreferences() {
+		LocalStorage.deleteKey('columnPreferences');
+		let preferences = this.loadColumnPreferences();
+		this.setState({ columnPreferences: preferences });
 	}
 
 	resetShuffleIndexes(withoutIndex) {

@@ -39,3 +39,7 @@ export function getObject(key, defaultValue) {
 
 	return JSON.parse(value);
 }
+
+export function deleteKey(key) {
+	localStorage.removeItem(key);
+}

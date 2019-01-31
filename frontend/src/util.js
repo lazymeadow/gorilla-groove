@@ -57,5 +57,5 @@ export function findSpotInSortedArray(item, array, sortKeys) {
 }
 
 export function arrayIntersection(array1, array2) {
-	array1.filter(val => array2.includes(val));
+	return array1.filter(val => array2.includes(val));
 }
