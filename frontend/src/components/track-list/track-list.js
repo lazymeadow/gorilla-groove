@@ -214,7 +214,7 @@ export class TrackList extends React.Component {
 			return;
 		}
 
-		let sortColumn = event.target.querySelector('.column-name').innerHTML.trim();
+		let sortColumn = event.currentTarget.querySelector('.column-name').innerHTML.trim();
 		let sortDir;
 
 		if (this.context.trackSortColumn === sortColumn) {
