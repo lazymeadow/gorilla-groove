@@ -6,11 +6,8 @@ import {EditableDiv} from "../editable-div/editable-div";
 export class SongRow extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {
-			updatableColumns: new Set(['Album', 'Artist', 'Name', 'Year', 'Track #', 'Genre', 'Note'])
-		}
+		this.state = { }
 	}
-
 
 	// This is currently causing issues with track-level updates (like updating play count)
 	// Because the value is updated directly on the track, this.props and nextProps already
@@ -74,7 +71,7 @@ export class SongRow extends React.Component {
 							<div className={this.props.showContextMenu && index === 0 ? 'shifted-entry' : ''}>
 								<EditableDiv
 									id={cellId}
-									editable={this.state.updatableColumns.has(columnName) && this.props.editableCell === cellId}
+									editable={SongRow.updatableColumns.has(columnName) && this.props.editableCell === cellId}
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={(newValue) => {
@@ -96,4 +93,4 @@ SongRow.defaultProps = {
 	selected: false
 };
 SongRow.contextType = MusicContext;
-
+SongRow.updatableColumns = new Set(['Album', 'Artist', 'Name', 'Year', 'Track #', 'Genre', 'Note']);

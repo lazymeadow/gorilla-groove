@@ -21,3 +21,21 @@ export function setBoolean(key, value) {
 		throw Error(`Non-boolean value (${value}) passed to setBoolean for key ${key}`)
 	}
 }
+
+export function setObject(key, object) {
+	if (typeof object !== 'object' || object === null) {
+		throw Error(`Non-object value (${object}) passed to setObject for key ${key}`);
+	}
+
+	localStorage.setItem(key, JSON.stringify(object));
+}
+
+export function getObject(key, defaultValue) {
+	const value = localStorage.getItem(key);
+
+	if (value === undefined || value === null) {
+		return defaultValue;
+	}
+
+	return JSON.parse(value);
+}

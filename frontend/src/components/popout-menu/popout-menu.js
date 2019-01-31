@@ -36,7 +36,11 @@ export class PopoutMenu extends React.Component {
 				<div className={`popout-menu ${menuClass}`}>
 					<ul>
 						{this.props.menuItems.map((menuItem, index) => {
-							return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
+							if (menuItem.component) {
+								return <li key={index}>{menuItem.component}</li>
+							} else {
+								return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
+							}
 						})}
 					</ul>
 				</div>

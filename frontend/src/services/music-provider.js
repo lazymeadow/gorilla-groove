@@ -12,47 +12,6 @@ export class MusicProvider extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {
-			viewedTracks: [],
-			trackView: TrackView.LIBRARY,
-			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
-			totalTracksToFetch: 0,
-			trackSortColumn: 'Artist',
-			trackSortDir: 'asc',
-			nowPlayingTracks: [],
-			playedTrack: null,
-			playedTrackIndex: null,
-			playlists: [],
-			songIndexesToShuffle: [],
-			shuffledSongIndexes: [],
-			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
-			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
-			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
-			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
-			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
-			sortTracks: (...args) => this.sortTracks(...args),
-			addUploadToExistingLibraryView: (...args) => this.addUploadToExistingLibraryView(...args),
-			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
-			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
-			playTracks: (...args) => this.playTracks(...args),
-			playTracksNext: (...args) => this.playTracksNext(...args),
-			playTracksLast: (...args) => this.playTracksLast(...args),
-			playNext: (...args) => this.playNext(...args),
-			playPrevious: (...args) => this.playPrevious(...args),
-			deleteTracks: (...args) => this.deleteTracks(...args),
-			setHidden: (...args) => this.setHidden(...args),
-			importTracks: (...args) => this.importTracks(...args),
-			loadPlaylists: (...args) => this.loadPlaylists(...args),
-			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
-			addToPlaylist: (...args) => this.addToPlaylist(...args),
-			createPlaylist: (...args) => this.createPlaylist(...args),
-			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
-			updateTrack: (...args) => this.updateTrack(...args),
-			renamePlaylist: (...args) => this.renamePlaylist(...args),
-			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
-			setShuffleSongs: (...args) => this.setShuffleSongs(...args)
-		};
-
 		this.trackKeyConversions = {
 			'Name': 'name',
 			'Artist': 'artist',
@@ -86,6 +45,79 @@ export class MusicProvider extends React.Component {
 		};
 
 		this.pageSize = 75;
+
+		this.state = {
+			viewedTracks: [],
+			trackView: TrackView.LIBRARY,
+			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
+			totalTracksToFetch: 0,
+			trackSortColumn: 'Artist',
+			trackSortDir: 'asc',
+			nowPlayingTracks: [],
+			playedTrack: null,
+			playedTrackIndex: null,
+			playlists: [],
+			songIndexesToShuffle: [],
+			shuffledSongIndexes: [],
+			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
+			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
+			columnPreferences: this.loadColumnPreferences(),
+			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
+			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
+			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
+			sortTracks: (...args) => this.sortTracks(...args),
+			addUploadToExistingLibraryView: (...args) => this.addUploadToExistingLibraryView(...args),
+			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
+			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
+			playTracks: (...args) => this.playTracks(...args),
+			playTracksNext: (...args) => this.playTracksNext(...args),
+			playTracksLast: (...args) => this.playTracksLast(...args),
+			playNext: (...args) => this.playNext(...args),
+			playPrevious: (...args) => this.playPrevious(...args),
+			deleteTracks: (...args) => this.deleteTracks(...args),
+			setHidden: (...args) => this.setHidden(...args),
+			importTracks: (...args) => this.importTracks(...args),
+			loadPlaylists: (...args) => this.loadPlaylists(...args),
+			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
+			addToPlaylist: (...args) => this.addToPlaylist(...args),
+			createPlaylist: (...args) => this.createPlaylist(...args),
+			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
+			updateTrack: (...args) => this.updateTrack(...args),
+			renamePlaylist: (...args) => this.renamePlaylist(...args),
+			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
+			setShuffleSongs: (...args) => this.setShuffleSongs(...args)
+		};
+	}
+
+	// A user's column preferences are stored in local storage in an object like
+	// [{ name: 'Name', enabled: true }, { name: 'Artist', enabled: false }]
+	loadColumnPreferences() {
+		// Grab the (potentially) already existing preferences
+		const columnOptions = Object.keys(this.trackKeyConversions);
+
+		let columnPreferences = LocalStorage.getObject('columnPreferences');
+		// If the preferences already existed, we need to check if any new columns were added
+		// since the user last logged in.
+		if (columnPreferences) {
+			let savedColumns = columnPreferences.map(columnPref => columnPref.name );
+			let newColumns = Util.arrayIntersection(columnOptions, savedColumns);
+
+			if (newColumns.length > 0) {
+				// We have new columns to add. Initialize them and add them to the column preferences
+				columnPreferences.concat(newColumns.map(trackColumnName => {
+					return { name: trackColumnName, enabled: true };
+				}));
+				LocalStorage.setObject('columnPreferences', columnPreferences);
+			}
+
+		} else {
+			// No pre-existing column preferences were found. Enable them all
+			columnPreferences = columnOptions.map(trackColumnName => {
+				return { name: trackColumnName, enabled: true };
+			})
+		}
+
+		return columnPreferences;
 	}
 
 	loadSongsForUser(userId, params, append) {

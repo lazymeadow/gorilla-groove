@@ -2,6 +2,7 @@ import React from 'react';
 import {withRouter} from "react-router-dom";
 import {Api} from "../../api";
 import {PopoutMenu} from "../popout-menu/popout-menu";
+import {Settings} from "../settings/settings";
 
 class LogoutButtonInternal extends React.Component {
 	constructor(props) {
@@ -29,12 +30,10 @@ class LogoutButtonInternal extends React.Component {
 						text: sessionStorage.getItem('loggedInUserName')
 					}}
 					menuItems={[
-						{ text: "Settings", clickHandler: () => alert("Settings") },
+						{ component: <Settings/> },
 						{ text: "Logout", clickHandler: (e) => this.logout(e) }
 					]}
 				/>
-				{/*<div className="user-button" onClick={() => this.toggleExpanded()}>*/}
-				{/*</div>*/}
 			</div>
 		)
 	}

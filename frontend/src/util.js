@@ -55,3 +55,7 @@ export function findSpotInSortedArray(item, array, sortKeys) {
 	// We made it through the entire array without sorting ourselves. So we must belong at the end of the array
 	return array.length;
 }
+
+export function arrayIntersection(array1, array2) {
+	array1.filter(val => array2.includes(val));
+}
