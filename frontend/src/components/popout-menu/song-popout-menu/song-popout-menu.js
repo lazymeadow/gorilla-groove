@@ -1,30 +1,72 @@
 import React from 'react';
 import {MusicContext} from "../../../services/music-provider";
 import {toast} from "react-toastify";
+import {TrackView} from "../../../enums/track-view";
 
 export class SongPopoutMenu extends React.Component {
 	constructor(props) {
 		super(props);
-		this.baseMenuOptions = [
-			{ text: "Play Now", clickHandler: (e) => {
+		this.state = {
+			menuOptions: []
+		};
+	}
+
+	shouldComponentUpdate(nextProps) {
+		return (nextProps.expanded !== this.props.expanded);
+	}
+
+	static getDerivedStateFromProps(props) {
+		let options;
+		if (props.context.trackView === TrackView.LIBRARY || props.context.trackView === TrackView.PLAYLIST) {
+			options = SongPopoutMenu.getBaseMenuOptions(props)
+				.concat(SongPopoutMenu.getOwnLibraryOptions(props))
+				.concat(SongPopoutMenu.getPlaylistOptions(props));
+		} else if (props.context.trackView === TrackView.USER) {
+			options = SongPopoutMenu.getBaseMenuOptions(props);
+		} else {
+			options = [];
+		}
+
+		return ({ menuOptions: options })
+	}
+
+	componentDidMount() {
+		document.body.addEventListener('click', this.props.closeContextMenu);
+	}
+
+	componentWillUnmount() {
+		document.body.removeEventListener('click', this.props.closeContextMenu);
+	}
+
+	static getBaseMenuOptions(props) {
+		return [
+			{
+				text: "Play Now", clickHandler: (e) => {
 					e.stopPropagation();
-					this.context.playTracks(this.props.getSelectedTracks())
+					props.context.playTracks(props.getSelectedTracks())
 				}
 			},
-			{ text: "Play Next", clickHandler: (e) => {
+			{
+				text: "Play Next", clickHandler: (e) => {
 					e.stopPropagation();
-					this.context.playTracksNext(this.props.getSelectedTracks())
+					props.context.playTracksNext(props.getSelectedTracks())
 				}
 			},
-			{ text: "Play Last", clickHandler: (e) => {
+			{
+				text: "Play Last", clickHandler: (e) => {
 					e.stopPropagation();
-					this.context.playTracksLast(this.props.getSelectedTracks())
+					props.context.playTracksLast(props.getSelectedTracks())
 				}
-			},
-			{ text: "Make Private", clickHandler: (e) => {
+			}];
+	}
+
+	static getOwnLibraryOptions(props) {
+		return [
+			{
+				text: "Make Private", clickHandler: (e) => {
 					e.stopPropagation();
-					const tracks = this.props.getSelectedTracks();
-					this.context.setHidden(tracks, true).then(() => {
+					const tracks = props.getSelectedTracks();
+					props.context.setHidden(tracks, true).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was made private`)
 						} else {
@@ -36,10 +78,11 @@ export class SongPopoutMenu extends React.Component {
 					});
 				}
 			},
-			{ text: "Make Public", clickHandler: (e) => {
+			{
+				text: "Make Public", clickHandler: (e) => {
 					e.stopPropagation();
-					const tracks = this.props.getSelectedTracks();
-					this.context.setHidden(tracks, false).then(() => {
+					const tracks = props.getSelectedTracks();
+					props.context.setHidden(tracks, false).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was made public`)
 						} else {
@@ -51,10 +94,11 @@ export class SongPopoutMenu extends React.Component {
 					});
 				}
 			},
-			{ text: "Delete", clickHandler: (e) => {
+			{
+				text: "Delete", clickHandler: (e) => {
 					e.stopPropagation();
-					const tracks = this.props.getSelectedTracks();
-					this.context.deleteTracks(tracks, false).then(() => {
+					const tracks = props.getSelectedTracks();
+					this.props.deleteTracks(tracks, false).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was deleted`)
 						} else {
@@ -67,29 +111,18 @@ export class SongPopoutMenu extends React.Component {
 				}
 			}
 		];
-		this.state = {
-			menuOptions: []
-		};
 	}
 
-	shouldComponentUpdate(nextProps) {
-		if (nextProps.expanded !== this.props.expanded) {
-			return true;
-		}
-
-		return this.context.playlists.length + this.baseMenuOptions.length !== this.state.menuOptions.length;
-	}
-
-	setupPlaylists() {
+	static getPlaylistOptions(props) {
 		// TODO I'd rather have these nested in a 'Playlists' context menu instead of being here at the root level
-		let playlistOptions = this.context.playlists.map(playlist => {
+		return props.context.playlists.map(playlist => {
 			return {
 				text: `Add to Playlist: ${playlist.name}`,
 				clickHandler: (e) => {
 					e.stopPropagation();
-					let tracks = this.props.getSelectedTracks();
+					let tracks = props.getSelectedTracks();
 					let trackIds = tracks.map(track => track.id);
-					this.context.addToPlaylist(playlist.id, trackIds).then(() => {
+					props.context.addToPlaylist(playlist.id, trackIds).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was added to '${playlist.name}'`)
 						} else {
@@ -102,20 +135,6 @@ export class SongPopoutMenu extends React.Component {
 				}
 			}
 		});
-
-		this.setState({menuOptions: this.baseMenuOptions.concat(playlistOptions)});
-	}
-
-	componentDidUpdate() {
-		this.setupPlaylists();
-	}
-
-	componentDidMount() {
-		document.body.addEventListener('click', this.props.closeContextMenu);
-	}
-
-	componentWillUnmount() {
-		document.body.removeEventListener('click', this.props.closeContextMenu);
 	}
 
 	render() {

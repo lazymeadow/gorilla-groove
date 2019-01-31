@@ -263,6 +263,7 @@ export class TrackList extends React.Component {
 			<div>
 				<div>
 					<SongPopoutMenu
+						context={this.context} // Pass in as prop, so it can be accessed in getDerivedState
 						closeContextMenu={() => this.closeContextMenu()}
 						getSelectedTracks={() => this.getSelectedTracks()}
 						expanded={this.state.contextMenuOptions.expanded}
