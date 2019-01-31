@@ -45,6 +45,11 @@ class TrackController(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
+	@PostMapping("/import")
+	fun importTracks(@RequestBody importDTO: MultiTrackIdDTO): List<Track> {
+		return trackService.importTrack(importDTO.trackIds)
+	}
+
 	// FIXME this should be a PATCH not a PUT. But I was having issues with PATCH failing the OPTIONS check
 	@PutMapping
 	fun updateTrackData(@RequestBody updateTrackDTO: UpdateTrackDTO): ResponseEntity<String> {
@@ -54,7 +59,7 @@ class TrackController(
 	}
 
 	@DeleteMapping
-	fun deleteTracks(@RequestBody deleteTrackDTO: DeleteTrackDTO): ResponseEntity<String> {
+	fun deleteTracks(@RequestBody deleteTrackDTO: MultiTrackIdDTO): ResponseEntity<String> {
 		trackService.deleteTracks(loadLoggedInUser(), deleteTrackDTO.trackIds)
 
 		return ResponseEntity(HttpStatus.OK)
@@ -74,7 +79,7 @@ class TrackController(
 			val isHidden: Boolean
 	)
 
-	data class DeleteTrackDTO(
+	data class MultiTrackIdDTO(
 			val trackIds: List<Long>
 	)
 

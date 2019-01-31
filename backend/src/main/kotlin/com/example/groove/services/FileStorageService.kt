@@ -107,6 +107,16 @@ class FileStorageService(
 		tmpAlbumArt.renameTo(destinationFile)
 	}
 
+	fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
+		val sourceDirectory = trackSourceId / 1000
+		val sourceFile = File("$albumArtLocation/$sourceDirectory/$trackSourceId.png")
+
+		val destinationDirectory = trackDestinationId / 1000
+		val destinationFile = File("$albumArtLocation/$destinationDirectory/$trackDestinationId.png")
+
+		sourceFile.copyTo(destinationFile)
+	}
+
 	@Transactional
 	fun convertAndSaveTrackForUser(fileName: String, user: User): Track {
 		var convertedFileName: String? = null

@@ -24,7 +24,8 @@ import java.util.*
 class TrackService(
 		private val trackRepository: TrackRepository,
 		private val trackHistoryRepository: TrackHistoryRepository,
-		private val fFmpegProperties: FFmpegProperties
+		private val fFmpegProperties: FFmpegProperties,
+		private val fileStorageService: FileStorageService
 ) {
 
 	@Transactional(readOnly = true)
@@ -122,30 +123,35 @@ class TrackService(
 		}
 	}
 
-	// I think this should be reworked to be "clone track" or "fork track" or something
-	/*
 	@Transactional
-	fun addTrack(user: User, trackId: Long) {
-		val track = trackRepository.findById(trackId)
-				.unwrap() ?: throw IllegalArgumentException("No track found by ID $trackId!")
+	fun importTrack(trackIds: List<Long>): List<Track> {
+		val user = loadLoggedInUser()
 
-		val existingLibraryEntry = trackRepository.findByTrackAndUser(track, user)
-		if (existingLibraryEntry != null) {
-			throw IllegalArgumentException("The track with ID $trackId already exists in this library")
+		val tracksToImport = trackIds.map {
+			trackRepository.findById(it).unwrap()
+		}
+		val invalidTracks = tracksToImport.filter { track ->
+			track == null || track.hidden || track.user.id == user.id
+		}
+		if (invalidTracks.isNotEmpty()) {
+			throw IllegalArgumentException("Invalid track import request. Supplied IDs: $trackIds")
 		}
 
-		val librariesWithTrack = trackRepository.findByTrack(track)
-		if (librariesWithTrack.isNotEmpty() && librariesWithTrack.all { it.hidden }) {
-			logger.info("The Track with ID $trackId was attempted to be added by User ID ${user.id}. " +
-					"However, this track is already owned by other users and none of them have the " +
-					" track listed with public visibility.")
-			throw IllegalArgumentException("No track found by ID $trackId!")
-		}
+		return tracksToImport.map { track ->
+			val forkedTrack = track!!.copy(
+					id = 0,
+					user = user,
+					createdAt = Timestamp(Date().time),
+					playCount = 0,
+					lastPlayed = null
+			)
 
-		val track = Track(user = user, track = track)
-		trackRepository.save(track)
+			trackRepository.save(forkedTrack)
+			fileStorageService.copyAlbumArt(track.id, forkedTrack.id)
+
+			forkedTrack
+		}
 	}
-	*/
 
 	companion object {
 		val logger = LoggerFactory.getLogger(TrackService::class.java)!!
