@@ -111,6 +111,10 @@ class FileStorageService(
 		val sourceDirectory = trackSourceId / 1000
 		val sourceFile = File("$albumArtLocation/$sourceDirectory/$trackSourceId.png")
 
+		if (!sourceFile.exists()) {
+			return
+		}
+
 		val destinationDirectory = trackDestinationId / 1000
 		val destinationFile = File("$albumArtLocation/$destinationDirectory/$trackDestinationId.png")
 

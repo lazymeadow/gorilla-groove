@@ -99,7 +99,7 @@ export class SongPopoutMenu extends React.Component {
 				text: "Delete", clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
-					this.props.deleteTracks(tracks, false).then(() => {
+					props.context.deleteTracks(tracks, false).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was deleted`)
 						} else {
