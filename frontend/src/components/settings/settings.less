@@ -2,11 +2,28 @@
   border: 2px solid black;
   user-select: none;
   -moz-user-select: none;
+  margin-right: 15px;
+  height: 20px;
 }
 .column-reorder-list {
   user-select: none;
   -moz-user-select: none;
+  margin-right: 20px;
+}
+.column-toggle {
+  border: 2px solid black;
+  height: 20px;
+  width: 20px;
+  &.column-enabled {
+    background-color: green;
+  }
+  &.column-disabled {
+    background-color: red;
+  }
 }
 .dragged {
   display: none;
+}
+.column-setting-wrapper {
+  display: flex;
 }

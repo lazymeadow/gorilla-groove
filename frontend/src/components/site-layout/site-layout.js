@@ -49,6 +49,10 @@ export class SiteLayout extends React.Component {
 	}
 
 	render() {
+		let displayedColumns = this.context.columnPreferences
+			.filter(columnPreference => columnPreference.enabled)
+			.map(columnPreference => columnPreference.name);
+
 		return (
 			<div className="full-screen border-layout">
 				<div className="border-layout-north">
@@ -63,7 +67,7 @@ export class SiteLayout extends React.Component {
 				</div>
 				<div className="border-layout-center track-table-container">
 					<TrackList
-						columns={this.context.columnPreferences.map(columnPreference => columnPreference.name )}
+						columns={displayedColumns}
 						userTracks={this.context.viewedTracks}
 						trackView={true}
 					/>

@@ -16,6 +16,7 @@ export class MusicProvider extends React.Component {
 			'Name': 'name',
 			'Artist': 'artist',
 			'Album': 'album',
+			'Track #' : 'trackNumber',
 			'Length': 'length',
 			'Year': 'releaseYear',
 			'Genre' : 'genre',
@@ -24,7 +25,6 @@ export class MusicProvider extends React.Component {
 			'Sample Rate': 'sampleRate',
 			'Added': 'createdAt',
 			'Last Played': 'lastPlayed',
-			'Track #' : 'trackNumber',
 			'Note' : 'note'
 		};
 
