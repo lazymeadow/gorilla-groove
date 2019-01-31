@@ -22,7 +22,8 @@ export class SongPopoutMenu extends React.Component {
 				.concat(SongPopoutMenu.getOwnLibraryOptions(props))
 				.concat(SongPopoutMenu.getPlaylistOptions(props));
 		} else if (props.context.trackView === TrackView.USER) {
-			options = SongPopoutMenu.getBaseMenuOptions(props);
+			options = SongPopoutMenu.getBaseMenuOptions(props)
+				.concat(SongPopoutMenu.getOtherUserOptions(props));
 		} else {
 			options = [];
 		}
@@ -107,6 +108,27 @@ export class SongPopoutMenu extends React.Component {
 					}).catch((error) => {
 						console.error(error);
 						toast.error('Failed to delete the selected tracks')
+					});
+				}
+			}
+		];
+	}
+
+	static getOtherUserOptions(props) {
+		return [
+			{
+				text: "Import to Library", clickHandler: (e) => {
+					e.stopPropagation();
+					const tracks = props.getSelectedTracks();
+					props.context.importTracks(tracks).then(() => {
+						if (tracks.length === 1) {
+							toast.success(`'${tracks[0].name}' was imported`)
+						} else {
+							toast.success(`${tracks.length} tracks were imported`)
+						}
+					}).catch(error => {
+						console.error(error);
+						toast.error('Failed to import the selected tracks')
 					});
 				}
 			}

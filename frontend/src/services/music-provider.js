@@ -37,11 +37,11 @@ export class MusicProvider extends React.Component {
 			playTracks: (...args) => this.playTracks(...args),
 			playTracksNext: (...args) => this.playTracksNext(...args),
 			playTracksLast: (...args) => this.playTracksLast(...args),
-			playIndex: (...args) => this.playIndex(...args),
 			playNext: (...args) => this.playNext(...args),
 			playPrevious: (...args) => this.playPrevious(...args),
 			deleteTracks: (...args) => this.deleteTracks(...args),
 			setHidden: (...args) => this.setHidden(...args),
+			importTracks: (...args) => this.importTracks(...args),
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
@@ -50,8 +50,7 @@ export class MusicProvider extends React.Component {
 			updateTrack: (...args) => this.updateTrack(...args),
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
-			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
-			resetShuffleIndexes: (...args) => this.resetShuffleIndexes(...args)
+			setShuffleSongs: (...args) => this.setShuffleSongs(...args)
 		};
 
 		this.trackKeyConversions = {
@@ -322,6 +321,13 @@ export class MusicProvider extends React.Component {
 		}).then(() => {
 			tracks.forEach(track => track.hidden = isHidden);
 			this.forceTrackUpdate();
+		});
+	}
+
+	// noinspection JSMethodCanBeStatic
+	importTracks(tracks) {
+		return Api.post('track/import', {
+			trackIds: tracks.map(track => track.id)
 		});
 	}
 
