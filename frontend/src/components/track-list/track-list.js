@@ -10,7 +10,7 @@ export class TrackList extends React.Component {
 		super(props);
 
 		this.state = {
-			selected: {},
+			selected: {}, // FIXME Pretty sure I should have made this a set. Pretty sure it's being used like a set
 			firstSelectedIndex: null,
 			lastSelectedIndex: null,
 			withinDoubleClick: false,
@@ -37,6 +37,7 @@ export class TrackList extends React.Component {
 
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
+			document.body.addEventListener('keypress', e => this.handleKeyPress(e));
 			document.body.addEventListener('click', (e) => this.handleEditStop(e));
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', () => this.handleScroll());
@@ -73,6 +74,46 @@ export class TrackList extends React.Component {
 	handleEditStop(event) {
 		if (event.target.id !== this.state.editableCell) {
 			this.stopCellEdits();
+		}
+	}
+
+	handleKeyPress(event) {
+		if (event.key === 'Enter') {
+			let indexes = Object.keys(this.state.selected);
+			if (indexes.length === 1) {
+				this.context.playFromTrackIndex(indexes[0], true);
+			} else {
+				let tracks = indexes.map(index => this.props.userTracks[index]);
+				this.context.playTracks(tracks);
+			}
+		} else if (event.key === 'ArrowDown') {
+			if (this.state.lastSelectedIndex === null) {
+				return;
+			}
+
+			if (this.state.lastSelectedIndex + 1 < this.props.userTracks.length) {
+				let newIndex = this.state.lastSelectedIndex + 1;
+				let selected = {};
+				selected[newIndex] = true;
+				this.setState({
+					selected: selected,
+					lastSelectedIndex: newIndex
+				});
+			}
+		} else if (event.key === 'ArrowUp') {
+			if (this.state.lastSelectedIndex === null) {
+				return;
+			}
+
+			if (this.state.lastSelectedIndex - 1 > 0) {
+				let newIndex = this.state.lastSelectedIndex - 1;
+				let selected = {};
+				selected[newIndex] = true;
+				this.setState({
+					selected: selected,
+					lastSelectedIndex: newIndex
+				});
+			}
 		}
 	}
 
