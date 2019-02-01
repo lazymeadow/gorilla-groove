@@ -86,33 +86,33 @@ export class TrackList extends React.Component {
 				let tracks = indexes.map(index => this.props.userTracks[index]);
 				this.context.playTracks(tracks);
 			}
-		} else if (event.key === 'ArrowDown') {
+		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
 			if (this.state.lastSelectedIndex === null) {
 				return;
 			}
 
-			if (this.state.lastSelectedIndex + 1 < this.props.userTracks.length) {
-				let newIndex = this.state.lastSelectedIndex + 1;
-				let selected = {};
-				selected[newIndex] = true;
-				this.setState({
-					selected: selected,
-					lastSelectedIndex: newIndex
-				});
-			}
-		} else if (event.key === 'ArrowUp') {
-			if (this.state.lastSelectedIndex === null) {
+			let newIndex = this.state.lastSelectedIndex + (event.key === 'ArrowDown' ? 1 : -1);
+
+			if (newIndex >= this.props.userTracks.length || newIndex < 0) {
 				return;
 			}
 
-			if (this.state.lastSelectedIndex - 1 > 0) {
-				let newIndex = this.state.lastSelectedIndex - 1;
-				let selected = {};
-				selected[newIndex] = true;
-				this.setState({
-					selected: selected,
-					lastSelectedIndex: newIndex
-				});
+			let selected = {};
+			selected[newIndex] = true;
+			this.setState({ selected: selected, lastSelectedIndex: newIndex });
+
+			let trackList = document.getElementById('library-view');
+			let selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
+
+			if (event.key === 'ArrowDown') {
+				let newScroll = selectedRow.offsetTop - trackList.offsetHeight;
+				if (newScroll > trackList.scrollTop) {
+					trackList.scrollTop = newScroll + selectedRow.offsetHeight - 10;
+				}
+			} else {
+				if (selectedRow.offsetTop - selectedRow.offsetHeight < trackList.scrollTop) {
+					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight - 13;
+				}
 			}
 		}
 	}
