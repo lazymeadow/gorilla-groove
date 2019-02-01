@@ -50,7 +50,7 @@ export class SongUpload extends React.Component {
 				<input
 					type="file"
 					id="file-upload"
-					className="hidden"
+					className="display-none"
 					onChange={(e) => this.uploadSong(e)}
 				/>
 			</div>

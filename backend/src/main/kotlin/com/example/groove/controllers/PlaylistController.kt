@@ -44,9 +44,10 @@ class PlaylistController(
 			@RequestParam(value = "name") name: String?,
 			@RequestParam(value = "artist") artist: String?,
 			@RequestParam(value = "album") album: String?,
+			@RequestParam(value = "searchTerm") searchTerm: String?,
 			pageable: Pageable
 	): Page<Track> {
-		return playlistService.getTracks(name, artist, album, playlistId, pageable)
+		return playlistService.getTracks(name, artist, album, playlistId, searchTerm, pageable)
     }
 
 	data class CreatePlaylistDTO(

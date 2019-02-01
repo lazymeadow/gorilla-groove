@@ -27,9 +27,10 @@ class TrackController(
 			@RequestParam(value = "name") name: String?,
 			@RequestParam(value = "artist") artist: String?,
 			@RequestParam(value = "album") album: String?,
+			@RequestParam(value = "searchTerm") searchTerm: String?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
-		return trackService.getTracks(name, artist, album, userId, pageable)
+		return trackService.getTracks(name, artist, album, userId, searchTerm, pageable)
     }
 
 	@PostMapping("/mark-listened")

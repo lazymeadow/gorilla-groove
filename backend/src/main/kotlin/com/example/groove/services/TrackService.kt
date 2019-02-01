@@ -34,13 +34,14 @@ class TrackService(
 			artist: String?,
 			album: String?,
 			userId: Long?,
+			searchTerm: String?,
 			pageable: Pageable
 	): Page<Track> {
 		val loggedInId = loadLoggedInUser().id
 		val idToLoad = userId ?: loggedInId
 		val loadHidden = loggedInId == idToLoad
 
-		return trackRepository.getTracks(name, artist, album, idToLoad, loadHidden, pageable)
+		return trackRepository.getTracks(name, artist, album, idToLoad, loadHidden, searchTerm, pageable)
 	}
 
 	@Transactional

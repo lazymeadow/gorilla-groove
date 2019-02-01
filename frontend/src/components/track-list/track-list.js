@@ -228,7 +228,7 @@ export class TrackList extends React.Component {
 			lastSelectedIndex: null
 		});
 
-		this.context.sortTracks(sortColumn, sortDir)
+		this.context.reloadTracks(sortColumn, sortDir)
 	}
 
 	handleContextMenuOpen(event) {

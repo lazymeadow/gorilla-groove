@@ -37,7 +37,7 @@ export class EditableDiv extends React.Component {
 				<input
 					id={this.props.id}
 					defaultValue={this.props.text}
-					onChange={(event) => this.setState({ newValue: event.target.value})}
+					onChange={(e) => this.setState({ newValue: e.target.value})}
 					onKeyDown={this.handleKeyPress.bind(this)}
 					autoFocus
 				/>

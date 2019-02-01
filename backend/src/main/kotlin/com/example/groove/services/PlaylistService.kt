@@ -63,6 +63,7 @@ class PlaylistService(
 			artist: String?,
 			album: String?,
 			playlistId: Long,
+			searchTerm: String?,
 			pageable: Pageable
 	): Page<Track> {
 		val playlist = playlistRepository.findById(playlistId).unwrap()
@@ -70,7 +71,7 @@ class PlaylistService(
 		playlistUserRepository.findByUserAndPlaylist(loadLoggedInUser(), playlist)
 				?: throw IllegalArgumentException("User has insufficient privileges to view playlist with ID: $playlistId")
 
-		return playlistTrackRepository.getTracks(name, artist, album, playlist, pageable)
+		return playlistTrackRepository.getTracks(name, artist, album, playlist, searchTerm, pageable)
 	}
 
 	@Transactional

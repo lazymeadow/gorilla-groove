@@ -63,9 +63,10 @@ export class MusicProvider extends React.Component {
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
+			searchTerm: '',
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
-			sortTracks: (...args) => this.sortTracks(...args),
+			reloadTracks: (...args) => this.reloadTracks(...args),
 			addUploadToExistingLibraryView: (...args) => this.addUploadToExistingLibraryView(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
@@ -87,6 +88,7 @@ export class MusicProvider extends React.Component {
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
 			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
+			setSearchTerm: (...args) => this.setSearchTerm(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args)
 		};
 	}
@@ -122,6 +124,20 @@ export class MusicProvider extends React.Component {
 		return columnPreferences;
 	}
 
+	buildTrackLoadParams(params) {
+		if (!params.size) {
+			params.size = this.pageSize;
+		}
+		if (!params.page) {
+			params.page = 0;
+		}
+
+		let searchTerm = this.state.searchTerm.trim();
+		if (searchTerm) {
+			params.searchTerm = searchTerm;
+		}
+	}
+
 	loadSongsForUser(userId, params, append) {
 		params = params ? params : {};
 		// If userId is null, the backend uses the current user
@@ -141,12 +157,8 @@ export class MusicProvider extends React.Component {
 		if (!params.sort) {
 			params.sort = this.buildTrackSortParameter(this.state.trackSortColumn, this.state.trackSortDir);
 		}
-		if (!params.size) {
-			params.size = this.pageSize;
-		}
-		if (!params.page) {
-			params.page = 0;
-		}
+
+		this.buildTrackLoadParams(params);
 
 		return Api.get('track', params).then(result => {
 			this.addTracksToView(result, append);
@@ -165,7 +177,7 @@ export class MusicProvider extends React.Component {
 		}
 	}
 
-	sortTracks(sortColumn, sortDir) {
+	reloadTracks(sortColumn, sortDir) {
 		let params = {};
 
 		if (sortColumn && sortDir) {
@@ -369,8 +381,8 @@ export class MusicProvider extends React.Component {
 		return Api.delete('track', {
 			trackIds: tracks.map(track => track.id)
 		}).then(() => {
-			// Call sortTracks() with no arguments, which will reload the songs for our view (and flush out the deleted ones)
-			this.sortTracks();
+			// Call reloadTracks() with no arguments, which will reload the songs for our view (and flush out the deleted ones)
+			this.reloadTracks();
 		})
 	}
 
@@ -384,18 +396,13 @@ export class MusicProvider extends React.Component {
 		params = params ? params : {};
 		params.playlistId = playlistId;
 
-
 		// Messing around with the JPA sorting setup is more hassle than it is worth
 		// For sorting playlists, just append 'track.' in front so the key is correct for playlist tracks
 		if ('sort' in params) {
 			params.sort = params.sort.map(sortTerm => 'track.' + sortTerm);
 		}
-		if (!params.size) {
-			params.size = this.pageSize;
-		}
-		if (!params.page) {
-			params.page = 0;
-		}
+
+		this.buildTrackLoadParams(params);
 
 		this.setState({
 			trackView: TrackView.PLAYLIST,
@@ -500,6 +507,10 @@ export class MusicProvider extends React.Component {
 			columnPreferences: columnPreferences,
 		});
 		LocalStorage.setObject('columnPreferences', columnPreferences);
+	}
+
+	setSearchTerm(searchTerm) {
+		this.setState({ searchTerm: searchTerm });
 	}
 
 	resetColumnPreferences() {

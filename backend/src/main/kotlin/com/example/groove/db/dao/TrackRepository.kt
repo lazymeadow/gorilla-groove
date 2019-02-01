@@ -16,7 +16,13 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			"AND (:loadHidden IS TRUE OR t.hidden = FALSE) " +
 			"AND (:name IS NULL OR t.name LIKE %:name%) " +
 			"AND (:artist IS NULL OR t.artist LIKE %:artist%) " +
-			"AND (:album IS NULL OR t.album LIKE %:album%)"
+			"AND (:album IS NULL OR t.album LIKE %:album%)" +
+			"AND (:searchTerm IS NULL " + // searchTerm is an 'OR' where the other terms are all ANDed
+			"      OR t.name LIKE %:searchTerm%" +
+			"      OR t.artist LIKE %:searchTerm%" +
+			"      OR t.album LIKE %:searchTerm%" +
+			"      OR t.genre LIKE %:searchTerm%" +
+			"      OR t.note LIKE %:searchTerm%)"
 	)
 	fun getTracks(
 			@Param("name") name: String? = null,
@@ -24,6 +30,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("album") album: String? = null,
 			@Param("userId") userId: Long,
 			@Param("loadHidden") loadHidden: Boolean = false,
+			@Param("searchTerm") searchTerm: String? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
 
