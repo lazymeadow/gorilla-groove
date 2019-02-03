@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
-	@Query("SELECT pt.track " +
+	@Query("SELECT pt " +
 			"FROM PlaylistTrack pt " +
 			"WHERE pt.playlist = :playlist " +
 			"AND pt.track.deleted = FALSE " +
@@ -31,6 +31,6 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
 			@Param("playlist") playlist: Playlist,
 			@Param("searchTerm") searchTerm: String? = null,
 			pageable: Pageable = Pageable.unpaged()
-	): Page<Track>
+	): Page<PlaylistTrack>
 
 }

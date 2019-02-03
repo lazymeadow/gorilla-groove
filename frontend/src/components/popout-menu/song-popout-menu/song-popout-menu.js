@@ -17,10 +17,15 @@ export class SongPopoutMenu extends React.Component {
 
 	static getDerivedStateFromProps(props) {
 		let options;
-		if (props.context.trackView === TrackView.LIBRARY || props.context.trackView === TrackView.PLAYLIST) {
+		if (props.context.trackView === TrackView.LIBRARY) {
 			options = SongPopoutMenu.getBaseMenuOptions(props)
 				.concat(SongPopoutMenu.getOwnLibraryOptions(props))
-				.concat(SongPopoutMenu.getPlaylistOptions(props));
+				.concat(SongPopoutMenu.getPlaylistAdditionOptions(props));
+		} else if (props.context.trackView === TrackView.PLAYLIST) {
+			options = SongPopoutMenu.getBaseMenuOptions(props)
+				.concat(SongPopoutMenu.getOwnLibraryOptions(props))
+				.concat(SongPopoutMenu.getPlaylistAdditionOptions(props))
+				.concat(SongPopoutMenu.getPlaylistSpecificOptions(props));
 		} else if (props.context.trackView === TrackView.USER) {
 			options = SongPopoutMenu.getBaseMenuOptions(props)
 				.concat(SongPopoutMenu.getOtherUserOptions(props));
@@ -114,6 +119,29 @@ export class SongPopoutMenu extends React.Component {
 		];
 	}
 
+	static getPlaylistSpecificOptions(props) {
+		return [
+			{
+				text: "Remove from Playlist", clickHandler: (e) => {
+					e.stopPropagation();
+					const tracks = props.getSelectedTracks();
+					const playlistTrackIds = tracks.map(track => track.playlistTrackId);
+
+					props.context.removeFromPlaylist(playlistTrackIds).then(() => {
+						if (tracks.length === 1) {
+							toast.success(`'${tracks[0].name}' was removed`)
+						} else {
+							toast.success(`${tracks.length} tracks were removed`)
+						}
+					}).catch(error => {
+						console.error(error);
+						toast.error('Failed to remove the selected tracks')
+					});
+				}
+			}
+		];
+	}
+
 	static getOtherUserOptions(props) {
 		return [
 			{
@@ -135,7 +163,7 @@ export class SongPopoutMenu extends React.Component {
 		];
 	}
 
-	static getPlaylistOptions(props) {
+	static getPlaylistAdditionOptions(props) {
 		// TODO I'd rather have these nested in a 'Playlists' context menu instead of being here at the root level
 		return props.context.playlists.map(playlist => {
 			return {

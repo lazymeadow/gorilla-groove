@@ -9,7 +9,6 @@ import com.example.groove.db.model.enums.OwnershipType
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
-import org.springframework.dao.PermissionDeniedDataAccessException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
@@ -65,7 +64,7 @@ class PlaylistService(
 			playlistId: Long,
 			searchTerm: String?,
 			pageable: Pageable
-	): Page<Track> {
+	): Page<PlaylistTrack> {
 		val playlist = playlistRepository.findById(playlistId).unwrap()
 				?: throw IllegalArgumentException("No playlist with ID: $playlistId found")
 		playlistUserRepository.findByUserAndPlaylist(loadLoggedInUser(), playlist)
@@ -75,7 +74,8 @@ class PlaylistService(
 	}
 
 	@Transactional
-	fun addTracksToPlaylist(user: User, playlistId: Long, trackIds: List<Long>) {
+	fun addTracksToPlaylist(playlistId: Long, trackIds: List<Long>) {
+		val user = loadLoggedInUser()
 		val playlist = playlistRepository.findById(playlistId)
 				.orElseThrow { IllegalArgumentException("Playlist ID: $playlistId not found") }
 
@@ -91,6 +91,26 @@ class PlaylistService(
 
 		tracks.forEach {
 			playlistTrackRepository.save(PlaylistTrack(playlist = playlist, track = it))
+		}
+	}
+
+	@Transactional
+	fun deletePlaylistTracks(playlistTrackIds: List<Long>) {
+		val user = loadLoggedInUser()
+
+		val playlistTracks = playlistTrackIds.map {
+			playlistTrackRepository.findById(it)
+					.orElseThrow { IllegalArgumentException("Track ID: $it not found") }
+		}
+
+		playlistTracks.forEach { playlistTrack ->
+			if (userCanEditPlaylist(user, playlistTrack.playlist, listOf(playlistTrack.track))) {
+				playlistTrackRepository.delete(playlistTrack)
+			} else {
+				logger.warn("User of ID ${user.id} tried to remove tracks from the playlist of ID ${playlistTrack.playlist.id} " +
+						"but did not have the permission to do so")
+				throw IllegalArgumentException("Insufficient privileges to remove the selected tracks from the playlist")
+			}
 		}
 	}
 

@@ -409,7 +409,17 @@ export class MusicProvider extends React.Component {
 			viewedEntityId: playlistId
 		});
 
-		return Api.get('playlist/track', params).then(result => { this.addTracksToView(result, append); })
+		return Api.get('playlist/track', params).then(result => {
+			// We need to store the playlistTrackId for later, in case we want to remove an entry from the playlist
+			// Add this as extra data to the track data, to make sharing the track-list view easy between playlist
+			// views, and library / user views
+			result.content = result.content.map(playlistTrack => {
+				let trackData = playlistTrack.track;
+				trackData.playlistTrackId = playlistTrack.id;
+				return trackData
+			});
+			this.addTracksToView(result, append);
+		})
 	}
 
 	addTracksToView(result, append) {
@@ -435,7 +445,7 @@ export class MusicProvider extends React.Component {
 	}
 
 	addToPlaylist(playlistId, trackIds) {
-		return Api.post("playlist/track", {
+		return Api.post('playlist/track', {
 			playlistId: playlistId,
 			trackIds: trackIds
 		}).then(() => {
@@ -443,8 +453,27 @@ export class MusicProvider extends React.Component {
 		})
 	}
 
-	removeFromPlaylist(trackIds, playlistId) {
+	removeFromPlaylist(playlistTrackIds) {
+		// It's kind of dumb to assume that the playlist we're deleting from is the one we're looking at
+		// It's always true right now. But maybe it won't be one day and this will be problematic
+		let playlistId = this.state.viewedEntityId;
 
+		return Api.delete('playlist/track', {
+			playlistTrackIds: playlistTrackIds
+		}).then(() => {
+			// Make sure we're still looking at the same playlist before we force the reload
+			if (this.state.trackView === TrackView.PLAYLIST && this.state.viewedEntityId === playlistId) {
+				let newViewedTracks = this.state.viewedTracks.slice(0);
+
+				// This is a pretty inefficient way to remove stuff. But it's probably fine... right?
+				playlistTrackIds.forEach(playlistTrackId => {
+					let trackIndex = newViewedTracks.findIndex(track => track.playlistTrackId === playlistTrackId);
+					newViewedTracks.splice(trackIndex, 1);
+				});
+
+				this.setState({ viewedTracks: newViewedTracks })
+			}
+		});
 	}
 
 	createPlaylist() {

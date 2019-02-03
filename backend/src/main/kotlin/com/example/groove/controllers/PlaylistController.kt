@@ -1,7 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Playlist
-import com.example.groove.db.model.Track
+import com.example.groove.db.model.PlaylistTrack
 import com.example.groove.services.PlaylistService
 import com.example.groove.util.loadLoggedInUser
 import org.springframework.data.domain.Page
@@ -34,8 +34,13 @@ class PlaylistController(
 	}
 
 	@PostMapping("/track")
-	fun addToPlaylist(@RequestBody addToPlaylistDTO: AddToPlaylistDTO) {
-		playlistService.addTracksToPlaylist(loadLoggedInUser(), addToPlaylistDTO.playlistId, addToPlaylistDTO.trackIds)
+	fun addToPlaylist(@RequestBody addPlaylistTrackDTO: AddPlaylistTrackDTO) {
+		playlistService.addTracksToPlaylist(addPlaylistTrackDTO.playlistId, addPlaylistTrackDTO.trackIds)
+	}
+
+	@DeleteMapping("/track")
+	fun removeFromPlaylist(@RequestBody removePlaylistTrackDTO: RemovePlaylistTrackDTO) {
+		playlistService.deletePlaylistTracks(removePlaylistTrackDTO.playlistTrackIds)
 	}
 
 	@GetMapping("/track")
@@ -46,7 +51,7 @@ class PlaylistController(
 			@RequestParam(value = "album") album: String?,
 			@RequestParam(value = "searchTerm") searchTerm: String?,
 			pageable: Pageable
-	): Page<Track> {
+	): Page<PlaylistTrack> {
 		return playlistService.getTracks(name, artist, album, playlistId, searchTerm, pageable)
     }
 
@@ -54,8 +59,12 @@ class PlaylistController(
 			val name: String
 	)
 
-	data class AddToPlaylistDTO(
+	data class AddPlaylistTrackDTO(
 			val playlistId: Long,
 			val trackIds: List<Long>
+	)
+
+	data class RemovePlaylistTrackDTO(
+			val playlistTrackIds: List<Long>
 	)
 }
