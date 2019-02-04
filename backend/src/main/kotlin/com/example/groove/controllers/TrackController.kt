@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.db.model.Track
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.dto.YoutubeDownloadDTO
+import com.example.groove.services.S3Service
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeService
 import com.example.groove.util.loadLoggedInUser
@@ -17,7 +18,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val youTubeService: YoutubeService
+		private val youTubeService: YoutubeService,
+		private val s3Service: S3Service
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
@@ -30,6 +32,7 @@ class TrackController(
 			@RequestParam(value = "searchTerm") searchTerm: String?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
+		s3Service.testS3IGuess()
 		return trackService.getTracks(name, artist, album, userId, searchTerm, pageable)
     }
 
