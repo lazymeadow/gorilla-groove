@@ -11,7 +11,7 @@ export class PlaybackControls extends React.Component {
 			totalTimeListened: 0,
 			timeTarget: null,
 			listenedTo: false,
-			songLink: null
+			songUrl: null
 		}
 	}
 
@@ -60,7 +60,7 @@ export class PlaybackControls extends React.Component {
 				lastTime: 0,
 				totalTimeListened: 0,
 				listenedTo: false,
-				songLink: this.getSongLink(links)
+				songUrl: this.getSongLink(links)
 			}, () => {
 				let audio = document.getElementById('audio');
 				audio.currentTime = 0;
@@ -73,7 +73,7 @@ export class PlaybackControls extends React.Component {
 	// noinspection JSMethodCanBeStatic
 	getSongLink(links) {
 		if (links.usingS3) {
-			console.log("Finish using s3 for album art");
+			return links.songLink;
 		} else {
 			return links.songLink + '?t=' + sessionStorage.getItem('token');
 		}
@@ -117,7 +117,7 @@ export class PlaybackControls extends React.Component {
 
 	render() {
 		let playedTrack = this.context.playedTrack;
-		let src = playedTrack ? this.state.songLink : '';
+		let src = playedTrack ? this.state.songUrl : '';
 		return (
 			<div>
 				Now Playing: {playedTrack ? playedTrack.name : 'Nothing'}

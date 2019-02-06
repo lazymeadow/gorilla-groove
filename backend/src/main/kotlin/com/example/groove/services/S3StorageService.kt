@@ -41,19 +41,19 @@ class S3StorageService(
 	}
 
 	override fun storeAlbumArt(albumArt: File, trackId: Long) {
-		s3Client.putObject(bucketName, "art/$trackId", albumArt)
+		s3Client.putObject(bucketName, "art/$trackId.png", albumArt)
 	}
 
 	override fun getSongLink(trackId: Long): String {
 		val track = loadAuthenticatedTrack(trackId)
 
-		return s3Client.generatePresignedUrl(bucketName, "music/${track.fileName}", getS3ExpirationDate()).path
+		return s3Client.generatePresignedUrl(bucketName, "music/${track.fileName}", getS3ExpirationDate()).toString()
 	}
 
 	override fun getAlbumArtLink(trackId: Long): String? {
 		val track = loadAuthenticatedTrack(trackId)
 
-		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}", getS3ExpirationDate()).path
+		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", getS3ExpirationDate()).toString()
 	}
 
 	private fun loadAuthenticatedTrack(trackId: Long): Track {

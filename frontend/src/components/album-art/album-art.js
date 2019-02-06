@@ -27,10 +27,7 @@ export class AlbumArt extends React.Component {
 	// falling back to our default image. Create an image element and check if the image loads.
 	// Depending on if it does, set the URL we want in our state
 	componentDidUpdate() {
-		if (this.context.playedTrack) {
-			this.setState({ playedTrackId: this.context.playedTrack.id });
-		} else {
-			this.setState({ imageUrl: defaultImageLink });
+		if (!this.context.playedTrack) {
 			return;
 		}
 
@@ -38,6 +35,7 @@ export class AlbumArt extends React.Component {
 			const albumImageLink = this.getImageLink(links);
 			let img = new Image();
 			img.src = albumImageLink;
+			this.setState({ playedTrackId: this.context.playedTrack.id });
 			img.onload = () => {
 				this.setState({ imageUrl: albumImageLink })
 			};
@@ -54,7 +52,7 @@ export class AlbumArt extends React.Component {
 
 	getImageLink(links) {
 		if (links.usingS3) {
-			console.log("Finish using s3 for album art");
+			return links.albumArtLink;
 		} else {
 			return links.albumArtLink + '?t=' + sessionStorage.getItem('token');
 		}
