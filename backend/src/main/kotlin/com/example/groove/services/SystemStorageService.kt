@@ -30,7 +30,7 @@ class SystemStorageService(
 
 	override fun getSongLink(trackId: Long): String {
 		// This is pretty jank. But it is only intended for use in local development right now
-		return "http://localhost:8080/music/$trackId.ogg/"
+		return "http://localhost:8080/music/$trackId.ogg"
 	}
 
 	override fun getAlbumArtLink(trackId: Long): String? {

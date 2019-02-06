@@ -22,32 +22,40 @@ export class AlbumArt extends React.Component {
 			|| this.state.modalOpen !== nextState.modalOpen;
 	}
 
+
 	// Because we're using a background-image and not a <img>, we need to be creative about
 	// falling back to our default image. Create an image element and check if the image loads.
 	// Depending on if it does, set the URL we want in our state
 	componentDidUpdate() {
 		if (this.context.playedTrack) {
 			this.setState({ playedTrackId: this.context.playedTrack.id });
+		} else {
+			this.setState({ imageUrl: defaultImageLink });
+			return;
 		}
 
-		const albumImageLink = this.getImageLink();
-		let img = new Image();
-		img.src = albumImageLink;
-		img.onload = () => {
-			this.setState({ imageUrl: albumImageLink })
-		};
-		img.onerror = () => {
-			this.setState({ imageUrl: defaultImageLink })
-		};
+		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
+			console.log(links);
+			const albumImageLink = this.getImageLink(links);
+			let img = new Image();
+			img.src = albumImageLink;
+			img.onload = () => {
+				this.setState({ imageUrl: albumImageLink })
+			};
+			img.onerror = () => {
+				this.setState({ imageUrl: defaultImageLink })
+			};
+		});
+
 	}
 
 	setModalOpen(isOpen) {
 		this.setState({ modalOpen: isOpen })
 	}
 
-	getImageLink() {
-		let userTrack = this.context.playedTrack;
-		return userTrack ? Api.getAlbumArtResourceLink(userTrack) : defaultImageLink;
+	getImageLink(links) {
+		// TODO conditional logic if using S3
+		return links.albumArtLink + '?t=' + sessionStorage.getItem('token');
 	}
 
 	render() {
