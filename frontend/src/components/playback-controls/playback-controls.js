@@ -10,7 +10,8 @@ export class PlaybackControls extends React.Component {
 			lastTime: 0,
 			totalTimeListened: 0,
 			timeTarget: null,
-			listenedTo: false
+			listenedTo: false,
+			songLink: null
 		}
 	}
 
@@ -21,7 +22,7 @@ export class PlaybackControls extends React.Component {
 		audio.addEventListener('ended', () => { this.context.playNext() });
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	componentDidUpdate() {
 		// No track to play. Nothing to do
 		if (!this.context.playedTrack) {
 			return;
@@ -49,17 +50,30 @@ export class PlaybackControls extends React.Component {
 			return;
 		}
 
-		// Start playing the new song
-		let audio = document.getElementById('audio');
-		audio.currentTime = 0;
-		audio.play();
+		// TODO It's probably actually better to have this fetching happen in the music context
+		// so that the album art and the song controls aren't both having to fetch them separate
+		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
 
-		this.setState({
-			currentSessionPlayCounter: this.context.sessionPlayCounter,
-			lastTime: 0,
-			totalTimeListened: 0,
-			listenedTo: false
-		})
+			// Start playing the new song
+			this.setState({
+				currentSessionPlayCounter: this.context.sessionPlayCounter,
+				lastTime: 0,
+				totalTimeListened: 0,
+				listenedTo: false,
+				songLink: this.getSongLink(links)
+			}, () => {
+				let audio = document.getElementById('audio');
+				audio.currentTime = 0;
+				audio.src = this.getSongLink(links);
+				audio.play();
+			})
+		});
+	}
+
+	// noinspection JSMethodCanBeStatic
+	getSongLink(links) {
+		// TODO swap for S3
+		return links.songLink + '?t=' + sessionStorage.getItem('token');
 	}
 
 	handleTimeTick(currentTime) {
@@ -100,7 +114,7 @@ export class PlaybackControls extends React.Component {
 
 	render() {
 		let playedTrack = this.context.playedTrack;
-		let src = playedTrack ? Api.getSongResourceLink(playedTrack.fileName) : '';
+		let src = playedTrack ? this.state.songLink : '';
 		return (
 			<div>
 				Now Playing: {playedTrack ? playedTrack.name : 'Nothing'}

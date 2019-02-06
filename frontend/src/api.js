@@ -66,16 +66,6 @@ export class Api {
 		})
 	}
 
-	static getSongResourceLink(fileName) {
-		return `${location}music/${fileName}?t=${sessionStorage.getItem('token')}`;
-	}
-
-	static getAlbumArtResourceLink(userTrack) {
-		let artId = userTrack.id;
-		let parentDirectory = parseInt(artId / 1000);
-		return `${location}album-art/${parentDirectory}/${artId}.png?t=${sessionStorage.getItem('token')}`;
-	}
-
 	static encodeUriParamsFromObject(params) {
 		if (!params || Object.keys(params).length === 0) {
 			return '';

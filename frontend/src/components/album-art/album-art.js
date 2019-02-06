@@ -35,7 +35,6 @@ export class AlbumArt extends React.Component {
 		}
 
 		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
-			console.log(links);
 			const albumImageLink = this.getImageLink(links);
 			let img = new Image();
 			img.src = albumImageLink;
