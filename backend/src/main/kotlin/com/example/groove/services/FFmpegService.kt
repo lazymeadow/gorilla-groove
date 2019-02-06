@@ -34,6 +34,9 @@ class FFmpegService(
         val executor = FFmpegExecutor(ffmpeg, ffprobe)
         executor.createJob(builder).run()
 
+		// Delete the non-converted file, as we no longer need it
+		File(fileStorageProperties.tmpDir + fileName).delete()
+
 		return File(fileStorageProperties.tmpDir + convertedFileName)
     }
 

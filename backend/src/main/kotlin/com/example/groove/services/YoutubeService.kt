@@ -66,7 +66,9 @@ class YoutubeService(
 		// TODO convert this to a png like the others
 		fileStorageService.storeAlbumArt(newAlbumArt, track.id)
 
-		// TODO cleanup tmp files?
+		// We have stored the file in its permanent home. We can delete this tmp file
+		newAlbumArt.delete()
+
 		return track
 	}
 

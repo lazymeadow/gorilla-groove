@@ -5,11 +5,9 @@ import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
-import com.example.groove.properties.FFmpegProperties
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
@@ -74,6 +72,8 @@ class SongIngestionService(
 
 			if (tmpImageFile != null) {
 				fileStorageService.storeAlbumArt(tmpImageFile, track.id)
+				// We have stored the file in its permanent home. We can delete this tmp file
+				tmpImageFile.delete()
 			}
 
 			return track
@@ -131,10 +131,14 @@ class SongIngestionService(
 		val track = fileMetadataService.createTrackFromSongFile(convertedFile!!, user)
 		trackRepository.save(track)
 
-		val finalSongFile = renameSongFile(convertedFile!!, track)
+		val renamedSongFile = renameSongFile(convertedFile!!, track)
 
-		fileStorageService.storeSong(finalSongFile, track.id)
-		// TODO clean up old file
+		fileStorageService.storeSong(renamedSongFile, track.id)
+
+		// We have stored the file in S3, (or copied it to its final home)
+		// We no longer need these files and can clean it up to save space
+		convertedFile!!.delete()
+		renamedSongFile.delete()
 
 		return track
 	}
