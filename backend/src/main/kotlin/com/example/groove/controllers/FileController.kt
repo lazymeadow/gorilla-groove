@@ -2,6 +2,7 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
 import com.example.groove.services.FileStorageService
+import com.example.groove.services.SongIngestionService
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
@@ -18,6 +19,7 @@ import kotlin.system.measureTimeMillis
 @RestController
 @RequestMapping("api/file")
 class FileController(
+		private val songIngestionService: SongIngestionService,
 		private val fileStorageService: FileStorageService
 ) {
 
@@ -31,7 +33,7 @@ class FileController(
 
 		var track: Track? = null
 		val timeToUpload = measureTimeMillis {
-			track = fileStorageService.storeSongForUser(file, loadLoggedInUser())
+			track = songIngestionService.storeSongForUser(file, loadLoggedInUser())
 		}
 
 		logger.info("File upload complete for ${file.name} in $timeToUpload")
@@ -48,7 +50,7 @@ class FileController(
     @GetMapping("/download")
     fun downloadFile(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
         // Load file as Resource
-        val resource = fileStorageService.loadFileAsResource(fileName)
+        val resource = songIngestionService.loadFileAsResource(fileName)
 
         // Try to determine file's content type
         val contentType = try {
@@ -64,7 +66,17 @@ class FileController(
                 .body(resource)
     }
 
+	@GetMapping("/link/{trackId}")
+	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {
+		return TrackLinks(fileStorageService.getSongLink(trackId), fileStorageService.getAlbumArtLink(trackId))
+	}
+
     companion object {
         private val logger = LoggerFactory.getLogger(FileController::class.java)
     }
+
+	data class TrackLinks(
+			val songLink: String,
+			val albumArtLink: String?
+	)
 }

@@ -15,10 +15,11 @@ import java.util.*
 
 @Service
 class YoutubeService(
-		private val fileStorageService: FileStorageService,
+		private val songIngestionService: SongIngestionService,
 		private val fileStorageProperties: FileStorageProperties,
 		private val trackRepository: TrackRepository,
-		private val youTubeDlProperties: YouTubeDlProperties
+		private val youTubeDlProperties: YouTubeDlProperties,
+		private val fileStorageService: FileStorageService
 ) {
 
 	@Transactional
@@ -26,7 +27,7 @@ class YoutubeService(
 		val url = youtubeDownloadDTO.url
 
 		val tmpFileName = UUID.randomUUID().toString()
-		val destination = fileStorageProperties.uploadDir + tmpFileName
+		val destination = fileStorageProperties.tmpDir + tmpFileName
 
 		val pb = ProcessBuilder(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
@@ -52,7 +53,7 @@ class YoutubeService(
 			logger.error("Failed to download album art for song at URL: $url. Continuing anyway")
 		}
 
-		val track = fileStorageService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser())
+		val track = songIngestionService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser())
 		// If the uploader provided any metadata, add it to the track and save it again
 		youtubeDownloadDTO.name?.let { track.name = it }
 		youtubeDownloadDTO.artist?.let { track.artist = it }
@@ -63,7 +64,7 @@ class YoutubeService(
 		trackRepository.save(track)
 
 		// TODO convert this to a png like the others
-		fileStorageService.moveAlbumArt(newAlbumArt, track.id)
+		fileStorageService.storeAlbumArt(newAlbumArt, track.id)
 
 		// TODO cleanup tmp files?
 		return track

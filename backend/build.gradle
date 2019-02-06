@@ -23,7 +23,6 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'kotlin-jpa'
 apply plugin: 'war'
-apply plugin: "io.spring.dependency-management"
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
@@ -47,6 +46,12 @@ compileTestKotlin {
 //    }
 //}
 
+dependencyManagement {
+    imports {
+        mavenBom 'com.amazonaws:aws-java-sdk-bom:1.11.228'
+    }
+}
+
 repositories {
 	mavenCentral()
 }
@@ -69,7 +74,7 @@ dependencies {
 	compile("org.flywaydb:flyway-core:5.0.7")
 	compile("net.bramp.ffmpeg:ffmpeg:0.6.2")
     compile("org:jaudiotagger:2.0.3")
-    compile group: 'software.amazon.awssdk', name: 'aws-sdk-java', version: '2.3.9'
+    compile 'com.amazonaws:aws-java-sdk-s3'
 
 //    testCompile(group: 'junit', name: 'junit', version: '4.11')
 	runtime('com.h2database:h2')

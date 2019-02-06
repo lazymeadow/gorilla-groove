@@ -1,29 +1,47 @@
 package com.example.groove.services
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.example.groove.properties.S3Properties
-import software.amazon.awssdk.services.s3.S3Client
-import java.util.*
+import org.springframework.stereotype.Service
+import java.io.File
 
+@Service
 class S3Service(
 		s3Properties: S3Properties
 ) {
-	private val s3Client: S3Client
+	private val s3Client: AmazonS3
 
-	//	val thing = DynamoDbClient.builder()
+	private val bucketName = "gorilla-tracks"
+
 	init {
-		val systemProperties = Properties(System.getProperties())
-		systemProperties.setProperty("aws.accessKeyId", s3Properties.awsAccessKeyId)
-		systemProperties.setProperty("aws.secretAccessKey", s3Properties.awsSecretAccessKey)
+		val awsCredentials = BasicAWSCredentials(s3Properties.awsAccessKeyId, s3Properties.awsSecretAccessKey)
 
-		System.setProperties(systemProperties)
+		s3Client = AmazonS3ClientBuilder
+				.standard()
+				.withRegion(Regions.US_WEST_2)
+				.withCredentials(AWSStaticCredentialsProvider(awsCredentials))
+				.build()
+	}
 
-		s3Client = S3Client.create()
+	fun uploadSongToS3(song: File) {
+		s3Client.putObject(bucketName, "music/${song.name}", song)
+	}
+
+	fun uploadAlbumArtToS3(trackId: Long, albumArt: File) {
+		s3Client.putObject(bucketName, "art/$trackId", albumArt)
 	}
 
 	fun testS3IGuess() {
 		System.out.println("Listing buckets");
-		s3Client.listBuckets().buckets().forEach {
-				System.out.println(it.name())
+//		s3Client.listBuckets()
+		s3Client.listBuckets().forEach {
+			System.out.println(it.name)
 		}
+//		s3Client.generatePresignedUrl()
 	}
 }

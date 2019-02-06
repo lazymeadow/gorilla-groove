@@ -18,8 +18,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val youTubeService: YoutubeService,
-		private val s3Service: S3Service
+		private val youTubeService: YoutubeService
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
@@ -32,13 +31,13 @@ class TrackController(
 			@RequestParam(value = "searchTerm") searchTerm: String?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
-		s3Service.testS3IGuess()
 		return trackService.getTracks(name, artist, album, userId, searchTerm, pageable)
     }
 
 	@PostMapping("/mark-listened")
 	fun markSongAsListenedTo(@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
 		trackService.markSongListenedTo(markSongAsReadDTO.trackId)
+
 		return ResponseEntity(HttpStatus.OK)
 	}
 

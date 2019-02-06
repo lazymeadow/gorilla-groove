@@ -23,7 +23,7 @@ class FileMetadataService(
 	// 2) Storing the album artwork on the track itself is not a useful place to store the data. It's
 	//    more convenient to save it to disk, and allow clients to directly link to the artwork
 	fun removeAlbumArtFromFile(fileName: String): BufferedImage? {
-		val path = "${fileStorageProperties.uploadDir}$fileName"
+		val path = "${fileStorageProperties.tmpDir}$fileName"
         val file = File(path)
         if (!file.exists()) {
             logger.error("File was not found using the path '$path'")
@@ -49,18 +49,16 @@ class FileMetadataService(
 		}
 	}
 
-    fun createTrackFromFileName(fileName: String, user: User): Track {
-        val path = "${musicProperties.musicDirectoryLocation}$fileName"
-        val file = File(path)
-        if (!file.exists()) {
-            logger.error("File was not found using the path '$path'")
-            throw IllegalArgumentException("File by name '$fileName' does not exist!")
+    fun createTrackFromSongFile(song: File, user: User): Track {
+        if (!song.exists()) {
+            logger.error("File was not found using the path '${song.path}'")
+            throw IllegalArgumentException("File by name '${song.name}' does not exist!")
         }
-        val audioFile = AudioFileIO.read(file)
+        val audioFile = AudioFileIO.read(song)
 
 		return Track(
 				user = user,
-				fileName = fileName,
+				fileName = song.name,
 				name = audioFile.tag.getFirst(FieldKey.TITLE),
 				artist = audioFile.tag.getFirst(FieldKey.ARTIST),
 				album = audioFile.tag.getFirst(FieldKey.ALBUM),

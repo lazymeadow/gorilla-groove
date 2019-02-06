@@ -7,6 +7,7 @@ import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.properties.FFmpegProperties
+import com.example.groove.properties.MusicProperties
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -24,8 +25,8 @@ import java.util.*
 class TrackService(
 		private val trackRepository: TrackRepository,
 		private val trackHistoryRepository: TrackHistoryRepository,
-		private val fFmpegProperties: FFmpegProperties,
-		private val fileStorageService: FileStorageService
+		private val songIngestionService: SongIngestionService,
+		private val musicProperties: MusicProperties
 ) {
 
 	@Transactional(readOnly = true)
@@ -118,7 +119,7 @@ class TrackService(
 			return
 		}
 
-		val success = File(fFmpegProperties.ffmpegOutputLocation + fileName).delete()
+		val success = File(musicProperties.musicDirectoryLocation + fileName).delete()
 		if (!success) {
 			logger.error("The file $fileName should have been deleted, but couldn't be")
 		}
@@ -148,7 +149,7 @@ class TrackService(
 			)
 
 			trackRepository.save(forkedTrack)
-			fileStorageService.copyAlbumArt(track.id, forkedTrack.id)
+			songIngestionService.copyAlbumArt(track.id, forkedTrack.id)
 
 			forkedTrack
 		}
