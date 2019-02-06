@@ -1,10 +1,12 @@
 package com.example.groove.services
 
 import com.example.groove.properties.MusicProperties
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
+@ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
 class SystemStorageService(
 		private val musicProperties: MusicProperties
 ) : FileStorageService {
@@ -18,14 +20,14 @@ class SystemStorageService(
 		song.copyTo(destinationFile)
 	}
 
-	override fun storeAlbumArt(tmpAlbumArt: File, trackId: Long) {
+	override fun storeAlbumArt(albumArt: File, trackId: Long) {
 		val parentDirectoryName = trackId / 1000 // Only put 1000 album art in a single directory for speed
 		val destinationFile = File("${musicProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId.png")
 
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
 
-		tmpAlbumArt.renameTo(destinationFile)
+		albumArt.renameTo(destinationFile)
 	}
 
 	override fun getSongLink(trackId: Long): String {

@@ -53,8 +53,11 @@ export class AlbumArt extends React.Component {
 	}
 
 	getImageLink(links) {
-		// TODO conditional logic if using S3
-		return links.albumArtLink + '?t=' + sessionStorage.getItem('token');
+		if (links.usingS3) {
+			console.log("Finish using s3 for album art");
+		} else {
+			return links.albumArtLink + '?t=' + sessionStorage.getItem('token');
+		}
 	}
 
 	render() {

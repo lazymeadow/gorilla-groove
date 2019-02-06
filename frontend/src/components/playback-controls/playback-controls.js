@@ -72,8 +72,11 @@ export class PlaybackControls extends React.Component {
 
 	// noinspection JSMethodCanBeStatic
 	getSongLink(links) {
-		// TODO swap for S3
-		return links.songLink + '?t=' + sessionStorage.getItem('token');
+		if (links.usingS3) {
+			console.log("Finish using s3 for album art");
+		} else {
+			return links.songLink + '?t=' + sessionStorage.getItem('token');
+		}
 	}
 
 	handleTimeTick(currentTime) {

@@ -1,6 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.properties.S3Properties
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.util.loadLoggedInUser
@@ -20,7 +21,8 @@ import kotlin.system.measureTimeMillis
 @RequestMapping("api/file")
 class FileController(
 		private val songIngestionService: SongIngestionService,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val s3Properties: S3Properties
 ) {
 
 	// Example cURL command for uploading a file
@@ -68,7 +70,11 @@ class FileController(
 
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {
-		return TrackLinks(fileStorageService.getSongLink(trackId), fileStorageService.getAlbumArtLink(trackId))
+		return TrackLinks(
+				fileStorageService.getSongLink(trackId),
+				fileStorageService.getAlbumArtLink(trackId),
+				s3Properties.awsStoreInS3
+		)
 	}
 
     companion object {
@@ -77,6 +83,7 @@ class FileController(
 
 	data class TrackLinks(
 			val songLink: String,
-			val albumArtLink: String?
+			val albumArtLink: String?,
+			val usingS3: Boolean
 	)
 }
