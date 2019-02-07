@@ -12,6 +12,7 @@
 
 .track-table {
   text-align: left;
+  position: relative; // Keep the cogwheel from flying off into the nether on Chrome, since it ignores relative positioning on <tr>s
   border-collapse: collapse;
   table-layout: fixed;
   overflow-x: scroll;
