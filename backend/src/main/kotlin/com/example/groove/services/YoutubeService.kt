@@ -57,6 +57,7 @@ class YoutubeService(
 		// If the uploader provided any metadata, add it to the track and save it again
 		youtubeDownloadDTO.name?.let { track.name = it }
 		youtubeDownloadDTO.artist?.let { track.artist = it }
+		youtubeDownloadDTO.featuring?.let { track.featuring = it }
 		youtubeDownloadDTO.album?.let { track.album = it }
 		youtubeDownloadDTO.releaseYear?.let { track.releaseYear = it }
 		youtubeDownloadDTO.trackNumber?.let { track.trackNumber = it }

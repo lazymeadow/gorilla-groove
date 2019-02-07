@@ -25,6 +25,9 @@ data class Track(
 		var artist: String = "",
 
 		@Column(nullable = false)
+		var featuring: String = "",
+
+		@Column(nullable = false)
 		var album: String = "",
 
 		@Column(name = "track_number")

@@ -29,6 +29,8 @@ export class SongRow extends React.Component {
 				return userTrack.name;
 			case 'Artist':
 				return userTrack.artist;
+			case 'Featuring':
+				return userTrack.featuring;
 			case 'Album':
 				return userTrack.album;
 			case 'Track #':
@@ -93,4 +95,4 @@ SongRow.defaultProps = {
 	selected: false
 };
 SongRow.contextType = MusicContext;
-SongRow.updatableColumns = new Set(['Album', 'Artist', 'Name', 'Year', 'Track #', 'Genre', 'Note']);
+SongRow.updatableColumns = new Set(['Album', 'Artist', 'Featuring', 'Name', 'Year', 'Track #', 'Genre', 'Note']);

@@ -4,6 +4,7 @@ data class UpdateTrackDTO(
 		val trackId: Long,
 		val name: String?,
 		val artist: String?,
+		val featuring: String?,
 		val album: String?,
 		val trackNumber: Int?,
 		val releaseYear: Int?,

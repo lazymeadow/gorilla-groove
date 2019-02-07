@@ -15,6 +15,7 @@ export class MusicProvider extends React.Component {
 		this.trackKeyConversions = {
 			'Name': 'name',
 			'Artist': 'artist',
+			'Featuring': 'featuring',
 			'Album': 'album',
 			'Track #' : 'trackNumber',
 			'Length': 'length',
@@ -32,6 +33,7 @@ export class MusicProvider extends React.Component {
 			'Name': [{ key: 'name' }],
 			'Artist': [{ key: 'artist' }, { key: 'album', dir: 'asc' }, { key: 'trackNumber', dir: 'asc' }],
 			'Album': [{ key: 'album' }, { key: 'trackNumber', dir: 'asc' }],
+			'Featuring': [{ key: 'featuring' }],
 			'Length': [{ key: 'length' }],
 			'Year': [{ key: 'releaseYear' }],
 			'Play Count': [{ key: 'playCount' }],
@@ -100,15 +102,16 @@ export class MusicProvider extends React.Component {
 		const columnOptions = Object.keys(this.trackKeyConversions);
 
 		let columnPreferences = LocalStorage.getObject('columnPreferences');
+
 		// If the preferences already existed, we need to check if any new columns were added
 		// since the user last logged in.
 		if (columnPreferences) {
 			let savedColumns = columnPreferences.map(columnPref => columnPref.name );
-			let newColumns = Util.arrayIntersection(columnOptions, savedColumns);
+			let newColumns = Util.arrayDifference(columnOptions, savedColumns);
 
 			if (newColumns.length > 0) {
 				// We have new columns to add. Initialize them and add them to the column preferences
-				columnPreferences.concat(newColumns.map(trackColumnName => {
+				columnPreferences = columnPreferences.concat(newColumns.map(trackColumnName => {
 					return { name: trackColumnName, enabled: true };
 				}));
 				LocalStorage.setObject('columnPreferences', columnPreferences);

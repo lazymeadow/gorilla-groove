@@ -29,6 +29,7 @@ export class YoutubeDlButton extends React.Component {
 		const url = document.getElementById('song-url').value;
 		const name = document.getElementById('song-name').value;
 		const artist = document.getElementById('song-artist').value;
+		const featuring = document.getElementById('song-featuring').value;
 		const album = document.getElementById('song-album').value;
 		const year = document.getElementById('song-year').value;
 		const trackNumber = document.getElementById('song-track-number').value;
@@ -52,6 +53,9 @@ export class YoutubeDlButton extends React.Component {
 		}
 		if (genre) {
 			params.genre = genre;
+		}
+		if (featuring) {
+			params.featuring = featuring;
 		}
 
 		Api.post('track/youtube-dl', params).then(track => {
@@ -92,6 +96,11 @@ export class YoutubeDlButton extends React.Component {
 							<div className="flex-label">
 								<label htmlFor="song-artist">Artist</label>
 								<input id="song-artist" name="song-artist" type="text"/>
+							</div>
+
+							<div className="flex-label">
+								<label htmlFor="song-featuring">Featuring</label>
+								<input id="song-featuring" name="song-featuring" type="text"/>
 							</div>
 
 							<div className="flex-label">

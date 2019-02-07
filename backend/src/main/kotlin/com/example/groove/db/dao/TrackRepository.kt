@@ -20,6 +20,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			"AND (:searchTerm IS NULL " + // searchTerm is an 'OR' where the other terms are all ANDed
 			"      OR t.name LIKE %:searchTerm%" +
 			"      OR t.artist LIKE %:searchTerm%" +
+			"      OR t.featuring LIKE %:searchTerm%" +
 			"      OR t.album LIKE %:searchTerm%" +
 			"      OR t.genre LIKE %:searchTerm%" +
 			"      OR t.note LIKE %:searchTerm%)"

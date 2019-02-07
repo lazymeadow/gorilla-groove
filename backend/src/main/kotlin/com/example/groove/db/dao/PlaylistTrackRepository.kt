@@ -20,6 +20,7 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
 			"AND (:searchTerm IS NULL " + // searchTerm is an 'OR' where the other terms are all ANDed
 			"      OR pt.track.name LIKE %:searchTerm%" +
 			"      OR pt.track.artist LIKE %:searchTerm%" +
+			"      OR pt.track.featuring LIKE %:searchTerm%" +
 			"      OR pt.track.album LIKE %:searchTerm%" +
 			"      OR pt.track.genre LIKE %:searchTerm%" +
 			"      OR pt.track.note LIKE %:searchTerm%)"
