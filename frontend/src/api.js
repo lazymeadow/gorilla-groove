@@ -6,7 +6,7 @@ export class Api {
 			// the one running the backend on 8080
 			return "http://localhost:8080";
 		} else {
-			return window.location.host;
+			return "http://" + window.location.host;
 		}
 	}
 
