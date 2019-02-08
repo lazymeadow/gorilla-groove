@@ -110,15 +110,6 @@ class SecurityConfiguration(
 						.addMapping("/**")
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
-
-			override fun addViewControllers(registry: ViewControllerRegistry) {
-				registry.addViewController("/{spring:\\w+}")
-						.setViewName("forward:/")
-				registry.addViewController("/**/{spring:\\w+}")
-						.setViewName("forward:/")
-				registry.addViewController("/{spring:\\w+}/**{spring:?!(\\.js|\\.css)$}")
-						.setViewName("forward:/")
-			}
 		}
 	}
 
