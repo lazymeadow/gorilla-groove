@@ -22,6 +22,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.OrRequestMatcher
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler
 import org.springframework.web.servlet.config.annotation.CorsRegistry
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 
@@ -108,6 +109,15 @@ class SecurityConfiguration(
 				registry
 						.addMapping("/**")
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
+			}
+
+			override fun addViewControllers(registry: ViewControllerRegistry) {
+				registry.addViewController("/{spring:\\w+}")
+						.setViewName("forward:/")
+				registry.addViewController("/**/{spring:\\w+}")
+						.setViewName("forward:/")
+				registry.addViewController("/{spring:\\w+}/**{spring:?!(\\.js|\\.css)$}")
+						.setViewName("forward:/")
 			}
 		}
 	}
