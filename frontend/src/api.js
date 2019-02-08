@@ -4,14 +4,14 @@ export class Api {
 		if (window.location.host.includes("localhost")) {
 			// For local dev-ing, I usually run react on a different web server. So redirect it to
 			// the one running the backend on 8080
-			return "http://localhost:8080/";
+			return "http://localhost:8080";
 		} else {
-			return window.location;
+			return window.location.host;
 		}
 	}
 
 	static getBaseUrl() {
-		return this.getBaseHost() + 'api/'
+		return this.getBaseHost() + '/api/'
 	}
 
 	static get(url, params) {
