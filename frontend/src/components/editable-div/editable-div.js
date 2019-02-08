@@ -62,7 +62,7 @@ export class EditableDiv extends React.Component {
 			)
 		} else {
 			return (
-				<div ref={this.handleLongNameTooltip.bind(this)} id={this.props.id}>
+				<div ref={this.handleLongNameTooltip.bind(this)} id={this.props.id} className="cutoff-text">
 					{this.props.text}
 				</div>
 			)
