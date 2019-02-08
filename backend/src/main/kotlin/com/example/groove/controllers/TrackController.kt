@@ -69,6 +69,10 @@ class TrackController(
 
 	@PostMapping("/youtube-dl")
 	fun youtubeDownload(@RequestBody youTubeDownloadDTO: YoutubeDownloadDTO): Track {
+		if (youTubeDownloadDTO.url.contains("&list")) {
+			throw IllegalArgumentException("Playlist downloads are not allowed")
+		}
+
 		return youTubeService.downloadSong(youTubeDownloadDTO)
 	}
 

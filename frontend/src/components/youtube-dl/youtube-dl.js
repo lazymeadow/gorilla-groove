@@ -21,11 +21,6 @@ export class YoutubeDlButton extends React.Component {
 	submitDownloadForm(event) {
 		event.preventDefault();
 
-		this.setState({
-			downloading: true,
-			modalOpen: false
-		});
-
 		const url = document.getElementById('song-url').value;
 		const name = document.getElementById('song-name').value;
 		const artist = document.getElementById('song-artist').value;
@@ -34,6 +29,11 @@ export class YoutubeDlButton extends React.Component {
 		const year = document.getElementById('song-year').value;
 		const trackNumber = document.getElementById('song-track-number').value;
 		const genre = document.getElementById('song-genre').value;
+
+		if (url.includes("&list")) {
+			toast.error("Playlist downloads are not supported");
+			return;
+		}
 
 		let params = { url: url };
 		if (name) {
@@ -57,6 +57,11 @@ export class YoutubeDlButton extends React.Component {
 		if (featuring) {
 			params.featuring = featuring;
 		}
+
+		this.setState({
+			downloading: true,
+			modalOpen: false
+		});
 
 		Api.post('track/youtube-dl', params).then(track => {
 			this.context.addUploadToExistingLibraryView(track);
