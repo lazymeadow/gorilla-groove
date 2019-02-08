@@ -38,19 +38,24 @@ export class TrackList extends React.Component {
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
 			document.body.addEventListener('keypress', e => this.handleKeyPress(e));
-			document.body.addEventListener('click', (e) => this.handleEditStop(e));
+			document.body.addEventListener('click', e => this.handleEditStop(e));
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', () => this.handleScroll());
 		}
+		ReactDOM.findDOMNode(this).addEventListener('contextmenu', e => { this.handleContextMenu(e) });
 	}
 
 	componentWillUnmount() {
 		this.disableResize();
 
 		if (!this.props.trackView) {
-			document.body.removeEventListener('click', (e) => this.handleEditStop(e));
+			document.body.removeEventListener('click', e => this.handleEditStop(e));
+			document.body.removeEventListener('keypress', e => this.handleKeyPress(e));
+			document.getElementsByClassName('border-layout-center')[0]
+				.removeEventListener('scroll', () => this.handleScroll());
 		}
 
+		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', e => { this.handleContextMenu(e) });
 	}
 
 	enableResize() {
@@ -75,6 +80,27 @@ export class TrackList extends React.Component {
 		if (event.target.id !== this.state.editableCell) {
 			this.stopCellEdits();
 		}
+	}
+
+	handleContextMenu(event) {
+		if (!this.context.useRightClickMenu) {
+			return;
+		}
+
+		event.preventDefault();
+
+		let row = event.target.closest('.song-row');
+		let rowIndex = [...row.parentElement.children].indexOf(row);
+
+		this.handleRowClick(event, rowIndex);
+
+		this.setState({
+			contextMenuOptions: {
+				expanded: true,
+				x: event.clientX - 6,
+				y: event.clientY + 8
+			}}
+		);
 	}
 
 	handleKeyPress(event) {
@@ -131,6 +157,8 @@ export class TrackList extends React.Component {
 	}
 
 	handleRowClick(event, userTrackIndex) {
+		let isLeftClick = event.type === 'click';
+
 		if (event.target.tagName === 'INPUT') {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
 		}
@@ -166,18 +194,19 @@ export class TrackList extends React.Component {
 		// The track we clicked needs to always be selected
 		selected[userTrackIndex] = true;
 
-		// TODO I don't actually make sure you double clicked the SAME row twice. Just that you double clicked. Fix perhaps?
-		if (this.state.withinDoubleClick) {
-			this.cancelDoubleClick();
-			this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
-			this.setState({ editableCell: null })
-		} else {
-			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
-			this.cancelDoubleClick();
-			let pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
-			this.setupDoubleClick(pendingEditableCell);
+		if (isLeftClick) {
 
-
+			// TODO I don't actually make sure you double clicked the SAME row twice. Just that you double clicked. Fix perhaps?
+			if (this.state.withinDoubleClick) {
+				this.cancelDoubleClick();
+				this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
+				this.setState({ editableCell: null })
+			} else {
+				// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
+				this.cancelDoubleClick();
+				let pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
+				this.setupDoubleClick(pendingEditableCell);
+			}
 		}
 
 		this.setState({ selected: selected });
@@ -346,7 +375,7 @@ export class TrackList extends React.Component {
 								played={played}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
-								showContextMenu={index === this.state.lastSelectedIndex}
+								showContextMenu={index === this.state.lastSelectedIndex && !this.context.useRightClickMenu}
 								openContextMenu={this.handleContextMenuOpen.bind(this)}
 								onClick={this.handleRowClick.bind(this)}
 								stopCellEdits={this.stopCellEdits.bind(this)}

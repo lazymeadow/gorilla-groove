@@ -12,7 +12,9 @@ export class SongPopoutMenu extends React.Component {
 	}
 
 	shouldComponentUpdate(nextProps) {
-		return (nextProps.expanded !== this.props.expanded);
+		return nextProps.expanded !== this.props.expanded
+			|| nextProps.x !== this.props.x
+			|| nextProps.y !== this.props.y;
 	}
 
 	static getDerivedStateFromProps(props) {

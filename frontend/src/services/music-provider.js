@@ -63,6 +63,7 @@ export class MusicProvider extends React.Component {
 			shuffledSongIndexes: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
+			useRightClickMenu: LocalStorage.getBoolean('useRightClickMenu', true),
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			searchTerm: '',
@@ -90,6 +91,7 @@ export class MusicProvider extends React.Component {
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
 			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
+			setUseRightClickMenu: (...args) => this.setUseRightClickMenu(...args),
 			setSearchTerm: (...args) => this.setSearchTerm(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args)
 		};
@@ -538,7 +540,14 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			columnPreferences: columnPreferences,
 		});
-		LocalStorage.setObject('columnPreferences', columnPreferences);
+		LocalStorage.setBoolean('columnPreferences', columnPreferences);
+	}
+
+	setUseRightClickMenu(useMenu) {
+		this.setState({
+			useRightClickMenu: useMenu,
+		});
+		LocalStorage.setBoolean('useRightClickMenu', useMenu);
 	}
 
 	setSearchTerm(searchTerm) {

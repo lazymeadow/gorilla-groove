@@ -81,6 +81,29 @@ export class Settings extends React.Component {
 								})}
 							</ul>
 						</div>
+						<div>
+
+							<h3>Override browser context menu</h3>
+
+							<input
+								type="radio"
+								id="yes-context-good"
+								name="rightClickMenu"
+								checked={this.context.useRightClickMenu === true}
+								onChange={() => this.context.setUseRightClickMenu(true)}
+							/>
+							<label htmlFor="yes-context-good">Yes please</label>
+
+							<input
+								type="radio"
+								id="no-context-bad"
+								name="rightClickMenu"
+								checked={this.context.useRightClickMenu === false}
+								onChange={() => this.context.setUseRightClickMenu(false)}
+							/>
+							<label htmlFor="no-context-bad">No thanks</label>
+
+						</div>
 					</div>
 					<button onClick={() => this.context.resetColumnPreferences()}>Reset</button>
 				</Modal>
