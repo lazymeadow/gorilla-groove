@@ -1,5 +1,6 @@
 import React from 'react';
 import {withRouter} from "react-router-dom";
+import {Api} from "../../api";
 
 class LoginPageInternal extends React.Component {
 	constructor(props) {
@@ -8,28 +9,20 @@ class LoginPageInternal extends React.Component {
 
 	submit(event) {
 		event.preventDefault();
-		fetch('http://localhost:8080/api/authentication/login', {
-			method: 'post',
-			headers: new Headers({
-				'Content-Type': 'application/json'
-			}),
-			body: JSON.stringify({
-				email: document.getElementById('email').value,
-				password: document.getElementById('password').value,
-			})
-		}).then(res => res.json())
-			.then(
-				(result) => {
-					// Would be a little more secure to store in an httpOnly cookie, but the inconvenience of reworking things at
-					// the moment is really not worth it for a website such as this where an XSS compromise doesn't really matter
-					sessionStorage.setItem('token', result.token);
-					sessionStorage.setItem('loggedInUserName', result.username);
-					sessionStorage.setItem('loggedInEmail', result.email);
-					this.props.history.push('/'); // Redirect to the main page now that we logged in
-				},
-				(error) => {
-					console.error(error)
-				});
+
+		let params = {
+			email: document.getElementById('email').value,
+			password: document.getElementById('password').value,
+		};
+
+		Api.post('authentication/login', params).then((result) => {
+			// Would be a little more secure to store in an httpOnly cookie, but the inconvenience of reworking things at
+			// the moment is really not worth it for a website such as this where an XSS compromise doesn't really matter
+			sessionStorage.setItem('token', result.token);
+			sessionStorage.setItem('loggedInUserName', result.username);
+			sessionStorage.setItem('loggedInEmail', result.email);
+			this.props.history.push('/'); // Redirect to the main page now that we logged in
+		})
 	}
 
 	render() {

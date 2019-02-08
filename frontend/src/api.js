@@ -1,13 +1,23 @@
-const location = window.location;
-const baseUrl = location + 'api/';
-
 export class Api {
 
-	// This will likely need to be modified when we start using URL parameters to filter things
+	static getBaseHost() {
+		if (window.location.host.includes("localhost")) {
+			// For local dev-ing, I usually run react on a different web server. So redirect it to
+			// the one running the backend on 8080
+			return "http://localhost:8080/";
+		} else {
+			return window.location;
+		}
+	}
+
+	static getBaseUrl() {
+		return this.getBaseHost() + 'api/'
+	}
+
 	static get(url, params) {
 		let urlParameters = Api.encodeUriParamsFromObject(params);
 
-		return fetch(baseUrl + url + urlParameters, {
+		return fetch(this.getBaseUrl() + url + urlParameters, {
 			method: 'get',
 			headers: new Headers({
 				'Content-Type': 'application/json',
@@ -29,12 +39,14 @@ export class Api {
 	}
 
 	static sendRequest(requestType, url, params) {
-		return fetch(baseUrl + url, {
+		let headers = { 'Content-Type': 'application/json', };
+		if (sessionStorage.getItem('token')) {
+			headers['Authorization'] = `Bearer ${sessionStorage.getItem('token')}`;
+		}
+
+		return fetch(this.getBaseUrl() + url, {
 			method: requestType,
-			headers: new Headers({
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-			}),
+			headers: new Headers(headers),
 			body: JSON.stringify(params)
 		}).then(res => {
 			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
@@ -57,7 +69,7 @@ export class Api {
 		let body = new FormData();
 		body.append('file', file);
 
-		return fetch(baseUrl + url, {
+		return fetch(this.getBaseUrl() + url, {
 			method: 'post',
 			headers: new Headers({
 				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
