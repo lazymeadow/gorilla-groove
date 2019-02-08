@@ -31,16 +31,28 @@ export class AlbumArt extends React.Component {
 			return;
 		}
 
+		// Despite doing this check in shouldComponentUpdate(), it seems to often be ignored. Possibly
+		// because the parent component is re-rendering and forcing this to render no matter what?
+		// So do this check here again to stop album art flickering
+		if (this.context.playedTrack.id === this.state.playedTrackId) {
+			return;
+		}
+
 		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
 			const albumImageLink = this.getImageLink(links);
 			let img = new Image();
 			img.src = albumImageLink;
-			this.setState({ playedTrackId: this.context.playedTrack.id });
 			img.onload = () => {
-				this.setState({ imageUrl: albumImageLink })
+				this.setState({
+					imageUrl: albumImageLink,
+					playedTrackId: this.context.playedTrack.id
+				})
 			};
 			img.onerror = () => {
-				this.setState({ imageUrl: defaultImageLink })
+				this.setState({
+					imageUrl: defaultImageLink,
+					playedTrackId: this.context.playedTrack.id
+				})
 			};
 		});
 
