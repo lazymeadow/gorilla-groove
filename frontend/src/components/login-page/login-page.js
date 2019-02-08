@@ -8,7 +8,7 @@ class LoginPageInternal extends React.Component {
 
 	submit(event) {
 		event.preventDefault();
-		fetch('http://gorillagroove.net:8080/api/authentication/login', {
+		fetch('http://localhost:8080/api/authentication/login', {
 			method: 'post',
 			headers: new Headers({
 				'Content-Type': 'application/json'
@@ -36,13 +36,22 @@ class LoginPageInternal extends React.Component {
 		return (
 			<div className="full-screen">
 				<form onSubmit={this.submit.bind(this)}>
-					<label htmlFor="email">Enter your email</label>
-					<input id="email" name="email" type="email"/>
+					<div className="login-container">
+						<h1>Gorilla Groove</h1>
+						<div className="login-flex">
+							<div className="flex-label">
+								<label htmlFor="email">Enter your email</label>
+								<input id="email" name="email" type="email"/>
+							</div>
 
-					<label htmlFor="password">Enter your password</label>
-					<input id="password" name="password" type="password"/>
+							<div className="flex-label">
+								<label htmlFor="password">Enter your password</label>
+								<input id="password" name="password" type="password"/>
+							</div>
+						</div>
 
-					<button>Login</button>
+						<button>Login</button>
+					</div>
 				</form>
 			</div>
 		)
