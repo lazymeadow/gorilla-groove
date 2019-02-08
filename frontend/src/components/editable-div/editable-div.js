@@ -23,6 +23,22 @@ export class EditableDiv extends React.Component {
 		}
 	}
 
+	// This probably could be its own React component... like
+	// maybe an <AbbreviatedText/> component or something. But... eh... maybe when I need to reuse it
+	handleLongNameTooltip(element) {
+		if (!element) {
+			return;
+		}
+
+		// This isn't very React-y, but because this has to happen after a component renders and knows its own width,
+		// it feels cleaner than making a component render twice. Once for initial render, and again to set the title attribute.
+		if (this.props.editable === false && element.scrollWidth > element.clientWidth) {
+			element.setAttribute('title', this.props.text);
+		} else {
+			element.removeAttribute('title');
+		}
+	}
+
 	handleKeyPress(event) {
 		if (event.key === 'Enter') {
 			this.props.stopEdit();
@@ -46,7 +62,7 @@ export class EditableDiv extends React.Component {
 			)
 		} else {
 			return (
-				<div id={this.props.id}>
+				<div ref={this.handleLongNameTooltip.bind(this)} id={this.props.id}>
 					{this.props.text}
 				</div>
 			)
