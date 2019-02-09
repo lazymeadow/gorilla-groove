@@ -6,10 +6,7 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.example.groove.db.dao.TrackRepository
-import com.example.groove.db.model.Track
 import com.example.groove.properties.S3Properties
-import com.example.groove.util.loadLoggedInUser
-import com.example.groove.util.unwrap
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
@@ -19,8 +16,8 @@ import java.util.*
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "true")
 class S3StorageService(
 		s3Properties: S3Properties,
-		private val trackRepository: TrackRepository
-) : FileStorageService {
+		trackRepository: TrackRepository
+) : FileStorageService(trackRepository) {
 
 	private val s3Client: AmazonS3
 
@@ -44,6 +41,14 @@ class S3StorageService(
 		s3Client.putObject(bucketName, "art/$trackId.png", albumArt)
 	}
 
+	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
+		s3Client.copyObject(bucketName, "art/$trackSourceId.png", bucketName, "art/$trackDestinationId.png")
+	}
+
+	override fun deleteSong(fileName: String) {
+		s3Client.deleteObject(bucketName, "music/$fileName")
+	}
+
 	override fun getSongLink(trackId: Long): String {
 		val track = loadAuthenticatedTrack(trackId)
 
@@ -54,17 +59,6 @@ class S3StorageService(
 		val track = loadAuthenticatedTrack(trackId)
 
 		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", getS3ExpirationDate()).toString()
-	}
-
-	private fun loadAuthenticatedTrack(trackId: Long): Track {
-		val track = trackRepository.findById(trackId).unwrap() ?: throw IllegalArgumentException("No track with ID $trackId found")
-		val user = loadLoggedInUser()
-
-		if (track.hidden && user.id != track.user.id) {
-			throw IllegalArgumentException("Insufficient privileges to access trackId $trackId")
-		}
-
-		return track
 	}
 
 	private fun getS3ExpirationDate(): Date {

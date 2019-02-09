@@ -6,7 +6,6 @@ import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FileStorageProperties
-import com.example.groove.properties.MusicProperties
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
@@ -28,7 +27,6 @@ import kotlin.system.measureTimeMillis
 @Service
 class SongIngestionService(
 		fileStorageProperties: FileStorageProperties,
-		musicProperties: MusicProperties,
 		private val ffmpegService: FFmpegService,
 		private val fileMetadataService: FileMetadataService,
 		private val trackRepository: TrackRepository,
@@ -36,9 +34,6 @@ class SongIngestionService(
 ) {
 
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir)
-			.toAbsolutePath().normalize()
-
-	private val albumArtLocation: Path = Paths.get(musicProperties.albumArtDirectoryLocation)
 			.toAbsolutePath().normalize()
 
 	init {
@@ -96,20 +91,6 @@ class SongIngestionService(
 		} else {
 			null
 		}
-	}
-
-	fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
-		val sourceDirectory = trackSourceId / 1000
-		val sourceFile = File("$albumArtLocation/$sourceDirectory/$trackSourceId.png")
-
-		if (!sourceFile.exists()) {
-			return
-		}
-
-		val destinationDirectory = trackDestinationId / 1000
-		val destinationFile = File("$albumArtLocation/$destinationDirectory/$trackDestinationId.png")
-
-		sourceFile.copyTo(destinationFile)
 	}
 
 	@Transactional

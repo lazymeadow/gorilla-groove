@@ -6,8 +6,6 @@ import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
 import com.example.groove.dto.UpdateTrackDTO
-import com.example.groove.properties.FFmpegProperties
-import com.example.groove.properties.MusicProperties
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -16,7 +14,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.io.File
 import java.sql.Timestamp
 import java.util.*
 
@@ -25,8 +22,7 @@ import java.util.*
 class TrackService(
 		private val trackRepository: TrackRepository,
 		private val trackHistoryRepository: TrackHistoryRepository,
-		private val songIngestionService: SongIngestionService,
-		private val musicProperties: MusicProperties
+		private val fileStorageService: FileStorageService
 ) {
 
 	@Transactional(readOnly = true)
@@ -120,10 +116,8 @@ class TrackService(
 			return
 		}
 
-		val success = File(musicProperties.musicDirectoryLocation + fileName).delete()
-		if (!success) {
-			logger.error("The file $fileName should have been deleted, but couldn't be")
-		}
+		logger.info("Deleting song with name $fileName")
+		fileStorageService.deleteSong(fileName)
 	}
 
 	@Transactional
@@ -150,7 +144,8 @@ class TrackService(
 			)
 
 			trackRepository.save(forkedTrack)
-			songIngestionService.copyAlbumArt(track.id, forkedTrack.id)
+
+			fileStorageService.copyAlbumArt(track.id, forkedTrack.id)
 
 			forkedTrack
 		}
