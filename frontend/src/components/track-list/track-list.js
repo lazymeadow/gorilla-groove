@@ -172,7 +172,8 @@ export class TrackList extends React.Component {
 		}
 
 		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
-		if (!event.ctrlKey && !event.shiftKey) {
+		// Additionally, if right clicking, we don't want to deselect if we selected an already selected row
+		if (!event.ctrlKey && !event.shiftKey && !(!isLeftClick && selected[userTrackIndex])) {
 			selected = {};
 			this.setState({ firstSelectedIndex: userTrackIndex })
 		}
