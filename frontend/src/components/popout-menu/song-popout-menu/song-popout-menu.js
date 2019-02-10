@@ -18,21 +18,38 @@ export class SongPopoutMenu extends React.Component {
 	}
 
 	static getDerivedStateFromProps(props) {
+		if (!props.expanded) {
+			return {};
+		}
+
 		let options;
-		if (props.context.trackView === TrackView.LIBRARY) {
-			options = SongPopoutMenu.getBaseMenuOptions(props)
-				.concat(SongPopoutMenu.getOwnLibraryOptions(props))
-				.concat(SongPopoutMenu.getPlaylistAdditionOptions(props));
-		} else if (props.context.trackView === TrackView.PLAYLIST) {
-			options = SongPopoutMenu.getBaseMenuOptions(props)
-				.concat(SongPopoutMenu.getOwnLibraryOptions(props))
-				.concat(SongPopoutMenu.getPlaylistAdditionOptions(props))
-				.concat(SongPopoutMenu.getPlaylistSpecificOptions(props));
-		} else if (props.context.trackView === TrackView.USER) {
-			options = SongPopoutMenu.getBaseMenuOptions(props)
-				.concat(SongPopoutMenu.getOtherUserOptions(props));
-		} else {
-			options = [];
+		switch (props.trackView) {
+			case TrackView.LIBRARY: {
+				options = SongPopoutMenu.getBaseMenuOptions(props)
+					.concat(SongPopoutMenu.getOwnLibraryOptions(props))
+					.concat(SongPopoutMenu.getPlaylistAdditionOptions(props));
+				break;
+			}
+			case TrackView.PLAYLIST: {
+				options = SongPopoutMenu.getBaseMenuOptions(props)
+					.concat(SongPopoutMenu.getOwnLibraryOptions(props))
+					.concat(SongPopoutMenu.getPlaylistAdditionOptions(props))
+					.concat(SongPopoutMenu.getPlaylistSpecificOptions(props));
+				break;
+			}
+			case TrackView.USER: {
+				options = SongPopoutMenu.getBaseMenuOptions(props)
+					.concat(SongPopoutMenu.getOtherUserOptions(props));
+				break;
+			}
+			case TrackView.NOW_PLAYING: {
+				options = SongPopoutMenu.getBaseMenuOptions(props)
+					.concat(SongPopoutMenu.getNowPlayingOptions(props))
+				break;
+			}
+			default: {
+				options = [];
+			}
 		}
 
 		return ({ menuOptions: options })
@@ -51,19 +68,19 @@ export class SongPopoutMenu extends React.Component {
 			{
 				text: "Play Now", clickHandler: (e) => {
 					e.stopPropagation();
-					props.context.playTracks(props.getSelectedTracks())
+					props.context.playTracks(props.getSelectedTracks());
 				}
 			},
 			{
 				text: "Play Next", clickHandler: (e) => {
 					e.stopPropagation();
-					props.context.playTracksNext(props.getSelectedTracks())
+					props.context.playTracksNext(props.getSelectedTracks());
 				}
 			},
 			{
 				text: "Play Last", clickHandler: (e) => {
 					e.stopPropagation();
-					props.context.playTracksLast(props.getSelectedTracks())
+					props.context.playTracksLast(props.getSelectedTracks());
 				}
 			}];
 	}
@@ -76,13 +93,13 @@ export class SongPopoutMenu extends React.Component {
 					const tracks = props.getSelectedTracks();
 					props.context.setHidden(tracks, true).then(() => {
 						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was made private`)
+							toast.success(`'${tracks[0].name}' was made private`);
 						} else {
-							toast.success(`${tracks.length} tracks were made private`)
+							toast.success(`${tracks.length} tracks were made private`);
 						}
 					}).catch((error) => {
 						console.error(error);
-						toast.error('Failed to make the selected tracks private')
+						toast.error('Failed to make the selected tracks private');
 					});
 				}
 			},
@@ -92,13 +109,13 @@ export class SongPopoutMenu extends React.Component {
 					const tracks = props.getSelectedTracks();
 					props.context.setHidden(tracks, false).then(() => {
 						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was made public`)
+							toast.success(`'${tracks[0].name}' was made public`);
 						} else {
-							toast.success(`${tracks.length} tracks were made public`)
+							toast.success(`${tracks.length} tracks were made public`);
 						}
 					}).catch((error) => {
 						console.error(error);
-						toast.error('Failed to make the selected tracks public')
+						toast.error('Failed to make the selected tracks public');
 					});
 				}
 			},
@@ -108,13 +125,13 @@ export class SongPopoutMenu extends React.Component {
 					const tracks = props.getSelectedTracks();
 					props.context.deleteTracks(tracks, false).then(() => {
 						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was deleted`)
+							toast.success(`'${tracks[0].name}' was deleted`);
 						} else {
-							toast.success(`${tracks.length} tracks were deleted`)
+							toast.success(`${tracks.length} tracks were deleted`);
 						}
 					}).catch((error) => {
 						console.error(error);
-						toast.error('Failed to delete the selected tracks')
+						toast.error('Failed to delete the selected tracks');
 					});
 				}
 			}
@@ -137,7 +154,7 @@ export class SongPopoutMenu extends React.Component {
 						}
 					}).catch(error => {
 						console.error(error);
-						toast.error('Failed to remove the selected tracks')
+						toast.error('Failed to remove the selected tracks');
 					});
 				}
 			}
@@ -158,8 +175,20 @@ export class SongPopoutMenu extends React.Component {
 						}
 					}).catch(error => {
 						console.error(error);
-						toast.error('Failed to import the selected tracks')
+						toast.error('Failed to import the selected tracks');
 					});
+				}
+			}
+		];
+	}
+
+	static getNowPlayingOptions(props) {
+		return [
+			{
+				text: "Remove", clickHandler: (e) => {
+					e.stopPropagation();
+					const trackIndexes = props.getSelectedTrackIndexes();
+					props.context.removeFromNowPlaying(trackIndexes);
 				}
 			}
 		];

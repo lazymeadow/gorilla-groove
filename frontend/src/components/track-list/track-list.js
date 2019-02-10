@@ -4,6 +4,7 @@ import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
 import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
+import {TrackView} from "../../enums/track-view";
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -97,6 +98,7 @@ export class TrackList extends React.Component {
 		this.setState({
 			contextMenuOptions: {
 				expanded: true,
+				trackView: this.props.trackView ? this.context.trackView : TrackView.NOW_PLAYING,
 				x: event.clientX - 6,
 				y: event.clientY + 8
 			}}
@@ -279,6 +281,10 @@ export class TrackList extends React.Component {
 		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
 	}
 
+	getSelectedTrackIndexes() {
+		return Object.keys(this.state.selected).map(index => parseInt(index));
+	}
+
 	handleHeaderClick(event) {
 		// We don't want the 'now playing' view to be able to sort things (at least for now). It gets messy
 		if (!this.props.trackView) {
@@ -337,7 +343,9 @@ export class TrackList extends React.Component {
 						context={this.context} // Pass in as prop, so it can be accessed in getDerivedState
 						closeContextMenu={() => this.closeContextMenu()}
 						getSelectedTracks={() => this.getSelectedTracks()}
+						getSelectedTrackIndexes={() => this.getSelectedTrackIndexes()}
 						expanded={this.state.contextMenuOptions.expanded}
+						trackView={this.state.contextMenuOptions.trackView}
 						x={this.state.contextMenuOptions.x}
 						y={this.state.contextMenuOptions.y}
 					/>

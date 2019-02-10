@@ -86,6 +86,7 @@ export class MusicProvider extends React.Component {
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
 			createPlaylist: (...args) => this.createPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
+			removeFromNowPlaying: (...args) => this.removeFromNowPlaying(...args),
 			updateTrack: (...args) => this.updateTrack(...args),
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
@@ -479,6 +480,33 @@ export class MusicProvider extends React.Component {
 				this.setState({ viewedTracks: newViewedTracks })
 			}
 		});
+	}
+
+	removeFromNowPlaying(trackIndexes) {
+		let trackIdSet = new Set(trackIndexes);
+		let newNowPlaying = this.state.nowPlayingTracks.filter((track, index) => !trackIdSet.has(index));
+
+		// Handle changing the currently playing song, if we need to
+		if (trackIdSet.has(this.state.playedTrackIndex)) {
+			// If a song we removed was playing, just stop playing altogether. Might try to do more stuff later
+			this.setState({
+				playedTrackIndex: null,
+				playedTrack: null,
+			});
+		} else if (this.state.playedTrackIndex !== null) {
+			// If we removed tracks BEFORE our now playing track index (i.e. we are playing the 10th song and
+			// we removed the 5th song) then we need to shift the now playing track index up by the number of
+			// tracks we removed less than the currently played track index
+			let indexesToRemove = 0;
+			trackIdSet.forEach( indexRemoved => {
+				if (indexRemoved < this.state.playedTrackIndex) {
+					indexesToRemove++;
+				}
+			});
+			this.setState({ playedTrackIndex: this.state.playedTrackIndex - indexesToRemove });
+		}
+
+		this.setState({ nowPlayingTracks: newNowPlaying });
 	}
 
 	createPlaylist() {
