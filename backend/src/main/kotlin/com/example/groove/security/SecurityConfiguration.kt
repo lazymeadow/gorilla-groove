@@ -45,6 +45,9 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/dist/index.css"),
 			AntPathRequestMatcher("/node_modules/react-toastify/dist/ReactToastify.min.css"), // I hate that I did this, but I didn't want to deal with webpack to combine them
 			AntPathRequestMatcher("/images/**"),
+			AntPathRequestMatcher("/favicon.ico"),
+			AntPathRequestMatcher("/favicon-16x16.png"),
+			AntPathRequestMatcher("/favicon-32x32.png"),
 			AntPathRequestMatcher("/**", HttpMethod.OPTIONS.toString(), false) // allow CORS option calls
 	)
 	private val protectedUrls = NegatedRequestMatcher(publicUrls)
