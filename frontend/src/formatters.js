@@ -8,6 +8,8 @@ export function formatDate(dateString) {
 }
 
 export function formatTimeFromSeconds(lotsOfSeconds) {
+	lotsOfSeconds = parseInt(lotsOfSeconds);
+
 	let minutes = parseInt(lotsOfSeconds / 60);
 	let seconds = lotsOfSeconds % 60;
 	let paddedSeconds = (seconds < 10 ? '0' : '') + seconds;

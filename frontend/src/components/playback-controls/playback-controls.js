@@ -1,6 +1,7 @@
 import React from 'react';
 import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
+import {formatTimeFromSeconds} from "../../formatters";
 
 export class PlaybackControls extends React.Component {
 	constructor(props) {
@@ -8,10 +9,15 @@ export class PlaybackControls extends React.Component {
 		this.state = {
 			currentSessionPlayCounter: 0, // Used to detect when we should play a new song
 			lastTime: 0,
+			currentTimePercent: 0,
 			totalTimeListened: 0,
 			timeTarget: null,
+			duration: 0,
 			listenedTo: false,
-			songUrl: null
+			songUrl: null,
+			volume: 1,
+			muted: false,
+			playing: false
 		}
 	}
 
@@ -19,7 +25,16 @@ export class PlaybackControls extends React.Component {
 		let audio = document.getElementById('audio');
 		audio.addEventListener('timeupdate', (e) => { this.handleTimeTick(e.target.currentTime) });
 		audio.addEventListener('durationchange', (e) => { this.handleDurationChange(e.target.duration) });
-		audio.addEventListener('ended', () => { this.context.playNext() });
+		audio.addEventListener('ended', () => { this.handleSongEnd() });
+	}
+
+	handleSongEnd() {
+		let playingNewSong = this.context.playNext();
+		if (!playingNewSong) {
+			this.setState({
+				playing: false
+			})
+		}
 	}
 
 	componentDidUpdate() {
@@ -42,11 +57,15 @@ export class PlaybackControls extends React.Component {
 	// triggers some time after the song change, once the metadata itself is loaded
 	handleDurationChange(duration) {
 		// If someone listens to 60% of a song, we want to mark it as listened to. Keep track of what that target is
-		this.setState({ timeTarget: duration * 0.60 })
+		this.setState({
+			timeTarget: duration * 0.60,
+			duration: duration
+		})
 	}
 
 	handleSongChange() {
 		if (this.context.playedTrackIndex == null) {
+			this.setState({ playing: false });
 			return;
 		}
 
@@ -58,9 +77,12 @@ export class PlaybackControls extends React.Component {
 			this.setState({
 				currentSessionPlayCounter: this.context.sessionPlayCounter,
 				lastTime: 0,
+				currentTime: 0,
 				totalTimeListened: 0,
+				duration: 0,
 				listenedTo: false,
-				songUrl: this.getSongLink(links)
+				songUrl: this.getSongLink(links),
+				playing: true
 			}, () => {
 				let audio = document.getElementById('audio');
 				audio.currentTime = 0;
@@ -81,6 +103,10 @@ export class PlaybackControls extends React.Component {
 
 	handleTimeTick(currentTime) {
 		let newProperties = { lastTime: currentTime };
+
+		if (this.state.duration > 0) {
+			newProperties.currentTimePercent = currentTime / this.state.duration;
+		}
 
 		let timeElapsed = currentTime - this.state.lastTime;
 		// If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
@@ -115,27 +141,133 @@ export class PlaybackControls extends React.Component {
 		this.setState(newProperties);
 	}
 
+	changeVolume(event) {
+		console.log("Change volume");
+		let audio = document.getElementById('audio');
+		let volume = event.target.value;
+
+		audio.volume = volume;
+		this.setState({ volume: volume });
+	}
+
+	// noinspection JSMethodCanBeStatic
+	changePlayTime(event) {
+		let audio = document.getElementById('audio');
+		let playPercent = event.target.value;
+
+		// Don't need to update state, as an event will fire and we will handle it afterwards
+		audio.currentTime = playPercent * audio.duration;
+	}
+
+	getDisplayedSongName() {
+		const playedTrack = this.context.playedTrack;
+		if (!playedTrack) {
+			return '';
+		} else if (playedTrack.name && playedTrack.artist) {
+			return `${playedTrack.name} - ${playedTrack.artist}`
+		} else if (playedTrack.name) {
+			return playedTrack.name
+		} else if (playedTrack.artist) {
+			return playedTrack.artist
+		} else {
+			return '-----'
+		}
+	}
+
+	getVolumeIcon() {
+		if (this.state.muted) {
+			return 'fa-volume-mute'
+		} else if (this.state.volume > 0.5) {
+			return 'fa-volume-up';
+		} else if (this.state.volume > 0) {
+			return 'fa-volume-down'
+		} else {
+			return 'fa-volume-off'
+		}
+	}
+
+	togglePause() {
+		let playing = this.state.playing;
+		let audio = document.getElementById('audio');
+		if (playing) {
+			audio.pause();
+		} else {
+			audio.play();
+		}
+
+		this.setState({ playing: !playing });
+	}
+
+	toggleMute() {
+		let audio = document.getElementById('audio');
+		audio.muted = !this.state.muted;
+
+		this.setState({ muted: !this.state.muted });
+	}
+
 	render() {
 		let playedTrack = this.context.playedTrack;
 		let src = playedTrack ? this.state.songUrl : '';
 		return (
-			<div>
-				Now Playing: {playedTrack ? playedTrack.name : 'Nothing'}
+			<div className="playback-controls">
+				<audio id="audio" src={src}>
+					Your browser is ancient. Be less ancient.
+				</audio>
+
+				<div className="played-song-name">
+					{this.getDisplayedSongName()}
+				</div>
+
 				<div>
 					<div>
-						<audio id="audio" src={src} controls>
-							Your browser is ancient. Be less ancient.
-						</audio>
-						<button onClick={() => this.context.playPrevious()}>Play Previous</button>
-						<button onClick={() => this.context.playNext()}>Play Next</button>
+						<i
+							onClick={() => this.context.playPrevious()}
+							className="fas fa-fast-backward control"
+						/>
+						<i
+							onClick={() => this.togglePause()}
+							className={`fas fa-${this.state.playing ? 'pause' : 'play'} control`}
+						/>
+						<i
+							onClick={() => this.context.playNext()}
+							className="fas fa-fast-forward control"
+						/>
+						<i
+							onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
+							className={`fas fa-random control ${this.context.shuffleSongs ? 'enabled' : ''}`}
+						/>
+						<i
+							onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
+							className={`fas fa-sync-alt control ${this.context.repeatSongs ? 'enabled' : ''}`}
+						/>
 					</div>
-					<div>
-						<button onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}>Repeat</button>
-						Repeat is {this.context.repeatSongs ? 'On' : 'Off'}
+					<div className="play-time-wrapper">
+						<div>
+							{formatTimeFromSeconds(this.state.currentTimePercent * this.state.duration)} / {formatTimeFromSeconds(this.state.duration)}
+						</div>
+						<input
+							type="range"
+							className="time-slider"
+							onChange={(e) => this.changePlayTime(e)}
+							min="0"
+							max="1"
+							step="0.01"
+							value={this.state.currentTimePercent}
+						/>
 					</div>
-					<div>
-						<button onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}>Shuffle</button>
-						Shuffle is {this.context.shuffleSongs ? 'On' : 'Off'}
+					<div className="volume-wrapper">
+						<i
+							className={`fas ${this.getVolumeIcon()}`}
+							onClick={() => this.toggleMute()}
+						/>
+						<input
+							type="range"
+							className="volume-slider"
+							onChange={(e) => this.changeVolume(e)}
+							min="0"
+							max="1"
+							step="0.01"
+						/>
 					</div>
 				</div>
 			</div>

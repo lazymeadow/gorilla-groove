@@ -307,27 +307,36 @@ export class MusicProvider extends React.Component {
 		})
 	}
 
+	// Returns true if another song could be played. False otherwise
 	playNext() {
 		if (this.state.shuffleSongs) {
 			// If we're shuffling and have more songs to shuffle through, play a random song
 			if (this.state.songIndexesToShuffle.length > 0) {
-				this.playIndex(this.getRandomIndex())
+				this.playIndex(this.getRandomIndex());
 
+				return true;
 				// If we are out of songs to shuffle through, but ARE repeating, reset the shuffle list and pick a random one
 			} else if (this.state.repeatSongs) {
 				this.resetShuffleIndexes();
-				this.playIndex(this.getRandomIndex())
+				this.playIndex(this.getRandomIndex());
+
+				return true;
 			}
 		} else {
 			// If we aren't shuffling, and we have more songs, just pick the next one
 			if (this.state.playedTrackIndex + 1 < this.state.nowPlayingTracks.length) {
 				this.playIndex(this.state.playedTrackIndex + 1);
 
+				return true;
 				// Otherwise, if we have run out of songs, but are repeating, start back over from 0
 			} else if (this.state.repeatSongs) {
 				this.playIndex(0);
+
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	getRandomIndex() {

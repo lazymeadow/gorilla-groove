@@ -1,3 +1,49 @@
-.best-style {
-  background-color: blue;
+.playback-controls {
+  margin-left: 15px;
+
+  .played-song-name {
+    height: 18px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .control {
+    font-size: 2.3em;
+    margin-right: 20px;
+  }
+
+  .fa-random {
+    margin-left: 25px;
+  }
+
+  .fa-play, .fa-pause {
+    font-size: 2.5em;
+  }
+
+  .fa-random, .fa-sync-alt {
+    font-size: 1.8em;
+    &.enabled {
+      color: @select-blue;
+    }
+  }
+
+  .play-time-wrapper {
+    margin-top: 15px;
+    margin-bottom: 10px;
+  }
+
+  .time-slider {
+    width: 350px;
+  }
+
+  .volume-slider {
+    position: relative;
+    bottom: 2px;
+  }
+
+  .volume-wrapper {
+    display: flex;
+    justify-content: space-between;
+    width: 195px;
+  }
 }
