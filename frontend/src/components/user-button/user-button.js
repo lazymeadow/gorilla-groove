@@ -3,6 +3,7 @@ import {withRouter} from "react-router-dom";
 import {Api} from "../../api";
 import {PopoutMenu} from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
+import {InviteUser} from "../invite-user/invite-user";
 
 class LogoutButtonInternal extends React.Component {
 	constructor(props) {
@@ -31,6 +32,7 @@ class LogoutButtonInternal extends React.Component {
 					}}
 					menuItems={[
 						{ component: <Settings/> },
+						{ component: <InviteUser/> },
 						{ text: "Logout", clickHandler: (e) => this.logout(e) }
 					]}
 				/>

@@ -3,7 +3,7 @@ import {Api} from "../../api";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
 
-export class InviteUserButton extends React.Component {
+export class InviteUser extends React.Component {
 	constructor(props) {
 		super(props);
 
@@ -42,8 +42,8 @@ export class InviteUserButton extends React.Component {
 
 	render() {
 		return (
-			<button className="invite-user-button" onClick={() => this.setModalOpen(true)}>
-				Invite a user
+			<div onClick={() => this.setModalOpen(true)}>
+				Invite a User
 				<Modal
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
@@ -72,7 +72,7 @@ export class InviteUserButton extends React.Component {
 						<button>Create User</button>
 					</form>
 				</Modal>
-			</button>
+			</div>
 		)
 	}
 }
