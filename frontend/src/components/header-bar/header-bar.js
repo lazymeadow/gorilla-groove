@@ -6,10 +6,20 @@ import {SearchBar} from "../search-bar/search-bar";
 export function HeaderBar() {
 	return (
 		<div className="header-bar">
-			<SongUpload/>
-			<YoutubeDlButton/>
+			<div className="display-flex">
+				<img src="./images/logo.png" width="50" height="50"/>
+				<div className="vertical-center">
+					<div>Gorilla</div>
+					<div>Groove</div>
+				</div>
+				<div className="song-acquisition-icons">
+					<SongUpload/>
+					<YoutubeDlButton/>
+				</div>
+			</div>
 			<SearchBar/>
 			<div className="user-button-wrapper">
+				{sessionStorage.getItem('loggedInUserName')}
 				<UserButton/>
 			</div>
 		</div>

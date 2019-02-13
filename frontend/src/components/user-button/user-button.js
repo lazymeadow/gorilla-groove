@@ -28,7 +28,7 @@ class LogoutButtonInternal extends React.Component {
 				<PopoutMenu
 					mainItem={{
 						className: "user-button",
-						text: sessionStorage.getItem('loggedInUserName')
+						text: <i className="fas fa-bars"/>
 					}}
 					menuItems={[
 						{ component: <Settings/> },

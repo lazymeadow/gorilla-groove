@@ -32,12 +32,26 @@ ul {
   list-style-type: none;
 }
 
+input {
+  border-width: 1px; // Apparently Firefox on Linux puts a 6px border on all the inputs??
+}
+
 .hidden {
   visibility: hidden;
 }
 
 .display-none {
   display: none;
+}
+
+.display-flex {
+  display: flex;
+}
+
+.vertical-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .cutoff-text {

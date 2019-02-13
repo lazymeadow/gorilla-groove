@@ -75,17 +75,16 @@ export class YoutubeDlButton extends React.Component {
 	}
 
 	render() {
-		let buttonClass = this.state.downloading ? 'hidden' : '';
-		let loaderClass = this.state.downloading ? '' : 'hidden';
+		let buttonClass = this.state.downloading ? 'display-none' : '';
+		let loaderClass = this.state.downloading ? '' : 'display-none';
 		return (
-			<div className="youtube-dl-wrapper">
-				<button className={buttonClass} onClick={() => this.setModalOpen(true)}>
-					Download from YouTube
+			<div className="vertical-center">
+				<i className={`${buttonClass} fab fa-youtube`} onClick={() => this.setModalOpen(true)}>
 					<Modal
 						isOpen={this.state.modalOpen}
 						closeFunction={() => this.setModalOpen(false)}
 					>
-						<form className="form-modal youtube-dl-modal" onSubmit={(e) => this.submitDownloadForm(e)}>
+						<form className="form-modal" onSubmit={(e) => this.submitDownloadForm(e)}>
 							<div className="flex-label">
 								<label htmlFor="song-url">URL</label>
 								<input id="song-url" name="song-url" type="text" required/>
@@ -131,7 +130,7 @@ export class YoutubeDlButton extends React.Component {
 							<button>Download Song</button>
 						</form>
 					</Modal>
-				</button>
+				</i>
 				<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
 			</div>
 		)

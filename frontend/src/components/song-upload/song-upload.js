@@ -38,14 +38,13 @@ export class SongUpload extends React.Component {
 	}
 
 	render() {
-		let buttonClass = this.state.uploading ? 'hidden' : '';
-		let loaderClass = this.state.uploading ? '' : 'hidden';
+		let buttonClass = this.state.uploading ? 'display-none' : '';
+		let loaderClass = this.state.uploading ? '' : 'display-none';
 		// noinspection HtmlUnknownTarget
 		return (
-			<div className="upload-btn-wrapper">
-				<button className={`${buttonClass}`} onClick={() => this.openFileDialog()}>
-					Upload a file
-				</button>
+			<div className="vertical-center">
+				<i className={`${buttonClass} fas fa-cloud-upload-alt`} onClick={() => this.openFileDialog()}>
+				</i>
 				<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
 				<input
 					type="file"

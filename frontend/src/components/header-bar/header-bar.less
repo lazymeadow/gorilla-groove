@@ -1,13 +1,36 @@
 .header-bar {
   display: flex;
   flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 
   button {
     margin-right: 10px;
   }
 }
 .user-button-wrapper {
-  position: absolute;
-  top: 0;
-  right: 0;
+  display: flex;
+}
+
+.song-acquisition-icons {
+  display: flex;
+  margin-left: 50px;
+
+  > div {
+    margin-right: 5px;
+  }
+
+  img, i {
+    width: 37px;
+    padding: 3px;
+    margin: 7px;
+  }
+
+  i {
+    font-size: 1.5em;
+    background-color: @light-blue;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+  }
 }
