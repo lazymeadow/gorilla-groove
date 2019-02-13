@@ -3,6 +3,7 @@ import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
 import {TrackView} from "../../enums/track-view";
 import {EditableDiv} from "../editable-div/editable-div";
+import {AddPlaylistButton} from "../add-playlist/add-playlist";
 
 export class TrackSourceList extends React.Component {
 	constructor(props) {
@@ -10,8 +11,15 @@ export class TrackSourceList extends React.Component {
 		this.state = {
 			collapsedBookkeeping: [false, false, false],
 			dataSource: [
-				{section: TrackView.USER, data: []},
-				{section: TrackView.PLAYLIST, data: []}
+				{
+					section: TrackView.USER,
+					heading: 'User Libraries',
+					data: []
+				}, {
+					section: TrackView.PLAYLIST,
+					heading: <span className="playlist-heading">Playlists <AddPlaylistButton/></span>,
+					data: []
+			}
 			],
 			editedId: null
 		};
@@ -85,9 +93,9 @@ export class TrackSourceList extends React.Component {
 				</div>
 				{this.state.dataSource.map((node, i) => {
 					const label =
-						<span className="tree-node" onClick={() => this.handleParentNodeClick(i)}>
-							{node.section}
-						</span>;
+						<div className="tree-node" onClick={() => this.handleParentNodeClick(i)}>
+							{node.heading}
+						</div>;
 					return (
 						<TreeView
 							key={i}

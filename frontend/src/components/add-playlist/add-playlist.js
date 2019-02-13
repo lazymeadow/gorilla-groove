@@ -8,9 +8,10 @@ export class AddPlaylistButton extends React.Component {
 
 	render() {
 		return (
-			<button className="add-playlist-button" onClick={() => this.context.createPlaylist()}>
-				Create a playlist
-			</button>
+			<i className="fas fa-plus add-playlist-button" onClick={(e) => {
+				e.stopPropagation();
+				this.context.createPlaylist(e)
+			}}/>
 		)
 	}
 }
