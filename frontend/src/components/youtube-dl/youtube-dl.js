@@ -77,61 +77,69 @@ export class YoutubeDlButton extends React.Component {
 	render() {
 		let buttonClass = this.state.downloading ? 'display-none' : '';
 		let loaderClass = this.state.downloading ? '' : 'display-none';
+		let title = this.state.downloading ? '' : 'Download from YouTube';
+
 		return (
-			<div className="vertical-center" title="Download from YouTube">
-				<i className={`${buttonClass} fab fa-youtube`} onClick={() => this.setModalOpen(true)}>
-					<Modal
-						isOpen={this.state.modalOpen}
-						closeFunction={() => this.setModalOpen(false)}
+			<div className="vertical-center">
+				<div className="icon-container">
+					<i
+						className={`${buttonClass} fab fa-youtube`}
+						title={`${title}`}
+						onClick={() => this.setModalOpen(true)}
 					>
-						<form className="form-modal" onSubmit={(e) => this.submitDownloadForm(e)}>
-							<div className="flex-label">
-								<label htmlFor="song-url">URL</label>
-								<input id="song-url" name="song-url" type="text" required/>
-							</div>
+						<Modal
+							isOpen={this.state.modalOpen}
+							closeFunction={() => this.setModalOpen(false)}
+						>
+							<form className="form-modal" onSubmit={(e) => this.submitDownloadForm(e)}>
+								<div className="flex-label">
+									<label htmlFor="song-url">URL</label>
+									<input id="song-url" name="song-url" type="text" required/>
+								</div>
 
-							<h4>Optional Metadata</h4>
+								<h4>Optional Metadata</h4>
 
-							<div className="flex-label">
-								<label htmlFor="song-name">Name</label>
-								<input id="song-name" name="song-name" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-name">Name</label>
+									<input id="song-name" name="song-name" type="text"/>
+								</div>
 
-							<div className="flex-label">
-								<label htmlFor="song-artist">Artist</label>
-								<input id="song-artist" name="song-artist" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-artist">Artist</label>
+									<input id="song-artist" name="song-artist" type="text"/>
+								</div>
 
-							<div className="flex-label">
-								<label htmlFor="song-featuring">Featuring</label>
-								<input id="song-featuring" name="song-featuring" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-featuring">Featuring</label>
+									<input id="song-featuring" name="song-featuring" type="text"/>
+								</div>
 
-							<div className="flex-label">
-								<label htmlFor="song-album">Album</label>
-								<input id="song-album" name="song-album" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-album">Album</label>
+									<input id="song-album" name="song-album" type="text"/>
+								</div>
 
-							<div className="flex-label">
-								<label htmlFor="song-year">Release Year</label>
-								<input id="song-year" name="song-year" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-year">Release Year</label>
+									<input id="song-year" name="song-year" type="text"/>
+								</div>
 
-							<div className="flex-label">
-								<label htmlFor="song-track-number">Track Number</label>
-								<input id="song-track-number" name="song-track-number" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-track-number">Track Number</label>
+									<input id="song-track-number" name="song-track-number" type="text"/>
+								</div>
 
-							<div className="flex-label">
-								<label htmlFor="song-genre">Genre</label>
-								<input id="song-genre" name="song-genre" type="text"/>
-							</div>
+								<div className="flex-label">
+									<label htmlFor="song-genre">Genre</label>
+									<input id="song-genre" name="song-genre" type="text"/>
+								</div>
 
-							<button>Download Song</button>
-						</form>
-					</Modal>
-				</i>
-				<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
+								<button>Download Song</button>
+							</form>
+						</Modal>
+					</i>
+					<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
+				</div>
 			</div>
 		)
 	}

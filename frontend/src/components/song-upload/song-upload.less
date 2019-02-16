@@ -1,1 +1,72 @@
+@upload-color: #00AA00;
+#song-upload {
 
+  progress {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+
+    &::-moz-progress-bar {
+      background-color: fade(@upload-color, 50%);
+      border-radius: 0;
+      padding: 0;
+    }
+
+    &::-webkit-progress-bar {
+      background-color: @light-blue;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      border: 1px lightgrey groove;
+    }
+
+    &::-webkit-progress-value {
+      background-color: fade(@upload-color, 50%);
+      border-radius: 0;
+    }
+  }
+
+  position: relative;
+
+  &:hover .floating-window {
+    visibility: visible;
+  }
+
+  .overall-upload-progress {
+    max-width: calc(100% - 4px);
+  }
+
+  .song-progress-counter {
+    font-size: 0.8em;
+  }
+
+  .floating-window {
+    position: absolute;
+    top: 40px;
+    z-index: 10;
+    background-color: @light-blue;
+    border: 1px solid black;
+    padding: 10px;
+    visibility: hidden;
+    filter: drop-shadow(2px 2px 2px black);
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &:hover {
+      visibility: visible;
+    }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: 250px 100px auto;
+      grid-gap: 10px;
+      text-align: left;
+
+      .grid-head {
+        font-weight: bold;
+      }
+    }
+  }
+}

@@ -64,18 +64,35 @@ export class Api {
 		})
 	};
 
+	static upload(url, file, progressCallback) {
+		let fullUrl = this.getBaseUrl() + url;
 
-	static upload(url, file) {
-		let body = new FormData();
-		body.append('file', file);
+		return new Promise(function (resolve, reject) {
+			let formData = new FormData();
+			formData.append('file', file);
 
-		return fetch(this.getBaseUrl() + url, {
-			method: 'post',
-			headers: new Headers({
-				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-			}),
-			body: body
-		})
+			let xhr = new XMLHttpRequest();
+			xhr.open('POST', fullUrl);
+			xhr.setRequestHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`);
+			xhr.upload.addEventListener("progress", progressCallback, false);
+			xhr.onload = function () {
+				if (this.status >= 200 && this.status < 300) {
+					resolve(xhr.response);
+				} else {
+					reject({
+						status: this.status,
+						statusText: xhr.statusText
+					});
+				}
+			};
+			xhr.onerror = function () {
+				reject({
+					status: this.status,
+					statusText: xhr.statusText
+				});
+			};
+			xhr.send(formData);
+		});
 	}
 
 	static encodeUriParamsFromObject(params) {
