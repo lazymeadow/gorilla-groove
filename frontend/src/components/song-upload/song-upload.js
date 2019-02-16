@@ -7,7 +7,8 @@ export class SongUpload extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			uploading: false
+			uploading: false,
+			filesToUpload: []
 		}
 	}
 
@@ -16,25 +17,43 @@ export class SongUpload extends React.Component {
 		document.getElementById('file-upload').click();
 	}
 
-	uploadSong(inputEvent) {
-		this.setState({ uploading: true });
+	handleUploadStart(inputEvent) {
+		this.setState({
+			uploading: true,
+			filesToUpload: inputEvent.target.files
+		}, this.uploadSongs());
+	}
 
-		// This can be altered to be a multi-file upload, and perhaps it should be
-		let file = inputEvent.target.files[0];
+	async uploadSongs() {
+		let files = this.state.filesToUpload;
+
+		for (const file in files) {
+			let result = await this.uploadSingleSong(file);
+			console.log(result);
+		}
+
+		this.setState({ loading: false });
+		if (files.length === 1) {
+			toast.success(`'${files[0].name}' uploaded successfully`)
+		} else {
+			toast.success(`${files.length} songs uploaded successfully`)
+		}
+	}
+
+	uploadSingleSong(file) {
 		const name = file.name;
 
-		Api.upload('file/upload', file).then((response) => {
+		return Api.upload('file/upload', file).then((response) => {
 			response.json().then(track => {
 				this.context.addUploadToExistingLibraryView(track);
-				toast.success(`'${name}' uploaded successfully`)
 			}).catch(error => {
 				console.error(error);
-				toast.info('The song upload succeeded, but the new song could not be loaded');
+				toast.info(`The upload of ${name} succeeded, but failed to be loaded into the library view`);
 			});
 		}).catch(error => {
 			console.error(error);
 			toast.error(`The upload of '${name}' failed`)
-		}).finally(() => this.setState({ uploading: false }));
+		});
 	}
 
 	render() {
@@ -42,7 +61,7 @@ export class SongUpload extends React.Component {
 		let loaderClass = this.state.uploading ? '' : 'display-none';
 		// noinspection HtmlUnknownTarget
 		return (
-			<div className="vertical-center">
+			<div className="vertical-center" title="Upload songs">
 				<i className={`${buttonClass} fas fa-cloud-upload-alt`} onClick={() => this.openFileDialog()}>
 				</i>
 				<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
@@ -50,8 +69,13 @@ export class SongUpload extends React.Component {
 					type="file"
 					id="file-upload"
 					className="display-none"
-					onChange={(e) => this.uploadSong(e)}
+					onChange={(e) => this.handleUploadStart(e)}
+					multiple
 				/>
+
+				<div>
+					Uploading
+				</div>
 			</div>
 		)
 	}

@@ -78,7 +78,7 @@ export class YoutubeDlButton extends React.Component {
 		let buttonClass = this.state.downloading ? 'display-none' : '';
 		let loaderClass = this.state.downloading ? '' : 'display-none';
 		return (
-			<div className="vertical-center">
+			<div className="vertical-center" title="Download from YouTube">
 				<i className={`${buttonClass} fab fa-youtube`} onClick={() => this.setModalOpen(true)}>
 					<Modal
 						isOpen={this.state.modalOpen}
