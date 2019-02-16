@@ -20,23 +20,26 @@ export class SongUpload extends React.Component {
 	handleUploadStart(inputEvent) {
 		this.setState({
 			uploading: true,
-			filesToUpload: inputEvent.target.files
-		}, this.uploadSongs());
+			filesToUpload: [...inputEvent.target.files] // Destructure to turn weird FileList into a sane array type instead
+		}, this.uploadSongs);
 	}
 
 	async uploadSongs() {
 		let files = this.state.filesToUpload;
+		let successfulFiles = [];
 
-		for (const file in files) {
-			let result = await this.uploadSingleSong(file);
-			console.log(result);
+		for (const file of files) {
+			let uploadedFile = await this.uploadSingleSong(file);
+			if (uploadedFile) {
+				successfulFiles.push(uploadedFile);
+			}
 		}
 
-		this.setState({ loading: false });
-		if (files.length === 1) {
-			toast.success(`'${files[0].name}' uploaded successfully`)
+		this.setState({ uploading: false });
+		if (successfulFiles.length === 1) {
+			toast.success(`'${successfulFiles[0].name}' uploaded successfully`)
 		} else {
-			toast.success(`${files.length} songs uploaded successfully`)
+			toast.success(`${successfulFiles.length} songs uploaded successfully`)
 		}
 	}
 
@@ -44,8 +47,9 @@ export class SongUpload extends React.Component {
 		const name = file.name;
 
 		return Api.upload('file/upload', file).then((response) => {
-			response.json().then(track => {
+			return response.json().then(track => {
 				this.context.addUploadToExistingLibraryView(track);
+				return file;
 			}).catch(error => {
 				console.error(error);
 				toast.info(`The upload of ${name} succeeded, but failed to be loaded into the library view`);
