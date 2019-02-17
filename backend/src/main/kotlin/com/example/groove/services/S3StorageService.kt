@@ -42,7 +42,9 @@ class S3StorageService(
 	}
 
 	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
-		s3Client.copyObject(bucketName, "art/$trackSourceId.png", bucketName, "art/$trackDestinationId.png")
+		if (s3Client.doesObjectExist(bucketName, "art/$trackSourceId.png")) {
+			s3Client.copyObject(bucketName, "art/$trackSourceId.png", bucketName, "art/$trackDestinationId.png")
+		}
 	}
 
 	override fun deleteSong(fileName: String) {
