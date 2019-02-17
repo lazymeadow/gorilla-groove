@@ -2,6 +2,7 @@ import React from 'react';
 import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
+import * as LocalStorage from "../../local-storage";
 
 export class PlaybackControls extends React.Component {
 	constructor(props) {
@@ -17,7 +18,7 @@ export class PlaybackControls extends React.Component {
 			songUrl: null,
 			volume: 1,
 			muted: false,
-			playing: false
+			playing: false,
 		}
 	}
 
@@ -26,6 +27,12 @@ export class PlaybackControls extends React.Component {
 		audio.addEventListener('timeupdate', (e) => { this.handleTimeTick(e.target.currentTime) });
 		audio.addEventListener('durationchange', (e) => { this.handleDurationChange(e.target.duration) });
 		audio.addEventListener('ended', () => { this.handleSongEnd() });
+
+		audio.volume = LocalStorage.getNumber('volume', 1);
+		this.setState({ volume: audio.volume});
+
+		audio.muted = LocalStorage.getBoolean('muted', false);
+		this.setState({ muted: audio.muted });
 	}
 
 	handleSongEnd() {
@@ -142,12 +149,12 @@ export class PlaybackControls extends React.Component {
 	}
 
 	changeVolume(event) {
-		console.log("Change volume");
 		let audio = document.getElementById('audio');
 		let volume = event.target.value;
 
 		audio.volume = volume;
 		this.setState({ volume: volume });
+		LocalStorage.setNumber('volume', volume);
 	}
 
 	// noinspection JSMethodCanBeStatic
@@ -200,9 +207,11 @@ export class PlaybackControls extends React.Component {
 
 	toggleMute() {
 		let audio = document.getElementById('audio');
-		audio.muted = !this.state.muted;
+		let newMute = !this.state.muted;
+		audio.muted = newMute;
 
-		this.setState({ muted: !this.state.muted });
+		this.setState({ muted: newMute });
+		LocalStorage.setBoolean('muted', newMute);
 	}
 
 	render() {
@@ -267,6 +276,7 @@ export class PlaybackControls extends React.Component {
 							min="0"
 							max="1"
 							step="0.01"
+							value={this.state.volume}
 						/>
 					</div>
 				</div>

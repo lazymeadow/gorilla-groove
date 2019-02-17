@@ -40,6 +40,34 @@ export function getObject(key, defaultValue) {
 	return JSON.parse(value);
 }
 
+export function setNumber(key, number) {
+	if (number === null || number === undefined) {
+		throw Error(`Non-numeric value (${number}) passed to setNumber for key ${key}`);
+	}
+	let parsedNumber = Number.parseFloat(number);
+
+	if (isNaN(parsedNumber)) {
+		throw Error(`Non-numeric value (${number}) passed to setNumber for key ${key}`);
+	}
+
+	localStorage.setItem(key, number);
+}
+
+export function getNumber(key, defaultValue) {
+	const value = localStorage.getItem(key);
+
+	if (value === undefined || value === null) {
+		return defaultValue;
+	}
+
+	let parsedNumber = Number.parseFloat(value);
+	if (isNaN(parsedNumber)) {
+		throw Error(`Non-numeric value (${value}) retrieved with getNumber`);
+	}
+
+	return parsedNumber;
+}
+
 export function deleteKey(key) {
 	localStorage.removeItem(key);
 }
