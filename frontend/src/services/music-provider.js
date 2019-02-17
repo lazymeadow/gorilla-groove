@@ -35,7 +35,7 @@ export class MusicProvider extends React.Component {
 			'Album': [{ key: 'album' }, { key: 'trackNumber', dir: 'asc' }],
 			'Featuring': [{ key: 'featuring' }],
 			'Length': [{ key: 'length' }],
-			'Year': [{ key: 'releaseYear' }],
+			'Year': [{ key: 'releaseYear' }, { key: 'album', dir: 'asc' }, { key: 'trackNumber', dir: 'asc' }],
 			'Play Count': [{ key: 'playCount' }],
 			'Genre': [{ key: 'genre' }],
 			'Bit Rate': [{ key: 'bitRate' }],
