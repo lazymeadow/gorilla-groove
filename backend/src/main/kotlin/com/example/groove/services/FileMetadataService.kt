@@ -72,11 +72,15 @@ class FileMetadataService(
 	}
 
 	private fun parseTrackNumber(trackNumber: String?): Int? {
+		if (trackNumber == null) {
+			return null
+		}
+		val trimTrackNumber = trackNumber.trim()
+
 		return when {
-			trackNumber == null -> null
-			trackNumber.isBlank() -> null
-			trackNumber.toIntOrNull() != null -> trackNumber.toIntOrNull()
-			trackNumber.contains('/') -> trackNumber.split('/')[0].toIntOrNull()
+			trimTrackNumber.isBlank() -> null
+			trimTrackNumber.toIntOrNull() != null -> trimTrackNumber.toIntOrNull()
+			trimTrackNumber.contains('/') -> trimTrackNumber.split('/')[0].toIntOrNull()
 			else -> null
 		}
 	}
