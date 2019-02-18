@@ -355,8 +355,10 @@ export class TrackList extends React.Component {
 					<tr>
 						{this.props.columns.map((columnName, index) => {
 							return <th key={index} onClick={(e) => this.handleHeaderClick(e)}>
-								<span className="column-name">{columnName}</span>
-								<span className="sort-direction">{this.getSortIndicator(columnName)}</span>
+								<div>
+									<span className="column-name">{columnName}</span>
+									<span className="sort-direction">{this.getSortIndicator(columnName)}</span>
+								</div>
 							</th>
 						})}
 					</tr>

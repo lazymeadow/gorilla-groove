@@ -6,6 +6,12 @@
   }
 }
 
+.grip-container {
+  position: sticky !important;
+  z-index: 50;
+  top: 0;
+}
+
 .grip-handle {
   height: 20px !important; // Don't bring the resizing thing down into the table. Keep it on the header
 }
@@ -25,7 +31,22 @@
 
   thead {
     font-size: 0.90em;
-    border-bottom: 3px solid black;
+  }
+
+  th {
+    position: sticky;
+    z-index: 3;
+    top: 0;
+    padding: 0;
+    background-color: @light-blue;
+
+    div {
+      border-bottom: 2px solid black;
+      border-left: 2px solid black;
+    }
+    &:first-child > div {
+      border-left: none;
+    }
   }
 
   tbody {
@@ -38,11 +59,6 @@
 
   th {
     overflow: hidden;
-    border-left: 2px solid black;
-
-    &:first-child {
-      border-left: none;
-    }
   }
 
   .sort-direction {
