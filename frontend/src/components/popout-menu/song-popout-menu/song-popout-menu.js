@@ -2,6 +2,7 @@ import React from 'react';
 import {MusicContext} from "../../../services/music-provider";
 import {toast} from "react-toastify";
 import {TrackView} from "../../../enums/track-view";
+import {SongProperties} from "../../song-properties/song-properties";
 
 export class SongPopoutMenu extends React.Component {
 	constructor(props) {
@@ -66,19 +67,17 @@ export class SongPopoutMenu extends React.Component {
 	static getBaseMenuOptions(props) {
 		return [
 			{
-				text: "Play Now", clickHandler: (e) => {
+				text: 'Play Now', clickHandler: (e) => {
 					e.stopPropagation();
 					props.context.playTracks(props.getSelectedTracks());
 				}
-			},
-			{
-				text: "Play Next", clickHandler: (e) => {
+			}, {
+				text: 'Play Next', clickHandler: (e) => {
 					e.stopPropagation();
 					props.context.playTracksNext(props.getSelectedTracks());
 				}
-			},
-			{
-				text: "Play Last", clickHandler: (e) => {
+			}, {
+				text: 'Play Last', clickHandler: (e) => {
 					e.stopPropagation();
 					props.context.playTracksLast(props.getSelectedTracks());
 				}
@@ -88,7 +87,7 @@ export class SongPopoutMenu extends React.Component {
 	static getOwnLibraryOptions(props) {
 		return [
 			{
-				text: "Make Private", clickHandler: (e) => {
+				text: 'Make Private', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					props.context.setHidden(tracks, true).then(() => {
@@ -102,9 +101,8 @@ export class SongPopoutMenu extends React.Component {
 						toast.error('Failed to make the selected tracks private');
 					});
 				}
-			},
-			{
-				text: "Make Public", clickHandler: (e) => {
+			}, {
+				text: 'Make Public', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					props.context.setHidden(tracks, false).then(() => {
@@ -118,9 +116,8 @@ export class SongPopoutMenu extends React.Component {
 						toast.error('Failed to make the selected tracks public');
 					});
 				}
-			},
-			{
-				text: "Delete", clickHandler: (e) => {
+			}, {
+				text: 'Delete', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					props.context.deleteTracks(tracks, false).then(() => {
@@ -134,6 +131,18 @@ export class SongPopoutMenu extends React.Component {
 						toast.error('Failed to delete the selected tracks');
 					});
 				}
+			}, {
+				component: <SongProperties/>, clickHandler: (e) => {
+					console.log("Clicked");
+					// e.stopPropagation();
+					// const tracks = props.getSelectedTracks();
+					// props.context.deleteTracks(tracks, false).then(() => {
+					//
+					// }).catch((error) => {
+					// 	console.error(error);
+					// 	toast.error('Failed');
+					// });
+				}
 			}
 		];
 	}
@@ -141,7 +150,7 @@ export class SongPopoutMenu extends React.Component {
 	static getPlaylistSpecificOptions(props) {
 		return [
 			{
-				text: "Remove from Playlist", clickHandler: (e) => {
+				text: 'Remove from Playlist', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const playlistTrackIds = tracks.map(track => track.playlistTrackId);
@@ -164,7 +173,7 @@ export class SongPopoutMenu extends React.Component {
 	static getOtherUserOptions(props) {
 		return [
 			{
-				text: "Import to Library", clickHandler: (e) => {
+				text: 'Import to Library', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					props.context.importTracks(tracks).then(() => {
@@ -185,7 +194,7 @@ export class SongPopoutMenu extends React.Component {
 	static getNowPlayingOptions(props) {
 		return [
 			{
-				text: "Remove", clickHandler: (e) => {
+				text: 'Remove', clickHandler: (e) => {
 					e.stopPropagation();
 					const trackIndexes = props.getSelectedTrackIndexes();
 					props.context.removeFromNowPlaying(trackIndexes);
@@ -218,13 +227,18 @@ export class SongPopoutMenu extends React.Component {
 		});
 	}
 
+	// TODO should really figure out a nice way for this to utilize popout-menu.js with the changes I had to make
 	render() {
 		let expandedClass = this.props.expanded ? '' : 'hidden';
 		return (
 			<div className={`song-popout-menu popout-menu ${expandedClass}`} style={{left: this.props.x, top: this.props.y}}>
 				<ul>
 					{this.state.menuOptions.map((menuItem, index) => {
-						return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
+						if (menuItem.component) {
+							return <li key={index}>{menuItem.component}</li>
+						} else {
+							return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
+						}
 					})}
 				</ul>
 			</div>
