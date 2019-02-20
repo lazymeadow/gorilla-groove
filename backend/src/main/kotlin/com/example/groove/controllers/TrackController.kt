@@ -55,7 +55,7 @@ class TrackController(
 	// FIXME this should be a PATCH not a PUT. But I was having issues with PATCH failing the OPTIONS check
 	@PutMapping
 	fun updateTrackData(@RequestBody updateTrackDTO: UpdateTrackDTO): ResponseEntity<String> {
-		trackService.updateTrack(loadLoggedInUser(), updateTrackDTO)
+		trackService.updateTracks(loadLoggedInUser(), updateTrackDTO)
 
 		return ResponseEntity(HttpStatus.OK)
 	}

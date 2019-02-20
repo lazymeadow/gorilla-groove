@@ -1,7 +1,7 @@
 package com.example.groove.dto
 
 data class UpdateTrackDTO(
-		val trackId: Long,
+		val trackIds: List<Long>,
 		val name: String?,
 		val artist: String?,
 		val featuring: String?,

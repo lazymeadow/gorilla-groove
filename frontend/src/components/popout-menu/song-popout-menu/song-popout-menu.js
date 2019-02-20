@@ -132,17 +132,7 @@ export class SongPopoutMenu extends React.Component {
 					});
 				}
 			}, {
-				component: <SongProperties/>, clickHandler: (e) => {
-					console.log("Clicked");
-					// e.stopPropagation();
-					// const tracks = props.getSelectedTracks();
-					// props.context.deleteTracks(tracks, false).then(() => {
-					//
-					// }).catch((error) => {
-					// 	console.error(error);
-					// 	toast.error('Failed');
-					// });
-				}
+				component: <SongProperties getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}
 		];
 	}

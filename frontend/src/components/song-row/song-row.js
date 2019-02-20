@@ -20,6 +20,8 @@ export class SongRow extends React.Component {
 	}
 	*/
 
+	// FIXME Would probably be good to keep a mapping of these conversions in one location...
+	// they also exist in the music-provider
 	// noinspection JSMethodCanBeStatic
 	getUserTrackPropertyValue(property, userTrack, rowIndex) {
 		switch (property) {
@@ -77,7 +79,10 @@ export class SongRow extends React.Component {
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={(newValue) => {
-										this.context.updateTrack(this.props.userTrack, columnName, newValue);
+										let newProperties = {};
+										newProperties[columnName] = newValue;
+
+										this.context.updateTracks([this.props.userTrack], newProperties, true);
 										this.forceUpdate();
 									}}
 								/>

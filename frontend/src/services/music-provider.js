@@ -87,7 +87,7 @@ export class MusicProvider extends React.Component {
 			createPlaylist: (...args) => this.createPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
 			removeFromNowPlaying: (...args) => this.removeFromNowPlaying(...args),
-			updateTrack: (...args) => this.updateTrack(...args),
+			updateTracks: (...args) => this.updateTracks(...args),
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
 			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
@@ -534,6 +534,7 @@ export class MusicProvider extends React.Component {
 			});
 	}
 
+	// @Deprecated
 	updateTrack(track, displayColumnName, newValue) {
 		const columnName = this.trackKeyConversions[displayColumnName];
 
@@ -543,6 +544,33 @@ export class MusicProvider extends React.Component {
 		track[columnName] = newValue;
 
 		return Api.put('track', params).catch((error) => {
+			console.error(error);
+			toast.error("Failed to updated song data")
+		})
+	}
+
+	updateTracks(tracks, updatedData, usingDisplayNames) {
+		// Convert frontend column names to backend names
+		let params;
+
+		if (usingDisplayNames) {
+			params = Util.mapKeys(updatedData, (key) => {
+				return this.trackKeyConversions[key];
+			});
+		} else {
+			params = updatedData;
+		}
+
+		params.trackIds = tracks.map(track => track.id);
+
+		// Update the local track data to be in sync
+		tracks.forEach(track => {
+			Object.keys(params).forEach(property => {
+				track[property] = params[property];
+			});
+		});
+
+		return Api.put('track', params).catch(error => {
 			console.error(error);
 			toast.error("Failed to updated song data")
 		})

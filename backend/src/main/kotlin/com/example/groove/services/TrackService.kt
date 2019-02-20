@@ -59,21 +59,23 @@ class TrackService(
 	}
 
 	@Transactional
-	fun updateTrack(updatingUser: User, updateTrackDTO: UpdateTrackDTO) {
-		val track = trackRepository.findById(updateTrackDTO.trackId).unwrap()
+	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO) {
+		updateTrackDTO.trackIds.forEach { trackId ->
+			val track = trackRepository.findById(trackId).unwrap()
 
-		if (track == null || track.user != loadLoggedInUser()) {
-			throw IllegalArgumentException("No track found by ID ${updateTrackDTO.trackId}!")
+			if (track == null || track.user != loadLoggedInUser()) {
+				throw IllegalArgumentException("No track found by ID $trackId!")
+			}
+
+			updateTrackDTO.name?.let { track.name = it }
+			updateTrackDTO.artist?.let { track.artist = it }
+			updateTrackDTO.featuring?.let { track.featuring = it }
+			updateTrackDTO.album?.let { track.album = it }
+			updateTrackDTO.releaseYear?.let { track.releaseYear = it }
+			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
+			updateTrackDTO.note?.let { track.note = it }
+			updateTrackDTO.genre?.let { track.genre = it }
 		}
-
-		updateTrackDTO.name?.let { track.name = it }
-		updateTrackDTO.artist?.let { track.artist = it }
-		updateTrackDTO.featuring?.let { track.featuring = it }
-		updateTrackDTO.album?.let { track.album = it }
-		updateTrackDTO.releaseYear?.let { track.releaseYear = it }
-		updateTrackDTO.trackNumber?.let { track.trackNumber = it }
-		updateTrackDTO.note?.let { track.note = it }
-		updateTrackDTO.genre?.let { track.genre = it }
 	}
 
 	@Transactional
