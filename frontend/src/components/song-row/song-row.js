@@ -82,7 +82,7 @@ export class SongRow extends React.Component {
 										let newProperties = {};
 										newProperties[columnName] = newValue;
 
-										this.context.updateTracks([this.props.userTrack], newProperties, true);
+										this.context.updateTracks([this.props.userTrack], null, newProperties, true);
 										this.forceUpdate();
 									}}
 								/>

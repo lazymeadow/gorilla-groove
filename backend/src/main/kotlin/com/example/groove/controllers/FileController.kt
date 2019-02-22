@@ -8,7 +8,6 @@ import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -40,13 +39,6 @@ class FileController(
 
 		logger.info("File upload complete for ${file.name} in $timeToUpload")
 		return track!!
-    }
-
-    @PostMapping("/upload-multiple-files")
-    fun uploadMultipleFiles(@RequestParam("files") files: Array<MultipartFile>): ResponseEntity<String> {
-        files.map { uploadFile(it) }
-
-        return ResponseEntity(HttpStatus.CREATED)
     }
 
     @GetMapping("/download")

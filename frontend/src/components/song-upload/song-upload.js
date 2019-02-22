@@ -68,8 +68,9 @@ export class SongUpload extends React.Component {
 		const name = file.fileData.name;
 
 		return Api.upload(
+			'POST',
 			'file/upload',
-			file.fileData,
+			{ file: file.fileData },
 			(e) => this.handleFileUploadProgress(e, file)
 		).then((response) => {
 			file.uploadStage = FileProgress.DONE;

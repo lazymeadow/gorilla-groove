@@ -64,15 +64,18 @@ export class Api {
 		})
 	};
 
-	static upload(url, file, progressCallback) {
+	static upload(httpMethod, url, params, progressCallback) {
 		let fullUrl = this.getBaseUrl() + url;
 
 		return new Promise(function (resolve, reject) {
 			let formData = new FormData();
-			formData.append('file', file);
+
+			Object.keys(params).forEach(paramKey => {
+				formData.append(paramKey, params[paramKey]);
+			});
 
 			let xhr = new XMLHttpRequest();
-			xhr.open('POST', fullUrl);
+			xhr.open(httpMethod, fullUrl);
 			xhr.setRequestHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`);
 			xhr.upload.addEventListener("progress", progressCallback, false);
 			xhr.onload = function () {

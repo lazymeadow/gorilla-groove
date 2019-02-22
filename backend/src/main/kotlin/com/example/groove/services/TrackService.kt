@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
 import java.util.*
 
@@ -22,7 +23,8 @@ import java.util.*
 class TrackService(
 		private val trackRepository: TrackRepository,
 		private val trackHistoryRepository: TrackHistoryRepository,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val songIngestionService: SongIngestionService
 ) {
 
 	@Transactional(readOnly = true)
@@ -59,7 +61,7 @@ class TrackService(
 	}
 
 	@Transactional
-	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO) {
+	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?) {
 		updateTrackDTO.trackIds.forEach { trackId ->
 			val track = trackRepository.findById(trackId).unwrap()
 
@@ -75,6 +77,10 @@ class TrackService(
 			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
 			updateTrackDTO.note?.let { track.note = it }
 			updateTrackDTO.genre?.let { track.genre = it }
+
+			if (albumArt != null) {
+				songIngestionService.storeAlbumArtForTrack(albumArt, track)
+			}
 		}
 	}
 

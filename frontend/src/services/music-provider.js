@@ -549,28 +549,34 @@ export class MusicProvider extends React.Component {
 		})
 	}
 
-	updateTracks(tracks, updatedData, usingDisplayNames) {
+	updateTracks(tracks, albumArt, trackData, usingDisplayNames) {
 		// Convert frontend column names to backend names
-		let params;
+		let trackParams;
 
 		if (usingDisplayNames) {
-			params = Util.mapKeys(updatedData, (key) => {
+			trackParams = Util.mapKeys(trackData, (key) => {
 				return this.trackKeyConversions[key];
 			});
 		} else {
-			params = updatedData;
+			trackParams = trackData;
 		}
 
-		params.trackIds = tracks.map(track => track.id);
+		trackParams.trackIds = tracks.map(track => track.id);
 
 		// Update the local track data to be in sync
 		tracks.forEach(track => {
-			Object.keys(params).forEach(property => {
-				track[property] = params[property];
+			Object.keys(trackParams).forEach(property => {
+				track[property] = trackParams[property];
 			});
 		});
 
-		return Api.put('track', params).catch(error => {
+		let params = { updateTrackJson: JSON.stringify(trackParams) };
+		if (albumArt) {
+			params.albumArt = albumArt;
+		}
+
+		// Use Api.upload here because we might have image data
+		return Api.upload('PUT', 'track', params).catch(error => {
 			console.error(error);
 			toast.error("Failed to updated song data")
 		})

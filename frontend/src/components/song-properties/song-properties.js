@@ -1,5 +1,4 @@
 import React from 'react';
-import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 
@@ -19,7 +18,8 @@ export class SongProperties extends React.Component {
 			bitRate: '',
 			sampleRate: '',
 			note: '',
-			albumArt: './images/unknown-art.jpg'
+			albumArt: null,
+			albumArtUrl: './images/unknown-art.jpg'
 		};
 
 		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNum',
@@ -64,13 +64,18 @@ export class SongProperties extends React.Component {
 	updateTracks(event) {
 		event.preventDefault();
 
-		this.context.updateTracks(this.props.getSelectedTracks(), this.getUnchangedProperties(), false).then(() => {
+		this.context.updateTracks(
+			this.props.getSelectedTracks(),
+			this.state.albumArt,
+			this.getChangedProperties(),
+			false
+		).then(() => {
 			this.setState({ modalOpen: false });
 			this.context.forceTrackUpdate();
 		});
 	}
 
-	getUnchangedProperties() {
+	getChangedProperties() {
 		let changedProperties = {};
 
 		this.inputNames.forEach(inputName => {
@@ -83,6 +88,26 @@ export class SongProperties extends React.Component {
 		});
 
 		return changedProperties;
+	}
+
+	// noinspection JSMethodCanBeStatic
+	openFileDialog() {
+		document.getElementById('picture-upload').click();
+	}
+
+	handlePictureUpload(inputEvent) {
+		let file = inputEvent.target.files[0];
+
+		// Preview the the album art for the user before upload
+		let reader = new FileReader();
+		reader.onload = (e) => {
+			this.setState({
+				albumArt: file,
+				albumArtUrl: e.target.result
+			});
+		};
+
+		reader.readAsDataURL(file);
 	}
 
 	render() {
@@ -209,7 +234,14 @@ export class SongProperties extends React.Component {
 
 								<div
 									className="album-art"
-									style={{ backgroundImage: 'url(' + this.state.albumArt + ')' }}
+									style={{ backgroundImage: 'url(' + this.state.albumArtUrl + ')' }}
+									onClick={() => this.openFileDialog()}
+								/>
+								<input
+									type="file"
+									id="picture-upload"
+									className="display-none"
+									onChange={(e) => this.handlePictureUpload(e)}
 								/>
 
 							</div>

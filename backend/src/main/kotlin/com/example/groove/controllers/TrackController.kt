@@ -6,12 +6,15 @@ import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeService
 import com.example.groove.util.loadLoggedInUser
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("api/track")
@@ -53,9 +56,16 @@ class TrackController(
 	}
 
 	// FIXME this should be a PATCH not a PUT. But I was having issues with PATCH failing the OPTIONS check
+	// Can't seem to deserialize a multipart file alongside other data using @RequestBody. So this is my dumb solution
 	@PutMapping
-	fun updateTrackData(@RequestBody updateTrackDTO: UpdateTrackDTO): ResponseEntity<String> {
-		trackService.updateTracks(loadLoggedInUser(), updateTrackDTO)
+	fun updateTrackData(
+			@RequestParam("albumArt") albumArt: MultipartFile?,
+			@RequestParam("updateTrackJson") updateTrackJson: String
+	): ResponseEntity<String> {
+		val mapper = ObjectMapper().registerKotlinModule()
+		val updateTrackDTO = mapper.readValue(updateTrackJson, UpdateTrackDTO::class.java)
+
+		trackService.updateTracks(loadLoggedInUser(), updateTrackDTO, albumArt)
 
 		return ResponseEntity(HttpStatus.OK)
 	}

@@ -1,5 +1,7 @@
 package com.example.groove.dto
 
+import org.springframework.web.multipart.MultipartFile
+
 data class UpdateTrackDTO(
 		val trackIds: List<Long>,
 		val name: String?,
@@ -9,5 +11,6 @@ data class UpdateTrackDTO(
 		val trackNumber: Int?,
 		val releaseYear: Int?,
 		val genre: String?,
-		val note: String?
+		val note: String?,
+		val albumArt: MultipartFile?
 )

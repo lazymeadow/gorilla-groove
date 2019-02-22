@@ -20,7 +20,7 @@ class SystemStorageService(
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
 
-		song.copyTo(destinationFile)
+		song.copyTo(destinationFile, true)
 	}
 
 	override fun storeAlbumArt(albumArt: File, trackId: Long) {
@@ -30,7 +30,7 @@ class SystemStorageService(
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
 
-		albumArt.copyTo(destinationFile)
+		albumArt.copyTo(destinationFile, true)
 	}
 
 	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
@@ -44,7 +44,7 @@ class SystemStorageService(
 		val destinationDirectory = trackDestinationId / 1000
 		val destinationFile = File("${musicProperties.albumArtDirectoryLocation}$destinationDirectory/$trackDestinationId.png")
 
-		sourceFile.copyTo(destinationFile)
+		sourceFile.copyTo(destinationFile, true)
 	}
 
 	override fun deleteSong(fileName: String) {

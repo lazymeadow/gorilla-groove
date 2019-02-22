@@ -11,10 +11,8 @@ import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.util.StringUtils
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.io.IOException
 import java.net.MalformedURLException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -22,7 +20,6 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
 import javax.imageio.ImageIO
-import kotlin.system.measureTimeMillis
 
 @Service
 class SongIngestionService(
@@ -37,7 +34,6 @@ class SongIngestionService(
 			.toAbsolutePath().normalize()
 
 	init {
-
 		try {
 			Files.createDirectories(this.fileStorageLocation)
 		} catch (ex: Exception) {
@@ -45,36 +41,47 @@ class SongIngestionService(
 		}
 	}
 
-	fun storeSongForUser(file: MultipartFile, user: User): Track {
-		// Normalize file name
-		val fileName = StringUtils.cleanPath(file.originalFilename!!)
+	private fun storeMultipartFile(file: MultipartFile): String {
+		// Discard the file's original name; but keep the extension
+		val extension = file.originalFilename!!.split(".").last()
+		val fileName = UUID.randomUUID().toString() + "." + extension
 
-		try {
-			// Check if the file's name contains invalid characters
-			if (fileName.contains("..")) {
-				throw FileStorageException("Sorry! Filename contains invalid path sequence $fileName")
-			}
+		// Copy the song to a temporary location for further processing
+		val targetLocation = fileStorageLocation.resolve(fileName)
+		Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
 
-			// TODO: Change this to allow unique files with same filename
-			// Copy the song to a temporary location for further processing
-			val targetLocation = fileStorageLocation.resolve(fileName)
-			Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
+		return fileName
+	}
 
-			val tmpImageFile = ripAndSaveAlbumArt(fileName)
+	fun storeSongForUser(songFile: MultipartFile, user: User): Track {
+		logger.info("Storing song ${songFile.originalFilename} for user: ${user.name}")
 
-			// TODO remove old files from the tmp (tmpDir) directory once saving and conversion are finished
-			val track = convertAndSaveTrackForUser(fileName, user)
+		val fileName = storeMultipartFile(songFile)
+		val tmpImageFile = ripAndSaveAlbumArt(fileName)
 
-			if (tmpImageFile != null) {
-				fileStorageService.storeAlbumArt(tmpImageFile, track.id)
-				// We have stored the file in its permanent home. We can delete this tmp file
-				tmpImageFile.delete()
-			}
+		val track = convertAndSaveTrackForUser(fileName, user)
 
-			return track
-		} catch (ex: IOException) {
-			throw FileStorageException("Could not store file $fileName. Please try again!", ex)
+		if (tmpImageFile != null) {
+			fileStorageService.storeAlbumArt(tmpImageFile, track.id)
+			// We have stored the songFile in its permanent home. We can delete this tmp songFile
+			tmpImageFile.delete()
 		}
+
+		return track
+	}
+
+	fun storeAlbumArtForTrack(albumArt: MultipartFile, track: Track) {
+		logger.info("Storing album artwork ${albumArt.originalFilename} for track ID: ${track.id}")
+
+		val fileName = storeMultipartFile(albumArt)
+
+		val imageFile = fileStorageLocation.resolve(fileName).toFile()
+		if (!imageFile.exists()) {
+			throw IllegalStateException("Could not store album art for track ID: ${track.id}")
+		}
+
+		fileStorageService.storeAlbumArt(imageFile, track.id)
+		imageFile.delete()
 	}
 
 	// It's important to rip the album art out PRIOR to running the song
@@ -95,30 +102,21 @@ class SongIngestionService(
 
 	@Transactional
 	fun convertAndSaveTrackForUser(fileName: String, user: User): Track {
-		var convertedFile: File? = null
+		logger.info("Saving file $fileName for user ${user.name}")
 
-		// Timing for benchmarks while messing with AWS. Remove later
-		val timeToConvert = measureTimeMillis {
-			// convert to .ogg
-			// TODO this also moves the file from the tmpDir to its final home in the music dir
-			// TODO we probably don't want the FFmpeg service responsible for moving the file, just converting it
-
-			convertedFile = ffmpegService.convertTrack(fileName)
-		}
-
-		logger.info("FFmpeg convert of $fileName done in $timeToConvert")
+		val convertedFile = ffmpegService.convertTrack(fileName)
 
 		// add the track to database
-		val track = fileMetadataService.createTrackFromSongFile(convertedFile!!, user)
+		val track = fileMetadataService.createTrackFromSongFile(convertedFile, user)
 		trackRepository.save(track)
 
-		val renamedSongFile = renameSongFile(convertedFile!!, track)
+		val renamedSongFile = renameSongFile(convertedFile, track)
 
 		fileStorageService.storeSong(renamedSongFile, track.id)
 
 		// We have stored the file in S3, (or copied it to its final home)
 		// We no longer need these files and can clean it up to save space
-		convertedFile!!.delete()
+		convertedFile.delete()
 		renamedSongFile.delete()
 
 		return track
