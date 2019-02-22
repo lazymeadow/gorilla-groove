@@ -42,8 +42,14 @@ class FileMetadataService(
 			audioFile.tag.deleteArtworkField()
 			audioFile.commit()
 
-			// Return the first album art that we found
-			artwork[0].image
+			// Check that the image data actually exists....
+			// Encountered Alestorm songs with album data that existed, but was empty
+			if (artwork[0].binaryData != null) {
+				// Return the first album art that we found
+				artwork[0].image
+			} else {
+				null
+			}
 		} else {
 			null
 		}
