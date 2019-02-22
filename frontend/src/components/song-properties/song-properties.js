@@ -1,6 +1,7 @@
 import React from 'react';
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
+import {toast} from "react-toastify";
 
 export class SongProperties extends React.Component {
 	constructor(props) {
@@ -8,6 +9,7 @@ export class SongProperties extends React.Component {
 
 		this.state = {
 			modalOpen: false,
+			loading: false,
 			name: '',
 			artist: '',
 			featuring: '',
@@ -64,6 +66,8 @@ export class SongProperties extends React.Component {
 	updateTracks(event) {
 		event.preventDefault();
 
+		this.setState({ loading: true });
+
 		this.context.updateTracks(
 			this.props.getSelectedTracks(),
 			this.state.albumArt,
@@ -72,7 +76,8 @@ export class SongProperties extends React.Component {
 		).then(() => {
 			this.setState({ modalOpen: false });
 			this.context.forceTrackUpdate();
-		});
+			toast.success("Track data updated successfully");
+		}).finally(() => this.setState({ loading: false }));
 	}
 
 	getChangedProperties() {
@@ -111,6 +116,7 @@ export class SongProperties extends React.Component {
 	}
 
 	render() {
+		// noinspection HtmlUnknownTarget
 		return (
 			<div onClick={() => this.setModalOpen(true)}>
 				Properties
@@ -119,6 +125,14 @@ export class SongProperties extends React.Component {
 					closeFunction={() => this.setModalOpen(false)}
 				>
 					<div id="song-properties" className="form-modal">
+						{
+							this.state.loading ? (
+									<div className="loading-container">
+										<img className="animation-spin" src="./images/logo.png" width="150" height="150"/>
+									</div>
+								) : <div/>
+						}
+
 						<form onSubmit={(e) => this.updateTracks(e)}>
 
 							<h2>Track Properties</h2>
@@ -247,7 +261,7 @@ export class SongProperties extends React.Component {
 							</div>
 							<div className="property-note">
 								Note
-								<textarea/>
+								<textarea onChange={e => this.inputChange('note', e)}/>
 							</div>
 
 							<div>

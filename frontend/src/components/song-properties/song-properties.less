@@ -1,4 +1,5 @@
 #song-properties {
+  position: relative;
   width: 500px;
 
   .long-property {
@@ -38,8 +39,18 @@
 
     textarea {
       resize: none;
-      width: 100%;
+      width: calc(100% - 10px);
     }
+  }
+
+  .loading-container {
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: RGBA(255, 255, 255, 0.8);
   }
 }
 
