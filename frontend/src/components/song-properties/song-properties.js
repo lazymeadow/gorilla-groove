@@ -69,12 +69,19 @@ export class SongProperties extends React.Component {
 	updateTracks(event) {
 		event.preventDefault();
 
+		let unchangedProperties = this.getChangedProperties();
+		if (Object.keys(unchangedProperties).length === 0 && this.state.albumArt === null) {
+			toast.info("No track data changes were made");
+			this.setState({ modalOpen: false });
+			return;
+		}
+
 		this.setState({ loading: true });
 
 		this.context.updateTracks(
 			this.props.getSelectedTracks(),
 			this.state.albumArt,
-			this.getChangedProperties(),
+			unchangedProperties,
 			false
 		).then(() => {
 			this.setState({ modalOpen: false });
