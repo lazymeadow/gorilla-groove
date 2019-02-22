@@ -21,7 +21,7 @@ export class SongProperties extends React.Component {
 			sampleRate: '',
 			note: '',
 			albumArt: null,
-			albumArtUrl: './images/unknown-art.jpg'
+			albumArtUrl: ''
 		};
 
 		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNum',
@@ -48,6 +48,9 @@ export class SongProperties extends React.Component {
 			newState[inputName] = originalValue;
 			newState.originalValues[inputName] = originalValue;
 		});
+
+		newState.albumArtUrl = './images/unknown-art.jpg';
+		newState.albumArt = null;
 
 		this.setState(newState);
 	}
