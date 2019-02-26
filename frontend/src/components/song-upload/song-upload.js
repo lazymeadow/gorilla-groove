@@ -127,12 +127,8 @@ export class SongUpload extends React.Component {
 		// noinspection HtmlUnknownTarget
 		return (
 			<div id="song-upload" className="vertical-center">
-				<div className="icon-container">
-					<i
-						className={`${buttonClass} fas fa-cloud-upload-alt`}
-						title={title}
-						onClick={() => this.openFileDialog()}
-					>
+				<div className="icon-container" onClick={() => this.openFileDialog()}>
+					<i className={`${buttonClass} fas fa-cloud-upload-alt`} title={title}>
 					</i>
 					<div className={`${loaderClass}`}>
 						<span className="song-progress-counter">
