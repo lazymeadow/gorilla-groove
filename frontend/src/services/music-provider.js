@@ -50,6 +50,7 @@ export class MusicProvider extends React.Component {
 
 		this.state = {
 			viewedTracks: [],
+			loadingTracks: false,
 			trackView: TrackView.LIBRARY,
 			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
 			totalTracksToFetch: 0,
@@ -166,11 +167,16 @@ export class MusicProvider extends React.Component {
 
 		this.buildTrackLoadParams(params);
 
+		if (!append) {
+			this.setState({ viewedTracks: [] });
+		}
+		this.setState({ loadingTracks: true });
+
 		return Api.get('track', params).then(result => {
 			this.addTracksToView(result, append);
 		}).catch((error) => {
 			console.error(error)
-		});
+		}).finally(() => this.setState({ loadingTracks: false }));
 	}
 
 	loadMoreTracks() {
@@ -421,8 +427,13 @@ export class MusicProvider extends React.Component {
 
 		this.setState({
 			trackView: TrackView.PLAYLIST,
-			viewedEntityId: playlistId
+			viewedEntityId: playlistId,
+			loadingTracks: true
 		});
+
+		if (!append) {
+			this.setState({ viewedTracks: [] });
+		}
 
 		return Api.get('playlist/track', params).then(result => {
 			// We need to store the playlistTrackId for later, in case we want to remove an entry from the playlist
@@ -434,7 +445,7 @@ export class MusicProvider extends React.Component {
 				return trackData
 			});
 			this.addTracksToView(result, append);
-		})
+		}).finally(() => this.setState({ loadingTracks: false }));
 	}
 
 	addTracksToView(result, append) {
@@ -611,7 +622,7 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			columnPreferences: columnPreferences,
 		});
-		LocalStorage.setBoolean('columnPreferences', columnPreferences);
+		LocalStorage.setObject('columnPreferences', columnPreferences);
 	}
 
 	setUseRightClickMenu(useMenu) {

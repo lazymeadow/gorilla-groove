@@ -1,92 +1,105 @@
-// All the gross !importants in this file override styles in the column-resizer library
-.grip-lastgrip {
-  margin-left: -5px !important; // Bring the last grip selector in, so we don't have a scroll bar without content to scroll
-  .grip-resizable {
-    width: 4px !important; // The last grip selector for resizing is unnecessarily large. Shrink it
-  }
-}
+.track-list {
+  height: 100%;
 
-.grip-container {
-  position: sticky !important;
-  z-index: 50;
-  top: 0;
-}
-
-.grip-handle {
-  height: 20px !important; // Don't bring the resizing thing down into the table. Keep it on the header
-}
-
-.track-table {
-  text-align: left;
-  position: relative; // Keep the cogwheel from flying off into the nether on Chrome, since it ignores relative positioning on <tr>s
-  border-collapse: collapse;
-  table-layout: fixed;
-  overflow-x: scroll;
-  -moz-user-select: none;
-  user-select: none;
-
-  &.track-table { // Increase the specificity of this rule in order to override the library. !important isn't enough
-    width: 100% !important; // Without this rule the columns can't be smaller than the content they contain (aka useless)
+  // All the gross !importants in this file override styles in the column-resizer library
+  .grip-lastgrip {
+    margin-left: -5px !important; // Bring the last grip selector in, so we don't have a scroll bar without content to scroll
+    .grip-resizable {
+      width: 4px !important; // The last grip selector for resizing is unnecessarily large. Shrink it
+    }
   }
 
-  thead {
-    font-size: 0.90em;
-  }
-
-  th {
-    position: sticky;
-    z-index: 3;
+  .grip-container {
+    position: sticky !important;
+    z-index: 50;
     top: 0;
-    padding: 0;
-    background-color: @light-blue;
+  }
 
-    div {
-      border-bottom: 2px solid @deeper-blue;
-      border-left: 2px solid @deeper-blue;
+  .grip-handle {
+    height: 20px !important; // Don't bring the resizing thing down into the table. Keep it on the header
+  }
+
+  .track-table {
+    text-align: left;
+    position: relative; // Keep the cogwheel from flying off into the nether on Chrome, since it ignores relative positioning on <tr>s
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow-x: scroll;
+    -moz-user-select: none;
+    user-select: none;
+
+    &.track-table { // Increase the specificity of this rule in order to override the library. !important isn't enough
+      width: 100% !important; // Without this rule the columns can't be smaller than the content they contain (aka useless)
     }
-    &:first-child > div {
-      border-left: none;
+
+    thead {
+      font-size: 0.90em;
+    }
+
+    th {
+      position: sticky;
+      z-index: 3;
+      top: 0;
+      padding: 0;
+      background-color: @light-blue;
+
+      div {
+        border-bottom: 2px solid @deeper-blue;
+        border-left: 2px solid @deeper-blue;
+      }
+      &:first-child > div {
+        border-left: none;
+      }
+    }
+
+    tbody {
+      font-size: 0.85em;
+    }
+
+    td, th {
+      white-space: pre;
+    }
+
+    th {
+      overflow: hidden;
+    }
+
+    .sort-direction {
+      float: right;
     }
   }
 
-  tbody {
-    font-size: 0.85em;
+  .song-row {
+    &.selected.selected { // Double up the selector so it's more specific and overrides the unselected colors
+      background-color: @select-blue;
+      color: white;
+    }
+
+    &.played {
+      font-weight: bold;
+    }
+
+    &:nth-child(even) {
+      background-color: @deep-blue;
+    }
+
+    &:nth-child(odd) {
+      background-color: @light-blue;
+    }
+
+    td > div {
+      margin-left: 5px;
+      margin-right: 5px;
+      overflow-x: hidden;
+    }
   }
 
-  td, th {
-    white-space: pre;
-  }
-
-  th {
-    overflow: hidden;
-  }
-
-  .sort-direction {
-    float: right;
-  }
-}
-
-.song-row {
-  &.selected.selected { // Double up the selector so it's more specific and overrides the unselected colors
-    background-color: @select-blue;
-    color: white;
-  }
-
-  &.played {
-    font-weight: bold;
-  }
-
-  &:nth-child(even) {
-    background-color: @deep-blue;
-  }
-
-  &:nth-child(odd) {
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: calc(100% - 20px);
     background-color: @light-blue;
-  }
-
-  td > div {
-    margin-left: 5px;
-    margin-right: 5px;
-    overflow-x: hidden;
   }
 }

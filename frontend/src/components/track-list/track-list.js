@@ -146,9 +146,11 @@ export class TrackList extends React.Component {
 	}
 
 	handleScroll() {
+		let scrollBuffer = 200; // Amount of space to scroll to in order to start loading more tracks
+
 		let container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.state.loading
-			&& container.scrollHeight < container.offsetHeight + container.scrollTop + 5
+			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
 			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
 
 			this.setState({ loading: true });
@@ -337,7 +339,7 @@ export class TrackList extends React.Component {
 
 	render() {
 		return (
-			<div>
+			<div className="track-list">
 				<div>
 					<SongPopoutMenu
 						context={this.context} // Pass in as prop, so it can be accessed in getDerivedState
@@ -395,6 +397,13 @@ export class TrackList extends React.Component {
 					})}
 					</tbody>
 				</table>
+				{
+					this.context.loadingTracks && this.props.trackView ? (
+						<div className="loading-container">
+							<img className="animation-spin" src="./images/logo.png" width="150" height="150"/>
+						</div>
+					) : <div/>
+				}
 			</div>
 		)
 	};
