@@ -83,13 +83,12 @@ export class TrackSourceList extends React.Component {
 	render() {
 		let librarySelected = this.context.trackView === TrackView.LIBRARY ? 'selected' : '';
 		return (
-			<div className="view-source-list">
-				View Songs From:
+			<div id="view-source-list">
 				<div
 					className={`library-option ${librarySelected}`}
 					onClick={() => this.loadOwnLibrary()}
 				>
-					Library
+					<span className="my-library">My Library</span>
 				</div>
 				{this.state.dataSource.map((node, i) => {
 					const label =

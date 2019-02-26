@@ -1,68 +1,62 @@
-.tree-view {
-  overflow-y: hidden;
-  margin-left: -5px;
-}
+#view-source-list {
+  .tree-view {
+    overflow-y: hidden;
+    margin-left: -5px;
+  }
 
-.tree-view_children {
-  margin-left: 16px;
-}
+  .tree-view_children-collapsed {
+    height: 0;
+  }
 
-.tree-view_children-collapsed {
-  height: 0;
-}
+  .tree-view_arrow {
+    cursor: pointer;
+    font-size: 1.5em;
+    position: relative;
+    top: 3px;
+    left: 1px;
+    display: inline-block;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
 
-.tree-view_arrow {
-  cursor: pointer;
-  font-size: 1.5em;
-  position: relative;
-  top: 3px;
-  left: 1px;
-  display: inline-block;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
+  .tree-view_arrow:after {
+    content: '▾';
+  }
 
-.tree-view_arrow:after {
-  content: '▾';
-}
+  .tree-node {
+    width: calc(100% - 30px);
+    position: relative;
+    display: inline-block;
+  }
 
-.tree-node {
-  width: calc(100% - 30px);
-  position: relative;
-  display: inline-block;
-}
+  .tree-node, .tree-child {
+    cursor: pointer;
+  }
 
-.tree-node, .tree-child {
-  cursor: pointer;
-}
+  .tree-child {
+    padding: 1px 0 1px 25px;
+  }
 
-.tree-child {
-  margin-left: 15px;
-}
+  /* rotate the triangle to close it */
+  .tree-view_arrow-collapsed {
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+  }
 
-/* rotate the triangle to close it */
-.tree-view_arrow-collapsed {
-  -webkit-transform: rotate(-90deg);
-  -moz-transform: rotate(-90deg);
-  -ms-transform: rotate(-90deg);
-  transform: rotate(-90deg);
-}
+  .library-option {
+    cursor: pointer;
+    font-size: 1.3em;
+    padding: 8px;
+    font-weight: bold;
+  }
 
-.view-source-list {
-  margin-left: 2px;
-  margin-top: 2px;
-}
-
-.library-option {
-  margin-top: 15px;
-  margin-left: 16px;
-  cursor: pointer;
-}
-
-// TODO this rule really needs to be moved to a generic stylesheet. Quit being a lazy asshole
-.selected {
-  background-color: @select-blue;
-  color: white;
+  // TODO this rule really needs to be moved to a generic stylesheet. Quit being a lazy asshole
+  .selected {
+    background-color: @select-blue;
+    color: white;
+  }
 }
