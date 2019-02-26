@@ -38,7 +38,7 @@ export class TrackList extends React.Component {
 
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
-			document.body.addEventListener('keypress', e => this.handleKeyPress(e));
+			document.body.addEventListener('keydown', e => this.handleKeyPress(e));
 			document.body.addEventListener('click', e => this.handleEditStop(e));
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', () => this.handleScroll());
@@ -51,7 +51,7 @@ export class TrackList extends React.Component {
 
 		if (!this.props.trackView) {
 			document.body.removeEventListener('click', e => this.handleEditStop(e));
-			document.body.removeEventListener('keypress', e => this.handleKeyPress(e));
+			document.body.removeEventListener('keydown', e => this.handleKeyPress(e));
 			document.getElementsByClassName('border-layout-center')[0]
 				.removeEventListener('scroll', () => this.handleScroll());
 		}
