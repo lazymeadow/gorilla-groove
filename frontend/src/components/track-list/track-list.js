@@ -146,7 +146,7 @@ export class TrackList extends React.Component {
 	}
 
 	handleScroll() {
-		let scrollBuffer = 300; // Amount of space to scroll to in order to start loading more tracks
+		let scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
 
 		let container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.state.loading
@@ -397,7 +397,6 @@ export class TrackList extends React.Component {
 					})}
 					</tbody>
 				</table>
-				<span>{this.props.userTracks.length}</span>
 				{
 					this.context.loadingTracks && this.props.trackView && this.props.userTracks.length === 0 ? (
 						<div className="loading-container">
