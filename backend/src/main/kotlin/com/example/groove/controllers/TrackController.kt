@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.sql.Timestamp
 
 @RestController
 @RequestMapping("api/track")
@@ -34,6 +35,14 @@ class TrackController(
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
 		return trackService.getTracks(name, artist, album, userId, searchTerm, pageable)
+    }
+
+	// This endpoint is laughably narrow in scope. But I don't know for sure how this is going to evolve later
+	@GetMapping("/all-count-since-timestamp")
+    fun getAllTrackCountSinceTimestamp(
+			@RequestParam(value = "timestamp") unixTimestamp: Long
+	): Int {
+		return trackService.getAllTrackCountSinceTimestamp(Timestamp(unixTimestamp))
     }
 
 	@PostMapping("/mark-listened")

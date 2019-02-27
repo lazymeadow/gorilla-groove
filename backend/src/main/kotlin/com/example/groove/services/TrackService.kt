@@ -43,6 +43,11 @@ class TrackService(
 		return trackRepository.getTracks(name, artist, album, idToLoad, loadHidden, searchTerm, pageable)
 	}
 
+	@Transactional(readOnly = true)
+	fun getAllTrackCountSinceTimestamp(timestamp: Timestamp): Int {
+		return trackRepository.countAllTracksAddedSinceTimestamp(timestamp)
+	}
+
 	@Transactional
 	fun markSongListenedTo(trackId: Long) {
 		val track = trackRepository.findById(trackId).unwrap()

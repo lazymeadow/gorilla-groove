@@ -7,24 +7,26 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
+import java.sql.Timestamp
 
 interface TrackRepository : CrudRepository<Track, Long> {
-	@Query("SELECT t " +
-			"FROM Track t " +
-			"WHERE t.user.id = :userId " +
-			"AND t.deleted = FALSE " +
-			"AND (:loadHidden IS TRUE OR t.hidden = FALSE) " +
-			"AND (:name IS NULL OR t.name LIKE %:name%) " +
-			"AND (:artist IS NULL OR t.artist LIKE %:artist%) " +
-			"AND (:album IS NULL OR t.album LIKE %:album%)" +
-			"AND (:searchTerm IS NULL " + // searchTerm is an 'OR' where the other terms are all ANDed
-			"      OR t.name LIKE %:searchTerm%" +
-			"      OR t.artist LIKE %:searchTerm%" +
-			"      OR t.featuring LIKE %:searchTerm%" +
-			"      OR t.album LIKE %:searchTerm%" +
-			"      OR t.genre LIKE %:searchTerm%" +
-			"      OR t.note LIKE %:searchTerm%)"
-	)
+	@Query("""
+			SELECT t
+			FROM Track t
+			WHERE t.user.id = :userId
+			AND t.deleted = FALSE
+			AND (:loadHidden IS TRUE OR t.hidden = FALSE)
+			AND (:name IS NULL OR t.name LIKE %:name%)
+			AND (:artist IS NULL OR t.artist LIKE %:artist%)
+			AND (:album IS NULL OR t.album LIKE %:album%)
+			AND (:searchTerm IS NULL
+				OR t.name LIKE %:searchTerm%
+				OR t.artist LIKE %:searchTerm%
+				OR t.featuring LIKE %:searchTerm%
+				OR t.album LIKE %:searchTerm%
+				OR t.genre LIKE %:searchTerm%
+				OR t.note LIKE %:searchTerm%)
+		""")
 	fun getTracks(
 			@Param("name") name: String? = null,
 			@Param("artist") artist: String? = null,
@@ -36,23 +38,36 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	): Page<Track>
 
 	@Modifying
-	@Query("UPDATE Track t " +
-			"SET t.hidden = :isHidden " +
-			"WHERE t.user.id = :userId " + // This user check is to prevent people hiding / showing
-			"AND t.id IN :trackIds"  // other users' songs by guessing at IDs
-	)
+	@Query("""
+			UPDATE Track t
+			SET t.hidden = :isHidden
+			WHERE t.user.id = :userId
+			AND t.id IN :trackIds
+			""")
 	fun setHiddenForUser(
 			@Param("trackIds") trackIds: List<Long>,
 			@Param("userId") userId: Long,
 			@Param("isHidden") isHidden: Boolean
 	)
 
-	@Query("SELECT t " +
-			"FROM Track t " +
-			"WHERE t.fileName = :fileName " +
-			"AND t.deleted = FALSE"
-	)
+	@Query("""
+			SELECT t
+			FROM Track t
+			WHERE t.fileName = :fileName
+			AND t.deleted = FALSE
+			""")
 	fun findAllByFileName(
 			@Param("fileName") fileName: String
 	): List<Track>
+
+	@Query("""
+			SELECT count(t)
+			FROM Track t
+			WHERE t.createdAt > :timestamp
+			AND t.hidden = FALSE
+			AND t.deleted = FALSE
+			""")
+	fun countAllTracksAddedSinceTimestamp(
+			@Param("timestamp") timestamp: Timestamp
+	): Int
 }
