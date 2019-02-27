@@ -5,6 +5,7 @@ import {AlbumArt} from "../album-art/album-art";
 import {TrackSourceList} from "../track-source-list/track-source-list";
 import {HeaderBar} from "../header-bar/header-bar";
 import {MusicContext} from "../../services/music-provider";
+import {SiteStats} from "../site-stats/site-stats";
 
 export class SiteLayout extends React.Component {
 	constructor(props) {
@@ -84,6 +85,9 @@ export class SiteLayout extends React.Component {
 				</div>
 				<div className="border-layout-south">
 					<PlaybackControls/>
+				</div>
+				<div className="border-layout-southeast">
+					<SiteStats/>
 				</div>
 			</div>
 		);
