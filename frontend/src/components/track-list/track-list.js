@@ -18,7 +18,7 @@ export class TrackList extends React.Component {
 			doubleClickTimeout: null,
 			editableCell: null,
 			pendingEditableCell: null,
-			id: 'track-list' + TrackList.count,
+			id: this.props.trackView ? 'track-list' : '',
 			contextMenuOptions: {
 				expanded: false,
 				x: 0,
@@ -26,11 +26,6 @@ export class TrackList extends React.Component {
 			},
 			loading: false
 		};
-
-		// There's more than one track-list component in view, and the column resizing needs a unique ID in order
-		// to attach to the tables. So increment this count and use it in the ID whenever we create a track list
-		// UPDATE: not sure that this actually worked...
-		TrackList.count++;
 	}
 
 	componentDidMount() {
@@ -60,6 +55,10 @@ export class TrackList extends React.Component {
 	}
 
 	enableResize() {
+		if (!this.props.trackView) {
+			return;
+		}
+
 		const options = {resizeMode: 'overflow'};
 		if (!this.resizer) {
 			let tableElement = ReactDOM.findDOMNode(this).querySelector('#' + this.state.id);
@@ -70,6 +69,10 @@ export class TrackList extends React.Component {
 	}
 
 	disableResize() {
+		if (!this.props.trackView) {
+			return;
+		}
+
 		if (this.resizer) {
 			// TODO reset returns the state of the options, including column widths
 			// we could save these off somewhere and use them to re-initialize the table
@@ -338,6 +341,7 @@ export class TrackList extends React.Component {
 	}
 
 	render() {
+		// noinspection HtmlUnknownTarget
 		return (
 			<div className="track-list">
 				<div>
@@ -367,12 +371,6 @@ export class TrackList extends React.Component {
 					</thead>
 					<tbody>
 					{this.props.userTracks.map((userTrack, index) => {
-						// We determine if a song in the view is the currently playing song differently based off which view we are in
-						// Because we can sort the main track view, and there are no duplicates, it makes sense to calculate this based
-						// on the ID of the currently playing track. We can't do this with the "now playing" list, as the same track
-						// could be on the list multiple times
-						// TODO a more elegant solution IS going to be required though. When playlists are implemented, a song could
-						// repeat multiple times in the playlist. The frontend might need to assign its own ID independent of the backend
 						let played;
 						if (this.props.trackView) {
 							played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
@@ -409,4 +407,3 @@ export class TrackList extends React.Component {
 	};
 }
 TrackList.contextType = MusicContext;
-TrackList.count = 0;
