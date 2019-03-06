@@ -109,6 +109,11 @@ export class TrackList extends React.Component {
 	}
 
 	handleKeyPress(event) {
+		// We are editing song data right now, so just ignore any other key actions
+		if (this.state.editableCell) {
+			return;
+		}
+
 		if (event.key === 'Enter') {
 			let indexes = Object.keys(this.state.selected);
 			if (indexes.length === 1) {
