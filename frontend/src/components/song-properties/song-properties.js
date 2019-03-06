@@ -15,8 +15,8 @@ export class SongProperties extends React.Component {
 			featuring: '',
 			album: '',
 			genre: '',
-			trackNum: '',
-			year: '',
+			trackNumber: '',
+			releaseYear: '',
 			bitRate: '',
 			sampleRate: '',
 			note: '',
@@ -24,8 +24,8 @@ export class SongProperties extends React.Component {
 			albumArtUrl: ''
 		};
 
-		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNum',
-			'year', 'bitRate', 'sampleRate', 'note'];
+		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNumber',
+			'releaseYear', 'bitRate', 'sampleRate', 'note'];
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -217,8 +217,8 @@ export class SongProperties extends React.Component {
 											name="property-track-num"
 											className="short-property"
 											type="text"
-											onChange={(e) => this.inputChange('trackNum', e)}
-											value={this.state.trackNum}
+											onChange={(e) => this.inputChange('trackNumber', e)}
+											value={this.state.trackNumber}
 										/>
 									</div>
 									<div className="flex-label">
@@ -228,8 +228,8 @@ export class SongProperties extends React.Component {
 											name="property-year"
 											className="short-property"
 											type="text"
-											onChange={(e) => this.inputChange('year', e)}
-											value={this.state.year}
+											onChange={(e) => this.inputChange('releaseYear', e)}
+											value={this.state.releaseYear}
 										/>
 									</div>
 									<div className="flex-label">
