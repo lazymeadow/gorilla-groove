@@ -11,11 +11,13 @@ export class SongLinkPlayer extends React.Component {
 		}
 	}
 
+	componentDidUpdate() {
+		document.getElementById('song-link-player').play();
+	}
+
 	componentDidMount() {
 		Api.get('file/track-link/' + this.props.match.params.trackId).then((res) => {
-			this.setState({ songLink: res.songLink }, () => {
-				document.getElementById('song-link-player').play();
-			});
+			this.setState({ songLink: res.songLink });
 		})
 	}
 
