@@ -91,8 +91,18 @@ export class SongPopoutMenu extends React.Component {
 				text: 'Get Link', clickHandler: (e) => {
 					e.stopPropagation();
 					let link = Api.getBaseHost() + '/track-link/' + selectedTracks[0].id;
-					console.log(selectedTracks[0]);
-					navigator.clipboard.writeText(link).then(() => toast.success("Link copied to clipboard"));
+
+					// This would be nice, but requires HTTPS that I do not yet have so instead do hacky bullshit
+					// navigator.clipboard.writeText(link).then(() => toast.success("Link copied to clipboard"));
+
+					let invisoElement = document.createElement('input');
+					invisoElement.value = link;
+					document.body.appendChild(invisoElement);
+
+					invisoElement.select();
+					document.execCommand("copy");
+
+					document.body.removeChild(invisoElement);
 				}
 			}])
 		}
