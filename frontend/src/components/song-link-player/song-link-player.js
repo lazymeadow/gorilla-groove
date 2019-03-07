@@ -11,20 +11,18 @@ export class SongLinkPlayer extends React.Component {
 		}
 	}
 
-	componentDidUpdate() {
-		document.getElementById('song-link-player').play();
-	}
-
 	componentDidMount() {
 		Api.get('file/track-link/' + this.props.match.params.trackId).then((res) => {
-			this.setState({ songLink: res.songLink });
+			this.setState({ songLink: res.songLink }, () => {
+				document.getElementById('audio-player').play();
+			});
 		})
 	}
 
 	render() {
 		return (
 			<div id="song-link-player">
-				<audio src={this.state.songLink} controls>
+				<audio id="audio-player" src={this.state.songLink} controls>
 					Your browser is ancient. Use a better browser
 				</audio>
 			</div>
