@@ -95,20 +95,22 @@ export class SongPopoutMenu extends React.Component {
 					// Call the API as an authenticated user to generate a link. Then save the frontend link to
 					// the song's page in the clipboard which will then be able to access the song, because we
 					// forced the link to be generated while we were authenticated
-					Api.get('file/link/' + trackId).then(() => {
-						let link = Api.getBaseHost() + '/track-link/' + trackId;
 
+					// We have to do this out of sequence, and ocpy to clipboard before we call the API. Otherwise, FF
+					// will get mad that the clipboard copy didn't happen quick enough after the click event......
+					let link = Api.getBaseHost() + '/track-link/' + trackId;
+					let invisoElement = document.createElement('input');
+					invisoElement.value = link;
+					document.body.appendChild(invisoElement);
+
+					invisoElement.select();
+					document.execCommand("copy");
+
+					document.body.removeChild(invisoElement);
+
+					Api.get('file/link/' + trackId).then(() => {
 						// This would be nice, but requires HTTPS that I do not yet have so instead do hacky bullshit
 						// navigator.clipboard.writeText(link).then(() => toast.success("Link copied to clipboard"));
-
-						let invisoElement = document.createElement('input');
-						invisoElement.value = link;
-						document.body.appendChild(invisoElement);
-
-						invisoElement.select();
-						document.execCommand("copy");
-
-						document.body.removeChild(invisoElement);
 						toast.success("Link copied to clipboard");
 					});
 				}
