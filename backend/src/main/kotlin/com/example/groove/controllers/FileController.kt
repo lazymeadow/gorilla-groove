@@ -63,8 +63,17 @@ class FileController(
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {
 		return TrackLinks(
-				fileStorageService.getSongLink(trackId),
+				fileStorageService.getSongLink(trackId, false),
 				fileStorageService.getAlbumArtLink(trackId),
+				s3Properties.awsStoreInS3
+		)
+	}
+
+	@GetMapping("/track-link/{trackId}")
+	fun getLinksForTrackAnonymous(@PathVariable trackId: Long): TrackLinks {
+		return TrackLinks(
+				fileStorageService.getSongLink(trackId, true),
+				null,
 				s3Properties.awsStoreInS3
 		)
 	}

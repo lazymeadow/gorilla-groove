@@ -6,3 +6,5 @@ class FileStorageException : RuntimeException {
 
     constructor(message: String, cause: Throwable) : super(message, cause) {}
 }
+
+class ResourceNotFoundException(message: String) : RuntimeException(message)

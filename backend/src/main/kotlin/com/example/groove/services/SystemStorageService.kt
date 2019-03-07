@@ -1,5 +1,6 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.properties.MusicProperties
 import org.slf4j.LoggerFactory
@@ -11,8 +12,9 @@ import java.io.File
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
 class SystemStorageService(
 		private val musicProperties: MusicProperties,
-		trackRepository: TrackRepository
-) : FileStorageService(trackRepository) {
+		trackRepository: TrackRepository,
+		trackLinkRepository: TrackLinkRepository
+) : FileStorageService(trackRepository, trackLinkRepository) {
 
 	override fun storeSong(song: File, trackId: Long) {
 		val destinationFile = File("${musicProperties.musicDirectoryLocation}$trackId.ogg")
@@ -54,11 +56,11 @@ class SystemStorageService(
 		}
 	}
 
-	override fun getSongLink(trackId: Long): String {
-		// This is pretty jank. But it is only intended for use in local development right now
-		val track = loadAuthenticatedTrack(trackId)
-
-		return "http://localhost:8080/music/${track.fileName}"
+	override fun getSongLink(trackId: Long, anonymousAccess: Boolean): String {
+		return getCachedSongLink(trackId, anonymousAccess) { track ->
+			// This is pretty jank. But it is only intended for use in local development right now
+			"http://localhost:8080/music/${track.fileName}"
+		}
 	}
 
 	override fun getAlbumArtLink(trackId: Long): String? {

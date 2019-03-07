@@ -5,19 +5,20 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.properties.S3Properties
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
-import java.util.*
 
 @Service
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "true")
 class S3StorageService(
 		s3Properties: S3Properties,
-		trackRepository: TrackRepository
-) : FileStorageService(trackRepository) {
+		trackRepository: TrackRepository,
+		trackLinkRepository: TrackLinkRepository
+) : FileStorageService(trackRepository, trackLinkRepository) {
 
 	private val s3Client: AmazonS3
 
@@ -51,23 +52,16 @@ class S3StorageService(
 		s3Client.deleteObject(bucketName, "music/$fileName")
 	}
 
-	override fun getSongLink(trackId: Long): String {
-		val track = loadAuthenticatedTrack(trackId)
-
-		return s3Client.generatePresignedUrl(bucketName, "music/${track.fileName}", getS3ExpirationDate()).toString()
+	override fun getSongLink(trackId: Long, anonymousAccess: Boolean): String {
+		return getCachedSongLink(trackId, anonymousAccess) { track ->
+			s3Client.generatePresignedUrl(bucketName, "music/${track.fileName}", expireHoursOut(4)).toString()
+		}
 	}
 
 	override fun getAlbumArtLink(trackId: Long): String? {
-		val track = loadAuthenticatedTrack(trackId)
+		val track = loadAuthenticatedTrack(trackId, false)
 
-		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", getS3ExpirationDate()).toString()
-	}
-
-	private fun getS3ExpirationDate(): Date {
-		val calendar = Calendar.getInstance()
-		calendar.add(Calendar.HOUR, 4)
-
-		return calendar.time
+		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
 	}
 
 }

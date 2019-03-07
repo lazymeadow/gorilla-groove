@@ -22,6 +22,11 @@ class LogoutButtonInternal extends React.Component {
 		});
 	}
 
+	test(event) {
+		event.preventDefault();
+		this.props.history.push('/track-link/15');
+	}
+
 	render() {
 		return (
 			<div className="user-menu">

@@ -17,6 +17,7 @@ export function HeaderBar() {
 					<YoutubeDlButton/>
 				</div>
 			</div>
+
 			<SearchBar/>
 			<div className="user-button-wrapper">
 				{sessionStorage.getItem('loggedInUserName')}

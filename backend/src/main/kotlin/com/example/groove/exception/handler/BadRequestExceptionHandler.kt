@@ -2,6 +2,7 @@
 
 package com.example.groove.exception.handler
 
+import com.example.groove.exception.ResourceNotFoundException
 import org.apache.tomcat.util.http.fileupload.FileUploadBase
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -24,5 +25,11 @@ class BadRequestExceptionHandler : ResponseEntityExceptionHandler() {
 	)
 	protected fun handleIllegalArgument(ex: RuntimeException, request: WebRequest): ResponseEntity<Any> {
 		return handleExceptionInternal(ex, ex.message, HttpHeaders(), HttpStatus.BAD_REQUEST, request)
+	}
+
+	// These exceptions should return a 404 to the client
+	@ExceptionHandler(ResourceNotFoundException::class)
+	protected fun handleNotFound(ex: RuntimeException, request: WebRequest): ResponseEntity<Any> {
+		return handleExceptionInternal(ex, ex.message, HttpHeaders(), HttpStatus.NOT_FOUND, request)
 	}
 }
