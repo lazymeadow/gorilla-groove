@@ -3,6 +3,7 @@ import {MusicContext} from "../../../services/music-provider";
 import {toast} from "react-toastify";
 import {TrackView} from "../../../enums/track-view";
 import {SongProperties} from "../../song-properties/song-properties";
+import {Api} from "../../../api";
 
 export class SongPopoutMenu extends React.Component {
 	constructor(props) {
@@ -45,7 +46,7 @@ export class SongPopoutMenu extends React.Component {
 			}
 			case TrackView.NOW_PLAYING: {
 				options = SongPopoutMenu.getBaseMenuOptions(props)
-					.concat(SongPopoutMenu.getNowPlayingOptions(props))
+					.concat(SongPopoutMenu.getNowPlayingOptions(props));
 				break;
 			}
 			default: {
@@ -65,7 +66,7 @@ export class SongPopoutMenu extends React.Component {
 	}
 
 	static getBaseMenuOptions(props) {
-		return [
+		let baseOptions = [
 			{
 				text: 'Play Now', clickHandler: (e) => {
 					e.stopPropagation();
@@ -82,6 +83,21 @@ export class SongPopoutMenu extends React.Component {
 					props.context.playTracksLast(props.getSelectedTracks());
 				}
 			}];
+
+		let selectedTracks = props.getSelectedTracks();
+
+		if (selectedTracks.length === 1) {
+			baseOptions = baseOptions.concat([{
+				text: 'Get Link', clickHandler: (e) => {
+					e.stopPropagation();
+					let link = Api.getBaseHost() + '/track-link/' + selectedTracks[0].id;
+					console.log(selectedTracks[0]);
+					navigator.clipboard.writeText(link).then(() => toast.success("Link copied to clipboard"));
+				}
+			}])
+		}
+
+		return baseOptions;
 	}
 
 	static getOwnLibraryOptions(props) {
