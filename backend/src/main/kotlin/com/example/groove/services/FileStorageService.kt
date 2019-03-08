@@ -30,7 +30,7 @@ abstract class FileStorageService(
 	fun getCachedSongLink(trackId: Long, anonymousAccess: Boolean, newLinkFun: (track: Track) -> String): String {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
-		synchronized(trackId) {
+		synchronized(this) {
 			val trackLink = trackLinkRepository.findUnexpiredByTrackId(track.id)
 
 			return when {
