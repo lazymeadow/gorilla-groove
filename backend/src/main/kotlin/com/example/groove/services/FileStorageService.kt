@@ -7,6 +7,8 @@ import com.example.groove.db.model.TrackLink
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import java.io.File
 import java.sql.Timestamp
 import java.util.*
@@ -23,15 +25,19 @@ abstract class FileStorageService(
 	abstract fun getAlbumArtLink(trackId: Long): String?
 	abstract fun deleteSong(fileName: String)
 
+	// Do all of this in a synchronized, new transaction to prevent race conditions with link creation / searching
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	fun getCachedSongLink(trackId: Long, anonymousAccess: Boolean, newLinkFun: (track: Track) -> String): String {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
-		val trackLink = trackLinkRepository.findUnexpiredByTrackId(track.id)
+		synchronized(trackId) {
+			val trackLink = trackLinkRepository.findUnexpiredByTrackId(track.id)
 
-		return when {
-			trackLink != null -> trackLink.link
-			!anonymousAccess -> cacheSongLink(track, newLinkFun(track))
-			else -> throw ResourceNotFoundException("No valid link found")
+			return when {
+				trackLink != null -> trackLink.link
+				!anonymousAccess -> cacheSongLink(track, newLinkFun(track))
+				else -> throw ResourceNotFoundException("No valid link found")
+			}
 		}
 	}
 
