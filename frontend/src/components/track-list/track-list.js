@@ -5,6 +5,8 @@ import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
 import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 import {TrackView} from "../../enums/track-view";
+import * as LocalStorage from "../../local-storage";
+import * as Util from "../../util";
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -59,7 +61,20 @@ export class TrackList extends React.Component {
 			return;
 		}
 
-		const options = {resizeMode: 'overflow'};
+		const options = {
+			resizeMode: 'overflow',
+			serialize: true,
+			onResize: () => {
+				// Put this in a timeout so that the library has time to update session storage
+				// We instead want to put it in local storage so it isn't lost as easily
+				setTimeout(() => {
+					let widths = sessionStorage.getItem('track-list').split(';').map(width => parseFloat(width));
+					LocalStorage.setObject('column-widths', widths);
+				}, 1000);
+			},
+			widths: LocalStorage.getObject('column-widths')
+		};
+
 		if (!this.resizer) {
 			let tableElement = ReactDOM.findDOMNode(this).querySelector('#' + this.state.id);
 			this.resizer = new ColumnResizer(tableElement, options);
