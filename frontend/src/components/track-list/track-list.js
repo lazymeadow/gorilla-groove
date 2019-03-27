@@ -25,8 +25,7 @@ export class TrackList extends React.Component {
 				expanded: false,
 				x: 0,
 				y: 0
-			},
-			loading: false
+			}
 		};
 	}
 
@@ -89,8 +88,6 @@ export class TrackList extends React.Component {
 		}
 
 		if (this.resizer) {
-			// TODO reset returns the state of the options, including column widths
-			// we could save these off somewhere and use them to re-initialize the table
 			this.resizer.reset({ disable: true });
 		}
 	}
@@ -172,14 +169,11 @@ export class TrackList extends React.Component {
 		let scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
 
 		let container = document.getElementsByClassName('border-layout-center')[0];
-		if (!this.state.loading
+		if (!this.context.loadingTracks
 			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
 			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
 
-			this.setState({ loading: true });
-			this.context.loadMoreTracks().finally(() => {
-				this.setState({ loading: false })
-			});
+			this.context.loadMoreTracks();
 		}
 	}
 
