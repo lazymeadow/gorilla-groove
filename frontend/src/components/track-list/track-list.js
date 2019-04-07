@@ -129,7 +129,7 @@ export class TrackList extends React.Component {
 		if (event.key === 'Enter') {
 			let indexes = Object.keys(this.state.selected);
 			if (indexes.length === 1) {
-				this.context.playFromTrackIndex(indexes[0], true);
+				this.context.playFromTrackIndex(parseInt(indexes[0]), true);
 			} else {
 				let tracks = indexes.map(index => this.props.userTracks[index]);
 				this.context.playTracks(tracks);
