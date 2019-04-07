@@ -32,6 +32,7 @@ export class SearchBar extends React.Component {
 			this.context.reloadTracks();
 		} else if (event.key === 'Enter') {
 			event.preventDefault();
+			event.stopPropagation();
 			this.context.reloadTracks();
 		}
 	}
