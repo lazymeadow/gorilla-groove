@@ -95,6 +95,11 @@ class TrackController(
 		return youTubeService.downloadSong(youTubeDownloadDTO)
 	}
 
+	@GetMapping("/public/{trackId}")
+	fun getLinksForTrackAnonymous(@PathVariable trackId: Long): Map<String, Any?> {
+		return trackService.getPublicTrackInfo(trackId)
+	}
+
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long
 	)

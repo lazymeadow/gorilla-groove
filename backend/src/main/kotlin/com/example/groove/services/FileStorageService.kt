@@ -22,7 +22,7 @@ abstract class FileStorageService(
 	abstract fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
 	abstract fun getSongLink(trackId: Long, anonymousAccess: Boolean): String
-	abstract fun getAlbumArtLink(trackId: Long): String?
+	abstract fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String?
 	abstract fun deleteSong(fileName: String)
 
 	// Do all of this in a synchronized, new transaction to prevent race conditions with link creation / searching
@@ -47,6 +47,18 @@ abstract class FileStorageService(
 		trackLinkRepository.save(trackLink)
 
 		return link
+	}
+
+	fun getTrackForAlbumArt(trackId: Long, anonymousAccess: Boolean): Track {
+		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
+
+		// If we are doing anonymous access, also make sure that the track is within its temporary access time
+		if  (anonymousAccess) {
+			trackLinkRepository.findUnexpiredByTrackId(track.id)
+					?: throw IllegalArgumentException("Album art for track ID: $trackId not available to anonymous users!")
+		}
+
+		return track
 	}
 
 	fun loadAuthenticatedTrack(trackId: Long, anonymousAccess: Boolean): Track {

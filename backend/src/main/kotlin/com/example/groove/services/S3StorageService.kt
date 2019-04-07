@@ -17,7 +17,7 @@ import java.io.File
 class S3StorageService(
 		s3Properties: S3Properties,
 		trackRepository: TrackRepository,
-		trackLinkRepository: TrackLinkRepository
+		private val trackLinkRepository: TrackLinkRepository
 ) : FileStorageService(trackRepository, trackLinkRepository) {
 
 	private val s3Client: AmazonS3
@@ -58,8 +58,8 @@ class S3StorageService(
 		}
 	}
 
-	override fun getAlbumArtLink(trackId: Long): String? {
-		val track = loadAuthenticatedTrack(trackId, false)
+	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String? {
+		val track = getTrackForAlbumArt(trackId, anonymousAccess)
 
 		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
 	}

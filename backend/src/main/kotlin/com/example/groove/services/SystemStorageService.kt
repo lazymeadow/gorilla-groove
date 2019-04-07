@@ -63,7 +63,9 @@ class SystemStorageService(
 		}
 	}
 
-	override fun getAlbumArtLink(trackId: Long): String? {
+	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String? {
+		getTrackForAlbumArt(trackId, anonymousAccess)
+
 		val parentDir = trackId / 1000
 		return "http://localhost:8080/album-art/$parentDir/$trackId.png"
 	}

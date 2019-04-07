@@ -64,7 +64,7 @@ class FileController(
 	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {
 		return TrackLinks(
 				fileStorageService.getSongLink(trackId, false),
-				fileStorageService.getAlbumArtLink(trackId),
+				fileStorageService.getAlbumArtLink(trackId, false),
 				s3Properties.awsStoreInS3
 		)
 	}

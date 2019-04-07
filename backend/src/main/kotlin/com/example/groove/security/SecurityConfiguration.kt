@@ -39,6 +39,7 @@ class SecurityConfiguration(
 	private val publicUrls = OrRequestMatcher(
 			AntPathRequestMatcher("/api/authentication/login**"),
 			AntPathRequestMatcher("/api/file/track-link/*"),
+			AntPathRequestMatcher("/api/track/public/*"),
 			AntPathRequestMatcher("/api/version**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
 			AntPathRequestMatcher("/login"),
