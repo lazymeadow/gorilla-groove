@@ -9,6 +9,7 @@ import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
@@ -39,13 +40,12 @@ class S3StorageService(
 	}
 
 	override fun storeSong(song: File, trackId: Long) {
-		// FIXME? I don't think I want to use "song.name" here? I should use TrackID?
-		// but I think the song name is the track ID so it isn't getting me in trouble... yet
-		s3Client.putObject(bucketName, "music/${song.name}", song)
+		logger.info("Storing song in S3 with ID: $trackId")
+		s3Client.putObject(bucketName, "music/$trackId.ogg", song)
 	}
 
 	override fun loadSong(trackId: Long): File {
-		val s3Stream = s3Client.getObject(bucketName, "music/$trackId").objectContent
+		val s3Stream = s3Client.getObject(bucketName, "music/$trackId.ogg").objectContent
 		val filePath = generateTmpFilePath()
 		Files.copy(s3Stream, filePath, StandardCopyOption.REPLACE_EXISTING)
 
@@ -78,4 +78,7 @@ class S3StorageService(
 		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
 	}
 
+	companion object {
+		val logger = LoggerFactory.getLogger(S3StorageService::class.java)!!
+	}
 }
