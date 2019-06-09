@@ -5,19 +5,24 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackLink
 import com.example.groove.exception.ResourceNotFoundException
+import com.example.groove.properties.FileStorageProperties
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.sql.Timestamp
 import java.util.*
 
 abstract class FileStorageService(
 		private val trackRepository: TrackRepository,
-		private val trackLinkRepository: TrackLinkRepository
+		private val trackLinkRepository: TrackLinkRepository,
+		private val fileStorageProperties: FileStorageProperties
 ) {
 	abstract fun storeSong(song: File, trackId: Long)
+	abstract fun loadSong(trackId: Long): File
 	abstract fun storeAlbumArt(albumArt: File, trackId: Long)
 	abstract fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
@@ -61,7 +66,7 @@ abstract class FileStorageService(
 		return track
 	}
 
-	fun loadAuthenticatedTrack(trackId: Long, anonymousAccess: Boolean): Track {
+	private fun loadAuthenticatedTrack(trackId: Long, anonymousAccess: Boolean): Track {
 		val track = trackRepository.findById(trackId).unwrap() ?: throw IllegalArgumentException("No track with ID $trackId found")
 
 		if (anonymousAccess) {
@@ -83,5 +88,10 @@ abstract class FileStorageService(
 		calendar.add(Calendar.HOUR, hours)
 
 		return calendar.time
+	}
+
+	protected fun generateTmpFilePath(): Path {
+		val tmpFileName = UUID.randomUUID().toString() + ".ogg"
+		return Paths.get(fileStorageProperties.tmpDir + tmpFileName)
 	}
 }

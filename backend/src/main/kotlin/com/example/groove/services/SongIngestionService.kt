@@ -149,6 +149,20 @@ class SongIngestionService(
 		}
 	}
 
+	fun trimSong(trackId: Long, startTime: String?, duration: String?): Int {
+		val tmpFile = fileStorageService.loadSong(trackId)
+
+		val trimmedSong = ffmpegService.trimSong(tmpFile, startTime, duration)
+
+		fileStorageService.storeSong(trimmedSong, trackId)
+
+		val newLength = fileMetadataService.getTrackLength(trimmedSong)
+
+		trimmedSong.delete()
+
+		return newLength
+	}
+
 	companion object {
         private val logger = LoggerFactory.getLogger(SongIngestionService::class.java)
     }

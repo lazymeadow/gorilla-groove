@@ -1,6 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.dto.TrackTrimDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.TrackService
@@ -93,6 +94,27 @@ class TrackController(
 		}
 
 		return youTubeService.downloadSong(youTubeDownloadDTO)
+	}
+
+	@PostMapping("/trim")
+	fun trimSong(@RequestBody trackTrimDTO: TrackTrimDTO): Map<String, Int> {
+		if (trackTrimDTO.startTime == null && trackTrimDTO.duration == null) {
+			throw IllegalArgumentException("No trimming parameters were passed")
+		}
+
+		val regex = Regex("^[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?\$")
+
+		trackTrimDTO.startTime?.let {
+			regex.matches(it)
+		}
+
+		trackTrimDTO.duration?.let {
+			regex.matches(it)
+		}
+
+		val newLength = trackService.trimTrack(trackTrimDTO.trackId, trackTrimDTO.startTime, trackTrimDTO.duration)
+
+		return mapOf("newLength" to newLength)
 	}
 
 	@GetMapping("/public/{trackId}")

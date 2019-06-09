@@ -77,6 +77,16 @@ class FileMetadataService(
 		)
 	}
 
+	fun getTrackLength(song: File): Int {
+		if (!song.exists()) {
+			logger.error("File was not found using the path '${song.path}'")
+			throw IllegalArgumentException("File by name '${song.name}' does not exist!")
+		}
+		val audioFile = AudioFileIO.read(song)
+
+		return audioFile.audioHeader.trackLength
+	}
+
 	private fun parseTrackNumber(trackNumber: String?): Int? {
 		if (trackNumber == null) {
 			return null

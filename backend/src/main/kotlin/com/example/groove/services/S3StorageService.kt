@@ -7,18 +7,22 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 @Service
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "true")
 class S3StorageService(
 		s3Properties: S3Properties,
 		trackRepository: TrackRepository,
-		private val trackLinkRepository: TrackLinkRepository
-) : FileStorageService(trackRepository, trackLinkRepository) {
+		trackLinkRepository: TrackLinkRepository,
+		fileStorageProperties: FileStorageProperties
+) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
 
 	private val s3Client: AmazonS3
 
@@ -35,7 +39,17 @@ class S3StorageService(
 	}
 
 	override fun storeSong(song: File, trackId: Long) {
+		// FIXME? I don't think I want to use "song.name" here? I should use TrackID?
+		// but I think the song name is the track ID so it isn't getting me in trouble... yet
 		s3Client.putObject(bucketName, "music/${song.name}", song)
+	}
+
+	override fun loadSong(trackId: Long): File {
+		val s3Stream = s3Client.getObject(bucketName, "music/$trackId").objectContent
+		val filePath = generateTmpFilePath()
+		Files.copy(s3Stream, filePath, StandardCopyOption.REPLACE_EXISTING)
+
+		return filePath.toFile()
 	}
 
 	override fun storeAlbumArt(albumArt: File, trackId: Long) {

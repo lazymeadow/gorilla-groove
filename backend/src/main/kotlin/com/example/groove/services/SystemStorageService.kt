@@ -2,19 +2,33 @@ package com.example.groove.services
 
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 @Service
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
 class SystemStorageService(
 		private val musicProperties: MusicProperties,
 		trackRepository: TrackRepository,
-		trackLinkRepository: TrackLinkRepository
-) : FileStorageService(trackRepository, trackLinkRepository) {
+		trackLinkRepository: TrackLinkRepository,
+		fileStorageProperties: FileStorageProperties
+) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
+
+	override fun loadSong(trackId: Long): File {
+		val sourceFile = File("${musicProperties.musicDirectoryLocation}$trackId.ogg")
+
+		val destinationPath = generateTmpFilePath()
+
+		Files.copy(sourceFile.toPath(), destinationPath, StandardCopyOption.REPLACE_EXISTING)
+
+		return destinationPath.toFile()
+	}
 
 	override fun storeSong(song: File, trackId: Long) {
 		val destinationFile = File("${musicProperties.musicDirectoryLocation}$trackId.ogg")

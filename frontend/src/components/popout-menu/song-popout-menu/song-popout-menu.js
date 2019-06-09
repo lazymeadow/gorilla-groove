@@ -4,6 +4,7 @@ import {toast} from "react-toastify";
 import {TrackView} from "../../../enums/track-view";
 import {SongProperties} from "../../song-properties/song-properties";
 import {Api} from "../../../api";
+import {TrimSong} from "../../trim-song/trim-song";
 
 export class SongPopoutMenu extends React.Component {
 	constructor(props) {
@@ -121,8 +122,8 @@ export class SongPopoutMenu extends React.Component {
 	}
 
 	static getOwnLibraryOptions(props) {
-		return [
-			{
+		let ownLibraryOptions = [
+ {
 				text: 'Make Private', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
@@ -171,6 +172,14 @@ export class SongPopoutMenu extends React.Component {
 				component: <SongProperties getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}
 		];
+
+		if (props.getSelectedTracks().length === 1) {
+			ownLibraryOptions = [{
+				component: <TrimSong getSelectedTracks={props.getSelectedTracks.bind(this)}/>
+			}].concat(ownLibraryOptions);
+		}
+
+		return ownLibraryOptions;
 	}
 
 	static getPlaylistSpecificOptions(props) {

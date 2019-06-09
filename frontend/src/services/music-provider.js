@@ -88,6 +88,7 @@ export class MusicProvider extends React.Component {
 			createPlaylist: (...args) => this.createPlaylist(...args),
 			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
 			removeFromNowPlaying: (...args) => this.removeFromNowPlaying(...args),
+			trimTrack: (...args) => this.trimTrack(...args),
 			updateTracks: (...args) => this.updateTracks(...args),
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
@@ -590,6 +591,22 @@ export class MusicProvider extends React.Component {
 		return Api.upload('PUT', 'track', params).catch(error => {
 			console.error(error);
 			toast.error("Failed to updated song data")
+		})
+	}
+
+	// noinspection JSMethodCanBeStatic
+	trimTrack(track, startTime, duration) {
+		let params = { trackId: track.id };
+		if (startTime.length > 0) {
+			params.startTime = startTime;
+		}
+
+		if (duration.length > 0) {
+			params.duration = duration;
+		}
+
+		return Api.post('track/trim', params).then(res => {
+			track.length = res.newLength;
 		})
 	}
 
