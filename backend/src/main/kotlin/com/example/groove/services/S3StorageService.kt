@@ -56,6 +56,21 @@ class S3StorageService(
 		s3Client.putObject(bucketName, "art/$trackId.png", albumArt)
 	}
 
+	override fun loadAlbumArt(trackId: Long): File? {
+		val path = "art/$trackId.png"
+
+		val exists = s3Client.doesObjectExist(bucketName, path)
+		if (!exists) {
+			return null
+		}
+
+		val s3Stream = s3Client.getObject(bucketName, path).objectContent
+		val filePath = generateTmpFilePath()
+		Files.copy(s3Stream, filePath, StandardCopyOption.REPLACE_EXISTING)
+
+		return filePath.toFile()
+	}
+
 	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
 		if (s3Client.doesObjectExist(bucketName, "art/$trackSourceId.png")) {
 			s3Client.copyObject(bucketName, "art/$trackSourceId.png", bucketName, "art/$trackDestinationId.png")

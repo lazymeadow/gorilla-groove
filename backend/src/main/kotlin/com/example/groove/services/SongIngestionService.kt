@@ -4,16 +4,14 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
-import com.example.groove.exception.MyFileNotFoundException
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.Resource
-import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.net.MalformedURLException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -30,7 +28,7 @@ class SongIngestionService(
 		private val fileStorageService: FileStorageService
 ) {
 
-	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir)
+	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir!!)
 			.toAbsolutePath().normalize()
 
 	init {
@@ -135,20 +133,6 @@ class SongIngestionService(
 		return destinationFile
 	}
 
-	fun loadFileAsResource(fileName: String): Resource {
-		try {
-			val filePath = this.fileStorageLocation.resolve(fileName).normalize()
-			val resource = UrlResource(filePath.toUri())
-			return if (resource.exists()) {
-				resource
-			} else {
-				throw MyFileNotFoundException("File not found $fileName")
-			}
-		} catch (ex: MalformedURLException) {
-			throw MyFileNotFoundException("File not found $fileName", ex)
-		}
-	}
-
 	fun trimSong(trackId: Long, startTime: String?, duration: String?): Int {
 		val tmpFile = fileStorageService.loadSong(trackId)
 
@@ -161,6 +145,31 @@ class SongIngestionService(
 		trimmedSong.delete()
 
 		return newLength
+	}
+
+	fun createTrackFileWithMetadata(trackId: Long): File {
+		logger.info("About to create a downloadable track for track ID: $trackId")
+		val track = trackRepository.findById(trackId).unwrap()
+
+		if (track == null || track.user != loadLoggedInUser()) {
+			throw IllegalArgumentException("No track found by ID $trackId!")
+		}
+
+		val songFile = fileStorageService.loadSong(trackId)
+		val songArtist = if (track.artist.isBlank()) "Unknown" else track.artist
+		val songName = if (track.name.isBlank()) "Unknown" else track.name
+		val newName = "$songArtist - $songName.ogg"
+
+		val artworkFile = fileStorageService.loadAlbumArt(trackId)
+
+		logger.info("Creating temporary track with name $newName")
+		val renamedFile = File("${songFile.parent}/$newName")
+		songFile.renameTo(renamedFile)
+
+		logger.info("Adding metadata to temporary track $newName")
+		fileMetadataService.addMetadataToFile(renamedFile, track, artworkFile)
+
+		return renamedFile
 	}
 
 	companion object {

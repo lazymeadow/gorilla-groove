@@ -6,14 +6,10 @@ import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import javax.servlet.http.HttpServletRequest
-import java.io.IOException
+import java.io.FileInputStream
+import javax.servlet.http.HttpServletResponse
 import kotlin.system.measureTimeMillis
 
 @RestController
@@ -41,24 +37,24 @@ class FileController(
 		return track!!
     }
 
-    @GetMapping("/download")
-    fun downloadFile(@PathVariable fileName: String, request: HttpServletRequest): ResponseEntity<Resource> {
-        // Load file as Resource
-        val resource = songIngestionService.loadFileAsResource(fileName)
+	@RequestMapping("/download/{trackId}")
+	fun getFile(@PathVariable trackId: Long, response: HttpServletResponse) {
+		val file = songIngestionService.createTrackFileWithMetadata(trackId)
+		response.contentType = "audio/ogg"
+		response.setHeader("Content-disposition", """attachment; filename="${file.name}"""")
 
-        // Try to determine file's content type
-        val contentType = try {
-            request.servletContext.getMimeType(resource.file.absolutePath)
-        } catch (ex: IOException) {
-            logger.info("Could not determine file type.")
-            "application/octet-stream"
-        }
+		val outStream = response.outputStream
+		val inStream = FileInputStream(file)
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${resource.filename}\"")
-                .body(resource)
-    }
+		logger.info("Writing song data for ${file.name} to output stream...")
+		outStream.write(inStream.readAllBytes())
+
+		outStream.close()
+		inStream.close()
+
+		logger.info("Deleting temporary file")
+		file.delete()
+	}
 
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {

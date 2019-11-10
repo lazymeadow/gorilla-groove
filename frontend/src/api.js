@@ -64,10 +64,19 @@ export class Api {
 		})
 	};
 
-	static upload(httpMethod, url, params, progressCallback) {
-		let fullUrl = this.getBaseUrl() + url;
+	static download(url) {
+		const fullUrl = this.getBaseUrl() + url;
 
-		return new Promise(function (resolve, reject) {
+		const a = document.createElement("a");
+		a.href = fullUrl;
+		a.setAttribute("download", "true");
+		a.click();
+	}
+
+	static upload(httpMethod, url, params, progressCallback) {
+		const fullUrl = this.getBaseUrl() + url;
+
+		return new Promise((resolve, reject) => {
 			let formData = new FormData();
 
 			Object.keys(params).forEach(paramKey => {

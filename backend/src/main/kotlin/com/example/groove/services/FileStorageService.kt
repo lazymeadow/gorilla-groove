@@ -24,6 +24,7 @@ abstract class FileStorageService(
 	abstract fun storeSong(song: File, trackId: Long)
 	abstract fun loadSong(trackId: Long): File
 	abstract fun storeAlbumArt(albumArt: File, trackId: Long)
+	abstract fun loadAlbumArt(trackId: Long): File?
 	abstract fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
 	abstract fun getSongLink(trackId: Long, anonymousAccess: Boolean): String

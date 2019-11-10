@@ -112,10 +112,18 @@ export class SongPopoutMenu extends React.Component {
 					Api.get('file/link/' + trackId).then(() => {
 						// This would be nice, but requires HTTPS that I do not yet have so instead do hacky bullshit
 						// navigator.clipboard.writeText(link).then(() => toast.success("Link copied to clipboard"));
-						toast.success("Link copied to clipboard");
+						toast.success('Link copied to clipboard');
 					});
 				}
-			}])
+			}, {
+				text: 'Download', clickHandler: (e) => {
+					e.stopPropagation();
+					const track = selectedTracks[0];
+
+					Api.download(`file/download/${track.id}?t=${sessionStorage.getItem('token')}`);
+				}
+			}
+			])
 		}
 
 		return baseOptions;
@@ -123,7 +131,7 @@ export class SongPopoutMenu extends React.Component {
 
 	static getOwnLibraryOptions(props) {
 		let ownLibraryOptions = [
- {
+			{
 				text: 'Make Private', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();

@@ -3,17 +3,17 @@ package com.example.groove.services
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
-import com.example.groove.properties.MusicProperties
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.datatype.Artwork
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.awt.image.BufferedImage
 import java.io.File
 
+
 @Component
 class FileMetadataService(
-		private val musicProperties: MusicProperties,
 		private val fileStorageProperties: FileStorageProperties
 ) {
 
@@ -37,7 +37,7 @@ class FileMetadataService(
 					"of art was found (${artwork.size} pieces). Using the first piece of album art.")
 		}
 
-		return if (!artwork.isEmpty()) {
+		return if (artwork.isNotEmpty()) {
 			// Destroy the existing album art on the file. We don't need it, and it can cause file conversion problems
 			audioFile.tag.deleteArtworkField()
 			audioFile.commit()
@@ -85,6 +85,27 @@ class FileMetadataService(
 		val audioFile = AudioFileIO.read(song)
 
 		return audioFile.audioHeader.trackLength
+	}
+
+	fun addMetadataToFile(song: File, track: Track, albumArt: File?) {
+		val file = AudioFileIO.read(song)
+		val tag = file.tag
+
+		tag.setField(FieldKey.TITLE, track.name)
+		tag.setField(FieldKey.ARTIST, track.artist)
+		tag.setField(FieldKey.ALBUM, track.album)
+		tag.setField(FieldKey.TRACK, track.trackNumber?.toString() ?: "")
+		tag.setField(FieldKey.YEAR, track.releaseYear?.toString() ?: "")
+		tag.setField(FieldKey.GENRE, track.genre ?: "")
+
+		albumArt?.let {
+			// This doesn't seem to actually work... Not sure if it's because it's .ogg. But oh well
+			tag.artworkList.add(Artwork.createArtworkFromFile(it))
+		}
+
+		AudioFileIO.write(file)
+
+		logger.info("Wrote metadata to file")
 	}
 
 	private fun parseTrackNumber(trackNumber: String?): Int? {
