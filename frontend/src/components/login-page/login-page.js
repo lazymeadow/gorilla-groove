@@ -1,5 +1,6 @@
 import React from 'react';
 import {withRouter} from "react-router-dom";
+import {toast} from "react-toastify";
 import {Api} from "../../api";
 
 class LoginPageInternal extends React.Component {
@@ -15,14 +16,18 @@ class LoginPageInternal extends React.Component {
 			password: document.getElementById('password').value,
 		};
 
-		Api.post('authentication/login', params).then((result) => {
-			// Would be a little more secure to store in an httpOnly cookie, but the inconvenience of reworking things at
-			// the moment is really not worth it for a website such as this where an XSS compromise doesn't really matter
-			sessionStorage.setItem('token', result.token);
-			sessionStorage.setItem('loggedInUserName', result.username);
-			sessionStorage.setItem('loggedInEmail', result.email);
-			this.props.history.push('/'); // Redirect to the main page now that we logged in
-		})
+		Api.post('authentication/login', params)
+			.then((result) => {
+				// Would be a little more secure to store in an httpOnly cookie, but the inconvenience of reworking things at
+				// the moment is really not worth it for a website such as this where an XSS compromise doesn't really matter
+				sessionStorage.setItem('token', result.token);
+				sessionStorage.setItem('loggedInUserName', result.username);
+				sessionStorage.setItem('loggedInEmail', result.email);
+				this.props.history.push('/'); // Redirect to the main page now that we logged in
+			})
+			.catch(() => {
+				toast.error("Well... that didn't work. Check your inputs");
+			})
 	}
 
 	render() {
