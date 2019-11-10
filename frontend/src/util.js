@@ -75,3 +75,8 @@ export function mapKeys(object, transformFunction) {
 
 	return newObject;
 }
+
+// Pretty basic. Might be better if it checked that the token was valid, but that would require http call
+export function isLoggedIn() {
+	return sessionStorage.getItem('token');
+}

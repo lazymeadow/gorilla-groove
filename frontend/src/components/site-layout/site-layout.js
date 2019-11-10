@@ -6,6 +6,7 @@ import {TrackSourceList} from "../track-source-list/track-source-list";
 import {HeaderBar} from "../header-bar/header-bar";
 import {MusicContext} from "../../services/music-provider";
 import {SiteStats} from "../site-stats/site-stats";
+import {isLoggedIn} from "../../util";
 
 export class SiteLayout extends React.Component {
 	constructor(props) {
@@ -17,12 +18,17 @@ export class SiteLayout extends React.Component {
 		};
 
 		// TODO perhaps also check that this token is valid, not just that it exists
-		if (!sessionStorage.getItem('token')) {
+		if (!isLoggedIn()) {
 			this.props.history.push('/login'); // Redirect to the login page now that we logged out
 		}
 	}
 
 	componentDidMount() {
+		if (!isLoggedIn()) {
+			console.info('Not logged in. Awaiting redirect');
+			return;
+		}
+
 		this.context.loadSongsForUser();
 		this.context.loadPlaylists();
 
@@ -44,12 +50,19 @@ export class SiteLayout extends React.Component {
 					otherUsers: result
 				})
 			})
-			.catch((error) => {
-				console.error(error)
+			.catch(error => {
+				console.error(error);
+				// If we had an error here it PROBABLY means we had a failure to login
+				this.props.history.push('/login');
 			});
 	}
 
 	render() {
+		if (!isLoggedIn()) {
+			// Just do nothing until the redirect catches up and takes us to the login page
+			return <div/>
+		}
+
 		let displayedColumns = this.context.columnPreferences
 			.filter(columnPreference => columnPreference.enabled)
 			.map(columnPreference => columnPreference.name);
