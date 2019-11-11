@@ -151,7 +151,7 @@ class SongIngestionService(
 		logger.info("About to create a downloadable track for track ID: $trackId")
 		val track = trackRepository.findById(trackId).unwrap()
 
-		if (track == null || track.user != loadLoggedInUser()) {
+		if (track == null || (track.hidden && track.user != loadLoggedInUser())) {
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
