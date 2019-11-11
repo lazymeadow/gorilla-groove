@@ -2,6 +2,7 @@ package com.example.groove.services
 
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
 import org.slf4j.LoggerFactory
@@ -20,8 +21,8 @@ class SystemStorageService(
 		fileStorageProperties: FileStorageProperties
 ) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
 
-	override fun loadSong(trackId: Long): File {
-		val sourceFile = File("${musicProperties.musicDirectoryLocation}$trackId.ogg")
+	override fun loadSong(track: Track): File {
+		val sourceFile = File("${musicProperties.musicDirectoryLocation}${track.fileName}")
 
 		val destinationPath = generateTmpFilePath()
 

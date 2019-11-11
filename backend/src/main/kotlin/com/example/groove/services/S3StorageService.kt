@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import org.slf4j.LoggerFactory
@@ -44,8 +45,8 @@ class S3StorageService(
 		s3Client.putObject(bucketName, "music/$trackId.ogg", song)
 	}
 
-	override fun loadSong(trackId: Long): File {
-		val s3Stream = s3Client.getObject(bucketName, "music/$trackId.ogg").objectContent
+	override fun loadSong(track: Track): File {
+		val s3Stream = s3Client.getObject(bucketName, "music/${track.fileName}").objectContent
 		val filePath = generateTmpFilePath()
 		Files.copy(s3Stream, filePath, StandardCopyOption.REPLACE_EXISTING)
 

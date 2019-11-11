@@ -133,12 +133,12 @@ class SongIngestionService(
 		return destinationFile
 	}
 
-	fun trimSong(trackId: Long, startTime: String?, duration: String?): Int {
-		val tmpFile = fileStorageService.loadSong(trackId)
+	fun trimSong(track: Track, startTime: String?, duration: String?): Int {
+		val tmpFile = fileStorageService.loadSong(track)
 
 		val trimmedSong = ffmpegService.trimSong(tmpFile, startTime, duration)
 
-		fileStorageService.storeSong(trimmedSong, trackId)
+		fileStorageService.storeSong(trimmedSong, track.id)
 
 		val newLength = fileMetadataService.getTrackLength(trimmedSong)
 
@@ -155,7 +155,7 @@ class SongIngestionService(
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
-		val songFile = fileStorageService.loadSong(trackId)
+		val songFile = fileStorageService.loadSong(track)
 		val songArtist = if (track.artist.isBlank()) "Unknown" else track.artist
 		val songName = if (track.name.isBlank()) "Unknown" else track.name
 		val newName = "$songArtist - $songName.ogg"

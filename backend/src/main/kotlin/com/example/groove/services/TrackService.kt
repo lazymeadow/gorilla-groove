@@ -188,7 +188,7 @@ class TrackService(
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
-		val newLength = songIngestionService.trimSong(trackId, startTime, duration)
+		val newLength = songIngestionService.trimSong(track, startTime, duration)
 
 		track.length = newLength
 		trackRepository.save(track)
