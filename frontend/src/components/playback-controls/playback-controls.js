@@ -88,24 +88,15 @@ export class PlaybackControls extends React.Component {
 				totalTimeListened: 0,
 				duration: 0,
 				listenedTo: false,
-				songUrl: this.getSongLink(links),
+				songUrl: links.songLink,
 				playing: true
 			}, () => {
 				let audio = document.getElementById('audio');
 				audio.currentTime = 0;
-				audio.src = this.getSongLink(links);
+				audio.src = links.songLink;
 				audio.play();
 			})
 		});
-	}
-
-	// noinspection JSMethodCanBeStatic
-	getSongLink(links) {
-		if (links.usingS3) {
-			return links.songLink;
-		} else {
-			return links.songLink + '?t=' + sessionStorage.getItem('token');
-		}
 	}
 
 	handleTimeTick(currentTime) {

@@ -4,6 +4,7 @@ import {Api} from "../../api";
 import {PopoutMenu} from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
 import {InviteUser} from "../invite-user/invite-user";
+import {deleteCookie} from "../../util";
 
 class LogoutButtonInternal extends React.Component {
 	constructor(props) {
@@ -18,6 +19,7 @@ class LogoutButtonInternal extends React.Component {
 			console.error(error)
 		}).finally(() => {
 			sessionStorage.removeItem('token');
+			deleteCookie('cookieToken');
 			this.props.history.push('/login'); // Redirect to the login page now that we logged out
 		});
 	}

@@ -120,7 +120,7 @@ export class SongPopoutMenu extends React.Component {
 					e.stopPropagation();
 					const track = selectedTracks[0];
 
-					Api.download(`file/download/${track.id}?t=${sessionStorage.getItem('token')}`);
+					Api.download(`file/download/${track.id}`);
 				}
 			}
 			])

@@ -78,5 +78,9 @@ export function mapKeys(object, transformFunction) {
 
 // Pretty basic. Might be better if it checked that the token was valid, but that would require http call
 export function isLoggedIn() {
-	return sessionStorage.getItem('token');
+	return document.cookie.indexOf('cookieToken') !== -1;
+}
+
+export function deleteCookie(name) {
+	document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }

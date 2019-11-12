@@ -18,9 +18,10 @@ class LoginPageInternal extends React.Component {
 
 		Api.post('authentication/login', params)
 			.then((result) => {
-				// Would be a little more secure to store in an httpOnly cookie, but the inconvenience of reworking things at
-				// the moment is really not worth it for a website such as this where an XSS compromise doesn't really matter
-				sessionStorage.setItem('token', result.token);
+				// Would be better to have the cookie be HttpOnly, but need to figure out how to send it from the server to do that
+				const ninetyDays = 7776000;
+				document.cookie = `cookieToken=${result.token};max-age=${ninetyDays};path='/'`;
+
 				sessionStorage.setItem('loggedInUserName', result.username);
 				sessionStorage.setItem('loggedInEmail', result.email);
 				this.props.history.push('/'); // Redirect to the main page now that we logged in

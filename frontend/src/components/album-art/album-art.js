@@ -38,8 +38,8 @@ export class AlbumArt extends React.Component {
 			return;
 		}
 
-		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
-			const albumImageLink = this.getImageLink(links);
+		Api.get('file/link/' + this.context.playedTrack.id).then(links => {
+			const albumImageLink = links.albumArtLink;
 			let img = new Image();
 			img.src = albumImageLink;
 			img.onload = () => {
@@ -60,14 +60,6 @@ export class AlbumArt extends React.Component {
 
 	setModalOpen(isOpen) {
 		this.setState({ modalOpen: isOpen })
-	}
-
-	getImageLink(links) {
-		if (links.usingS3) {
-			return links.albumArtLink;
-		} else {
-			return links.albumArtLink + '?t=' + sessionStorage.getItem('token');
-		}
 	}
 
 	render() {

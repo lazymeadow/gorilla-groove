@@ -23,6 +23,7 @@ export class Api {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
 			}),
+			credentials: 'include'
 		}).then(res => res.json())
 	}
 
@@ -47,6 +48,7 @@ export class Api {
 		return fetch(this.getBaseUrl() + url, {
 			method: requestType,
 			headers: new Headers(headers),
+			credentials: 'include',
 			body: JSON.stringify(params)
 		}).then(res => {
 			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block

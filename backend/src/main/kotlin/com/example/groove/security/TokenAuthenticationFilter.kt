@@ -17,11 +17,14 @@ import javax.servlet.FilterChain
 class TokenAuthenticationFilter(requiresAuth: RequestMatcher) : AbstractAuthenticationProcessingFilter(requiresAuth) {
 
 	override fun attemptAuthentication(request: HttpServletRequest, response: HttpServletResponse): Authentication? {
-		val param = request.getHeader(AUTHORIZATION) ?: request.getParameter("t")
+		val tokenParam = request.getHeader(AUTHORIZATION) ?: request.getParameter("t")
+		val cookieParam = request.cookies.find { it.name == "cookieToken" }
 
-		val token = param?.let {
-			removeStart(param, BEARER).trim()
-		} ?: throw BadCredentialsException("Missing Authentication Token")
+		val token = when {
+			cookieParam != null -> cookieParam.value.trim()
+			tokenParam != null -> removeStart(tokenParam, BEARER).trim()
+			else -> throw BadCredentialsException("Missing Authentication Token")
+		}
 
 		val auth = UsernamePasswordAuthenticationToken(token, token)
 		return authenticationManager.authenticate(auth)
