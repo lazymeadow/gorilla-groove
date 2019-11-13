@@ -114,7 +114,11 @@ class SecurityConfiguration(
 			override fun addCorsMappings(registry: CorsRegistry) {
 				registry
 						.addMapping("/**")
-						.allowedOrigins("http://localhost:8081")
+						.allowedOrigins(
+								"http://localhost:8081",
+								"http://gorillagroove.net",
+								"https://gorillagroove.net"
+						)
 						.allowCredentials(true)
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
