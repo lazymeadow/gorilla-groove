@@ -80,7 +80,3 @@ export function mapKeys(object, transformFunction) {
 export function isLoggedIn() {
 	return document.cookie.indexOf('cookieToken') !== -1;
 }
-
-export function deleteCookie(name) {
-	document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-}

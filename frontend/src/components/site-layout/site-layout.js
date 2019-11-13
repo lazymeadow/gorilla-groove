@@ -7,6 +7,7 @@ import {HeaderBar} from "../header-bar/header-bar";
 import {MusicContext} from "../../services/music-provider";
 import {SiteStats} from "../site-stats/site-stats";
 import {isLoggedIn} from "../../util";
+import {getCookieValue} from "../../cookie";
 
 export class SiteLayout extends React.Component {
 	constructor(props) {
@@ -34,9 +35,9 @@ export class SiteLayout extends React.Component {
 
 		Api.get("user")
 			.then((result) => {
-				let ownUserIndex = result.findIndex((user) => {
-					return user.email.toLowerCase() === sessionStorage.getItem('loggedInEmail').toLowerCase();
-				});
+				const loggedInEmail = getCookieValue('loggedInEmail').toLowerCase();
+				const ownUserIndex = result.findIndex(user => user.email.toLowerCase() === loggedInEmail);
+
 				let ownUser = null;
 				if (ownUserIndex === -1) {
 					console.error("Could not locate own user within Gorilla Groove's users");

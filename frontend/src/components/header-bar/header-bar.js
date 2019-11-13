@@ -2,6 +2,7 @@ import React from 'react';
 import {UserButton, SongUpload} from "..";
 import {YoutubeDlButton} from "../youtube-dl/youtube-dl";
 import {SearchBar} from "../search-bar/search-bar";
+import {getCookieValue} from "../../cookie";
 
 export function HeaderBar() {
 	return (
@@ -20,7 +21,7 @@ export function HeaderBar() {
 
 			<SearchBar/>
 			<div className="user-button-wrapper">
-				{sessionStorage.getItem('loggedInUserName')}
+				{getCookieValue('loggedInUserName')}
 				<UserButton/>
 			</div>
 		</div>

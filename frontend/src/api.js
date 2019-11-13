@@ -40,10 +40,7 @@ export class Api {
 	}
 
 	static sendRequest(requestType, url, params) {
-		let headers = { 'Content-Type': 'application/json', };
-		if (sessionStorage.getItem('token')) {
-			headers['Authorization'] = `Bearer ${sessionStorage.getItem('token')}`;
-		}
+		let headers = { 'Content-Type': 'application/json' };
 
 		return fetch(this.getBaseUrl() + url, {
 			method: requestType,
@@ -87,6 +84,7 @@ export class Api {
 
 			let xhr = new XMLHttpRequest();
 			xhr.open(httpMethod, fullUrl);
+			xhr.withCredentials = true;
 			xhr.setRequestHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`);
 			xhr.upload.addEventListener("progress", progressCallback, false);
 			xhr.onload = function () {

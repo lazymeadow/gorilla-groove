@@ -2,6 +2,7 @@ import React from 'react';
 import {withRouter} from "react-router-dom";
 import {toast} from "react-toastify";
 import {Api} from "../../api";
+import {addCookie} from "../../cookie";
 
 class LoginPageInternal extends React.Component {
 	constructor(props) {
@@ -20,10 +21,10 @@ class LoginPageInternal extends React.Component {
 			.then((result) => {
 				// Would be better to have the cookie be HttpOnly, but need to figure out how to send it from the server to do that
 				const ninetyDays = 7776000;
-				document.cookie = `cookieToken=${result.token};max-age=${ninetyDays};path='/'`;
+				addCookie('cookieToken', result.token, ninetyDays);
+				addCookie('loggedInUserName', result.username, ninetyDays);
+				addCookie('loggedInEmail', result.email, ninetyDays);
 
-				sessionStorage.setItem('loggedInUserName', result.username);
-				sessionStorage.setItem('loggedInEmail', result.email);
 				this.props.history.push('/'); // Redirect to the main page now that we logged in
 			})
 			.catch(() => {

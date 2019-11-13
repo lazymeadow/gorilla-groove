@@ -18,7 +18,7 @@ class TokenAuthenticationFilter(requiresAuth: RequestMatcher) : AbstractAuthenti
 
 	override fun attemptAuthentication(request: HttpServletRequest, response: HttpServletResponse): Authentication? {
 		val tokenParam = request.getHeader(AUTHORIZATION) ?: request.getParameter("t")
-		val cookieParam = request.cookies.find { it.name == "cookieToken" }
+		val cookieParam = request.cookies?.find { it.name == "cookieToken" }
 
 		val token = when {
 			cookieParam != null -> cookieParam.value.trim()
