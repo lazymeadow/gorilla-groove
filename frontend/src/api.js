@@ -4,20 +4,24 @@ export class Api {
 		if (window.location.host.includes("localhost")) {
 			// For local dev-ing, I usually run react on a different web server. So redirect it to
 			// the one running the backend on 8080
-			return "http://localhost:8080";
+			return "localhost:8080";
 		} else {
-			return "http://" + window.location.host;
+			return window.location.host;
 		}
 	}
 
 	static getBaseUrl() {
-		return this.getBaseHost() + '/api/'
+		return "http://" + this.getBaseHost();
+	}
+
+	static getBaseApiUrl() {
+		return this.getBaseUrl() + '/api/'
 	}
 
 	static get(url, params) {
 		let urlParameters = Api.encodeUriParamsFromObject(params);
 
-		return fetch(this.getBaseUrl() + url + urlParameters, {
+		return fetch(this.getBaseApiUrl() + url + urlParameters, {
 			method: 'get',
 			headers: new Headers({
 				'Content-Type': 'application/json',
@@ -42,7 +46,7 @@ export class Api {
 	static sendRequest(requestType, url, params) {
 		let headers = { 'Content-Type': 'application/json' };
 
-		return fetch(this.getBaseUrl() + url, {
+		return fetch(this.getBaseApiUrl() + url, {
 			method: requestType,
 			headers: new Headers(headers),
 			credentials: 'include',
@@ -64,7 +68,7 @@ export class Api {
 	};
 
 	static download(url) {
-		const fullUrl = this.getBaseUrl() + url;
+		const fullUrl = this.getBaseApiUrl() + url;
 
 		const a = document.createElement("a");
 		a.href = fullUrl;
@@ -73,7 +77,7 @@ export class Api {
 	}
 
 	static upload(httpMethod, url, params, progressCallback) {
-		const fullUrl = this.getBaseUrl() + url;
+		const fullUrl = this.getBaseApiUrl() + url;
 
 		return new Promise((resolve, reject) => {
 			let formData = new FormData();

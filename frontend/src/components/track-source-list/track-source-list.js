@@ -34,11 +34,11 @@ export class TrackSourceList extends React.Component {
 	}
 
 	componentWillReceiveProps(props) {
-		let userIndex = this.state.dataSource.findIndex(data => {
+		const userIndex = this.state.dataSource.findIndex(data => {
 			return data.section === TrackView.USER
 		});
 
-		let playlistsIndex = this.state.dataSource.findIndex(data => {
+		const playlistsIndex = this.state.dataSource.findIndex(data => {
 			return data.section === TrackView.PLAYLIST
 		});
 
@@ -81,7 +81,7 @@ export class TrackSourceList extends React.Component {
 	}
 
 	render() {
-		let librarySelected = this.context.trackView === TrackView.LIBRARY ? 'selected' : '';
+		const librarySelected = this.context.trackView === TrackView.LIBRARY ? 'selected' : '';
 		return (
 			<div id="view-source-list">
 				<div
@@ -103,9 +103,9 @@ export class TrackSourceList extends React.Component {
 							onClick={() => this.handleParentNodeClick(i)}
 						>
 							{node.data.map(entry => {
-								let entrySelected = this.context.trackView === node.section & entry.id === this.context.viewedEntityId;
-								let entryClass = entrySelected ? 'selected' : '';
-								let cellId = i + '-' + entry.id;
+								const entrySelected = this.context.trackView === node.section & entry.id === this.context.viewedEntityId;
+								const entryClass = entrySelected ? 'selected' : '';
+								const cellId = i + '-' + entry.id;
 								return (
 									<div
 										id={cellId}
@@ -117,12 +117,16 @@ export class TrackSourceList extends React.Component {
 											editable={this.state.editedId === cellId}
 											text={entry.username ? entry.username : entry.name}
 											stopEdit={() => this.setState({ editedId: null })}
-											updateHandler={(newValue) => {
+											updateHandler={newValue => {
 												this.context.renamePlaylist(entry, newValue);
 												this.forceUpdate();
 											}}
 										/>
-
+										{
+											this.context.nowListeningUsers[entry.email]
+												? <span>♬</span>
+												: <span/>
+										}
 									</div>
 								)
 							})}

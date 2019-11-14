@@ -99,7 +99,7 @@ export class SongPopoutMenu extends React.Component {
 
 					// We have to do this out of sequence, and ocpy to clipboard before we call the API. Otherwise, FF
 					// will get mad that the clipboard copy didn't happen quick enough after the click event......
-					let link = Api.getBaseHost() + '/track-link/' + trackId;
+					let link = Api.getBaseUrl() + '/track-link/' + trackId;
 					let invisoElement = document.createElement('input');
 					invisoElement.value = link;
 					document.body.appendChild(invisoElement);

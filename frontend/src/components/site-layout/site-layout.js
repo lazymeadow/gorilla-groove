@@ -18,7 +18,6 @@ export class SiteLayout extends React.Component {
 			otherUsers: []
 		};
 
-		// TODO perhaps also check that this token is valid, not just that it exists
 		if (!isLoggedIn()) {
 			this.props.history.push('/login'); // Redirect to the login page now that we logged out
 		}
@@ -30,6 +29,7 @@ export class SiteLayout extends React.Component {
 			return;
 		}
 
+		this.context.connectToSocket();
 		this.context.loadSongsForUser();
 		this.context.loadPlaylists();
 

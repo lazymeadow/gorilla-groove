@@ -5,6 +5,7 @@ import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
 import {toast} from "react-toastify";
 import {findSpotInSortedArray} from "../util";
+import {getCookieValue} from "../cookie";
 
 export const MusicContext = React.createContext();
 
@@ -68,6 +69,9 @@ export class MusicProvider extends React.Component {
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			searchTerm: '',
+			nowListeningUsers: {},
+			socket: null,
+
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
 			reloadTracks: (...args) => this.reloadTracks(...args),
@@ -96,7 +100,10 @@ export class MusicProvider extends React.Component {
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
 			setUseRightClickMenu: (...args) => this.setUseRightClickMenu(...args),
 			setSearchTerm: (...args) => this.setSearchTerm(...args),
-			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args)
+			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
+
+			connectToSocket: (...args) => this.connectToSocket(...args),
+			sendPlayEvent: (...args) => this.sendPlayEvent(...args)
 		};
 	}
 
@@ -697,6 +704,34 @@ export class MusicProvider extends React.Component {
 		}
 
 		this.setState({ songIndexesToShuffle: adjustedIndexes })
+	}
+
+	connectToSocket() {
+		const socket = new WebSocket('ws://' + Api.getBaseHost() + '/api/socket');
+		socket.onmessage = res => {
+			const data = JSON.parse(res.data);
+			console.log('Received message');
+			console.log(data);
+
+			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
+			newNowListeningUsers[data.userEmail] = data.trackId;
+			this.setState({ nowListeningUsers: newNowListeningUsers })
+		};
+		this.setState({ socket });
+	}
+
+	sendPlayEvent(trackId) {
+		if (!this.state.socket || !this.state.playedTrack) {
+			return;
+		}
+
+		console.log('Sending play event');
+		this.state.socket.send(JSON.stringify(
+			{
+				userEmail: getCookieValue('loggedInEmail'),
+				trackId
+			}
+		))
 	}
 
 	render() {
