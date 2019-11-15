@@ -80,6 +80,18 @@ export class TrackSourceList extends React.Component {
 		}
 	}
 
+	getNowPlayingElement(entry) {
+		const song = this.context.nowListeningUsers[entry.email];
+		if (!song || !song.trackId) {
+			return <span/>
+		}
+
+		const artist = song.trackArtist ? song.trackArtist : 'Unknown';
+		const name = song.trackName ? song.trackName : 'Unknown';
+
+		return <span className="user-listening" title={`${artist} - ${name}`}>♬</span>
+	}
+
 	render() {
 		const librarySelected = this.context.trackView === TrackView.LIBRARY ? 'selected' : '';
 		return (
@@ -122,11 +134,7 @@ export class TrackSourceList extends React.Component {
 												this.forceUpdate();
 											}}
 										/>
-										{
-											this.context.nowListeningUsers[entry.email]
-												? <span>♬</span>
-												: <span/>
-										}
+										{ this.getNowPlayingElement(entry) }
 									</div>
 								)
 							})}

@@ -710,28 +710,34 @@ export class MusicProvider extends React.Component {
 		const socket = new WebSocket('ws://' + Api.getBaseHost() + '/api/socket');
 		socket.onmessage = res => {
 			const data = JSON.parse(res.data);
-			console.log('Received message');
-			console.log(data);
+
+			const email = data.userEmail;
+			delete data.userEmail;
 
 			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
-			newNowListeningUsers[data.userEmail] = data.trackId;
+			newNowListeningUsers[email] = data;
+
 			this.setState({ nowListeningUsers: newNowListeningUsers })
 		};
 		this.setState({ socket });
 	}
 
-	sendPlayEvent(trackId) {
-		if (!this.state.socket || !this.state.playedTrack) {
+	sendPlayEvent(track) {
+		if (!this.state.socket) {
 			return;
 		}
 
-		console.log('Sending play event');
-		this.state.socket.send(JSON.stringify(
-			{
-				userEmail: getCookieValue('loggedInEmail'),
-				trackId
-			}
-		))
+		const payload = {
+			userEmail: getCookieValue('loggedInEmail')
+		};
+
+		if (track) {
+			payload.trackId = track.id;
+			payload.trackArtist = track.hidden ? 'This track' : track.artist;
+			payload.trackName = track.hidden ? 'is private' : track.name;
+		}
+
+		this.state.socket.send(JSON.stringify(payload))
 	}
 
 	render() {

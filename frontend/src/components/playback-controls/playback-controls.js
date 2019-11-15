@@ -46,8 +46,11 @@ export class PlaybackControls extends React.Component {
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		if (!prevState.playing && this.state.playing) {
-			this.context.sendPlayEvent(this.context.playedTrack.id);
+		if (
+			(!prevState.playing && this.state.playing) // Started playing something when we weren't playing anything
+			|| (prevState.currentSessionPlayCounter !== this.state.currentSessionPlayCounter) // Song changed
+		) {
+			this.context.sendPlayEvent(this.context.playedTrack);
 			this.setState({ lastSongPlayHeartbeatTime: Date.now() })
 		} else if (prevState.playing && !this.state.playing) {
 			this.context.sendPlayEvent(null);
@@ -154,7 +157,7 @@ export class PlaybackControls extends React.Component {
 		const heartbeatInterval = 15000; // Don't need to spam everyone. Only check every 15 seconds
 
 		if (this.state.lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
-			this.context.sendPlayEvent(this.context.playedTrack.id);
+			this.context.sendPlayEvent(this.context.playedTrack);
 			this.setState({ lastSongPlayHeartbeatTime: currentTimeMillis })
 		}
 	}

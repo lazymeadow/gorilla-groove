@@ -69,5 +69,7 @@ class SocketTextHandler : TextWebSocketHandler() {
 data class NowListeningDTO(
 	val userEmail: String,
 	val trackId: Long?,
+	val trackName: String?,
+	val trackArtist: String?,
 	val time: Long = System.currentTimeMillis()
 )
