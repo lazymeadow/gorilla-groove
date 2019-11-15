@@ -18,7 +18,7 @@ class LoginPageInternal extends React.Component {
 		};
 
 		Api.post('authentication/login', params)
-			.then((result) => {
+			.then(result => {
 				// Would be better to have the cookie be HttpOnly, but need to figure out how to send it from the server to do that
 				const ninetyDays = 7776000;
 				addCookie('cookieToken', result.token, ninetyDays);

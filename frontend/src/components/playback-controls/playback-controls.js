@@ -12,6 +12,7 @@ export class PlaybackControls extends React.Component {
 			lastTime: 0,
 			currentTimePercent: 0,
 			totalTimeListened: 0,
+			lastSongPlayHeartbeatTime: 0,
 			timeTarget: null,
 			duration: 0,
 			listenedTo: false,
@@ -44,7 +45,17 @@ export class PlaybackControls extends React.Component {
 		}
 	}
 
-	componentDidUpdate() {
+	componentDidUpdate(prevProps, prevState) {
+		if (
+			(!prevState.playing && this.state.playing) // Started playing something when we weren't playing anything
+			|| (prevState.currentSessionPlayCounter !== this.state.currentSessionPlayCounter) // Song changed
+		) {
+			this.context.sendPlayEvent(this.context.playedTrack);
+			this.setState({ lastSongPlayHeartbeatTime: Date.now() })
+		} else if (prevState.playing && !this.state.playing) {
+			this.context.sendPlayEvent(null);
+		}
+
 		// No track to play. Nothing to do
 		if (!this.context.playedTrack) {
 			return;
@@ -130,13 +141,25 @@ export class PlaybackControls extends React.Component {
 					// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
 					this.context.forceTrackUpdate();
 				})
-				.catch((e) => {
+				.catch(e => {
 					console.error('Failed to update play count');
 					console.error(e);
 				});
 		}
 
+		this.broadcastListenHeartbeatIfNeeded();
 		this.setState(newProperties);
+	}
+
+	// Send an event that says we are listening to a particular song so other people can see it
+	broadcastListenHeartbeatIfNeeded() {
+		const currentTimeMillis = Date.now();
+		const heartbeatInterval = 15000; // Don't need to spam everyone. Only check every 15 seconds
+
+		if (this.state.lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
+			this.context.sendPlayEvent(this.context.playedTrack);
+			this.setState({ lastSongPlayHeartbeatTime: currentTimeMillis })
+		}
 	}
 
 	changeVolume(event) {
