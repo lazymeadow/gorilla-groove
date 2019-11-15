@@ -24,6 +24,8 @@ class WebSocketConfig : WebSocketConfigurer {
 
 }
 
+// FIXME this socket really doesn't belong here, and it is also super specific to one use case
+// It should be moved out, and be made more generic and look at message types for the future
 @Component
 class SocketTextHandler : TextWebSocketHandler() {
 
