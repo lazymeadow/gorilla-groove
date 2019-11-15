@@ -1,5 +1,6 @@
 package com.example.groove.config
 
+import com.example.groove.security.SecurityConfiguration
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Component
@@ -19,7 +20,7 @@ class WebSocketConfig : WebSocketConfigurer {
 	override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
 		registry
 				.addHandler(SocketTextHandler(), "/api/socket")
-				.setAllowedOrigins("*")
+				.setAllowedOrigins(*SecurityConfiguration.allowedOrigins)
 	}
 
 }

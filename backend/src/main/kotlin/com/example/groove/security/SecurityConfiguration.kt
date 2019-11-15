@@ -114,11 +114,7 @@ class SecurityConfiguration(
 			override fun addCorsMappings(registry: CorsRegistry) {
 				registry
 						.addMapping("/**")
-						.allowedOrigins(
-								"http://localhost:8081",
-								"http://gorillagroove.net",
-								"https://gorillagroove.net"
-						)
+						.allowedOrigins(*allowedOrigins)
 						.allowCredentials(true)
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
@@ -127,5 +123,13 @@ class SecurityConfiguration(
 
 	companion object {
 		val logger = LoggerFactory.getLogger(SecurityConfiguration::class.java)!!
+
+		val allowedOrigins = arrayOf(
+				"http://127.0.0.1:8081",
+				"http://localhost:8081",
+				"http://192.168.1.25:8081",
+				"http://gorillagroove.net",
+				"https://gorillagroove.net"
+		)
 	}
 }
