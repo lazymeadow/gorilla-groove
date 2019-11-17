@@ -15,7 +15,7 @@ export class Api {
 	}
 
 	static getBaseUrl() {
-		return "http://" + this.getBaseHost();
+		return "https://" + this.getBaseHost();
 	}
 
 	static getBaseApiUrl() {
