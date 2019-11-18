@@ -645,8 +645,8 @@ export class MusicProvider extends React.Component {
 		LocalStorage.setBoolean('useRightClickMenu', useMenu);
 	}
 
-	setSearchTerm(searchTerm) {
-		this.setState({ searchTerm: searchTerm });
+	setSearchTerm(searchTerm, callback) {
+		this.setState({ searchTerm: searchTerm }, callback);
 	}
 
 	resetColumnPreferences() {

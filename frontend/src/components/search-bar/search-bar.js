@@ -55,15 +55,27 @@ export class SearchBar extends React.Component {
 		ReactDOM.findDOMNode(this).removeEventListener('keydown', e => { this.handleKeyPress(e) });
 	}
 
+	clearInput() {
+		this.context.setSearchTerm('', this.context.reloadTracks);
+	}
+
 	render() {
 		return (
 			<div className="search">
 				Search
 				<input
 					className="search-bar"
+					value={this.context.searchTerm}
 					onChange={this.handleInputChange.bind(this)}
 					defaultValue={this.context.searchTerm}
 				/>
+				{ this.context.searchTerm
+					? <i
+						className="fas fa-times-circle close-button"
+						onClick={this.clearInput.bind(this)}
+					/>
+					: <i/>
+				}
 			</div>
 		)
 	}
