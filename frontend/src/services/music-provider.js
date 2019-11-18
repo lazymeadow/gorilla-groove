@@ -102,6 +102,7 @@ export class MusicProvider extends React.Component {
 			setUseRightClickMenu: (...args) => this.setUseRightClickMenu(...args),
 			setSearchTerm: (...args) => this.setSearchTerm(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
+			resetSessionState: (...args) => this.resetSessionState(...args),
 
 			// Socket
 			connectToSocket: (...args) => this.connectToSocket(...args),
@@ -652,6 +653,14 @@ export class MusicProvider extends React.Component {
 		LocalStorage.deleteKey('columnPreferences');
 		let preferences = this.loadColumnPreferences();
 		this.setState({ columnPreferences: preferences });
+	}
+
+	resetSessionState() {
+		this.setState({
+			playedTrack: null,
+			playedTrackIndex: null,
+			searchTerm: ''
+		})
 	}
 
 	resetShuffleIndexes(withoutIndex) {
