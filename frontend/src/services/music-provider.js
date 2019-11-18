@@ -708,8 +708,15 @@ export class MusicProvider extends React.Component {
 
 	connectToSocket() {
 		const socket = new WebSocket(Api.getSocketUri());
+		socket.onopen = e => {
+			console.log('WebSocket was opened', new Date());
+			console.log(e);
+		};
 		socket.onmessage = res => {
 			const data = JSON.parse(res.data);
+
+			console.log('WebSocket received message', new Date());
+			console.log(data);
 
 			const email = data.userEmail;
 			delete data.userEmail;
@@ -717,7 +724,13 @@ export class MusicProvider extends React.Component {
 			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
 			newNowListeningUsers[email] = data;
 
+			console.log(newNowListeningUsers);
+
 			this.setState({ nowListeningUsers: newNowListeningUsers })
+		};
+		socket.onclose = e => {
+			console.log('WebSocket was closed', new Date());
+			console.log(e);
 		};
 		this.setState({ socket });
 	}
@@ -731,13 +744,31 @@ export class MusicProvider extends React.Component {
 			userEmail: getCookieValue('loggedInEmail')
 		};
 
+		// Had a server-side deserialization error once saying this was missing... Not sure how
+		if (!payload.userEmail) {
+			console.error('No user email found!? Not sending socket message');
+			return;
+		}
+
 		if (track) {
 			payload.trackId = track.id;
 			payload.trackArtist = track.hidden ? 'This track' : track.artist;
 			payload.trackName = track.hidden ? 'is private' : track.name;
 		}
 
-		this.state.socket.send(JSON.stringify(payload))
+		console.log('About to send socket data', new Date());
+		console.log(payload);
+		const readyState = this.state.socket.readyState;
+
+		if (readyState === WebSocket.OPEN) {
+			this.state.socket.send(JSON.stringify(payload))
+		} else if (readyState === WebSocket.CONNECTING) {
+			console.info('Socket was still connecting. Ignoring socket send request');
+		} else {
+			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
+			const newSocket = new WebSocket(Api.getSocketUri());
+			this.setState({ socket: newSocket });
+		}
 	}
 
 	render() {

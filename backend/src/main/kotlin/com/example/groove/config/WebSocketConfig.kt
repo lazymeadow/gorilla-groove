@@ -2,6 +2,7 @@ package com.example.groove.config
 
 import com.example.groove.security.SecurityConfiguration
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
@@ -22,7 +23,6 @@ class WebSocketConfig : WebSocketConfigurer {
 				.addHandler(SocketTextHandler(), "/api/socket")
 				.setAllowedOrigins(*SecurityConfiguration.allowedOrigins)
 	}
-
 }
 
 // FIXME this socket really doesn't belong here, and it is also super specific to one use case
@@ -35,12 +35,21 @@ class SocketTextHandler : TextWebSocketHandler() {
 	val currentSongListens = ConcurrentHashMap<String, NowListeningDTO>()
 
 	override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
-		val nowListeningDTO = objectMapper.readValue(message.payload, NowListeningDTO::class.java)
+		val nowListeningDTO = try {
+			objectMapper.readValue(message.payload, NowListeningDTO::class.java)
+		} catch (e: Exception) {
+			logger.error("Could not deserialize WebSocket message! Message: $message", e)
+			return
+		}
 
 		currentSongListens[session.id] = nowListeningDTO
 
 		val otherSessions = sessions - session
-		otherSessions.forEach { it.sendMessage(message) }
+		otherSessions.forEach {
+			if (it.isOpen) {
+				it.sendMessage(message)
+			}
+		}
 	}
 
 	override fun afterConnectionEstablished(session: WebSocketSession) {
@@ -60,12 +69,22 @@ class SocketTextHandler : TextWebSocketHandler() {
 		sessions.remove(session)
 		currentSongListens.remove(session.id)
 
-		// If this user was playing something, broadcast to everyone that they stopped
-		if (lastSentUpdate?.trackId != null) {
-			val newUpdate = lastSentUpdate.copy(trackId = null)
-			val message = objectMapper.writeValueAsString(newUpdate)
-			sessions.forEach { it.sendMessage(TextMessage(message)) }
+		// If this user was not playing something, then there is no need to update any clients
+		if (lastSentUpdate?.trackId == null) {
+			return
 		}
+
+		val newUpdate = lastSentUpdate.copy(trackId = null)
+		val message = objectMapper.writeValueAsString(newUpdate)
+		sessions.forEach {
+			if (it.isOpen) {
+				it.sendMessage(TextMessage(message))
+			}
+		}
+	}
+
+	companion object {
+		val logger = LoggerFactory.getLogger(WebSocketConfig::class.java)!!
 	}
 }
 
