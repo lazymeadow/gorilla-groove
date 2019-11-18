@@ -103,7 +103,9 @@ export class MusicProvider extends React.Component {
 			setSearchTerm: (...args) => this.setSearchTerm(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
 
+			// Socket
 			connectToSocket: (...args) => this.connectToSocket(...args),
+			disconnectSocket: (...args) => this.disconnectSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args)
 		};
 	}

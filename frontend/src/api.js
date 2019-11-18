@@ -30,8 +30,7 @@ export class Api {
 		return fetch(this.getBaseApiUrl() + url + urlParameters, {
 			method: 'get',
 			headers: new Headers({
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+				'Content-Type': 'application/json'
 			}),
 			credentials: 'include'
 		}).then(res => res.json())
@@ -95,7 +94,6 @@ export class Api {
 			let xhr = new XMLHttpRequest();
 			xhr.open(httpMethod, fullUrl);
 			xhr.withCredentials = true;
-			xhr.setRequestHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`);
 			xhr.upload.addEventListener("progress", progressCallback, false);
 			xhr.onload = function () {
 				if (this.status >= 200 && this.status < 300) {
