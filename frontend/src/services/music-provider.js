@@ -6,6 +6,7 @@ import * as Util from "../util";
 import {toast} from "react-toastify";
 import {findSpotInSortedArray} from "../util";
 import {getCookieValue} from "../cookie";
+import {isLoggedIn} from "../util";
 
 export const MusicContext = React.createContext();
 
@@ -553,21 +554,6 @@ export class MusicProvider extends React.Component {
 			});
 	}
 
-	// @Deprecated
-	updateTrack(track, displayColumnName, newValue) {
-		const columnName = this.trackKeyConversions[displayColumnName];
-
-		let params = { trackId: track.id };
-		params[columnName] = newValue;
-
-		track[columnName] = newValue;
-
-		return Api.put('track', params).catch((error) => {
-			console.error(error);
-			toast.error("Failed to updated song data")
-		})
-	}
-
 	updateTracks(tracks, albumArt, trackData, usingDisplayNames) {
 		// Convert frontend column names to backend names
 		let trackParams;
@@ -707,16 +693,14 @@ export class MusicProvider extends React.Component {
 	}
 
 	connectToSocket() {
+		if (!isLoggedIn()) {
+			return;
+		}
+
 		const socket = new WebSocket(Api.getSocketUri());
-		socket.onopen = e => {
-			console.log('WebSocket was opened', new Date());
-			console.log(e);
-		};
+
 		socket.onmessage = res => {
 			const data = JSON.parse(res.data);
-
-			console.log('WebSocket received message', new Date());
-			console.log(data);
 
 			const email = data.userEmail;
 			delete data.userEmail;
@@ -724,15 +708,23 @@ export class MusicProvider extends React.Component {
 			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
 			newNowListeningUsers[email] = data;
 
-			console.log(newNowListeningUsers);
-
 			this.setState({ nowListeningUsers: newNowListeningUsers })
 		};
-		socket.onclose = e => {
-			console.log('WebSocket was closed', new Date());
-			console.log(e);
+		socket.onclose = () => {
+			console.log('WebSocket was closed. Reconnecting');
+			this.connectToSocket();
 		};
-		this.setState({ socket });
+
+		this.setState({
+			socket,
+			nowListeningUsers: {}
+		});
+	}
+
+	disconnectSocket() {
+		if (this.state.socket) {
+			this.state.socket.close();
+		}
 	}
 
 	sendPlayEvent(track) {
@@ -766,8 +758,7 @@ export class MusicProvider extends React.Component {
 			console.info('Socket was still connecting. Ignoring socket send request');
 		} else {
 			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
-			const newSocket = new WebSocket(Api.getSocketUri());
-			this.setState({ socket: newSocket });
+			this.connectToSocket();
 		}
 	}
 

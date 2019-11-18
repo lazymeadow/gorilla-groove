@@ -45,14 +45,11 @@ class SocketTextHandler : TextWebSocketHandler() {
 		currentSongListens[session.id] = nowListeningDTO
 
 		val otherSessions = sessions - session
-		otherSessions.forEach {
-			if (it.isOpen) {
-				it.sendMessage(message)
-			}
-		}
+		otherSessions.forEach { it.sendIfOpen(message) }
 	}
 
 	override fun afterConnectionEstablished(session: WebSocketSession) {
+		logger.info("New user connected to socket with ID: ${session.id}")
 		sessions.add(session)
 
 		// Tell this new user about all the things being listened to
@@ -60,10 +57,11 @@ class SocketTextHandler : TextWebSocketHandler() {
 		currentSongListens.values
 				.filter { it.time > timeForStaleListen }
 				.map { objectMapper.writeValueAsString(it) }
-				.forEach { session.sendMessage(TextMessage(it)) }
+				.forEach { session.sendIfOpen(it) }
 	}
 
 	override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+		logger.info("User disconnected from socket with ID: ${session.id}")
 		val lastSentUpdate = currentSongListens[session.id]
 
 		sessions.remove(session)
@@ -76,10 +74,18 @@ class SocketTextHandler : TextWebSocketHandler() {
 
 		val newUpdate = lastSentUpdate.copy(trackId = null)
 		val message = objectMapper.writeValueAsString(newUpdate)
-		sessions.forEach {
-			if (it.isOpen) {
-				it.sendMessage(TextMessage(message))
-			}
+		sessions.forEach { it.sendIfOpen(message) }
+	}
+
+	fun WebSocketSession.sendIfOpen(message: String) {
+		sendIfOpen(TextMessage(message))
+	}
+
+	fun WebSocketSession.sendIfOpen(message: TextMessage) {
+		if (isOpen) {
+			sendMessage(message)
+		} else {
+			logger.info("Could not send message to socket ID: $id: $message")
 		}
 	}
 

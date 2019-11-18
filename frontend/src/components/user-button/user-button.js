@@ -5,6 +5,7 @@ import {PopoutMenu} from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
 import {InviteUser} from "../invite-user/invite-user";
 import {deleteCookie} from "../../cookie";
+import {MusicContext} from "../../services/music-provider";
 
 class LogoutButtonInternal extends React.Component {
 	constructor(props) {
@@ -22,13 +23,10 @@ class LogoutButtonInternal extends React.Component {
 			deleteCookie('cookieToken');
 			deleteCookie('loggedInEmail');
 			deleteCookie('loggedInUserName');
+
+			this.context.disconnectSocket();
 			this.props.history.push('/login'); // Redirect to the login page now that we logged out
 		});
-	}
-
-	test(event) {
-		event.preventDefault();
-		this.props.history.push('/track-link/15');
 	}
 
 	render() {
@@ -49,6 +47,7 @@ class LogoutButtonInternal extends React.Component {
 		)
 	}
 }
+LogoutButtonInternal.contextType = MusicContext;
 
 // This page uses the router history. In order to gain access to the history, the class needs
 // to be exported wrapped by the router. Now inside of LogoutButtonInternal, this.props will have a history object
