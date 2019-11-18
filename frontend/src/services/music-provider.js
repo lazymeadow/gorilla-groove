@@ -707,7 +707,7 @@ export class MusicProvider extends React.Component {
 	}
 
 	connectToSocket() {
-		const socket = new WebSocket('wss://' + Api.getBaseHost() + '/api/socket');
+		const socket = new WebSocket(Api.getSocketUri());
 		socket.onmessage = res => {
 			const data = JSON.parse(res.data);
 
