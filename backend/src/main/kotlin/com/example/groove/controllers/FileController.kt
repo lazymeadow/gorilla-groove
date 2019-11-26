@@ -1,6 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
@@ -11,13 +12,23 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.FileInputStream
 import javax.servlet.http.HttpServletResponse
 import kotlin.system.measureTimeMillis
+import org.springframework.http.ResponseEntity
+import java.nio.file.Files
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import java.io.File
+import java.nio.file.Paths
+
 
 @RestController
 @RequestMapping("api/file")
 class FileController(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageService: FileStorageService,
-		private val s3Properties: S3Properties
+		private val s3Properties: S3Properties,
+		private val fileStorageProperties: FileStorageProperties
 ) {
 
 	// Example cURL command for uploading a file
@@ -54,6 +65,31 @@ class FileController(
 
 		logger.info("Deleting temporary file")
 		file.delete()
+	}
+
+	@RequestMapping("/download-apk")
+	fun downloadApk(): ResponseEntity<Resource> {
+		val path = fileStorageProperties.apkDownloadDir
+				?: throw IllegalStateException("No APK location has been configured!")
+
+		val apkFile = File(path)
+
+		if (!apkFile.exists()) {
+			throw IllegalStateException("No APK exists at the specified location '$path'!")
+		}
+
+		val resource = ByteArrayResource(
+				Files.readAllBytes(Paths.get(apkFile.absolutePath))
+		)
+
+		val headers = HttpHeaders()
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=groove.apk")
+
+		return ResponseEntity.ok()
+				.headers(headers)
+				.contentLength(apkFile.length())
+				.contentType(MediaType.parseMediaType("application/octet-stream"))
+				.body(resource)
 	}
 
 	@GetMapping("/link/{trackId}")

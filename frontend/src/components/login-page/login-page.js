@@ -32,25 +32,39 @@ class LoginPageInternal extends React.Component {
 			})
 	}
 
+	downloadApk(event) {
+		event.preventDefault();
+
+		Api.download('file/download-apk');
+
+		return false;
+	}
+
 	render() {
 		return (
 			<div className="full-screen">
 				<form onSubmit={this.submit.bind(this)}>
 					<div className="login-container">
-						<h1>Gorilla Groove</h1>
-						<div className="login-flex">
-							<div className="flex-label">
-								<label htmlFor="email">Enter your email</label>
-								<input id="email" name="email" type="email"/>
+						<div>
+							<h1>Gorilla Groove</h1>
+							<div className="login-flex">
+								<div className="flex-label">
+									<label htmlFor="email">Enter your email</label>
+									<input id="email" name="email" type="email"/>
+								</div>
+
+								<div className="flex-label">
+									<label htmlFor="password">Enter your password</label>
+									<input id="password" name="password" type="password"/>
+								</div>
 							</div>
 
-							<div className="flex-label">
-								<label htmlFor="password">Enter your password</label>
-								<input id="password" name="password" type="password"/>
-							</div>
+							<button>Login</button>
 						</div>
 
-						<button>Login</button>
+						<div className="apk-download">
+							Download the <a onClick={this.downloadApk.bind(this)}>Android App</a>
+						</div>
 					</div>
 				</form>
 			</div>
