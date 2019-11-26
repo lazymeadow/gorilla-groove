@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.security.UserAuthenticationService
 import com.example.groove.services.UserService
 import com.example.groove.util.loadLoggedInUser
+import org.slf4j.LoggerFactory
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,6 +19,9 @@ class AuthenticationController(
 	fun login(@RequestBody userAuthenticationDTO: UserAuthenticationDTO): ResponseEntity<AuthResponseDTO> {
 		val token = userAuthenticationService.login(userAuthenticationDTO.email, userAuthenticationDTO.password)
 		val user = userService.getUserByEmail(userAuthenticationDTO.email)!!
+
+		logger.info(userAuthenticationDTO.email + " logged in")
+
 		return ResponseEntity
 				.ok(AuthResponseDTO(token, userAuthenticationDTO.email, user.name))
 	}
@@ -53,4 +57,7 @@ class AuthenticationController(
 			val password: String
 	)
 
+	companion object {
+		val logger = LoggerFactory.getLogger(AuthenticationController::class.java)!!
+	}
 }

@@ -28,7 +28,6 @@ class UuidAuthenticationService(
 
 		if (!BCrypt.checkpw(password, user.encryptedPassword)) {
 			logger.info("A user attempted to log in to the email address $email but provided the wrong password")
-			logger.info("$password ${user.encryptedPassword}")
 			throw BadCredentialsException("The password provided was invalid")
 		}
 

@@ -94,6 +94,8 @@ class FileController(
 
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {
+		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().email}")
+
 		return TrackLinks(
 				fileStorageService.getSongLink(trackId, false),
 				fileStorageService.getAlbumArtLink(trackId, false),
@@ -103,6 +105,8 @@ class FileController(
 
 	@GetMapping("/track-link/{trackId}")
 	fun getLinksForTrackAnonymous(@PathVariable trackId: Long): TrackLinks {
+		logger.info("Anonymous track links were requested for Track ID: $trackId")
+
 		return TrackLinks(
 				fileStorageService.getSongLink(trackId, true),
 				null,
