@@ -2,6 +2,7 @@ import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
 import {MusicContext} from "../../services/music-provider";
 import {EditableDiv} from "../editable-div/editable-div";
+import {TrackView} from "../../enums/track-view";
 
 export class SongRow extends React.Component {
 	constructor(props) {
@@ -58,7 +59,6 @@ export class SongRow extends React.Component {
 		}
 	}
 
-
 	render() {
 		let selected = this.props.selected ? "selected" : "";
 		let playedClass = this.props.played ? 'played' : '';
@@ -75,7 +75,11 @@ export class SongRow extends React.Component {
 							<div className={this.props.showContextMenu && index === 0 ? 'shifted-entry' : ''}>
 								<EditableDiv
 									id={cellId}
-									editable={SongRow.updatableColumns.has(columnName) && this.props.editableCell === cellId}
+									editable={
+										SongRow.updatableColumns.has(columnName)
+										&& this.props.editableCell === cellId
+										&& this.context.trackView === TrackView.LIBRARY
+									}
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={(newValue) => {
