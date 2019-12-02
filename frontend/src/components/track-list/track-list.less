@@ -1,5 +1,8 @@
 .track-list {
   height: 100%;
+  display: inline; // Having the element be inline makes the behavior better when scrolling
+                   // This element is inside of a scrollable div, and when scrolling the element would
+                   // kind of scroll out of view. This affected things like the resize handles floating away
 
   // All the gross !importants in this file override styles in the column-resizer library
   .grip-lastgrip {
