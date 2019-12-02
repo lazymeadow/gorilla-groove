@@ -6,7 +6,6 @@ import {MusicContext} from "../../services/music-provider";
 import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 import {TrackView} from "../../enums/track-view";
 import * as LocalStorage from "../../local-storage";
-import * as Util from "../../util";
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -34,10 +33,10 @@ export class TrackList extends React.Component {
 
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
-			document.body.addEventListener('keydown', e => this.handleKeyPress(e));
-			document.body.addEventListener('click', e => this.handleEditStop(e));
+			document.body.addEventListener('keydown', this.handleKeyPress.bind(this));
+			document.body.addEventListener('click', this.handleEditStop.bind(this));
 			document.getElementsByClassName('border-layout-center')[0]
-				.addEventListener('scroll', () => this.handleScroll());
+				.addEventListener('scroll', this.handleScroll.bind(this));
 		}
 		ReactDOM.findDOMNode(this).addEventListener('contextmenu', e => { this.handleContextMenu(e) });
 	}
@@ -46,10 +45,10 @@ export class TrackList extends React.Component {
 		this.disableResize();
 
 		if (!this.props.trackView) {
-			document.body.removeEventListener('click', e => this.handleEditStop(e));
-			document.body.removeEventListener('keydown', e => this.handleKeyPress(e));
+			document.body.removeEventListener('click', this.handleEditStop);
+			document.body.removeEventListener('keydown', this.handleKeyPress);
 			document.getElementsByClassName('border-layout-center')[0]
-				.removeEventListener('scroll', () => this.handleScroll());
+				.removeEventListener('scroll', this.handleScroll);
 		}
 
 		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', e => { this.handleContextMenu(e) });
@@ -293,7 +292,9 @@ export class TrackList extends React.Component {
 	}
 
 	stopCellEdits() {
-		this.setState({ editableCell: null })
+		if (this.state.editableCell !== null) {
+			this.setState({ editableCell: null })
+		}
 	}
 
 	getSelectedTracks() {
@@ -339,7 +340,9 @@ export class TrackList extends React.Component {
 	}
 
 	closeContextMenu() {
-		this.setState({ contextMenuOptions: { expanded: false }})
+		if (this.state.contextMenuOptions.expanded) {
+			this.setState({ contextMenuOptions: { expanded: false }})
+		}
 	}
 
 	getSortIndicator(columnName) {

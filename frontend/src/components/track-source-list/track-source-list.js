@@ -26,11 +26,11 @@ export class TrackSourceList extends React.Component {
 	}
 
 	componentDidMount() {
-		document.body.addEventListener('click', (e) => this.handleEditStop(e));
+		document.body.addEventListener('click', this.handleEditStop.bind(this));
 	}
 
 	componentWillUnmount() {
-		document.body.removeEventListener('click', (e) => this.handleEditStop(e));
+		document.body.removeEventListener('click', this.handleEditStop.bind(this));
 	}
 
 	componentWillReceiveProps(props) {
@@ -47,11 +47,15 @@ export class TrackSourceList extends React.Component {
 		dataSource[userIndex].data = props.otherUsers;
 		dataSource[playlistsIndex].data = props.playlists;
 
-		this.setState({ dataSource: dataSource });
+		this.setState({ dataSource });
 	}
 
 	handleEditStop(event) {
-		if (event.target.tagName !== 'INPUT' && event.target.id !== this.state.editedId) {
+		if (
+			event.target.tagName !== 'INPUT'
+			&& event.target.id !== this.state.editedId
+			&& this.state.editedId !== null
+		) {
 			this.setState({ editedId: null })
 		}
 	}
