@@ -130,7 +130,7 @@ export class TrackSourceList extends React.Component {
 										onClick={() => this.selectEntry(node.section, entry, cellId)}
 									>
 										<EditableDiv
-											editable={this.state.editedId === cellId}
+											editable={this.state.editedId === cellId && node.section === TrackView.PLAYLIST}
 											text={entry.username ? entry.username : entry.name}
 											stopEdit={() => this.setState({ editedId: null })}
 											updateHandler={newValue => {
