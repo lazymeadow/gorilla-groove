@@ -106,7 +106,14 @@ export class PlaybackControls extends React.Component {
 				let audio = document.getElementById('audio');
 				audio.currentTime = 0;
 				audio.src = links.songLink;
-				audio.play();
+				const playPromise = audio.play();
+				playPromise.catch(e => {
+					// Code 20 is when the loading gets aborted. This happens all the time if you skip around.
+					// I'm sick of seeing them in the logs so ignore them
+					if (e.code !== 20) {
+						console.error(e);
+					}
+				})
 			})
 		});
 	}
