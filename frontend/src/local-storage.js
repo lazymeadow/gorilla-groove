@@ -44,7 +44,7 @@ export function setNumber(key, number) {
 	if (number === null || number === undefined) {
 		throw Error(`Non-numeric value (${number}) passed to setNumber for key ${key}`);
 	}
-	let parsedNumber = Number.parseFloat(number);
+	const parsedNumber = Number.parseFloat(number);
 
 	if (isNaN(parsedNumber)) {
 		throw Error(`Non-numeric value (${number}) passed to setNumber for key ${key}`);
@@ -60,7 +60,7 @@ export function getNumber(key, defaultValue) {
 		return defaultValue;
 	}
 
-	let parsedNumber = Number.parseFloat(value);
+	const parsedNumber = Number.parseFloat(value);
 	if (isNaN(parsedNumber)) {
 		throw Error(`Non-numeric value (${value}) retrieved with getNumber`);
 	}

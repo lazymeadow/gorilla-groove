@@ -67,7 +67,6 @@ export class SearchBar extends React.Component {
 					className="search-bar"
 					value={this.context.searchTerm}
 					onChange={this.handleInputChange.bind(this)}
-					defaultValue={this.context.searchTerm}
 				/>
 				{ this.context.searchTerm
 					? <i

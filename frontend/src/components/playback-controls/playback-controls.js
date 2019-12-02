@@ -3,6 +3,7 @@ import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
 import * as LocalStorage from "../../local-storage";
+import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 
 export class PlaybackControls extends React.Component {
 	constructor(props) {
@@ -232,67 +233,75 @@ export class PlaybackControls extends React.Component {
 		let playedTrack = this.context.playedTrack;
 		let src = playedTrack ? this.state.songUrl : '';
 		return (
-			<div className="playback-controls">
-				<audio id="audio" src={src}>
-					Your browser is ancient. Be less ancient.
-				</audio>
+			<div className="playback-controls display-flex">
+				<div>
+					<audio id="audio" src={src}>
+						Your browser is ancient. Be less ancient.
+					</audio>
 
-				<div className="played-song-name">
-					{this.getDisplayedSongName()}
+					<div className="played-song-name">
+						{this.getDisplayedSongName()}
+					</div>
+
+					<div>
+						<div className="display-flex">
+							<i
+								onClick={() => this.context.playPrevious()}
+								className="fas fa-fast-backward control"
+							/>
+							<i
+								onClick={() => this.togglePause()}
+								className={`fas fa-${this.state.playing ? 'pause' : 'play'} control`}
+							/>
+							<i
+								onClick={() => this.context.playNext()}
+								className="fas fa-fast-forward control"
+							/>
+							<i
+								onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
+								className={`fas fa-random control ${this.context.shuffleSongs ? 'enabled' : ''}`}
+							/>
+							<i
+								onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
+								className={`fas fa-sync-alt control ${this.context.repeatSongs ? 'enabled' : ''}`}
+							/>
+						</div>
+
+						<div className="play-time-wrapper">
+							<div>
+								{formatTimeFromSeconds(this.state.currentTimePercent * this.state.duration)} / {formatTimeFromSeconds(this.state.duration)}
+							</div>
+							<input
+								type="range"
+								className="time-slider"
+								onChange={(e) => this.changePlayTime(e)}
+								min="0"
+								max="1"
+								step="0.01"
+								value={this.state.currentTimePercent}
+							/>
+						</div>
+
+						<div className="volume-wrapper">
+							<i
+								className={`fas ${this.getVolumeIcon()}`}
+								onClick={() => this.toggleMute()}
+							/>
+							<input
+								type="range"
+								className="volume-slider"
+								onChange={(e) => this.changeVolume(e)}
+								min="0"
+								max="1"
+								step="0.01"
+								value={this.state.volume}
+							/>
+						</div>
+					</div>
 				</div>
 
-				<div>
-					<div>
-						<i
-							onClick={() => this.context.playPrevious()}
-							className="fas fa-fast-backward control"
-						/>
-						<i
-							onClick={() => this.togglePause()}
-							className={`fas fa-${this.state.playing ? 'pause' : 'play'} control`}
-						/>
-						<i
-							onClick={() => this.context.playNext()}
-							className="fas fa-fast-forward control"
-						/>
-						<i
-							onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
-							className={`fas fa-random control ${this.context.shuffleSongs ? 'enabled' : ''}`}
-						/>
-						<i
-							onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
-							className={`fas fa-sync-alt control ${this.context.repeatSongs ? 'enabled' : ''}`}
-						/>
-					</div>
-					<div className="play-time-wrapper">
-						<div>
-							{formatTimeFromSeconds(this.state.currentTimePercent * this.state.duration)} / {formatTimeFromSeconds(this.state.duration)}
-						</div>
-						<input
-							type="range"
-							className="time-slider"
-							onChange={(e) => this.changePlayTime(e)}
-							min="0"
-							max="1"
-							step="0.01"
-							value={this.state.currentTimePercent}
-						/>
-					</div>
-					<div className="volume-wrapper">
-						<i
-							className={`fas ${this.getVolumeIcon()}`}
-							onClick={() => this.toggleMute()}
-						/>
-						<input
-							type="range"
-							className="volume-slider"
-							onChange={(e) => this.changeVolume(e)}
-							min="0"
-							max="1"
-							step="0.01"
-							value={this.state.volume}
-						/>
-					</div>
+				<div id="shuffle-wrapper">
+					{ this.context.shuffleSongs ? <ShuffleChaos/> : <div/> }
 				</div>
 			</div>
 		)

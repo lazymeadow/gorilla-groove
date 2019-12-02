@@ -65,6 +65,7 @@ export class MusicProvider extends React.Component {
 			songIndexesToShuffle: [],
 			shuffledSongIndexes: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
+			shuffleChaos: LocalStorage.getNumber('shuffleChaos', 1),
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
 			useRightClickMenu: LocalStorage.getBoolean('useRightClickMenu', true),
 			columnPreferences: this.loadColumnPreferences(),
@@ -98,6 +99,7 @@ export class MusicProvider extends React.Component {
 			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
 			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
+			setShuffleChaos: (...args) => this.setShuffleChaos(...args),
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
 			setUseRightClickMenu: (...args) => this.setUseRightClickMenu(...args),
 			setSearchTerm: (...args) => this.setSearchTerm(...args),
@@ -303,7 +305,7 @@ export class MusicProvider extends React.Component {
 		// If we're shuffling, we need to remove this song from the shuffle pool after we play it
 		if (this.state.shuffleSongs) {
 			// Couldn't resist this horrible variable name
-			let indexIndex = this.state.songIndexesToShuffle.findIndex((index) => index === newTrackIndex);
+			let indexIndex = this.state.songIndexesToShuffle.findIndex(index => index === newTrackIndex);
 
 			// Now that we know where the song index is, in our array of indexes we can still pick, remove the indexIndex
 			let newShuffleIndexes = this.state.songIndexesToShuffle.slice(0);
@@ -330,13 +332,13 @@ export class MusicProvider extends React.Component {
 		if (this.state.shuffleSongs) {
 			// If we're shuffling and have more songs to shuffle through, play a random song
 			if (this.state.songIndexesToShuffle.length > 0) {
-				this.playIndex(this.getRandomIndex());
+				this.playIndex(this.getRandomShuffleIndex());
 
 				return true;
 				// If we are out of songs to shuffle through, but ARE repeating, reset the shuffle list and pick a random one
 			} else if (this.state.repeatSongs) {
 				this.resetShuffleIndexes();
-				this.playIndex(this.getRandomIndex());
+				this.playIndex(this.getRandomShuffleIndex());
 
 				return true;
 			}
@@ -357,8 +359,33 @@ export class MusicProvider extends React.Component {
 		return false;
 	}
 
-	getRandomIndex() {
+	getRandomShuffleIndex() {
 		let shuffleIndexes = this.state.songIndexesToShuffle;
+
+		if (this.state.shuffleChaos > 1) {
+			if (Math.random() + 1 < this.state.shuffleChaos) {
+				const highestPlay = this.state.songIndexesToShuffle.reduce((max, index) => {
+					const track = this.state.nowPlayingTracks[index];
+					return track.playCount > max ? track.playCount : max;
+				}, 0);
+
+				shuffleIndexes = this.state.songIndexesToShuffle.filter(index =>
+					this.state.nowPlayingTracks[index].playCount === highestPlay
+				);
+			}
+		} else if (this.state.shuffleChaos < 1) {
+			if (Math.random() > this.state.shuffleChaos) {
+				const lowestPlay = this.state.songIndexesToShuffle.reduce((min, index) => {
+					const track = this.state.nowPlayingTracks[index];
+					return track.playCount < min ? track.playCount : min;
+				}, Number.MAX_VALUE);
+
+				shuffleIndexes = this.state.songIndexesToShuffle.filter(index =>
+					this.state.nowPlayingTracks[index].playCount === lowestPlay
+				);
+			}
+		}
+
 		return shuffleIndexes[Math.floor(Math.random() * shuffleIndexes.length)];
 	}
 
@@ -369,10 +396,10 @@ export class MusicProvider extends React.Component {
 				// Someone hit play previous on the first song they played. Just start it over
 				this.setState({ sessionPlayCounter: this.state.sessionPlayCounter + 1 });
 			} else if (shuffledSongIndexes.length > 1) {
-				let currentIndex = shuffledSongIndexes.pop();
-				let previousIndex = shuffledSongIndexes.pop();
+				const currentIndex = shuffledSongIndexes.pop();
+				const previousIndex = shuffledSongIndexes.pop();
 
-				let indexesToShuffle = this.state.songIndexesToShuffle.slice(0);
+				const indexesToShuffle = this.state.songIndexesToShuffle.slice(0);
 				indexesToShuffle.push(currentIndex);
 				indexesToShuffle.push(previousIndex);
 
@@ -624,6 +651,11 @@ export class MusicProvider extends React.Component {
 			}
 		});
 		LocalStorage.setBoolean('shuffleSongs', shuffleSongs);
+	}
+
+	setShuffleChaos(shuffleChaos) {
+		this.setState({ shuffleChaos });
+		LocalStorage.setNumber('shuffleChaos', shuffleChaos);
 	}
 
 	setRepeatSongs(repeatSongs) {
