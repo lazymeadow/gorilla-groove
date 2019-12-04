@@ -2,7 +2,6 @@ package com.example.groove.db.model
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
-import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -63,6 +62,7 @@ data class Track(
 		@Column(name = "created_at", nullable = false)
 		var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
+		@JsonIgnore // Currently breaks GG app to include this and offers no current benefit to be exposed
 		@Column(name = "updated_at", nullable = false)
 		var updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
