@@ -61,7 +61,10 @@ data class Track(
 		var lastPlayed: Timestamp? = null,
 
 		@Column(name = "created_at", nullable = false)
-		var createdAt: Timestamp = Timestamp(Date().time),
+		var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+
+		@Column(name = "updated_at", nullable = false)
+		var updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")

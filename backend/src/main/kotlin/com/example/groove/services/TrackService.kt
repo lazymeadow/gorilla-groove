@@ -5,6 +5,7 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
+import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
@@ -48,6 +49,24 @@ class TrackService(
 		return trackRepository.countAllTracksAddedSinceTimestamp(timestamp)
 	}
 
+	@Transactional(readOnly = true)
+	fun getTracksUpdatedSinceTimestamp(userId: Long, timestamp: Timestamp): TrackChangesDTO {
+		if (userId != loadLoggedInUser().id) {
+			throw IllegalArgumentException("Not allowed to access track changes for anyone but yourself")
+		}
+
+		val tracks = trackRepository.getTracksUpdatedSinceTimestamp(userId = userId, timestamp = timestamp)
+
+		val (deletedTracks, aliveTracks) = tracks.partition { it.deleted }
+		val (newTracks, modifiedTracks) = aliveTracks.partition { it.createdAt > timestamp }
+
+		return TrackChangesDTO(
+				newTracks = newTracks,
+				modifiedTracks = modifiedTracks,
+				removedTrackIds = deletedTracks.map { it.id }
+		)
+	}
+
 	@Transactional
 	fun markSongListenedTo(trackId: Long) {
 		val track = trackRepository.findById(trackId).unwrap()
@@ -59,7 +78,8 @@ class TrackService(
 		// May want to do some sanity checks / server side validation here to prevent this incrementing too often.
 		// We know the last played date of a track and can see if it's even possible to have listened to this song
 		track.playCount++
-		track.lastPlayed = Timestamp(Date().time)
+		track.lastPlayed = Timestamp(System.currentTimeMillis())
+		track.updatedAt = Timestamp(System.currentTimeMillis())
 
 		val trackHistory = TrackHistory(track = track)
 		trackHistoryRepository.save(trackHistory)
@@ -82,6 +102,7 @@ class TrackService(
 			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
 			updateTrackDTO.note?.let { track.note = it }
 			updateTrackDTO.genre?.let { track.genre = it }
+			track.updatedAt = Timestamp(System.currentTimeMillis())
 
 			if (albumArt != null) {
 				songIngestionService.storeAlbumArtForTrack(albumArt, track)
@@ -117,6 +138,7 @@ class TrackService(
 
 		tracks.forEach { track ->
 			track.deleted = true
+			track.updatedAt = Timestamp(System.currentTimeMillis())
 			trackRepository.save(track)
 
 			deleteFileIfUnused(track.fileName)
@@ -191,6 +213,7 @@ class TrackService(
 		val newLength = songIngestionService.trimSong(track, startTime, duration)
 
 		track.length = newLength
+		track.updatedAt = Timestamp(System.currentTimeMillis())
 		trackRepository.save(track)
 
 		return newLength

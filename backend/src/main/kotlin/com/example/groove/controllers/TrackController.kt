@@ -1,6 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.TrackTrimDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.dto.YoutubeDownloadDTO
@@ -36,6 +37,15 @@ class TrackController(
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
 		return trackService.getTracks(name, artist, album, userId, searchTerm, pageable)
+    }
+
+	// Used by the Android App
+	@GetMapping("/changes-since-timestamp/userId/{userId}/timestamp/{timestamp}")
+    fun getTracksChangedSinceTimestamp(
+			@PathVariable(value = "userId") userId: Long,
+			@PathVariable(value = "timestamp") unixTimestamp: Long
+	): TrackChangesDTO {
+		return trackService.getTracksUpdatedSinceTimestamp(userId, Timestamp(unixTimestamp))
     }
 
 	// This endpoint is laughably narrow in scope. But I don't know for sure how this is going to evolve later

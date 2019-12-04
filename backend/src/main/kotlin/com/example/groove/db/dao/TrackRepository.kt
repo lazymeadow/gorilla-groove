@@ -40,7 +40,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Modifying
 	@Query("""
 			UPDATE Track t
-			SET t.hidden = :isHidden
+			SET t.hidden = :isHidden, t.updatedAt = now()
 			WHERE t.user.id = :userId
 			AND t.id IN :trackIds
 			""")
@@ -70,4 +70,15 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	fun countAllTracksAddedSinceTimestamp(
 			@Param("timestamp") timestamp: Timestamp
 	): Int
+
+	@Query("""
+			SELECT t
+			FROM Track t
+			WHERE t.updatedAt > :timestamp
+			AND t.user.id = :userId
+			""")
+	fun getTracksUpdatedSinceTimestamp(
+			@Param("userId") userId: Long,
+			@Param("timestamp") timestamp: Timestamp
+	): List<Track>
 }
