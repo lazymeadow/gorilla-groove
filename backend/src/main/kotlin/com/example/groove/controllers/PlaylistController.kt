@@ -33,6 +33,11 @@ class PlaylistController(
 		return playlistService.renamePlaylist(loadLoggedInUser(), playlistId, createPlaylistDTO.name)
 	}
 
+	@DeleteMapping("/{playlistId}")
+	fun deletePlaylist(@PathVariable playlistId: Long) {
+		return playlistService.deletePlaylist(loadLoggedInUser(), playlistId)
+	}
+
 	@PostMapping("/track")
 	fun addToPlaylist(@RequestBody addPlaylistTrackDTO: AddPlaylistTrackDTO) {
 		playlistService.addTracksToPlaylist(addPlaylistTrackDTO.playlistId, addPlaylistTrackDTO.trackIds)

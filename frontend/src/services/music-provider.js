@@ -89,6 +89,7 @@ export class MusicProvider extends React.Component {
 			setHidden: (...args) => this.setHidden(...args),
 			importTracks: (...args) => this.importTracks(...args),
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
+			deletePlaylist: (...args) => this.deletePlaylist(...args),
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			addToPlaylist: (...args) => this.addToPlaylist(...args),
 			createPlaylist: (...args) => this.createPlaylist(...args),
@@ -447,8 +448,20 @@ export class MusicProvider extends React.Component {
 	}
 
 	loadPlaylists() {
-		return Api.get('playlist').then((playlists) => {
-			this.setState({playlists: playlists});
+		return Api.get('playlist').then(playlists => {
+			this.setState({ playlists: playlists });
+		})
+	}
+
+	deletePlaylist(playlist) {
+		const deleteId = playlist.id;
+		return Api.delete(`playlist/${deleteId}`).then(() => {
+			const newPlaylists = this.state.playlists.filter(playlist => playlist.id !== deleteId);
+			this.setState({ playlists: newPlaylists });
+
+			if (this.state.trackView === TrackView.PLAYLIST && this.state.viewedEntityId === deleteId) {
+				this.loadSongsForUser();
+			}
 		})
 	}
 

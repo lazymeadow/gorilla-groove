@@ -25,5 +25,8 @@ data class Playlist(
 		var name: String,
 
 		@Column(name = "created_at", nullable = false)
-		var createdAt: Timestamp = Timestamp(Date().time)
+		var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+
+		@Column
+		var deleted: Boolean = false
 )

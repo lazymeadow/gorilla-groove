@@ -9,9 +9,11 @@ import org.springframework.data.repository.query.Param
 
 interface PlaylistUserRepository : CrudRepository<PlaylistUser, Long> {
 
-	@Query("SELECT pu.playlist " +
-			"FROM PlaylistUser pu " +
-			"WHERE pu.user = :user "
+	@Query("""SELECT pu.playlist
+			FROM PlaylistUser pu
+			WHERE pu.user = :user
+			AND pu.playlist.deleted = 0
+			"""
 	)
 	fun getPlaylistsForUser(
 			@Param("user") user: User

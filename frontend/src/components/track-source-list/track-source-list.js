@@ -4,6 +4,7 @@ import {MusicContext} from "../../services/music-provider";
 import {TrackView} from "../../enums/track-view";
 import {EditableDiv} from "../editable-div/editable-div";
 import {AddPlaylistButton} from "../add-playlist/add-playlist";
+import {Modal} from "../modal/modal";
 
 export class TrackSourceList extends React.Component {
 	constructor(props) {
@@ -19,9 +20,11 @@ export class TrackSourceList extends React.Component {
 					section: TrackView.PLAYLIST,
 					heading: <span className="playlist-heading">Playlists <AddPlaylistButton/></span>,
 					data: []
-			}
+				}
 			],
-			editedId: null
+			editedId: null,
+			modalOpen: false,
+			pendingDeletePlaylist: {}
 		};
 	}
 
@@ -139,12 +142,44 @@ export class TrackSourceList extends React.Component {
 											}}
 										/>
 										{ this.getNowPlayingElement(entry) }
+
+										<div className="playlist-delete">
+											{ node.section === TrackView.PLAYLIST
+												? <i className="fas fa-times" onClick={e => {
+													e.stopPropagation();
+													this.setState({
+														modalOpen: true,
+														pendingDeletePlaylist: entry
+													});
+												}}/>
+												: <i/>
+											}
+										</div>
+
+
 									</div>
 								)
 							})}
 						</TreeView>
 					);
 				})}
+				<Modal
+					isOpen={this.state.modalOpen}
+					closeFunction={() => this.setState({ modalOpen: false })}
+				>
+					<div id="playlist-delete-modal">
+						<div>Are you sure you want to delete the playlist '{this.state.pendingDeletePlaylist.name}'?</div>
+						<div className="flex-between confirm-modal-buttons">
+							<button onClick={() => {
+								this.context.deletePlaylist(this.state.pendingDeletePlaylist).then(() => {
+									this.setState({ modalOpen: false });
+								})
+							}}>You know I do</button>
+							<button onClick={() => this.setState({ modalOpen: false })}>No. Woops</button>
+						</div>
+					</div>
+				</Modal>
+
 			</div>
 		);
 	}

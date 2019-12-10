@@ -56,6 +56,23 @@ class PlaylistService(
 		return playlist
 	}
 
+	@Transactional
+	fun deletePlaylist(user: User, playlistId: Long) {
+		logger.info("${user.email} is attempting to delete playlist $playlistId")
+
+		val playlist = playlistRepository.findById(playlistId).unwrap()
+				?: throw IllegalArgumentException("Playlist not found with ID $playlistId")
+		val playlistUser = playlist.users.find { it.user.id == user.id }
+				?: throw IllegalArgumentException("Playlist not found with ID $playlistId")
+
+		if (playlistUser.ownershipType != OwnershipType.OWNER) {
+			throw IllegalArgumentException("Must be a playlist's owner to delete it.")
+		}
+
+		playlist.deleted = true
+		playlistRepository.save(playlist)
+	}
+
 	@Transactional(readOnly = true)
 	fun getTracks(
 			name: String?,

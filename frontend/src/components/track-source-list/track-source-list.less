@@ -38,8 +38,14 @@
   .tree-child {
     position: relative;
     padding: 1px 0 1px 25px;
-    &:hover {
-      color: white;
+    display: flex;
+    justify-content: space-between;
+
+    .editable-div {
+      flex-grow: 1;
+      &:hover {
+        color: white;
+      }
     }
   }
 
@@ -72,5 +78,22 @@
   .selected {
     background-color: @select-blue;
     color: white;
+  }
+
+  .playlist-delete {
+    margin-right: 9px;
+    opacity: 0.1;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+#playlist-delete-modal {
+  .confirm-modal-buttons {
+    margin-top: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
   }
 }
