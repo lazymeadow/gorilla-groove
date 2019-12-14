@@ -69,7 +69,7 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long, deviceType: DeviceType, remoteIp: String) {
+	fun markSongListenedTo(trackId: Long, deviceType: DeviceType, remoteIp: String?) {
 		val track = trackRepository.findById(trackId).unwrap()
 
 		if (track == null || track.user != loadLoggedInUser()) {

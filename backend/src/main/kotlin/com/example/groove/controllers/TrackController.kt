@@ -64,12 +64,8 @@ class TrackController(
 			@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO,
 			request: HttpServletRequest
 	): ResponseEntity<String> {
-		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceType, request.remoteAddr)
-
-		val headerNames = request.headerNames.toList()
-		headerNames.forEach {
-			logger.info("$it => ${request.getHeader(it)}")
-		}
+		val ipAddress = request.getHeader("x-forwarded-for")
+		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceType, ipAddress)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
