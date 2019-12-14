@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.model.enums.DeviceType
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
 import java.util.*
@@ -17,6 +18,14 @@ data class TrackHistory(
 		@ManyToOne
 		@JoinColumn(name = "track_id", nullable = false)
 		val track: Track,
+
+		@JsonIgnore
+		@Enumerated
+		val deviceType: DeviceType?,
+
+		@JsonIgnore
+		@Column(name = "ip_address")
+		val ipAddress: String?,
 
 		@Column(name = "created_at", nullable = false)
 		val createdAt: Timestamp = Timestamp(Date().time)

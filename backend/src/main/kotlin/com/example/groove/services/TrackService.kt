@@ -5,6 +5,7 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.util.loadLoggedInUser
@@ -68,7 +69,7 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long) {
+	fun markSongListenedTo(trackId: Long, deviceType: DeviceType, remoteIp: String) {
 		val track = trackRepository.findById(trackId).unwrap()
 
 		if (track == null || track.user != loadLoggedInUser()) {
@@ -81,7 +82,7 @@ class TrackService(
 		track.lastPlayed = Timestamp(System.currentTimeMillis())
 		track.updatedAt = Timestamp(System.currentTimeMillis())
 
-		val trackHistory = TrackHistory(track = track)
+		val trackHistory = TrackHistory(track = track, deviceType = deviceType, ipAddress = remoteIp)
 		trackHistoryRepository.save(trackHistory)
 	}
 

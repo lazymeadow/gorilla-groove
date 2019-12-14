@@ -1,6 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.TrackTrimDTO
 import com.example.groove.dto.UpdateTrackDTO
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
+import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("api/track")
@@ -57,8 +59,11 @@ class TrackController(
     }
 
 	@PostMapping("/mark-listened")
-	fun markSongAsListenedTo(@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO): ResponseEntity<String> {
-		trackService.markSongListenedTo(markSongAsReadDTO.trackId)
+	fun markSongAsListenedTo(
+			@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO,
+			request: HttpServletRequest
+	): ResponseEntity<String> {
+		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceType, request.remoteAddr)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -133,7 +138,9 @@ class TrackController(
 	}
 
 	data class MarkTrackAsListenedToDTO(
-			val trackId: Long
+			val trackId: Long,
+			@Deprecated("DeviceType should not have a default after Android App is updated")
+			val deviceType: DeviceType = DeviceType.ANDROID // Until David updates the App, assume it's android if missing
 	)
 
 	data class SetHiddenDTO(

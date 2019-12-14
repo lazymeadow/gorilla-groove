@@ -804,8 +804,8 @@ export class MusicProvider extends React.Component {
 			payload.trackName = track.hidden ? 'is private' : track.name;
 		}
 
-		console.log('About to send socket data', new Date());
-		console.log(payload);
+		console.debug('About to send socket data', new Date());
+		console.debug(payload);
 		const readyState = this.state.socket.readyState;
 
 		if (readyState === WebSocket.OPEN) {
