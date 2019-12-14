@@ -11,6 +11,7 @@ import com.example.groove.services.YoutubeService
 import com.example.groove.util.loadLoggedInUser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -64,6 +65,11 @@ class TrackController(
 			request: HttpServletRequest
 	): ResponseEntity<String> {
 		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceType, request.remoteAddr)
+
+		val headerNames = request.headerNames.toList()
+		headerNames.forEach {
+			logger.info("$it => ${request.getHeader(it)}")
+		}
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -152,5 +158,7 @@ class TrackController(
 			val trackIds: List<Long>
 	)
 
-
+	companion object {
+		val logger = LoggerFactory.getLogger(TrackController::class.java)!!
+	}
 }
