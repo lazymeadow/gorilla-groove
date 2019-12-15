@@ -65,6 +65,10 @@ class TrackController(
 			request: HttpServletRequest
 	): ResponseEntity<String> {
 		val ipAddress = request.getHeader("x-forwarded-for")
+		if (markSongAsReadDTO.deviceType == null) {
+			logger.info("User ${loadLoggedInUser().name} listened to a song without the device included")
+		}
+
 		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceType, ipAddress)
 
 		return ResponseEntity(HttpStatus.OK)
@@ -141,8 +145,8 @@ class TrackController(
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
-			@Deprecated("DeviceType should not have a default after Android App is updated")
-			val deviceType: DeviceType = DeviceType.ANDROID // Until David updates the App, assume it's android if missing
+			@Deprecated("DeviceType should not be null after clients are updated")
+			val deviceType: DeviceType?
 	)
 
 	data class SetHiddenDTO(
