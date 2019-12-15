@@ -65,11 +65,11 @@ class TrackController(
 			request: HttpServletRequest
 	): ResponseEntity<String> {
 		val ipAddress = request.getHeader("x-forwarded-for")
-		if (markSongAsReadDTO.deviceType == null) {
+		if (markSongAsReadDTO.deviceId == null) {
 			logger.info("User ${loadLoggedInUser().name} listened to a song without the device included")
 		}
 
-		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceType, ipAddress)
+		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceId, ipAddress)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -145,8 +145,8 @@ class TrackController(
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
-			@Deprecated("DeviceType should not be null after clients are updated")
-			val deviceType: DeviceType?
+			@Deprecated("'deviceId' should not be null after clients are updated")
+			val deviceId: String?
 	)
 
 	data class SetHiddenDTO(

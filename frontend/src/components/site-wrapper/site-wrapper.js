@@ -8,11 +8,11 @@ export class SiteWrapper extends React.Component {
 
 	componentDidMount() {
 		Api.get('version').then((serverVersion) => {
-			const clientVersion = "1.0.8";
+			const clientVersion = "1.0.9";
 			if (serverVersion.version !== clientVersion) {
-				toast.info("Your Gorilla Groove is out of date. Please hard-reload your web page.")
+				console.info("Your Gorilla Groove is out of date. Please hard-reload your web page.")
 			}
-		})
+		});
 	}
 
 	render() {

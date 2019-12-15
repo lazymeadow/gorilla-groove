@@ -1,11 +1,11 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
-import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.util.loadLoggedInUser
@@ -25,6 +25,7 @@ import java.util.*
 class TrackService(
 		private val trackRepository: TrackRepository,
 		private val trackHistoryRepository: TrackHistoryRepository,
+		private val deviceRepository: DeviceRepository,
 		private val fileStorageService: FileStorageService,
 		private val songIngestionService: SongIngestionService
 ) {
@@ -69,10 +70,11 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long, deviceType: DeviceType?, remoteIp: String?) {
+	fun markSongListenedTo(trackId: Long, deviceId: String?, remoteIp: String?) {
 		val track = trackRepository.findById(trackId).unwrap()
+		val user = loadLoggedInUser()
 
-		if (track == null || track.user != loadLoggedInUser()) {
+		if (track == null || track.user.id != user.id) {
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
@@ -82,7 +84,15 @@ class TrackService(
 		track.lastPlayed = Timestamp(System.currentTimeMillis())
 		track.updatedAt = Timestamp(System.currentTimeMillis())
 
-		val trackHistory = TrackHistory(track = track, deviceType = deviceType, ipAddress = remoteIp)
+		val device = deviceId?.let { id ->
+			val savedDevice = deviceRepository.findByDeviceIdAndUser(id, user)
+			if (savedDevice == null) {
+				logger.error("No device found with ID $id for user ${user.name} when saving track history!")
+			}
+			savedDevice
+		}
+
+		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp)
 		trackHistoryRepository.save(trackHistory)
 	}
 

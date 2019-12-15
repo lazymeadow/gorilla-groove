@@ -22,6 +22,20 @@ export function setBoolean(key, value) {
 	}
 }
 
+export function getString(key, defaultValue) {
+	const value = localStorage.getItem(key);
+
+	if (value === undefined || value === null) {
+		return defaultValue;
+	}
+
+	return value;
+}
+
+export function setString(key, value) {
+	localStorage.setItem(key, value);
+}
+
 export function setObject(key, object) {
 	if (typeof object !== 'object' || object === null) {
 		throw Error(`Non-object value (${object}) passed to setObject for key ${key}`);

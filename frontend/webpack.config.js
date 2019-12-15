@@ -3,6 +3,13 @@ const CircularDependencyPlugin = require('circular-dependency-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CleanCSSPlugin = require('less-plugin-clean-css');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const webpack = require("webpack");
+
+let appVersion = require('child_process')
+	.execSync('node ../backend/get-version.js')
+	.toString()
+	.trim();
+
 
 module.exports = [{
 	entry: './src/index.js',
@@ -24,7 +31,10 @@ module.exports = [{
 		]
 	},
 	plugins: [
-		new CleanWebpackPlugin(['dist/bundle.js'])
+		new CleanWebpackPlugin(['dist/bundle.js']),
+		new webpack.DefinePlugin({
+			__VERSION__: JSON.stringify(appVersion),
+		})
 	]
 
 }, {

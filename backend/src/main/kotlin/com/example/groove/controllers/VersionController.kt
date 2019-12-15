@@ -1,14 +1,17 @@
 package com.example.groove.controllers
 
+import com.example.groove.properties.VersionProperties
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("api/version")
-class VersionController {
+class VersionController(
+		private val versionProperties: VersionProperties
+) {
 
 	@GetMapping
-	fun login(): ResponseEntity<Map<String, String>> {
-		return ResponseEntity.ok(mapOf("version" to "1.0.8"))
+	fun getVersion(): ResponseEntity<Map<String, String>> {
+		return ResponseEntity.ok(mapOf("version" to versionProperties.version!!))
 	}
 }

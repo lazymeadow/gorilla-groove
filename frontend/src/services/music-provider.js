@@ -767,7 +767,7 @@ export class MusicProvider extends React.Component {
 			this.setState({ nowListeningUsers: newNowListeningUsers })
 		};
 		socket.onclose = () => {
-			console.log('WebSocket was closed. Reconnecting');
+			console.debug('WebSocket was closed. Reconnecting');
 			this.connectToSocket();
 		};
 

@@ -2,6 +2,7 @@ buildscript {
 	ext {
 		kotlinVersion = '1.2.70'
 		springBootVersion = '2.0.4.RELEASE'
+        internalVersion = '1.0.9' // If this returns 1.0.9 from version controller, try to make this call the version script
 	}
 	repositories {
 		mavenCentral()
@@ -13,7 +14,6 @@ buildscript {
 		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
 		classpath("org.jetbrains.kotlin:kotlin-noarg:${kotlinVersion}")
 	}
-
 }
 
 apply plugin: 'kotlin'
@@ -27,6 +27,7 @@ apply plugin: 'war'
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
+
 compileKotlin {
 	kotlinOptions {
 		freeCompilerArgs = ["-Xjsr305=strict"]
@@ -40,15 +41,15 @@ compileTestKotlin {
 	}
 }
 
-//dependencyManagement {
-//    imports {
-//        mavenBom 'software.amazon.awssdk:bom:2.0.0'
-//    }
-//}
-
 dependencyManagement {
     imports {
         mavenBom 'com.amazonaws:aws-java-sdk-bom:1.11.228'
+    }
+}
+
+processResources {
+    filesMatching('application.properties') {
+        expand(project.properties)
     }
 }
 

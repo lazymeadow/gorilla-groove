@@ -8,6 +8,7 @@ import {MusicContext} from "../../services/music-provider";
 import {SiteStats} from "../site-stats/site-stats";
 import {isLoggedIn} from "../../util";
 import {getCookieValue} from "../../cookie";
+import {notifyVersion} from "../../services/version";
 
 export class SiteLayout extends React.Component {
 	constructor(props) {
@@ -33,8 +34,10 @@ export class SiteLayout extends React.Component {
 		this.context.loadSongsForUser();
 		this.context.loadPlaylists();
 
+		notifyVersion();
+
 		Api.get("user")
-			.then((result) => {
+			.then(result => {
 				const loggedInEmail = getCookieValue('loggedInEmail').toLowerCase();
 				const ownUserIndex = result.findIndex(user => user.email.toLowerCase() === loggedInEmail);
 

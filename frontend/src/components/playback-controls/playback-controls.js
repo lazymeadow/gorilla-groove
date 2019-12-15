@@ -4,6 +4,7 @@ import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
 import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
+import {getDeviceId} from "../../services/version";
 
 export class PlaybackControls extends React.Component {
 	constructor(props) {
@@ -139,7 +140,7 @@ export class PlaybackControls extends React.Component {
 			newProperties.listenedTo = true;
 
 			let playedTrack = this.context.playedTrack;
-			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceType: 'WEB' })
+			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceId: getDeviceId() })
 				.then(() => {
 					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
 					playedTrack.playCount++;

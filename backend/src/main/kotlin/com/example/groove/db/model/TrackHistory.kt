@@ -16,17 +16,18 @@ data class TrackHistory(
 
 		@JsonIgnore
 		@ManyToOne
-		@JoinColumn(name = "track_id", nullable = false)
+		@JoinColumn(name = "track_id")
 		val track: Track,
 
 		@JsonIgnore
-		@Enumerated
-		val deviceType: DeviceType?,
+		@ManyToOne
+		@JoinColumn(name = "device_id")
+		val device: Device?,
 
 		@JsonIgnore
 		@Column(name = "ip_address")
 		val ipAddress: String?,
 
-		@Column(name = "created_at", nullable = false)
-		val createdAt: Timestamp = Timestamp(Date().time)
+		@Column(name = "created_at")
+		val createdAt: Timestamp = Timestamp(System.currentTimeMillis())
 )
