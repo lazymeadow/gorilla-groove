@@ -63,6 +63,7 @@ export class SiteStats extends React.Component {
 	render() {
 		return (
 			<div id="site-stats">
+				<div>
 				{
 					this.state.loading ? <div/> : (
 						<>
@@ -82,6 +83,10 @@ export class SiteStats extends React.Component {
 						</>
 					)
 				}
+				</div>
+				<div className="version-display">
+					{ __VERSION__ }
+				</div>
 			</div>
 		);
 	}
