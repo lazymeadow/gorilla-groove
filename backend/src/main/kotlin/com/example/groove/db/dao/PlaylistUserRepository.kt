@@ -13,6 +13,7 @@ interface PlaylistUserRepository : CrudRepository<PlaylistUser, Long> {
 			FROM PlaylistUser pu
 			WHERE pu.user = :user
 			AND pu.playlist.deleted = 0
+			ORDER BY pu.playlist.name ASC
 			"""
 	)
 	fun getPlaylistsForUser(
