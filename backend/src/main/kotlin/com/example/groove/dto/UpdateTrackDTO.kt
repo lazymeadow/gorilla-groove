@@ -12,5 +12,6 @@ data class UpdateTrackDTO(
 		val releaseYear: Int?,
 		val genre: String?,
 		val note: String?,
+		val hidden: Boolean?,
 		val albumArt: MultipartFile?
 )

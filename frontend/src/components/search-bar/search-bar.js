@@ -11,8 +11,12 @@ export class SearchBar extends React.Component {
 	}
 
 	handleInputChange(event) {
-		this.context.setSearchTerm(event.target.value);
+		this.context.setProviderState({ searchTerm: event.target.value }, false);
 		this.debouncedKeyPress();
+	}
+
+	handleHiddenChange() {
+		this.context.setProviderState({ showHidden: !this.context.showHidden }, true);
 	}
 
 	debouncedKeyPress() {
@@ -56,25 +60,39 @@ export class SearchBar extends React.Component {
 	}
 
 	clearInput() {
-		this.context.setSearchTerm('', this.context.reloadTracks);
+		this.context.setProviderState({ searchTerm: '' }, true);
 	}
 
 	render() {
 		return (
-			<div className="search">
-				Search
-				<input
-					className="search-bar"
-					value={this.context.searchTerm}
-					onChange={this.handleInputChange.bind(this)}
-				/>
-				{ this.context.searchTerm
-					? <i
-						className="fas fa-times-circle close-button"
-						onClick={this.clearInput.bind(this)}
+			<div className="display-flex search">
+				<div>
+					Search
+					<input
+						className="search-bar"
+						value={this.context.searchTerm}
+						onChange={this.handleInputChange.bind(this)}
 					/>
-					: <i/>
-				}
+					{ this.context.searchTerm
+						? <i
+							className="fas fa-times-circle close-button"
+							onClick={this.clearInput.bind(this)}
+						/>
+						: <i/>
+					}
+				</div>
+
+				<div className="hidden-checkbox">
+					Show Hidden Tracks
+					<i title="Show songs that have been hidden from the library.
+This is not the same as private tracks, which are only visible to the owner"
+						 className="fas fa-question-circle"/>
+					<input
+						type="checkbox"
+						value={this.context.showHidden}
+						onChange={this.handleHiddenChange.bind(this)}
+					/>
+				</div>
 			</div>
 		)
 	}

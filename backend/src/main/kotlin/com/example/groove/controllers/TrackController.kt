@@ -36,9 +36,18 @@ class TrackController(
 			@RequestParam(value = "artist") artist: String?,
 			@RequestParam(value = "album") album: String?,
 			@RequestParam(value = "searchTerm") searchTerm: String?,
+			@RequestParam(value = "showHidden") showHidden: Boolean?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
-		return trackService.getTracks(name, artist, album, userId, searchTerm, pageable)
+		return trackService.getTracks(
+				name = name,
+				artist = artist,
+				album = album,
+				userId = userId,
+				searchTerm = searchTerm,
+				showHidden = showHidden ?: false,
+				pageable = pageable
+		)
     }
 
 	// Used by the Android App

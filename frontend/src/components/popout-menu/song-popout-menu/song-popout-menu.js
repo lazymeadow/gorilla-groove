@@ -141,7 +141,7 @@ export class SongPopoutMenu extends React.Component {
 						} else {
 							toast.success(`${tracks.length} tracks were made private`);
 						}
-					}).catch((error) => {
+					}).catch(error => {
 						console.error(error);
 						toast.error('Failed to make the selected tracks private');
 					});
@@ -156,9 +156,38 @@ export class SongPopoutMenu extends React.Component {
 						} else {
 							toast.success(`${tracks.length} tracks were made public`);
 						}
-					}).catch((error) => {
+					});
+				}
+			}, {
+				text: 'Hide in Library', clickHandler: (e) => {
+					e.stopPropagation();
+					const tracks = props.getSelectedTracks();
+					const propertyChange = { hidden: true };
+					props.context.updateTracks(tracks, null, propertyChange, false).then(() => {
+						if (tracks.length === 1) {
+							toast.success(`'${tracks[0].name}' was hidden`);
+						} else {
+							toast.success(`${tracks.length} tracks were hidden`);
+						}
+						if (!props.context.showHidden) {
+							props.context.reloadTracks();
+						}
+					});
+				}
+			}, {
+				text: 'Show in Library', clickHandler: (e) => {
+					e.stopPropagation();
+					const tracks = props.getSelectedTracks();
+					const propertyChange = { hidden: false };
+					props.context.updateTracks(tracks, null, propertyChange, false).then(() => {
+						if (tracks.length === 1) {
+							toast.success(`'${tracks[0].name}' was revealed again`);
+						} else {
+							toast.success(`${tracks.length} tracks were revealed again`);
+						}
+					}).catch(error => {
 						console.error(error);
-						toast.error('Failed to make the selected tracks public');
+						toast.error('Failed to make the selected tracks visible');
 					});
 				}
 			}, {

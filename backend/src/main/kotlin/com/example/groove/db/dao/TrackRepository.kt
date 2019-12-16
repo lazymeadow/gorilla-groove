@@ -15,6 +15,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			FROM Track t
 			WHERE t.user.id = :userId
 			AND t.deleted = FALSE
+			AND (t.hidden IS FALSE OR :loadHidden IS TRUE)
 			AND (:loadPrivate IS TRUE OR t.private = FALSE)
 			AND (:name IS NULL OR t.name LIKE %:name%)
 			AND (:artist IS NULL OR t.artist LIKE %:artist%)
@@ -33,6 +34,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("album") album: String? = null,
 			@Param("userId") userId: Long,
 			@Param("loadPrivate") loadPrivate: Boolean = false,
+			@Param("loadHidden") loadHidden: Boolean = false,
 			@Param("searchTerm") searchTerm: String? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>

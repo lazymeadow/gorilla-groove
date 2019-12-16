@@ -37,13 +37,23 @@ class TrackService(
 			album: String?,
 			userId: Long?,
 			searchTerm: String?,
+			showHidden: Boolean,
 			pageable: Pageable
 	): Page<Track> {
 		val loggedInId = loadLoggedInUser().id
 		val idToLoad = userId ?: loggedInId
 		val loadPrivate = loggedInId == idToLoad
 
-		return trackRepository.getTracks(name, artist, album, idToLoad, loadPrivate, searchTerm, pageable)
+		return trackRepository.getTracks(
+				name = name,
+				artist = artist,
+				album = album,
+				userId = idToLoad,
+				loadPrivate = loadPrivate,
+				loadHidden = showHidden,
+				searchTerm = searchTerm,
+				pageable = pageable
+		)
 	}
 
 	@Transactional(readOnly = true)
@@ -113,6 +123,7 @@ class TrackService(
 			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
 			updateTrackDTO.note?.let { track.note = it }
 			updateTrackDTO.genre?.let { track.genre = it }
+			updateTrackDTO.hidden?.let { track.hidden = it }
 			track.updatedAt = Timestamp(System.currentTimeMillis())
 
 			if (albumArt != null) {

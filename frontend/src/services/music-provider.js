@@ -71,6 +71,7 @@ export class MusicProvider extends React.Component {
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			searchTerm: '',
+			showHidden: false,
 			nowListeningUsers: {},
 			socket: null,
 
@@ -103,7 +104,7 @@ export class MusicProvider extends React.Component {
 			setShuffleChaos: (...args) => this.setShuffleChaos(...args),
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
 			setUseRightClickMenu: (...args) => this.setUseRightClickMenu(...args),
-			setSearchTerm: (...args) => this.setSearchTerm(...args),
+			setProviderState: (...args) => this.setProviderState(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
 			resetSessionState: (...args) => this.resetSessionState(...args),
 
@@ -158,6 +159,7 @@ export class MusicProvider extends React.Component {
 		if (searchTerm) {
 			params.searchTerm = searchTerm;
 		}
+		params.showHidden = this.state.showHidden;
 	}
 
 	loadSongsForUser(userId, params, append) {
@@ -690,8 +692,13 @@ export class MusicProvider extends React.Component {
 		LocalStorage.setBoolean('useRightClickMenu', useMenu);
 	}
 
-	setSearchTerm(searchTerm, callback) {
-		this.setState({ searchTerm: searchTerm }, callback);
+	setProviderState(state, reloadSongs) {
+		const reloadCallback = () => {
+			if (reloadSongs) {
+				this.reloadTracks();
+			}
+		};
+		this.setState(state, reloadCallback);
 	}
 
 	resetColumnPreferences() {
