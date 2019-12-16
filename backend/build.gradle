@@ -2,7 +2,6 @@ buildscript {
 	ext {
 		kotlinVersion = '1.2.70'
 		springBootVersion = '2.0.4.RELEASE'
-        internalVersion = '1.0.9' // If this returns 1.0.9 from version controller, try to make this call the version script
 	}
 	repositories {
 		mavenCentral()
@@ -47,10 +46,23 @@ dependencyManagement {
     }
 }
 
+def getInternalVersion() {
+    println "Getting version..."
+    def output = new ByteArrayOutputStream()
+    project.exec {
+        commandLine = ['node', './get-version.js']
+        standardOutput = output
+    }
+    println "Found version ${output.toString()}"
+    return output.toString()
+}
+
 processResources {
+    def props = ["internalVersion":getInternalVersion()]
     println("Processing resources...")
-    filesMatching('application.properties') {
-        expand(project.properties)
+    println(props)
+    filesMatching('**/application.properties') {
+        expand(props)
     }
 }
 
