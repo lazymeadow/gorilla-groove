@@ -66,7 +66,7 @@ export class SearchBar extends React.Component {
 	render() {
 		return (
 			<div className="display-flex search">
-				<div>
+				<div className="p-relative">
 					Search
 					<input
 						className="search-bar"
