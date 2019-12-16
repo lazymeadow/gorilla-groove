@@ -71,12 +71,12 @@ abstract class FileStorageService(
 		val track = trackRepository.findById(trackId).unwrap() ?: throw IllegalArgumentException("No track with ID $trackId found")
 
 		if (anonymousAccess) {
-			if (track.hidden) {
+			if (track.private) {
 				throw IllegalArgumentException("Insufficient privileges to access trackId $trackId")
 			}
 		} else {
 			val user = loadLoggedInUser()
-			if (track.hidden && user.id != track.user.id) {
+			if (track.private && user.id != track.user.id) {
 				throw IllegalArgumentException("Insufficient privileges to access trackId $trackId")
 			}
 		}

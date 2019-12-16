@@ -135,7 +135,7 @@ export class SongPopoutMenu extends React.Component {
 				text: 'Make Private', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
-					props.context.setHidden(tracks, true).then(() => {
+					props.context.setPrivate(tracks, true).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was made private`);
 						} else {
@@ -150,7 +150,7 @@ export class SongPopoutMenu extends React.Component {
 				text: 'Make Public', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
-					props.context.setHidden(tracks, false).then(() => {
+					props.context.setPrivate(tracks, false).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was made public`);
 						} else {

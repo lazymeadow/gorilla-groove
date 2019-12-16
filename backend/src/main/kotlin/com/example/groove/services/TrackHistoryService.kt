@@ -23,9 +23,9 @@ class TrackHistoryService(
 		val currentUser = loadLoggedInUser()
 		val targetUser = if (userId != null) { userRepository.findById(userId).unwrap() } else { null }
 
-		val loadHidden = targetUser != null && targetUser.id == currentUser.id
+		val loadPrivate = targetUser != null && targetUser.id == currentUser.id
 
-		return trackHistoryRepository.findAllByUserAndTimeRange(targetUser?.id, loadHidden, startDate, endDate)
+		return trackHistoryRepository.findAllByUserAndTimeRange(targetUser?.id, loadPrivate, startDate, endDate)
 	}
 
 	companion object {

@@ -41,9 +41,9 @@ class TrackService(
 	): Page<Track> {
 		val loggedInId = loadLoggedInUser().id
 		val idToLoad = userId ?: loggedInId
-		val loadHidden = loggedInId == idToLoad
+		val loadPrivate = loggedInId == idToLoad
 
-		return trackRepository.getTracks(name, artist, album, idToLoad, loadHidden, searchTerm, pageable)
+		return trackRepository.getTracks(name, artist, album, idToLoad, loadPrivate, searchTerm, pageable)
 	}
 
 	@Transactional(readOnly = true)
@@ -122,7 +122,7 @@ class TrackService(
 	}
 
 	@Transactional
-	fun setHidden(trackIds: List<Long>, hidden: Boolean) {
+	fun setPrivate(trackIds: List<Long>, private: Boolean) {
 		val user = loadLoggedInUser()
 
 		// The DB query is written such that it protects the tracks anyway. So this check is kind
@@ -132,7 +132,7 @@ class TrackService(
 				throw IllegalArgumentException("No track with ID: ${track.id} found")
 			}
 		}
-		trackRepository.setHiddenForUser(trackIds, loadLoggedInUser().id, hidden)
+		trackRepository.setPrivateForUser(trackIds, loadLoggedInUser().id, private)
 	}
 
 	@Transactional
@@ -174,7 +174,7 @@ class TrackService(
 			trackRepository.findById(it).unwrap()
 		}
 		val invalidTracks = tracksToImport.filter { track ->
-			track == null || track.hidden || track.user.id == user.id
+			track == null || track.private || track.user.id == user.id
 		}
 		if (invalidTracks.isNotEmpty()) {
 			throw IllegalArgumentException("Invalid track import request. Supplied IDs: $trackIds")

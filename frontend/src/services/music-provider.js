@@ -86,7 +86,7 @@ export class MusicProvider extends React.Component {
 			playNext: (...args) => this.playNext(...args),
 			playPrevious: (...args) => this.playPrevious(...args),
 			deleteTracks: (...args) => this.deleteTracks(...args),
-			setHidden: (...args) => this.setHidden(...args),
+			setPrivate: (...args) => this.setPrivate(...args),
 			importTracks: (...args) => this.importTracks(...args),
 			loadPlaylists: (...args) => this.loadPlaylists(...args),
 			deletePlaylist: (...args) => this.deletePlaylist(...args),
@@ -421,12 +421,12 @@ export class MusicProvider extends React.Component {
 		}
 	}
 
-	setHidden(tracks, isHidden) {
-		return Api.post('track/set-hidden', {
+	setPrivate(tracks, isPrivate) {
+		return Api.post('track/set-private', {
 			trackIds: tracks.map(track => track.id),
-			isHidden: isHidden
+			isPrivate
 		}).then(() => {
-			tracks.forEach(track => track.hidden = isHidden);
+			tracks.forEach(track => track.private = isPrivate);
 			this.forceTrackUpdate();
 		});
 	}
@@ -800,8 +800,8 @@ export class MusicProvider extends React.Component {
 
 		if (track) {
 			payload.trackId = track.id;
-			payload.trackArtist = track.hidden ? 'This track' : track.artist;
-			payload.trackName = track.hidden ? 'is private' : track.name;
+			payload.trackArtist = track.private ? 'This track' : track.artist;
+			payload.trackName = track.private ? 'is private' : track.name;
 		}
 
 		console.debug('About to send socket data', new Date());

@@ -1,7 +1,6 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
-import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.TrackTrimDTO
 import com.example.groove.dto.UpdateTrackDTO
@@ -74,9 +73,9 @@ class TrackController(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
-	@PostMapping("/set-hidden")
-	fun setHidden(@RequestBody setHiddenDTO: SetHiddenDTO): ResponseEntity<String> {
-		trackService.setHidden(setHiddenDTO.trackIds, setHiddenDTO.isHidden)
+	@PostMapping("/set-private")
+	fun setPrivate(@RequestBody setPrivateDTO: SetPrivateDTO): ResponseEntity<String> {
+		trackService.setPrivate(setPrivateDTO.trackIds, setPrivateDTO.isPrivate)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -149,9 +148,9 @@ class TrackController(
 			val deviceId: String?
 	)
 
-	data class SetHiddenDTO(
+	data class SetPrivateDTO(
 			val trackIds: List<Long>,
-			val isHidden: Boolean
+			val isPrivate: Boolean
 	)
 
 	data class MultiTrackIdDTO(

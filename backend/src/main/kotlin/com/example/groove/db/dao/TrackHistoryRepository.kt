@@ -11,14 +11,14 @@ interface TrackHistoryRepository : CrudRepository<TrackHistory, Long> {
 			SELECT th
 			FROM TrackHistory th
 			WHERE (:userId IS NULL OR th.track.user.id = :userId)
-			    AND (:loadHidden IS TRUE OR th.track.hidden = FALSE)
+			    AND (:loadPrivate IS TRUE OR th.track.private = FALSE)
 			    AND th.track.deleted = FALSE
 				AND th.createdAt > :startDate
 				AND th.createdAt < :endDate
 			""")
 	fun findAllByUserAndTimeRange(
 			@Param("userId") userId: Long?,
-			@Param("loadHidden") loadHidden: Boolean,
+			@Param("loadPrivate") loadPrivate: Boolean,
 			@Param("startDate") startDate: Timestamp,
 			@Param("endDate") endDate: Timestamp
 	): List<TrackHistory>

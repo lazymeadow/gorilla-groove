@@ -67,17 +67,17 @@ class TrackRepositoryTest(
 	}
 
 	@Test
-	fun i_can_set_hidden_values_of_my_own_tracks() {
+	fun i_can_set_private_values_of_my_own_tracks() {
 		val user = createPersistedTestUser()
 		val track = createPersistedTrack(user = user)
 
-		assertThat(track.hidden).isFalse()
+		assertThat(track.private).isFalse()
 
-		trackRepository.setHiddenForUser(listOf(track.id), user.id, true)
+		trackRepository.setPrivateForUser(listOf(track.id), user.id, true)
 		entityManager.clear() // Clear the cache so the track we grab is the updated one
 
 		val recoveredTrack = trackRepository.findById(track.id)
-		assertThat(recoveredTrack.unwrap()!!.hidden).isTrue()
+		assertThat(recoveredTrack.unwrap()!!.private).isTrue()
 	}
 
 	private fun createPersistedTrack(

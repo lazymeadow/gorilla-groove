@@ -54,6 +54,9 @@ data class Track(
 		var playCount: Int = 0,
 
 		@Column(columnDefinition = "BIT") // MySQL lacks a Boolean type. Need to label it as a BIT column
+		var private: Boolean = false,
+
+		@Column(columnDefinition = "BIT")
 		var hidden: Boolean = false,
 
 		@Column(name = "last_played")

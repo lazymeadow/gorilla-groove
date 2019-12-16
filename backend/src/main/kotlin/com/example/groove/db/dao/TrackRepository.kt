@@ -15,7 +15,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			FROM Track t
 			WHERE t.user.id = :userId
 			AND t.deleted = FALSE
-			AND (:loadHidden IS TRUE OR t.hidden = FALSE)
+			AND (:loadPrivate IS TRUE OR t.private = FALSE)
 			AND (:name IS NULL OR t.name LIKE %:name%)
 			AND (:artist IS NULL OR t.artist LIKE %:artist%)
 			AND (:album IS NULL OR t.album LIKE %:album%)
@@ -32,7 +32,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("artist") artist: String? = null,
 			@Param("album") album: String? = null,
 			@Param("userId") userId: Long,
-			@Param("loadHidden") loadHidden: Boolean = false,
+			@Param("loadPrivate") loadPrivate: Boolean = false,
 			@Param("searchTerm") searchTerm: String? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
@@ -40,14 +40,14 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Modifying
 	@Query("""
 			UPDATE Track t
-			SET t.hidden = :isHidden, t.updatedAt = now()
+			SET t.private = :isPrivate, t.updatedAt = now()
 			WHERE t.user.id = :userId
 			AND t.id IN :trackIds
 			""")
-	fun setHiddenForUser(
+	fun setPrivateForUser(
 			@Param("trackIds") trackIds: List<Long>,
 			@Param("userId") userId: Long,
-			@Param("isHidden") isHidden: Boolean
+			@Param("isPrivate") isPrivate: Boolean
 	)
 
 	@Query("""
@@ -64,7 +64,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			SELECT count(t)
 			FROM Track t
 			WHERE t.createdAt > :timestamp
-			AND t.hidden = FALSE
+			AND t.private = FALSE
 			AND t.deleted = FALSE
 			""")
 	fun countAllTracksAddedSinceTimestamp(
