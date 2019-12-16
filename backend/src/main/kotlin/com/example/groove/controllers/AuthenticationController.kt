@@ -20,7 +20,6 @@ class AuthenticationController(
 		val token = userAuthenticationService.login(userAuthenticationDTO.email, userAuthenticationDTO.password)
 		val user = userService.getUserByEmail(userAuthenticationDTO.email)!!
 
-		userService.updateOwnLastLogin()
 		logger.info(userAuthenticationDTO.email + " logged in")
 
 		return ResponseEntity
