@@ -48,6 +48,7 @@ dependencyManagement {
 }
 
 processResources {
+    println("Processing resources...")
     filesMatching('application.properties') {
         expand(project.properties)
     }
@@ -60,6 +61,8 @@ repositories {
 test {
 	useJUnitPlatform()
 }
+
+//bootWar { mustRunAfter(processResources) }
 
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-data-jpa')
