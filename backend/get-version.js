@@ -1,4 +1,4 @@
-const version = '1.0.9';
+const version = '1.1.1';
 const commitHash = require('child_process')
 	.execSync('git rev-parse --short HEAD')
 	.toString();

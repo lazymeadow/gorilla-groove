@@ -78,11 +78,11 @@ export class SongRow extends React.Component {
 									editable={
 										SongRow.updatableColumns.has(columnName)
 										&& this.props.editableCell === cellId
-										&& this.context.trackView === TrackView.LIBRARY
+										&& (this.context.trackView === TrackView.LIBRARY || this.context.trackView === TrackView.PLAYLIST)
 									}
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 									stopEdit={this.props.stopCellEdits.bind(this)}
-									updateHandler={(newValue) => {
+									updateHandler={newValue => {
 										let newProperties = {};
 										newProperties[columnName] = newValue;
 
