@@ -2,6 +2,7 @@ package com.example.groove.db.model
 
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
+import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
@@ -17,7 +18,11 @@ data class User(
 		val email: String,
 
 		@Column(name = "password")
-		var encryptedPassword: String // Named encryptedPassword to not conflict with the parent method getPassword()
+		var encryptedPassword: String, // Named encryptedPassword to not conflict with the parent method getPassword()
+
+		// Doesn't necessarily require a "log in". If a user opens the site with a valid cookie that counts too
+		@Column(name = "last_login")
+		var lastLogin: Timestamp = Timestamp(System.currentTimeMillis())
 ) : UserDetails {
 	override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
 		return mutableListOf()

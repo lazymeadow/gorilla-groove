@@ -195,7 +195,7 @@ class TrackService(
 			val forkedTrack = track!!.copy(
 					id = 0,
 					user = user,
-					createdAt = Timestamp(Date().time),
+					createdAt = Timestamp(System.currentTimeMillis()),
 					playCount = 0,
 					lastPlayed = null
 			)

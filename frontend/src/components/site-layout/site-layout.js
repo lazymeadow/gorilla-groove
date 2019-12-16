@@ -36,7 +36,7 @@ export class SiteLayout extends React.Component {
 
 		notifyVersion();
 
-		Api.get("user")
+		Api.get('user', { showAll: false })
 			.then(result => {
 				const loggedInEmail = getCookieValue('loggedInEmail').toLowerCase();
 				const ownUserIndex = result.findIndex(user => user.email.toLowerCase() === loggedInEmail);

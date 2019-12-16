@@ -26,8 +26,10 @@ class UserController(
 	}
 
 	@GetMapping
-	fun getUsers(): List<UserResponseDTO> {
-		return userService.getAllUsers().map {
+	fun getUsers(
+			@RequestParam(value = "showAll") showAll: Boolean?
+	): List<UserResponseDTO> {
+		return userService.getUsers(showAll ?: false).map {
 			UserResponseDTO(it.id, it.name, it.email)
 		}
 	}
