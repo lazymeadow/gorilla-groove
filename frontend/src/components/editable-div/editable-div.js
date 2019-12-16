@@ -43,6 +43,7 @@ export class EditableDiv extends React.Component {
 		if (event.key === 'Enter') {
 			this.props.stopEdit();
 			event.preventDefault();
+			event.nativeEvent.propagationStopped = true;
 		} else if (event.key === 'Escape') {
 			this.setState({ newValue: this.props.text });
 			this.props.stopEdit();

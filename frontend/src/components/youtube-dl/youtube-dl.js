@@ -20,6 +20,7 @@ export class YoutubeDlButton extends React.Component {
 
 	submitDownloadForm(event) {
 		event.preventDefault();
+		event.nativeEvent.propagationStopped = true;
 
 		const url = document.getElementById('song-url').value;
 		const name = document.getElementById('song-name').value;
@@ -74,6 +75,12 @@ export class YoutubeDlButton extends React.Component {
 		});
 	}
 
+	// When we push enter, a submit event is fired and a key event
+	// Wrap the entire form in a key listener that stops the propagation of the key event so songs don't play from 'enter'
+	stopPropagation(event) {
+		event.nativeEvent.propagationStopped = true;
+	}
+
 	render() {
 		let buttonClass = this.state.downloading ? 'display-none' : '';
 		let loaderClass = this.state.downloading ? '' : 'display-none';
@@ -81,10 +88,10 @@ export class YoutubeDlButton extends React.Component {
 
 		return (
 			<div className="vertical-center" onClick={() => this.setModalOpen(true)}>
-				<div className="icon-container">
+				<div className="icon-container" onKeyDown={this.stopPropagation.bind(this)}>
 					<i className={`${buttonClass} fab fa-youtube`} title={`${title}`}>
 						<Modal isOpen={this.state.modalOpen} closeFunction={() => this.setModalOpen(false)}>
-							<form className="form-modal" onSubmit={(e) => this.submitDownloadForm(e)}>
+							<form className="form-modal" onSubmit={e => this.submitDownloadForm(e)}>
 								<div className="flex-label">
 									<label htmlFor="song-url">URL</label>
 									<input id="song-url" name="song-url" type="text" required/>

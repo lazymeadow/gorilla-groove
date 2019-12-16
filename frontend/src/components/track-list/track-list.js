@@ -120,6 +120,18 @@ export class TrackList extends React.Component {
 	}
 
 	handleKeyPress(event) {
+		// In react the native DOM events trigger completely, and then React synthetic events are fired afterwards.
+		// Essentially, Any React key handler where we push enter is going to fire after this native document listener does.
+		// We wrap it in a setTimeout, which will give the React event handlers a chance to set a property on the event
+		// (propagationStopped) which we can then use to conditionally ignore the event
+		setTimeout(() => {
+			if (!event.propagationStopped) {
+				this.handleKeyPressInternal(event);
+			}
+		});
+	}
+
+	handleKeyPressInternal(event) {
 		// We are editing song data right now, so just ignore any other key actions
 		if (this.state.editableCell) {
 			return;
