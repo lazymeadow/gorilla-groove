@@ -6,6 +6,7 @@ import {MusicContext} from "../../services/music-provider";
 import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 import {TrackView} from "../../enums/track-view";
 import * as LocalStorage from "../../local-storage";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -113,8 +114,8 @@ export class TrackList extends React.Component {
 			contextMenuOptions: {
 				expanded: true,
 				trackView: this.props.trackView ? this.context.trackView : TrackView.NOW_PLAYING,
-				x: event.clientX - 6,
-				y: event.clientY + 8
+				x: event.clientX,
+				y: event.clientY + 4
 			}}
 		);
 	}
@@ -340,13 +341,14 @@ export class TrackList extends React.Component {
 		this.context.reloadTracks(sortColumn, sortDir)
 	}
 
+	// I think this is used by that cogwheel thing I should get rid of?
 	handleContextMenuOpen(event) {
 		event.stopPropagation();
 		this.setState({
 			contextMenuOptions: {
 				expanded: true,
-				x: event.clientX - 6,
-				y: event.clientY + 8
+				x: event.clientX,
+				y: event.clientY + 4
 			}
 		})
 	}
@@ -424,13 +426,9 @@ export class TrackList extends React.Component {
 					})}
 					</tbody>
 				</table>
-				{
-					this.context.loadingTracks && this.props.trackView && this.props.userTracks.length === 0 ? (
-						<div className="loading-container">
-							<img className="animation-spin" src="./images/logo.png" width="150" height="150"/>
-						</div>
-					) : <div/>
-				}
+				<LoadingSpinner
+					visible={this.context.loadingTracks && this.props.trackView && this.props.userTracks.length === 0}
+				/>
 			</div>
 		)
 	};

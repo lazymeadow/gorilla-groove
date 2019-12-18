@@ -2,6 +2,7 @@ import React from 'react';
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 export class TrimSong extends React.Component {
 	constructor(props) {
@@ -99,14 +100,8 @@ export class TrimSong extends React.Component {
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
 				>
-					<div id="trim-song" className="form-modal">
-						{
-							this.state.loading ? (
-								<div className="loading-container">
-									<img className="animation-spin" src="./images/logo.png" width="150" height="150"/>
-								</div>
-							) : <div/>
-						}
+					<div id="trim-song" className="form-modal p-relative">
+						<LoadingSpinner visible={this.state.loading}/>
 						<form onSubmit={(e) => this.trimTrack(e)}>
 
 							<h2>Trim Song</h2>

@@ -83,7 +83,7 @@ export class SiteLayout extends React.Component {
 						playlists={this.context.playlists}
 					/>
 				</div>
-				<div id="library-view" className="border-layout-center track-list-container">
+				<div id="library-view" className="border-layout-center track-list-container p-relative">
 					<TrackList
 						columns={displayedColumns}
 						userTracks={this.context.viewedTracks}

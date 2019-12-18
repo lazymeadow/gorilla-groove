@@ -2,10 +2,8 @@ package com.example.groove.controllers
 
 import com.example.groove.dto.TrackHistoryDTO
 import com.example.groove.services.TrackHistoryService
-import org.joda.time.DateTime
 
 import org.springframework.web.bind.annotation.*
-import java.sql.Date
 import java.sql.Timestamp
 
 @RestController
