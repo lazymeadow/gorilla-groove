@@ -18,6 +18,8 @@ export class VersionDisplay extends React.Component {
 	componentDidUpdate(prevProps, prevState) {
 		if (!prevState.modalOpen && this.state.modalOpen) {
 			this.loadHistory();
+		} else if (prevState.modalOpen && !this.state.modalOpen) {
+			this.setState({ historyRecords: [] });
 		}
 	}
 
@@ -47,7 +49,7 @@ export class VersionDisplay extends React.Component {
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setState({ modalOpen: false })}
 				>
-					<div id="changelog">
+					<div id="changelog" className="p-relative">
 						<LoadingSpinner visible={this.state.loadingHistory}/>
 						<h2>Changelog</h2>
 						<hr/>
