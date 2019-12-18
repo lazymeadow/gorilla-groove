@@ -159,23 +159,29 @@ export class MusicProvider extends React.Component {
 		if (searchTerm) {
 			params.searchTerm = searchTerm;
 		}
-		params.showHidden = this.state.showHidden;
+		params.showHidden = params.showHidden !== undefined ? params.showHidden : this.state.showHidden;
 	}
 
 	loadSongsForUser(userId, params, append) {
 		params = params ? params : {};
+		const newState = { loadingTracks: true };
+
 		// If userId is null, the backend uses the current user
 		if (userId) {
 			params.userId = userId;
-			this.setState({
-				trackView: TrackView.USER,
-				viewedEntityId: userId
-			});
+			newState.trackView = TrackView.USER;
+			newState.viewedEntityId = userId;
+			if (this.state.trackView !== TrackView.USER) {
+				newState.showHidden = true;
+				params.showHidden = true;
+			}
 		} else {
-			this.setState({
-				trackView: TrackView.LIBRARY,
-				viewedEntityId: null
-			});
+			newState.trackView = TrackView.LIBRARY;
+			newState.viewedEntityId = null;
+			if (this.state.trackView !== TrackView.LIBRARY) {
+				newState.showHidden = false;
+				params.showHidden = false;
+			}
 		}
 
 		if (!params.sort) {
@@ -185,9 +191,10 @@ export class MusicProvider extends React.Component {
 		this.buildTrackLoadParams(params);
 
 		if (!append) {
-			this.setState({ viewedTracks: [] });
+			newState.viewedTracks = [];
 		}
-		this.setState({ loadingTracks: true });
+
+		this.setState(newState);
 
 		return Api.get('track', params).then(result => {
 			this.addTracksToView(result, append);

@@ -40,8 +40,6 @@ export class TrimSong extends React.Component {
 		const validationRegex = /^[0-9]{1,2}:[0-9]{2}(\.[0-9]{1,3})?$/;
 
 		if (!validationRegex.test(userInput)) {
-			console.log("Failed on: ");
-			console.log(userInput);
 			toast.info(errorMessage);
 			return null;
 		}

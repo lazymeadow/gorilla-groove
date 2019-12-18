@@ -89,7 +89,7 @@ This is not the same as private tracks, which are only visible to the owner"
 						 className="fas fa-question-circle"/>
 					<input
 						type="checkbox"
-						value={this.context.showHidden}
+						checked={this.context.showHidden}
 						onChange={this.handleHiddenChange.bind(this)}
 					/>
 				</div>
