@@ -11,8 +11,36 @@ export class VersionDisplay extends React.Component {
 		this.state = {
 			modalOpen: false,
 			loadingHistory: false,
-			historyRecords: []
+			historyRecords: [],
+			updateIntervalId: undefined,
+			outOfDate: false
 		}
+	}
+
+	componentDidMount() {
+		const thirtyMinutes = 30 * 60 * 1000;
+		const interval = setInterval(this.checkForNewerVersion.bind(this), thirtyMinutes);
+		this.setState({ updateIntervalId: interval }, this.checkForNewerVersion.bind(this));
+	}
+
+	componentWillUnmount() {
+		if (this.state.updateIntervalId !== undefined) {
+			clearInterval(this.state.updateIntervalId);
+		}
+	}
+
+	checkForNewerVersion() {
+		Api.get('version').then(serverVersion => {
+			if (serverVersion.version !== __VERSION__) {
+				// Once we've marked it as out of date, there is no reason to continue checking
+				clearInterval(this.state.updateIntervalId);
+
+				this.setState({
+					outOfDate: true ,
+					updateIntervalId: undefined
+				});
+			}
+		});
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -42,9 +70,12 @@ export class VersionDisplay extends React.Component {
 	render() {
 		return (
 			<div id="version-display">
-				<div onClick={() => this.setState({ modalOpen: true })} className="version-text">
-					{ __VERSION__ }
-				</div>
+				<span onClick={() => this.setState({ modalOpen: true })} className="version-text">{__VERSION__}</span>
+				{
+					this.state.outOfDate
+						? <i className="fas fa-exclamation-triangle" title="Your GG is out of date. Refresh your browser. Please?"/>
+						: <React.Fragment/>
+				}
 				<Modal
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setState({ modalOpen: false })}
