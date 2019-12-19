@@ -26,7 +26,8 @@ class DeviceService(
 			deviceId: String,
 			deviceType: DeviceType,
 			version: String,
-			ipAddress: String?
+			ipAddress: String?,
+			additionalData: String?
 	) {
 		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user)
 				?: run {
@@ -42,6 +43,7 @@ class DeviceService(
 
 		device.applicationVersion = version
 		device.updatedAt = Timestamp(System.currentTimeMillis())
+		device.additionalData = additionalData
 		ipAddress?.let { device.lastIp = ipAddress }
 
 		deviceRepository.save(device)

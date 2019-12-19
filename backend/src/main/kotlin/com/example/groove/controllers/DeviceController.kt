@@ -33,7 +33,8 @@ class DeviceController(
 				deviceId = body.deviceId,
 				deviceType = body.deviceType,
 				version = body.version,
-				ipAddress = ipAddress
+				ipAddress = ipAddress,
+				additionalData = body.additionalData
 		)
 
 		// This basically is a "log in". Update our last login time here
@@ -43,6 +44,7 @@ class DeviceController(
 	data class UpdateDeviceVersionDTO(
 			val deviceId: String,
 			val deviceType: DeviceType,
-			val version: String
+			val version: String,
+			val additionalData: String?
 	)
 }

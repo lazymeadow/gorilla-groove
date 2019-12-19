@@ -31,6 +31,9 @@ data class Device(
 		@Column(name = "last_ip")
 		var lastIp: String,
 
+		@Column(name = "additional_data")
+		var additionalData: String? = null,
+
 		@Column(name = "created_at")
 		val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
