@@ -5,10 +5,16 @@ import {PopoutMenu} from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
 import {InviteUser} from "../invite-user/invite-user";
 import {deleteCookie} from "../../cookie";
+import {DraftRelease} from "../draft-release/draft-release";
+import {PermissionType} from "../../enums/permission-type";
 
 class LogoutButtonInternal extends React.Component {
 	constructor(props) {
 		super(props);
+	}
+
+	hasPermission(permissionType) {
+		return this.props.musicContext.ownPermissions.has(permissionType);
 	}
 
 	logout(event) {
@@ -38,6 +44,7 @@ class LogoutButtonInternal extends React.Component {
 					menuItems={[
 						{ component: <Settings/> },
 						{ component: <InviteUser/> },
+						{ component: <DraftRelease/>, shouldRender: this.hasPermission(PermissionType.WRITE_VERSION_HISTORY) },
 						{ text: "Logout", clickHandler: (e) => this.logout(e) }
 					]}
 				/>

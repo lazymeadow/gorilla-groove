@@ -75,6 +75,8 @@ export class MusicProvider extends React.Component {
 			nowListeningUsers: {},
 			socket: null,
 
+			ownPermissions: new Set(), // FIXME Makes NO sense to be in this context. Need to figure out how to make more than one
+
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
 			reloadTracks: (...args) => this.reloadTracks(...args),

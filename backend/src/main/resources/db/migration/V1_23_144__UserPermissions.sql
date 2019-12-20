@@ -10,3 +10,6 @@ CREATE TABLE `groovatron`.`user_permission` (
     REFERENCES `groovatron`.`user` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
+
+ALTER TABLE `groovatron`.`version_history`
+ADD UNIQUE INDEX `index2` (`version` ASC, `device_type` ASC);

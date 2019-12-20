@@ -40,7 +40,7 @@ export class SiteLayout extends React.Component {
 
 		Api.get('user/permissions').then(result => {
 			const permissionSet = new Set(result.map(it => PermissionType[it.permissionType]));
-			this.setState({ permissions: permissionSet });
+			this.context.setProviderState({ ownPermissions: permissionSet });
 		});
 
 		Api.get('user', { showAll: false })

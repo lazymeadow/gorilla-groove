@@ -22,6 +22,13 @@ class VersionService(
 		)
 	}
 
+	@Transactional
+	fun createVersionHistory(deviceType: DeviceType, version: String, notes: String): VersionHistory {
+		val versionHistory = VersionHistory(version = version, notes = notes, deviceType = deviceType)
+
+		return versionHistoryRepository.save(versionHistory)
+	}
+
 	companion object {
 		val logger = LoggerFactory.getLogger(VersionService::class.java)!!
 	}

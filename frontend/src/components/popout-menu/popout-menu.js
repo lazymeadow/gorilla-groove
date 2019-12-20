@@ -35,13 +35,15 @@ export class PopoutMenu extends React.Component {
 				</div>
 				<div className={`popout-menu ${menuClass}`}>
 					<ul>
-						{this.props.menuItems.map((menuItem, index) => {
-							if (menuItem.component) {
-								return <li key={index}>{menuItem.component}</li>
-							} else {
-								return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
-							}
-						})}
+						{this.props.menuItems
+							.filter(menuItem => menuItem.shouldRender === undefined || menuItem.shouldRender === true)
+							.map((menuItem, index) => {
+								if (menuItem.component) {
+									return <li key={index}>{menuItem.component}</li>
+								} else {
+									return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
+								}
+							})}
 					</ul>
 				</div>
 			</div>
