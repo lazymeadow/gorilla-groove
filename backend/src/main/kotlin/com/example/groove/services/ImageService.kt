@@ -1,15 +1,25 @@
 package com.example.groove.services
 
+import com.example.groove.properties.FileStorageProperties
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.awt.image.BufferedImage
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.min
 
 @Service
-class ImageService {
-	fun cropToSquare(imageFile: File): BufferedImage {
+class ImageService(
+		fileStorageProperties: FileStorageProperties
+) {
+
+	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir!!)
+			.toAbsolutePath().normalize()
+
+	fun cropToSquare(imageFile: File): File {
 		val image = ImageIO.read(imageFile)
 
 		val smallerEdge = min(image.width, image.height)
@@ -30,7 +40,11 @@ class ImageService {
 
 		g.drawImage(subImage, 0, 0, null)
 
-		return copyOfImage
+		val tmpImageName = UUID.randomUUID().toString() + ".png"
+		val outputFile = fileStorageLocation.resolve(tmpImageName).toFile()
+		ImageIO.write(copyOfImage, "png", outputFile)
+
+		return outputFile
 	}
 
 	companion object {

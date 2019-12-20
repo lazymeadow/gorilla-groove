@@ -19,7 +19,8 @@ class YoutubeService(
 		private val fileStorageProperties: FileStorageProperties,
 		private val trackRepository: TrackRepository,
 		private val youTubeDlProperties: YouTubeDlProperties,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val imageService: ImageService
 ) {
 
 	@Transactional
@@ -64,10 +65,14 @@ class YoutubeService(
 		youtubeDownloadDTO.genre?.let { track.genre = it }
 		trackRepository.save(track)
 
-		// TODO convert this to a png like the others
-		fileStorageService.storeAlbumArt(newAlbumArt, track.id)
+		if (youtubeDownloadDTO.cropArtToSquare) {
+			val croppedArt = imageService.cropToSquare(newAlbumArt)
+			fileStorageService.storeAlbumArt(croppedArt, track.id)
+			croppedArt.delete()
+		} else {
+			fileStorageService.storeAlbumArt(newAlbumArt, track.id)
+		}
 
-		// We have stored the file in its permanent home. We can delete this tmp file
 		newAlbumArt.delete()
 
 		return track

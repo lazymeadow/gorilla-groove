@@ -10,7 +10,8 @@ export class YoutubeDlButton extends React.Component {
 
 		this.state = {
 			modalOpen: false,
-			downloading: false
+			downloading: false,
+			cropArtToSquare: true
 		}
 	}
 
@@ -36,7 +37,11 @@ export class YoutubeDlButton extends React.Component {
 			return;
 		}
 
-		let params = { url: url };
+		const params = {
+			url: url,
+			cropArtToSquare: this.state.cropArtToSquare
+		};
+
 		if (name) {
 			params.name = name;
 		}
@@ -76,9 +81,9 @@ export class YoutubeDlButton extends React.Component {
 	}
 
 	render() {
-		let buttonClass = this.state.downloading ? 'display-none' : '';
-		let loaderClass = this.state.downloading ? '' : 'display-none';
-		let title = this.state.downloading ? '' : 'Download from YouTube';
+		const buttonClass = this.state.downloading ? 'display-none' : '';
+		const loaderClass = this.state.downloading ? '' : 'display-none';
+		const title = this.state.downloading ? '' : 'Download from YouTube';
 
 		return (
 			<div className="vertical-center" onClick={() => this.setModalOpen(true)}>
@@ -128,6 +133,29 @@ export class YoutubeDlButton extends React.Component {
 									<input id="song-genre" name="song-genre" type="text"/>
 								</div>
 
+								<hr/>
+								<div>
+									Crop Art to Square?
+									<input
+										id="crop-yes"
+										type="radio"
+										name="crop"
+										value="true"
+										checked={this.state.cropArtToSquare}
+										onChange={() => this.setState({ cropArtToSquare: true })}
+									/>
+									<label htmlFor="crop-yes">Yes</label>
+
+									<input
+										id="crop-no"
+										type="radio"
+										name="crop"
+										value="false"
+										checked={!this.state.cropArtToSquare}
+										onChange={() => this.setState({ cropArtToSquare: false })}
+									/>
+									<label htmlFor="crop-no">No</label>
+								</div>
 								<button>Download Song</button>
 							</form>
 						</Modal>
