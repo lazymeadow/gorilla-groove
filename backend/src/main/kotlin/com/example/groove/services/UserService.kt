@@ -9,11 +9,9 @@ import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.util.DateUtils
 import com.example.groove.util.isNewerThan
 import com.example.groove.util.loadLoggedInUser
-import org.springframework.dao.PermissionDeniedDataAccessException
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 
 

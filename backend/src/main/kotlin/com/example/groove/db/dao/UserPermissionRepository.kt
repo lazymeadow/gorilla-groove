@@ -7,5 +7,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface UserPermissionRepository : CrudRepository<UserPermission, Long> {
 	fun findByUser(user: User): List<UserPermission>
-	fun findByUserAndPermissionType(User: User, permissionType: PermissionType): PermissionType?
+	fun findByUserAndPermissionType(User: User, permissionType: PermissionType): UserPermission?
 }
