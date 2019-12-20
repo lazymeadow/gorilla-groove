@@ -13,5 +13,6 @@ data class UpdateTrackDTO(
 		val genre: String?,
 		val note: String?,
 		val hidden: Boolean?,
-		val albumArt: MultipartFile?
+		val albumArt: MultipartFile?,
+		val cropArtToSquare: Boolean = false
 )

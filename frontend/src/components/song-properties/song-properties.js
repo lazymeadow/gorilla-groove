@@ -21,7 +21,8 @@ export class SongProperties extends React.Component {
 			sampleRate: '',
 			note: '',
 			albumArt: null,
-			albumArtUrl: ''
+			albumArtUrl: '',
+			cropArtToSquare: false
 		};
 
 		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNumber',
@@ -51,6 +52,7 @@ export class SongProperties extends React.Component {
 
 		newState.albumArtUrl = './images/unknown-art.jpg';
 		newState.albumArt = null;
+		newState.cropArtToSquare = false;
 
 		this.setState(newState);
 	}
@@ -69,8 +71,9 @@ export class SongProperties extends React.Component {
 	updateTracks(event) {
 		event.preventDefault();
 
-		let unchangedProperties = this.getChangedProperties();
-		if (Object.keys(unchangedProperties).length === 0 && this.state.albumArt === null) {
+		const changedProperties = this.getChangedProperties();
+
+		if (Object.keys(changedProperties).length === 0 && this.state.albumArt === null) {
 			toast.info("No track data changes were made");
 			this.setState({ modalOpen: false });
 			return;
@@ -81,7 +84,7 @@ export class SongProperties extends React.Component {
 		this.context.updateTracks(
 			this.props.getSelectedTracks(),
 			this.state.albumArt,
-			unchangedProperties,
+			changedProperties,
 			false
 		).then(() => {
 			this.setState({ modalOpen: false });
@@ -101,6 +104,10 @@ export class SongProperties extends React.Component {
 				changedProperties[inputName] = currentValue;
 			}
 		});
+
+		if (this.state.cropArtToSquare) {
+			changedProperties.cropArtToSquare = true;
+		}
 
 		return changedProperties;
 	}
@@ -253,6 +260,30 @@ export class SongProperties extends React.Component {
 											value={this.state.sampleRate}
 											disabled
 										/>
+									</div>
+
+									<hr/>
+									<div className="flex-label">
+										Crop Art to Square?
+										<input
+											id="crop-yes"
+											type="radio"
+											name="crop"
+											value="true"
+											checked={this.state.cropArtToSquare}
+											onChange={() => this.setState({ cropArtToSquare: true })}
+										/>
+										<label htmlFor="crop-yes">Yes</label>
+
+										<input
+											id="crop-no"
+											type="radio"
+											name="crop"
+											value="false"
+											checked={!this.state.cropArtToSquare}
+											onChange={() => this.setState({ cropArtToSquare: false })}
+										/>
+										<label htmlFor="crop-no">No</label>
 									</div>
 								</div>
 

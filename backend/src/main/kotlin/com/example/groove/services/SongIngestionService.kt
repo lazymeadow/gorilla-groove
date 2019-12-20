@@ -25,7 +25,8 @@ class SongIngestionService(
 		private val ffmpegService: FFmpegService,
 		private val fileMetadataService: FileMetadataService,
 		private val trackRepository: TrackRepository,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val imageService: ImageService
 ) {
 
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir!!)
@@ -68,9 +69,8 @@ class SongIngestionService(
 		return track
 	}
 
-	fun storeAlbumArtForTrack(albumArt: MultipartFile, track: Track) {
+	fun storeAlbumArtForTrack(albumArt: MultipartFile, track: Track, cropImageToSquare: Boolean) {
 		logger.info("Storing album artwork ${albumArt.originalFilename} for track ID: ${track.id}")
-
 		val fileName = storeMultipartFile(albumArt)
 
 		val imageFile = fileStorageLocation.resolve(fileName).toFile()
@@ -78,8 +78,30 @@ class SongIngestionService(
 			throw IllegalStateException("Could not store album art for track ID: ${track.id}")
 		}
 
-		fileStorageService.storeAlbumArt(imageFile, track.id)
+		storeAlbumArtForTrack(imageFile, track, cropImageToSquare)
+
 		imageFile.delete()
+	}
+
+	fun storeAlbumArtForTrack(albumArt: File, track: Track, cropImageToSquare: Boolean) {
+		if (!cropImageToSquare) {
+			logger.info("Storing album art track ID: ${track.id} unaltered")
+			fileStorageService.storeAlbumArt(albumArt, track.id)
+			return
+		}
+
+		logger.info("Beginning album art crop for track ID: ${track.id}")
+		// Crop the image and save the cropped file
+		val croppedImage = imageService.cropToSquare(albumArt)
+
+		val tmpImageName = UUID.randomUUID().toString() + ".png"
+		val outputFile = fileStorageLocation.resolve(tmpImageName).toFile()
+		ImageIO.write(croppedImage, "png", outputFile)
+
+		fileStorageService.storeAlbumArt(outputFile, track.id)
+		logger.info("Cropped album art was stored for track ID: ${track.id}")
+
+		outputFile.delete()
 	}
 
 	// It's important to rip the album art out PRIOR to running the song

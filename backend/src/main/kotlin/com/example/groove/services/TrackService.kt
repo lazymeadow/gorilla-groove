@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
-import java.util.*
+import kotlin.math.log
 
 
 @Service
@@ -110,8 +110,9 @@ class TrackService(
 	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?) {
 		updateTrackDTO.trackIds.forEach { trackId ->
 			val track = trackRepository.findById(trackId).unwrap()
+			val user = loadLoggedInUser()
 
-			if (track == null || track.user != loadLoggedInUser()) {
+			if (track == null || track.user.id != user.id) {
 				throw IllegalArgumentException("No track found by ID $trackId!")
 			}
 
@@ -127,7 +128,16 @@ class TrackService(
 			track.updatedAt = Timestamp(System.currentTimeMillis())
 
 			if (albumArt != null) {
-				songIngestionService.storeAlbumArtForTrack(albumArt, track)
+				songIngestionService.storeAlbumArtForTrack(albumArt, track, updateTrackDTO.cropArtToSquare)
+			} else if (updateTrackDTO.cropArtToSquare) {
+				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
+				val art = fileStorageService.loadAlbumArt(trackId)
+				if (art == null) {
+					logger.info("$trackId does not have album art to crop!")
+				} else {
+					songIngestionService.storeAlbumArtForTrack(art, track, true)
+					art.delete()
+				}
 			}
 		}
 	}
