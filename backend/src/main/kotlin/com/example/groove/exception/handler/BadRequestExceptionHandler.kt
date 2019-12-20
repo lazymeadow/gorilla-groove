@@ -2,6 +2,7 @@
 
 package com.example.groove.exception.handler
 
+import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.exception.ResourceNotFoundException
 import org.apache.tomcat.util.http.fileupload.FileUploadBase
 import org.springframework.http.HttpHeaders
@@ -31,5 +32,11 @@ class BadRequestExceptionHandler : ResponseEntityExceptionHandler() {
 	@ExceptionHandler(ResourceNotFoundException::class)
 	protected fun handleNotFound(ex: RuntimeException, request: WebRequest): ResponseEntity<Any> {
 		return handleExceptionInternal(ex, ex.message, HttpHeaders(), HttpStatus.NOT_FOUND, request)
+	}
+
+	// These exceptions should return a 401 to the client
+	@ExceptionHandler(PermissionDeniedException::class)
+	protected fun handleUnauthorized(ex: RuntimeException, request: WebRequest): ResponseEntity<Any> {
+		return handleExceptionInternal(ex, ex.message, HttpHeaders(), HttpStatus.UNAUTHORIZED, request)
 	}
 }

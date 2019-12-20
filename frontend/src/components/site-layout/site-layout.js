@@ -9,6 +9,7 @@ import {SiteStats} from "../site-stats/site-stats";
 import {isLoggedIn} from "../../util";
 import {getCookieValue} from "../../cookie";
 import {notifyVersion} from "../../services/version";
+import {PermissionType} from "../../enums/permission-type";
 
 export class SiteLayout extends React.Component {
 	constructor(props) {
@@ -16,6 +17,7 @@ export class SiteLayout extends React.Component {
 		this.state = {
 			isLoaded: false, // TODO use this to actually indicate loading
 			ownUser: null,
+			ownPermissions: new Set(),
 			otherUsers: []
 		};
 
@@ -35,6 +37,11 @@ export class SiteLayout extends React.Component {
 		this.context.loadPlaylists();
 
 		notifyVersion();
+
+		Api.get('user/permissions').then(result => {
+			const permissionSet = new Set(result.map(it => PermissionType[it.permissionType]));
+			this.setState({ permissions: permissionSet });
+		});
 
 		Api.get('user', { showAll: false })
 			.then(result => {

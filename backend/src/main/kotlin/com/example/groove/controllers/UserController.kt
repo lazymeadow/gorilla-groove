@@ -1,7 +1,9 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.User
+import com.example.groove.db.model.UserPermission
 import com.example.groove.services.UserService
+import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -32,6 +34,11 @@ class UserController(
 		return userService.getUsers(showAll ?: false).map {
 			UserResponseDTO(it.id, it.name, it.email)
 		}
+	}
+
+	@GetMapping("/permissions")
+	fun getOwnPermissions(): List<UserPermission> {
+		return userService.getUserPermissions(loadLoggedInUser())
 	}
 
 	data class UserCreateDTO(

@@ -1,10 +1,8 @@
 package com.example.groove.exception
 
 
-class FileStorageException : RuntimeException {
-    constructor(message: String) : super(message) {}
-
-    constructor(message: String, cause: Throwable) : super(message, cause) {}
-}
+class FileStorageException(message: String, cause: Throwable) : RuntimeException(message, cause)
 
 class ResourceNotFoundException(message: String) : RuntimeException(message)
+
+class PermissionDeniedException(message: String) : RuntimeException(message)
