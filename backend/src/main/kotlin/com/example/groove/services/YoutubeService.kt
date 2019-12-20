@@ -54,7 +54,9 @@ class YoutubeService(
 			logger.error("Failed to download album art for song at URL: $url. Continuing anyway")
 		}
 
-		val track = songIngestionService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser())
+		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
+		// Slightly complicates finding the file after we save it, though
+		val track = songIngestionService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser(), url)
 		// If the uploader provided any metadata, add it to the track and save it again
 		youtubeDownloadDTO.name?.let { track.name = it }
 		youtubeDownloadDTO.artist?.let { track.artist = it }

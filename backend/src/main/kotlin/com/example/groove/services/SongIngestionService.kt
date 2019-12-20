@@ -58,7 +58,7 @@ class SongIngestionService(
 		val fileName = storeMultipartFile(songFile)
 		val tmpImageFile = ripAndSaveAlbumArt(fileName)
 
-		val track = convertAndSaveTrackForUser(fileName, user)
+		val track = convertAndSaveTrackForUser(fileName, user, songFile.originalFilename!!)
 
 		if (tmpImageFile != null) {
 			fileStorageService.storeAlbumArt(tmpImageFile, track.id)
@@ -117,13 +117,13 @@ class SongIngestionService(
 	}
 
 	@Transactional
-	fun convertAndSaveTrackForUser(fileName: String, user: User): Track {
+	fun convertAndSaveTrackForUser(fileName: String, user: User, originalFileName: String): Track {
 		logger.info("Saving file $fileName for user ${user.name}")
 
 		val convertedFile = ffmpegService.convertTrack(fileName)
 
 		// add the track to database
-		val track = fileMetadataService.createTrackFromSongFile(convertedFile, user)
+		val track = fileMetadataService.createTrackFromSongFile(convertedFile, user, originalFileName)
 		trackRepository.save(track)
 
 		val renamedSongFile = renameSongFile(convertedFile, track)

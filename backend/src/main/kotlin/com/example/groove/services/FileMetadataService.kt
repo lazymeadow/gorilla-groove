@@ -55,18 +55,20 @@ class FileMetadataService(
 		}
 	}
 
-    fun createTrackFromSongFile(song: File, user: User): Track {
+    fun createTrackFromSongFile(song: File, user: User, originalFileName: String): Track {
         if (!song.exists()) {
             logger.error("File was not found using the path '${song.path}'")
             throw IllegalArgumentException("File by name '${song.name}' does not exist!")
         }
         val audioFile = AudioFileIO.read(song)
 
+		val (backupName, backupArtist) = deriveBackupNamesFromOriginalFileName(originalFileName)
+
 		return Track(
 				user = user,
 				fileName = song.name,
-				name = audioFile.tag.getFirst(FieldKey.TITLE),
-				artist = audioFile.tag.getFirst(FieldKey.ARTIST),
+				name = audioFile.tag.getFirst(FieldKey.TITLE).ifEmpty(backupName),
+				artist = audioFile.tag.getFirst(FieldKey.ARTIST).ifEmpty(backupArtist),
 				album = audioFile.tag.getFirst(FieldKey.ALBUM),
 				trackNumber = parseTrackNumber(audioFile.tag.getFirst(FieldKey.TRACK)),
 				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
@@ -75,6 +77,47 @@ class FileMetadataService(
 				bitRate = audioFile.audioHeader.bitRateAsNumber,
 				sampleRate = audioFile.audioHeader.sampleRateAsNumber
 		)
+	}
+
+	// If someone uploads a file with no metadata, make the best possible effort to put SOMETHING in the song row.
+	// Return a PairOf(Title, Artist)
+	private fun deriveBackupNamesFromOriginalFileName(originalFileName: String): Pair<String, String> {
+		// Probably from youtube. Nothing to do
+		if (originalFileName.startsWith("http")) {
+			return originalFileName to ""
+		}
+
+		// Maybe it's in the format of:  Artist - Title
+		if (originalFileName.contains("-")) {
+			val hyphenIndex = originalFileName.indexOfFirst { it == '-' }
+			return Pair(
+					originalFileName.substring(hyphenIndex + 1).trimExtension(),
+					originalFileName.substring(0, hyphenIndex).trim()
+			)
+		}
+
+		// Maybe it's in the format of:  Artist, Title
+		if (originalFileName.contains(",")) {
+			val hyphenIndex = originalFileName.indexOfFirst { it == ',' }
+			return Pair(
+					originalFileName.substring(hyphenIndex + 1).trimExtension(),
+					originalFileName.substring(0, hyphenIndex).trim()
+			)
+		}
+
+		return originalFileName.trimExtension() to ""
+	}
+
+	private fun String?.ifEmpty(defaultValue: String): String {
+		return if (isNullOrEmpty()) {
+			defaultValue
+		} else {
+			this.toString()
+		}
+	}
+
+	private fun String.trimExtension(): String {
+		return this.split('.').first().trim()
 	}
 
 	fun getTrackLength(song: File): Int {
