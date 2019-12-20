@@ -75,12 +75,6 @@ export class YoutubeDlButton extends React.Component {
 		});
 	}
 
-	// When we push enter, a submit event is fired and a key event
-	// Wrap the entire form in a key listener that stops the propagation of the key event so songs don't play from 'enter'
-	stopPropagation(event) {
-		event.nativeEvent.propagationStopped = true;
-	}
-
 	render() {
 		let buttonClass = this.state.downloading ? 'display-none' : '';
 		let loaderClass = this.state.downloading ? '' : 'display-none';
@@ -88,7 +82,7 @@ export class YoutubeDlButton extends React.Component {
 
 		return (
 			<div className="vertical-center" onClick={() => this.setModalOpen(true)}>
-				<div className="icon-container" onKeyDown={this.stopPropagation.bind(this)}>
+				<div className="icon-container">
 					<i className={`${buttonClass} fab fa-youtube`} title={`${title}`}>
 						<Modal isOpen={this.state.modalOpen} closeFunction={() => this.setModalOpen(false)}>
 							<form className="form-modal" onSubmit={e => this.submitDownloadForm(e)}>

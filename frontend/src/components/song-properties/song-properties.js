@@ -145,7 +145,7 @@ export class SongProperties extends React.Component {
 					<div id="song-properties" className="form-modal">
 						<LoadingSpinner visible={this.state.loading}/>
 
-						<form onSubmit={(e) => this.updateTracks(e)}>
+						<form onSubmit={e => this.updateTracks(e)}>
 
 							<h2>Track Properties</h2>
 

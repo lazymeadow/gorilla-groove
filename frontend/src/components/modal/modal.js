@@ -32,6 +32,12 @@ export class Modal extends React.Component {
 		this.props.closeFunction();
 	}
 
+	// When we push enter, a submit event is fired and a key event
+	// Wrap the entire form in a key listener that stops the propagation of the key event so songs don't play from 'enter'
+	stopPropagation(event) {
+		event.nativeEvent.propagationStopped = true;
+	}
+
 	render() {
 		return (
 			<ReactModal
@@ -42,7 +48,9 @@ export class Modal extends React.Component {
 				contentLabel="Example Modal"
 			>
 				<span className="modal-close" onClick={(e) => this.closeModal(e)}>✗</span>
-				{this.props.children}
+				<div onKeyDown={this.stopPropagation.bind(this)}>
+					{this.props.children}
+				</div>
 			</ReactModal>
 		);
 	}
