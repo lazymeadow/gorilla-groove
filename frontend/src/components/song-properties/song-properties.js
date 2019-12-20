@@ -2,6 +2,7 @@ import React from 'react';
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 export class SongProperties extends React.Component {
 	constructor(props) {
@@ -142,13 +143,7 @@ export class SongProperties extends React.Component {
 					closeFunction={() => this.setModalOpen(false)}
 				>
 					<div id="song-properties" className="form-modal">
-						{
-							this.state.loading ? (
-									<div className="loading-container">
-										<img className="animation-spin" src="./images/logo.png" width="150" height="150"/>
-									</div>
-								) : <div/>
-						}
+						<LoadingSpinner visible={this.state.loading}/>
 
 						<form onSubmit={(e) => this.updateTracks(e)}>
 
