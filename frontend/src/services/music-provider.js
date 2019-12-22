@@ -14,6 +14,8 @@ export class MusicProvider extends React.Component {
 	constructor(props) {
 		super(props);
 
+		console.log('music provider', this.props);
+
 		this.trackKeyConversions = {
 			'Name': 'name',
 			'Artist': 'artist',
@@ -70,6 +72,7 @@ export class MusicProvider extends React.Component {
 			useRightClickMenu: LocalStorage.getBoolean('useRightClickMenu', true),
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
+			renderCounter: 0,
 			searchTerm: '',
 			showHidden: false,
 			nowListeningUsers: {},
@@ -157,16 +160,19 @@ export class MusicProvider extends React.Component {
 			params.page = 0;
 		}
 
-		let searchTerm = this.state.searchTerm.trim();
+		const searchTerm = this.props.filterContext.searchTerm.trim();
 		if (searchTerm) {
 			params.searchTerm = searchTerm;
 		}
-		params.showHidden = params.showHidden !== undefined ? params.showHidden : this.state.showHidden;
+		params.showHidden = params.showHidden !== undefined ? params.showHidden : this.props.filterContext.showHidden;
 	}
 
 	loadSongsForUser(userId, params, append) {
 		params = params ? params : {};
-		const newState = { loadingTracks: true };
+		const newState = {
+			loadingTracks: true,
+			renderCounter: this.state.renderCounter + 1
+		};
 
 		// If userId is null, the backend uses the current user
 		if (userId) {
@@ -202,7 +208,10 @@ export class MusicProvider extends React.Component {
 			this.addTracksToView(result, append);
 		}).catch((error) => {
 			console.error(error)
-		}).finally(() => this.setState({ loadingTracks: false }));
+		}).finally(() => this.setState({
+			loadingTracks: false,
+			renderCounter: this.state.renderCounter + 1
+		}));
 	}
 
 	loadMoreTracks() {
@@ -491,7 +500,8 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			trackView: TrackView.PLAYLIST,
 			viewedEntityId: playlistId,
-			loadingTracks: true
+			loadingTracks: true,
+			renderCounter: this.state.renderCounter + 1
 		});
 
 		if (!append) {
@@ -508,7 +518,10 @@ export class MusicProvider extends React.Component {
 				return trackData
 			});
 			this.addTracksToView(result, append);
-		}).finally(() => this.setState({ loadingTracks: false }));
+		}).finally(() => this.setState({
+			loadingTracks: false,
+			renderCounter: this.state.renderCounter + 1
+		}));
 	}
 
 	addTracksToView(result, append) {
@@ -834,7 +847,12 @@ export class MusicProvider extends React.Component {
 		}
 	}
 
+	shouldComponentUpdate(nextProps, nextState) {
+		return this.state.renderCounter !== nextState.renderCounter;
+	}
+
 	render() {
+		console.log('music provider');
 		return (
 			<MusicContext.Provider value={this.state}>
 				{this.props.children}
