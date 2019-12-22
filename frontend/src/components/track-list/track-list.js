@@ -8,6 +8,11 @@ import {TrackView} from "../../enums/track-view";
 import * as LocalStorage from "../../local-storage";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
+
+let doubleClickTimeout = null;
+let withinDoubleClick = false;
+let pendingEditableCell = null;
+
 export class TrackList extends React.Component {
 	constructor(props) {
 		super(props);
@@ -16,10 +21,7 @@ export class TrackList extends React.Component {
 			selected: {}, // FIXME Pretty sure I should have made this a set. Pretty sure it's being used like a set
 			firstSelectedIndex: null,
 			lastSelectedIndex: null,
-			withinDoubleClick: false,
-			doubleClickTimeout: null,
 			editableCell: null,
-			pendingEditableCell: null,
 			id: this.props.trackView ? 'track-list' : '',
 			contextMenuOptions: {
 				expanded: false,
@@ -27,6 +29,11 @@ export class TrackList extends React.Component {
 				y: 0
 			}
 		};
+	}
+
+	shouldComponentUpdate(prevProps, prevState) {
+		console.log(prevProps, JSON.stringify(prevState));
+		return true;
 	}
 
 	componentDidMount() {
@@ -60,6 +67,7 @@ export class TrackList extends React.Component {
 			return;
 		}
 
+		// noinspection JSUnusedGlobalSymbols
 		const options = {
 			resizeMode: 'overflow',
 			serialize: true,
@@ -99,14 +107,15 @@ export class TrackList extends React.Component {
 	}
 
 	handleContextMenu(event) {
+		console.log('handle context menu');
 		if (!this.context.useRightClickMenu) {
 			return;
 		}
 
 		event.preventDefault();
 
-		let row = event.target.closest('.song-row');
-		let rowIndex = [...row.parentElement.children].indexOf(row);
+		const row = event.target.closest('.song-row');
+		const rowIndex = [...row.parentElement.children].indexOf(row);
 
 		this.handleRowClick(event, rowIndex);
 
@@ -178,9 +187,9 @@ export class TrackList extends React.Component {
 	}
 
 	handleScroll() {
-		let scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
+		const scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
 
-		let container = document.getElementsByClassName('border-layout-center')[0];
+		const container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.context.loadingTracks
 			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
 			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
@@ -190,25 +199,26 @@ export class TrackList extends React.Component {
 	}
 
 	handleRowClick(event, userTrackIndex) {
-		let isLeftClick = event.type === 'click';
+		console.log('handle row click');
+		const isLeftClick = event.type === 'click';
 
 		if (event.target.tagName === 'INPUT') {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
 		}
 
 		let selected = this.state.selected;
-		this.setState({ lastSelectedIndex: userTrackIndex });
+		const newState = { lastSelectedIndex: userTrackIndex };
 
 		// Always set the first selected if there wasn't one
 		if (this.state.firstSelectedIndex === null) {
-			this.setState({ firstSelectedIndex: userTrackIndex })
+			newState.firstSelectedIndex = userTrackIndex;
 		}
 
 		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
 		// Additionally, if right clicking, we don't want to deselect if we selected an already selected row
 		if (!event.ctrlKey && !event.shiftKey && !(!isLeftClick && selected[userTrackIndex])) {
 			selected = {};
-			this.setState({ firstSelectedIndex: userTrackIndex })
+			newState.firstSelectedIndex = userTrackIndex;
 		}
 
 		// If we're holding shift, we should select the rows between this click and the first click
@@ -231,10 +241,10 @@ export class TrackList extends React.Component {
 		if (isLeftClick) {
 
 			// TODO I don't actually make sure you double clicked the SAME row twice. Just that you double clicked. Fix perhaps?
-			if (this.state.withinDoubleClick) {
+			if (withinDoubleClick) {
 				this.cancelDoubleClick();
 				this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
-				this.setState({ editableCell: null })
+				newState.editableCell = null;
 			} else {
 				// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
 				this.cancelDoubleClick();
@@ -243,26 +253,20 @@ export class TrackList extends React.Component {
 			}
 		}
 
-		this.setState({ selected: selected });
+		newState.selected = selected;
+		this.setState(newState);
 	}
 
 	setupDoubleClick(pendingEditableCell) {
 		// Set up a timer that will kill our ability to double click if we are too slow
-		let timeout = setTimeout(() => {
-			this.setState({ withinDoubleClick: false });
+		doubleClickTimeout = setTimeout(() => {
+			withinDoubleClick = false;
 			if (pendingEditableCell) {
-				this.setState({
-					editableCell: pendingEditableCell,
-					pendingEditableCell: null
-				})
+				pendingEditableCell = null;
+				this.setState({ editableCell: pendingEditableCell })
 			}
 		}, 300);
-
-		// Set our double clicking state for the next timeout
-		this.setState({
-			withinDoubleClick: true,
-			doubleClickTimeout: timeout
-		});
+		withinDoubleClick = true;
 	}
 
 	setupEdit(event, selectedIndexes, userTrackIndex) {
@@ -280,27 +284,24 @@ export class TrackList extends React.Component {
 				cellId = elements ? elements[0].id : null;
 			}
 
-			this.setState({ pendingEditableCell: cellId });
+			pendingEditableCell = cellId;
 
 			return cellId;
 		} else {
-			this.setState({
-				editableCell: null,
-				pendingEditableCell: null
-			});
+			pendingEditableCell = null;
+			this.setState({ editableCell: null });
 
 			return null;
 		}
 	}
 
 	cancelDoubleClick() {
-		if (this.state.doubleClickTimeout) {
-			window.clearTimeout(this.state.doubleClickTimeout);
-			this.setState({
-				withinDoubleClick: false,
-				doubleClickTimeout: null,
-				pendingEditableCell: null
-			});
+		if (doubleClickTimeout) {
+			window.clearTimeout(doubleClickTimeout);
+
+			withinDoubleClick = false;
+			doubleClickTimeout = null;
+			pendingEditableCell = null;
 		}
 	}
 
@@ -372,6 +373,10 @@ export class TrackList extends React.Component {
 	}
 
 	render() {
+		if (this.props.trackView) {
+			console.log('Rerendering');
+		}
+
 		// noinspection HtmlUnknownTarget
 		return (
 			<div className="track-list">
