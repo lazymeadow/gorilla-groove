@@ -61,7 +61,7 @@ export class SongRow extends React.Component {
 	}
 
 	render() {
-		let selected = this.props.selected ? "selected" : "";
+		let selected = this.props.selected ? 'selected' : '';
 		let playedClass = this.props.played ? 'played' : '';
 
 		return (
@@ -84,7 +84,7 @@ export class SongRow extends React.Component {
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={newValue => {
-										let newProperties = {};
+										const newProperties = {};
 										newProperties[columnName] = newValue;
 
 										this.context.updateTracks([this.props.userTrack], null, newProperties, true);

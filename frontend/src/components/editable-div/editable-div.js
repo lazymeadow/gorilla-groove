@@ -1,5 +1,4 @@
 import React from 'react';
-import * as ReactDOM from "react-dom";
 
 export class EditableDiv extends React.Component {
 	constructor(props) {
@@ -7,6 +6,14 @@ export class EditableDiv extends React.Component {
 		this.state = {
 			newValue: this.props.text
 		}
+	}
+
+	shouldComponentUpdate(nextProps) {
+		// This is probably gross, but I am choosing to not check the value of the div that we keep in
+		// the state to see if we need to render. This is a string comparison, and there could be literally
+		// thousands of these divs that need to be checked. Instead, just check the easy conditions in here,
+		// and we call forceUpdate() when we have already established a scenario where we know we need to update
+		return this.props.editable || nextProps.editable !== this.props.editable
 	}
 
 	componentDidUpdate(prevProps) {
@@ -19,6 +26,7 @@ export class EditableDiv extends React.Component {
 			// Make sure the value is new
 			if (this.state.newValue !== prevProps.text) {
 				this.props.updateHandler(this.state.newValue);
+				this.forceUpdate();
 			}
 		}
 	}
