@@ -163,21 +163,21 @@ export class TrackList extends React.Component {
 				return;
 			}
 
-			let selected = {};
+			const selected = {};
 			selected[newIndex] = true;
 			this.setState({ selected: selected, lastSelectedIndex: newIndex });
 
-			let trackList = document.getElementById('library-view');
-			let selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
+			const trackList = document.getElementById('library-view');
+			const selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
 
 			if (event.key === 'ArrowDown') {
-				let newScroll = selectedRow.offsetTop - trackList.offsetHeight;
+				const newScroll = selectedRow.offsetTop - trackList.offsetHeight + 30;
 				if (newScroll > trackList.scrollTop) {
 					trackList.scrollTop = newScroll + selectedRow.offsetHeight - 10;
 				}
 			} else {
-				if (selectedRow.offsetTop - selectedRow.offsetHeight < trackList.scrollTop) {
-					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight - 13;
+				if (selectedRow.offsetTop - selectedRow.offsetHeight + 13 < trackList.scrollTop) {
+					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
 				}
 			}
 		}
@@ -358,9 +358,7 @@ export class TrackList extends React.Component {
 	}
 
 	render() {
-		if (this.props.trackView) {
-			console.log('Rerendering');
-		}
+		console.log('Rerendering');
 
 		// noinspection HtmlUnknownTarget
 		return (
