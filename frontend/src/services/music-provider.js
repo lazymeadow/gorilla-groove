@@ -261,7 +261,10 @@ export class MusicProvider extends React.Component {
 		const newTrackIndex = findSpotInSortedArray(track, this.state.viewedTracks, sort);
 		this.state.viewedTracks.splice(newTrackIndex, 0, track);
 
-		this.setState({ viewedTracks: this.state.viewedTracks });
+		this.setState({
+			viewedTracks: this.state.viewedTracks,
+			renderCounter: this.state.renderCounter + 1
+		});
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
