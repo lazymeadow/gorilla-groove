@@ -1,5 +1,4 @@
 import React from 'react';
-import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 
@@ -11,50 +10,35 @@ export class AlbumArt extends React.Component {
 
 		this.state = {
 			modalOpen: false,
-			playedTrackId: null,
-			imageUrl: defaultImageLink
+			imageUrl: defaultImageLink,
+			lastAttemptedLink: null
 		}
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-		return (this.context.playedTrack && this.context.playedTrack.id !== this.state.playedTrackId)
-			|| this.state.imageUrl !== nextState.imageUrl
-			|| this.state.modalOpen !== nextState.modalOpen;
+		return nextProps.artLink !== nextState.lastAttemptedLink || this.state.imageUrl !== nextState.imageUrl;
 	}
-
 
 	// Because we're using a background-image and not a <img>, we need to be creative about
 	// falling back to our default image. Create an image element and check if the image loads.
 	// Depending on if it does, set the URL we want in our state
 	componentDidUpdate() {
-		if (!this.context.playedTrack) {
+		// We come through here twice- the first time to check if the link exists, and to adjust the state if it does.
+		// Then the second time we come through here because the link updated. We only need to fetch the first time.
+		if (this.props.artLink === this.state.lastAttemptedLink) {
 			return;
 		}
 
-		// Despite doing this check in shouldComponentUpdate(), it seems to often be ignored. Possibly
-		// because the parent component is re-rendering and forcing this to render no matter what?
-		// So do this check here again to stop album art flickering
-		if (this.context.playedTrack.id === this.state.playedTrackId) {
-			return;
-		}
+		this.setState({ lastAttemptedLink: this.props.artLink });
 
-		Api.get('file/link/' + this.context.playedTrack.id).then(links => {
-			const albumImageLink = links.albumArtLink;
-			let img = new Image();
-			img.src = albumImageLink;
-			img.onload = () => {
-				this.setState({
-					imageUrl: albumImageLink,
-					playedTrackId: this.context.playedTrack.id
-				})
-			};
-			img.onerror = () => {
-				this.setState({
-					imageUrl: defaultImageLink,
-					playedTrackId: this.context.playedTrack.id
-				})
-			};
-		});
+		const img = new Image();
+		img.src = this.props.artLink;
+		img.onload = () => {
+			this.setState({ imageUrl: this.props.artLink });
+		};
+		img.onerror = () => {
+			this.setState({ imageUrl: defaultImageLink });
+		};
 
 	}
 

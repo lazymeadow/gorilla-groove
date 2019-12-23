@@ -17,7 +17,8 @@ export class SiteLayout extends React.Component {
 		this.state = {
 			ownUser: null,
 			ownPermissions: new Set(),
-			otherUsers: []
+			otherUsers: [],
+			albumArtLink: null // FIXME Really not sure where this should live long term
 		};
 
 		if (!isLoggedIn()) {
@@ -105,10 +106,10 @@ export class SiteLayout extends React.Component {
 					/>
 				</div>
 				<div className="border-layout-southwest">
-					<AlbumArt/>
+					<AlbumArt artLink={this.state.albumArtLink}/>
 				</div>
 				<div className="border-layout-south">
-					<PlaybackControls/>
+					<PlaybackControls setAlbumArt={albumArtLink => this.setState({ albumArtLink })}/>
 				</div>
 				<div className="border-layout-southeast">
 					<SiteStats/>

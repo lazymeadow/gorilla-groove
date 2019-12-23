@@ -6,6 +6,8 @@ import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
 
+let loadingTrackId = null;
+
 export class PlaybackControls extends React.Component {
 	constructor(props) {
 		super(props);
@@ -89,9 +91,14 @@ export class PlaybackControls extends React.Component {
 			return;
 		}
 
-		// TODO It's probably actually better to have this fetching happen in the music context
-		// so that the album art and the song controls aren't both having to fetch them separate
-		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
+		if (this.context.playedTrack.id === loadingTrackId) {
+			return;
+		}
+
+		loadingTrackId = this.context.playedTrack.id;
+
+		Api.get('file/link/' + this.context.playedTrack.id).then(links => {
+			this.props.setAlbumArt(links.albumArtLink);
 
 			// Start playing the new song
 			this.setState({
@@ -104,7 +111,9 @@ export class PlaybackControls extends React.Component {
 				songUrl: links.songLink,
 				playing: true
 			}, () => {
-				let audio = document.getElementById('audio');
+				loadingTrackId = null;
+
+				const audio = document.getElementById('audio');
 				audio.currentTime = 0;
 				audio.src = links.songLink;
 				const playPromise = audio.play();
