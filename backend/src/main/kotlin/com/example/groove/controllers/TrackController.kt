@@ -74,8 +74,9 @@ class TrackController(
 	): ResponseEntity<String> {
 		val ipAddress = request.getHeader("x-forwarded-for")
 		if (markSongAsReadDTO.deviceId == null) {
-			logger.info("User ${loadLoggedInUser().name} listened to a song without the device included")
+			logger.warn("User ${loadLoggedInUser().name} listened to a song without the device included")
 		}
+		logger.info("User ${loadLoggedInUser().name} listened to track with ID: ${markSongAsReadDTO.trackId}")
 
 		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceId, ipAddress)
 
