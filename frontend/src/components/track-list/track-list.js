@@ -32,7 +32,6 @@ export class TrackList extends React.Component {
 	}
 
 	shouldComponentUpdate(prevProps, prevState) {
-		console.log(prevProps, JSON.stringify(prevState));
 		return true;
 	}
 
@@ -41,8 +40,8 @@ export class TrackList extends React.Component {
 
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
+			document.body.addEventListener('mousedown', this.handleEditStop.bind(this));
 			document.body.addEventListener('keydown', this.handleKeyPress.bind(this));
-			document.body.addEventListener('click', this.handleEditStop.bind(this));
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', this.handleScroll.bind(this));
 		}
@@ -53,7 +52,7 @@ export class TrackList extends React.Component {
 		this.disableResize();
 
 		if (!this.props.trackView) {
-			document.body.removeEventListener('click', this.handleEditStop);
+			document.body.removeEventListener('mousedown', this.handleEditStop);
 			document.body.removeEventListener('keydown', this.handleKeyPress);
 			document.getElementsByClassName('border-layout-center')[0]
 				.removeEventListener('scroll', this.handleScroll);
@@ -107,8 +106,6 @@ export class TrackList extends React.Component {
 	}
 
 	handleContextMenu(event) {
-		console.log('handle context menu');
-
 		event.preventDefault();
 
 		const row = event.target.closest('.song-row');
@@ -196,8 +193,7 @@ export class TrackList extends React.Component {
 	}
 
 	handleRowClick(event, userTrackIndex) {
-		console.log('handle row click');
-		const isLeftClick = event.type === 'click';
+		const isLeftClick = event.type === 'mousedown';
 
 		if (event.target.tagName === 'INPUT') {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
@@ -236,18 +232,18 @@ export class TrackList extends React.Component {
 		selected[userTrackIndex] = true;
 
 		if (isLeftClick) {
-
+			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
 			// TODO I don't actually make sure you double clicked the SAME row twice. Just that you double clicked. Fix perhaps?
 			if (withinDoubleClick) {
-				this.cancelDoubleClick();
 				this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
 				newState.editableCell = null;
-			} else {
-				// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
 				this.cancelDoubleClick();
-				let pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
+			} else {
+				this.cancelDoubleClick();
+				const pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
 				this.setupDoubleClick(pendingEditableCell);
 			}
+
 		}
 
 		newState.selected = selected;
@@ -277,7 +273,7 @@ export class TrackList extends React.Component {
 			if (event.target.id) {
 				cellId = event.target.id;
 			} else {
-				let elements = event.target.querySelectorAll('[id]');
+				const elements = event.target.querySelectorAll('[id]');
 				cellId = elements ? elements[0].id : null;
 			}
 
@@ -358,17 +354,15 @@ export class TrackList extends React.Component {
 	}
 
 	render() {
-		console.log('Rerendering');
-
 		// noinspection HtmlUnknownTarget
 		return (
 			<div className="track-list">
 				<div>
 					<SongPopoutMenu
 						context={this.context} // Pass in as prop, so it can be accessed in getDerivedState
-						closeContextMenu={() => this.closeContextMenu()}
-						getSelectedTracks={() => this.getSelectedTracks()}
-						getSelectedTrackIndexes={() => this.getSelectedTrackIndexes()}
+						closeContextMenu={this.closeContextMenu.bind(this)}
+						getSelectedTracks={this.getSelectedTracks.bind(this)}
+						getSelectedTrackIndexes={this.getSelectedTrackIndexes.bind(this)}
 						expanded={this.state.contextMenuOptions.expanded}
 						trackView={this.state.contextMenuOptions.trackView}
 						x={this.state.contextMenuOptions.x}
@@ -379,7 +373,7 @@ export class TrackList extends React.Component {
 					<thead>
 					<tr>
 						{this.props.columns.map((columnName, index) => {
-							return <th key={index} onClick={(e) => this.handleHeaderClick(e)}>
+							return <th key={index} onClick={this.handleHeaderClick.bind(this)}>
 								<div>
 									<span className="column-name">{columnName}</span>
 									<span className="sort-direction">{this.getSortIndicator(columnName)}</span>

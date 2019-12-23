@@ -78,8 +78,6 @@ export class SiteLayout extends React.Component {
 			.filter(columnPreference => columnPreference.enabled)
 			.map(columnPreference => columnPreference.name);
 
-		console.log('Render parent');
-
 		return (
 			<div className="full-screen border-layout">
 				<div className="border-layout-north">

@@ -14,8 +14,6 @@ export class MusicProvider extends React.Component {
 	constructor(props) {
 		super(props);
 
-		console.log('music provider', this.props);
-
 		this.trackKeyConversions = {
 			'Name': 'name',
 			'Artist': 'artist',
@@ -71,7 +69,7 @@ export class MusicProvider extends React.Component {
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
-			renderCounter: 0,
+			renderCounter: 0, // Used to determine if we should rerender this component (and therefore most of the site because this component is too large)
 			searchTerm: '',
 			showHidden: false,
 			nowListeningUsers: {},
@@ -267,21 +265,19 @@ export class MusicProvider extends React.Component {
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
-		this.setState({
+		const newState = {
 			playedTrackIndex: trackIndex,
-			sessionPlayCounter: this.state.sessionPlayCounter + 1,
-		});
+			sessionPlayCounter: this.state.sessionPlayCounter + 1
+		};
 
 		if (updateNowPlaying) {
-			this.setState({
-				nowPlayingTracks: this.state.viewedTracks.slice(0),
-				playedTrack: this.state.viewedTracks[trackIndex]
-			}, () => this.resetShuffleIndexes(trackIndex))
+			newState.nowPlayingTracks = this.state.viewedTracks.slice(0);
+			newState.playedTrack = this.state.viewedTracks[trackIndex];
 		} else {
-			this.setState({
-					playedTrack: this.state.nowPlayingTracks[trackIndex]
-				}, () => this.resetShuffleIndexes(trackIndex));
+			newState.playedTrack = this.state.nowPlayingTracks[trackIndex];
 		}
+
+		this.setState(newState, () => this.resetShuffleIndexes(trackIndex));
 	}
 
 	playTracks(tracks) {
@@ -839,11 +835,11 @@ export class MusicProvider extends React.Component {
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-		return this.state.renderCounter !== nextState.renderCounter;
+		return this.state.renderCounter !== nextState.renderCounter
+			|| this.state.sessionPlayCounter !== nextState.sessionPlayCounter;
 	}
 
 	render() {
-		console.log('music provider');
 		return (
 			<MusicContext.Provider value={this.state}>
 				{this.props.children}

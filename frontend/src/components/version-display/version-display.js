@@ -59,7 +59,6 @@ export class VersionDisplay extends React.Component {
 		return Api.get('version/history/deviceType/WEB', params)
 			.then(result => {
 				this.setState({ historyRecords: result });
-				console.log(result);
 			}).catch(error => {
 				console.error(error);
 			}).finally(() => {

@@ -59,11 +59,11 @@ export class SongPopoutMenu extends React.Component {
 	}
 
 	componentDidMount() {
-		document.body.addEventListener('click', this.props.closeContextMenu);
+		document.body.addEventListener('mousedown', this.props.closeContextMenu);
 	}
 
 	componentWillUnmount() {
-		document.body.removeEventListener('click', this.props.closeContextMenu);
+		document.body.removeEventListener('mousedown', this.props.closeContextMenu);
 	}
 
 	static getBaseMenuOptions(props) {

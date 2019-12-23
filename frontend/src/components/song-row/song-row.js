@@ -66,7 +66,7 @@ export class SongRow extends React.Component {
 
 		return (
 			<tr
-				onClick={(event) => {this.props.onClick(event, this.props.rowIndex)}}
+				onMouseDown={event => { this.props.onClick(event, this.props.rowIndex)}}
 				className={`song-row ${selected} ${playedClass}`}
 			>
 				{this.props.columns.map((columnName, index) => {
