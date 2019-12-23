@@ -42,13 +42,13 @@ export class InviteUser extends React.Component {
 
 	render() {
 		return (
-			<div onClick={() => this.setModalOpen(true)}>
+			<div onMouseDown={() => this.setModalOpen(true)}>
 				Invite a User
 				<Modal
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
 				>
-					<form className="form-modal" onSubmit={(e) => this.submitInviteForm(e)}>
+					<form className="form-modal" onSubmit={this.submitInviteForm.bind(this)}>
 						<div className="flex-label">
 							<label htmlFor="username">Username</label>
 							<input id="username" name="username" type="text" maxLength="32" required/>

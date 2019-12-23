@@ -64,7 +64,7 @@ export class AlbumArt extends React.Component {
 
 	render() {
 		return (
-			<div onClick={() => this.setModalOpen(true)} className="album-art-container">
+			<div onMouseDown={() => this.setModalOpen(true)} className="album-art-container">
 				{/* Use a background image here because it behaves better at staying within boundaries */}
 				<div
 					className="album-art"

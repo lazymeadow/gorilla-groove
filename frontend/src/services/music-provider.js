@@ -463,7 +463,10 @@ export class MusicProvider extends React.Component {
 
 	loadPlaylists() {
 		return Api.get('playlist').then(playlists => {
-			this.setState({ playlists: playlists });
+			this.setState({
+				playlists: playlists,
+				renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+			});
 		})
 	}
 
@@ -471,7 +474,10 @@ export class MusicProvider extends React.Component {
 		const deleteId = playlist.id;
 		return Api.delete(`playlist/${deleteId}`).then(() => {
 			const newPlaylists = this.state.playlists.filter(playlist => playlist.id !== deleteId);
-			this.setState({ playlists: newPlaylists });
+			this.setState({
+				playlists: newPlaylists,
+				renderCounter: this.state.renderCounter + 1
+			});
 
 			if (this.state.trackView === TrackView.PLAYLIST && this.state.viewedEntityId === deleteId) {
 				this.loadSongsForUser();
@@ -601,11 +607,14 @@ export class MusicProvider extends React.Component {
 
 	createPlaylist() {
 		Api.post('playlist', {name: 'New Playlist'})
-			.then((playlist) => {
+			.then(playlist => {
 				let playlists = this.state.playlists.slice(0);
 				playlists.push(playlist);
 
-				this.setState({ playlists: playlists });
+				this.setState({
+					playlists: playlists,
+					renderCounter: this.state.renderCounter + 1
+				});
 
 				toast.success('New playlist created')
 			})
@@ -676,6 +685,7 @@ export class MusicProvider extends React.Component {
 	setShuffleSongs(shuffleSongs) {
 		this.setState({
 			shuffleSongs: shuffleSongs,
+			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
 		}, () => {
 			if (shuffleSongs) {
 				this.resetShuffleIndexes(this.state.playedTrackIndex);
@@ -685,18 +695,25 @@ export class MusicProvider extends React.Component {
 	}
 
 	setShuffleChaos(shuffleChaos) {
-		this.setState({ shuffleChaos });
+		this.setState({
+			shuffleChaos,
+			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+		});
 		LocalStorage.setNumber('shuffleChaos', shuffleChaos);
 	}
 
 	setRepeatSongs(repeatSongs) {
-		this.setState({ repeatSongs: repeatSongs });
+		this.setState({
+			repeatSongs: repeatSongs,
+			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+		});
 		LocalStorage.setBoolean('repeatSongs', repeatSongs);
 	}
 
 	setColumnPreferences(columnPreferences) {
 		this.setState({
 			columnPreferences: columnPreferences,
+			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
 		});
 		LocalStorage.setObject('columnPreferences', columnPreferences);
 	}
@@ -712,15 +729,19 @@ export class MusicProvider extends React.Component {
 
 	resetColumnPreferences() {
 		LocalStorage.deleteKey('columnPreferences');
-		let preferences = this.loadColumnPreferences();
-		this.setState({ columnPreferences: preferences });
+		const preferences = this.loadColumnPreferences();
+		this.setState({
+			columnPreferences: preferences,
+			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+		});
 	}
 
 	resetSessionState() {
+		this.props.filterContext.resetState();
+
 		this.setState({
 			playedTrack: null,
-			playedTrackIndex: null,
-			searchTerm: ''
+			playedTrackIndex: null
 		})
 	}
 

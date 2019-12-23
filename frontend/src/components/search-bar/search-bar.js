@@ -55,7 +55,7 @@ export default function SearchBar() {
 				{ musicFilterContext.searchTerm
 					? <i
 						className="fas fa-times-circle close-button"
-						onClick={clearInput}
+						onMouseDown={clearInput}
 					/>
 					: <i/>
 				}

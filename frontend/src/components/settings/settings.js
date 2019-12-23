@@ -38,7 +38,7 @@ export class Settings extends React.Component {
 
 	render() {
 		return (
-			<div onClick={() => this.setModalOpen(true)}>
+			<div onMouseDown={() => this.setModalOpen(true)}>
 				Settings
 				<Modal
 					isOpen={this.state.modalOpen}
@@ -72,7 +72,7 @@ export class Settings extends React.Component {
 									return (
 										<li key={index}>
 											<div
-												onClick={e => this.toggleColumnEnabled(e)}
+												onMouseDown={this.toggleColumnEnabled.bind(this)}
 												className={`column-toggle ${columnClass}`}
 												data-column-index={index}
 											/>
@@ -82,7 +82,7 @@ export class Settings extends React.Component {
 							</ul>
 						</div>
 					</div>
-					<button onClick={() => this.context.resetColumnPreferences()}>Reset</button>
+					<button onMouseDown={() => this.context.resetColumnPreferences()}>Reset</button>
 				</Modal>
 			</div>
 		)

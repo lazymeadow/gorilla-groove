@@ -11,11 +11,19 @@ export class MusicFilterProvider extends React.Component {
 			showHidden: false,
 
 			setProviderState: (...args) => this.setProviderState(...args),
+			resetState: (...args) => this.resetState(...args),
 		}
 	}
 
 	setProviderState(state, callback) {
 		this.setState(state, callback);
+	}
+
+	resetState() {
+		this.setState({
+			searchTerm: '',
+			showHidden: false
+		})
 	}
 
 	render() {

@@ -105,13 +105,13 @@ export class TrackSourceList extends React.Component {
 			<div id="view-source-list">
 				<div
 					className={`library-option ${librarySelected}`}
-					onClick={() => this.loadOwnLibrary()}
+					onMouseDown={this.loadOwnLibrary.bind(this)}
 				>
 					<span className="my-library">My Library</span>
 				</div>
 				{this.state.dataSource.map((node, i) => {
 					const label =
-						<div className="tree-node" onClick={() => this.handleParentNodeClick(i)}>
+						<div className="tree-node" onMouseDown={() => this.handleParentNodeClick(i)}>
 							{node.heading}
 						</div>;
 					return (
@@ -130,7 +130,7 @@ export class TrackSourceList extends React.Component {
 										id={cellId}
 										className={`tree-child ${entryClass}`}
 										key={entry.id}
-										onClick={() => this.selectEntry(node.section, entry, cellId)}
+										onMouseDown={() => this.selectEntry(node.section, entry, cellId)}
 									>
 										<EditableDiv
 											editable={this.state.editedId === cellId && node.section === TrackView.PLAYLIST}
@@ -145,7 +145,7 @@ export class TrackSourceList extends React.Component {
 
 										<div className="playlist-delete">
 											{ node.section === TrackView.PLAYLIST
-												? <i className="fas fa-times" onClick={e => {
+												? <i className="fas fa-times" onMouseDown={e => {
 													e.stopPropagation();
 													this.setState({
 														modalOpen: true,
@@ -170,12 +170,12 @@ export class TrackSourceList extends React.Component {
 					<div id="playlist-delete-modal">
 						<div>Are you sure you want to delete the playlist '{this.state.pendingDeletePlaylist.name}'?</div>
 						<div className="flex-between confirm-modal-buttons">
-							<button onClick={() => {
+							<button onMouseDown={() => {
 								this.context.deletePlaylist(this.state.pendingDeletePlaylist).then(() => {
 									this.setState({ modalOpen: false });
 								})
 							}}>You know I do</button>
-							<button onClick={() => this.setState({ modalOpen: false })}>No. Woops</button>
+							<button onMouseDown={() => this.setState({ modalOpen: false })}>No. Woops</button>
 						</div>
 					</div>
 				</Modal>

@@ -86,11 +86,11 @@ export class YoutubeDlButton extends React.Component {
 		const title = this.state.downloading ? '' : 'Download from YouTube';
 
 		return (
-			<div className="vertical-center" onClick={() => this.setModalOpen(true)}>
+			<div className="vertical-center" onMouseDown={() => this.setModalOpen(true)}>
 				<div className="icon-container">
 					<i className={`${buttonClass} fab fa-youtube`} title={`${title}`}>
 						<Modal isOpen={this.state.modalOpen} closeFunction={() => this.setModalOpen(false)}>
-							<form className="form-modal" onSubmit={e => this.submitDownloadForm(e)}>
+							<form className="form-modal" onSubmit={this.submitDownloadForm.bind(this)}>
 								<div className="flex-label">
 									<label htmlFor="song-url">URL</label>
 									<input id="song-url" name="song-url" type="text" required/>

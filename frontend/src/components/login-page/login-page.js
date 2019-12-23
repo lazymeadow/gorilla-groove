@@ -63,7 +63,7 @@ class LoginPageInternal extends React.Component {
 						</div>
 
 						<div className="apk-download">
-							Download the <strong>beta</strong> <a onClick={this.downloadApk.bind(this)}>Android App</a>
+							Download the <strong>beta</strong> <a onMouseDown={this.downloadApk.bind(this)}>Android App</a>
 						</div>
 					</div>
 				</form>

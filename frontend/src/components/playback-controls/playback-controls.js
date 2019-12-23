@@ -254,23 +254,23 @@ export class PlaybackControls extends React.Component {
 					<div>
 						<div className="display-flex">
 							<i
-								onClick={() => this.context.playPrevious()}
+								onMouseDown={this.context.playPrevious}
 								className="fas fa-fast-backward control"
 							/>
 							<i
-								onClick={() => this.togglePause()}
+								onMouseDown={this.togglePause.bind(this)}
 								className={`fas fa-${this.state.playing ? 'pause' : 'play'} control`}
 							/>
 							<i
-								onClick={() => this.context.playNext()}
+								onMouseDown={this.context.playNext}
 								className="fas fa-fast-forward control"
 							/>
 							<i
-								onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
+								onMouseDown={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
 								className={`fas fa-random control ${this.context.shuffleSongs ? 'enabled' : ''}`}
 							/>
 							<i
-								onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
+								onMouseDown={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
 								className={`fas fa-sync-alt control ${this.context.repeatSongs ? 'enabled' : ''}`}
 							/>
 						</div>
@@ -293,12 +293,12 @@ export class PlaybackControls extends React.Component {
 						<div className="volume-wrapper">
 							<i
 								className={`fas ${this.getVolumeIcon()}`}
-								onClick={() => this.toggleMute()}
+								onMouseDown={this.toggleMute.bind(this)}
 							/>
 							<input
 								type="range"
 								className="volume-slider"
-								onChange={(e) => this.changeVolume(e)}
+								onChange={this.changeVolume.bind(this)}
 								min="0"
 								max="1"
 								step="0.01"

@@ -8,7 +8,7 @@ export class AddPlaylistButton extends React.Component {
 
 	render() {
 		return (
-			<i className="fas fa-plus add-playlist-button" onClick={(e) => {
+			<i className="fas fa-plus add-playlist-button" onMouseDown={(e) => {
 				e.stopPropagation();
 				this.context.createPlaylist(e)
 			}}/>

@@ -31,12 +31,10 @@ export class TrackList extends React.Component {
 		};
 	}
 
-	shouldComponentUpdate(prevProps, prevState) {
-		return true;
-	}
-
 	componentDidMount() {
 		this.enableResize();
+
+		ReactDOM.findDOMNode(this).addEventListener('mousedown', this.handleContextMenu.bind(this));
 
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
@@ -45,7 +43,7 @@ export class TrackList extends React.Component {
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', this.handleScroll.bind(this));
 		}
-		ReactDOM.findDOMNode(this).addEventListener('contextmenu', e => { this.handleContextMenu(e) });
+		ReactDOM.findDOMNode(this).addEventListener('contextmenu', this.suppressContextMenu.bind(this));
 	}
 
 	componentWillUnmount() {
@@ -58,7 +56,12 @@ export class TrackList extends React.Component {
 				.removeEventListener('scroll', this.handleScroll);
 		}
 
-		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', e => { this.handleContextMenu(e) });
+		ReactDOM.findDOMNode(this).removeEventListener('mousedown', this.handleContextMenu.bind(this));
+		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', this.suppressContextMenu.bind(this));
+	}
+
+	suppressContextMenu(event) {
+		event.preventDefault();
 	}
 
 	enableResize() {
@@ -106,20 +109,22 @@ export class TrackList extends React.Component {
 	}
 
 	handleContextMenu(event) {
-		event.preventDefault();
+		if (event.button !== 2) {
+			return;
+		}
 
-		const row = event.target.closest('.song-row');
-		const rowIndex = [...row.parentElement.children].indexOf(row);
-
-		this.handleRowClick(event, rowIndex);
-
-		this.setState({
-			contextMenuOptions: {
-				expanded: true,
-				trackView: this.props.trackView ? this.context.trackView : TrackView.NOW_PLAYING,
-				x: event.clientX,
-				y: event.clientY + 4
-			}}
+		// When we right click, a click event is also fired to deal with selecting things.
+		// Wrap the context menu in a timeout, because it needs to happen after the selection has resolved
+		setTimeout(() => {
+				this.setState({
+					contextMenuOptions: {
+						expanded: true,
+						trackView: this.props.trackView ? this.context.trackView : TrackView.NOW_PLAYING,
+						x: event.clientX,
+						y: event.clientY + 4
+					}}
+				);
+			}
 		);
 	}
 
@@ -193,7 +198,7 @@ export class TrackList extends React.Component {
 	}
 
 	handleRowClick(event, userTrackIndex) {
-		const isLeftClick = event.type === 'mousedown';
+		const isLeftClick = event.type === 'mousedown' && event.button === 0;
 
 		if (event.target.tagName === 'INPUT') {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
@@ -335,8 +340,8 @@ export class TrackList extends React.Component {
 		this.context.reloadTracks(sortColumn, sortDir)
 	}
 
-	closeContextMenu() {
-		if (this.state.contextMenuOptions.expanded) {
+	closeContextMenu(event) {
+		if (this.state.contextMenuOptions.expanded && event.button === 0) {
 			this.setState({ contextMenuOptions: { expanded: false }})
 		}
 	}
@@ -373,7 +378,7 @@ export class TrackList extends React.Component {
 					<thead>
 					<tr>
 						{this.props.columns.map((columnName, index) => {
-							return <th key={index} onClick={this.handleHeaderClick.bind(this)}>
+							return <th key={index} onMouseDown={this.handleHeaderClick.bind(this)}>
 								<div>
 									<span className="column-name">{columnName}</span>
 									<span className="sort-direction">{this.getSortIndicator(columnName)}</span>
