@@ -2,15 +2,21 @@ import React from 'react';
 import {MusicProvider} from "../../services/music-provider";
 import {Slide, ToastContainer} from "react-toastify";
 import {PageRouter} from "..";
+import {MusicFilterContext, MusicFilterProvider} from "../../services/music-filter-provider";
 
-export class SiteWrapper extends React.Component {
+export default function SiteWrapper() {
 
-	render() {
-		return (
-			<MusicProvider>
-				<ToastContainer autoClose={5000} hideProgressBar={true} transition={Slide}/>
-				<PageRouter/>
-			</MusicProvider>
-		)
-	}
+	return (
+		// Wrap the music context in the music filter context so it has a reference
+		<MusicFilterProvider>
+			<MusicFilterContext.Consumer>
+				{ musicFilterContext =>
+					<MusicProvider filterContext={musicFilterContext}>
+						<ToastContainer autoClose={5000} hideProgressBar={true} transition={Slide}/>
+						<PageRouter/>
+					</MusicProvider>
+				}
+			</MusicFilterContext.Consumer>
+		</MusicFilterProvider>
+	)
 }

@@ -6,6 +6,8 @@ import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
 
+let loadingTrackId = null;
+
 export class PlaybackControls extends React.Component {
 	constructor(props) {
 		super(props);
@@ -89,9 +91,14 @@ export class PlaybackControls extends React.Component {
 			return;
 		}
 
-		// TODO It's probably actually better to have this fetching happen in the music context
-		// so that the album art and the song controls aren't both having to fetch them separate
-		Api.get('file/link/' + this.context.playedTrack.id).then((links) => {
+		if (this.context.playedTrack.id === loadingTrackId) {
+			return;
+		}
+
+		loadingTrackId = this.context.playedTrack.id;
+
+		Api.get('file/link/' + this.context.playedTrack.id).then(links => {
+			this.props.setAlbumArt(links.albumArtLink);
 
 			// Start playing the new song
 			this.setState({
@@ -104,7 +111,9 @@ export class PlaybackControls extends React.Component {
 				songUrl: links.songLink,
 				playing: true
 			}, () => {
-				let audio = document.getElementById('audio');
+				loadingTrackId = null;
+
+				const audio = document.getElementById('audio');
 				audio.currentTime = 0;
 				audio.src = links.songLink;
 				const playPromise = audio.play();
@@ -254,23 +263,23 @@ export class PlaybackControls extends React.Component {
 					<div>
 						<div className="display-flex">
 							<i
-								onClick={() => this.context.playPrevious()}
+								onMouseDown={this.context.playPrevious}
 								className="fas fa-fast-backward control"
 							/>
 							<i
-								onClick={() => this.togglePause()}
+								onMouseDown={this.togglePause.bind(this)}
 								className={`fas fa-${this.state.playing ? 'pause' : 'play'} control`}
 							/>
 							<i
-								onClick={() => this.context.playNext()}
+								onMouseDown={this.context.playNext}
 								className="fas fa-fast-forward control"
 							/>
 							<i
-								onClick={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
+								onMouseDown={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
 								className={`fas fa-random control ${this.context.shuffleSongs ? 'enabled' : ''}`}
 							/>
 							<i
-								onClick={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
+								onMouseDown={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
 								className={`fas fa-sync-alt control ${this.context.repeatSongs ? 'enabled' : ''}`}
 							/>
 						</div>
@@ -293,12 +302,12 @@ export class PlaybackControls extends React.Component {
 						<div className="volume-wrapper">
 							<i
 								className={`fas ${this.getVolumeIcon()}`}
-								onClick={() => this.toggleMute()}
+								onMouseDown={this.toggleMute.bind(this)}
 							/>
 							<input
 								type="range"
 								className="volume-slider"
-								onChange={(e) => this.changeVolume(e)}
+								onChange={this.changeVolume.bind(this)}
 								min="0"
 								max="1"
 								step="0.01"

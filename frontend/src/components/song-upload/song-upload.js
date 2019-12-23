@@ -127,7 +127,7 @@ export class SongUpload extends React.Component {
 		// noinspection HtmlUnknownTarget
 		return (
 			<div id="song-upload" className="vertical-center">
-				<div className="icon-container" onClick={() => this.openFileDialog()}>
+				<div className="icon-container" onMouseDown={this.openFileDialog.bind(this)}>
 					<i className={`${buttonClass} fas fa-cloud-upload-alt`} title={title}>
 					</i>
 					<div className={`${loaderClass}`}>
@@ -140,7 +140,7 @@ export class SongUpload extends React.Component {
 						type="file"
 						id="file-upload"
 						className="display-none"
-						onChange={(e) => this.handleUploadStart(e)}
+						onChange={this.handleUploadStart.bind(this)}
 						multiple
 					/>
 

@@ -8,6 +8,11 @@ import {TrackView} from "../../enums/track-view";
 import * as LocalStorage from "../../local-storage";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
+
+let doubleClickTimeout = null;
+let withinDoubleClick = false;
+let pendingEditableCell = null;
+
 export class TrackList extends React.Component {
 	constructor(props) {
 		super(props);
@@ -16,10 +21,7 @@ export class TrackList extends React.Component {
 			selected: {}, // FIXME Pretty sure I should have made this a set. Pretty sure it's being used like a set
 			firstSelectedIndex: null,
 			lastSelectedIndex: null,
-			withinDoubleClick: false,
-			doubleClickTimeout: null,
 			editableCell: null,
-			pendingEditableCell: null,
 			id: this.props.trackView ? 'track-list' : '',
 			contextMenuOptions: {
 				expanded: false,
@@ -32,27 +34,34 @@ export class TrackList extends React.Component {
 	componentDidMount() {
 		this.enableResize();
 
+		ReactDOM.findDOMNode(this).addEventListener('mousedown', this.handleContextMenu.bind(this));
+
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
+			document.body.addEventListener('mousedown', this.handleEditStop.bind(this));
 			document.body.addEventListener('keydown', this.handleKeyPress.bind(this));
-			document.body.addEventListener('click', this.handleEditStop.bind(this));
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', this.handleScroll.bind(this));
 		}
-		ReactDOM.findDOMNode(this).addEventListener('contextmenu', e => { this.handleContextMenu(e) });
+		ReactDOM.findDOMNode(this).addEventListener('contextmenu', this.suppressContextMenu.bind(this));
 	}
 
 	componentWillUnmount() {
 		this.disableResize();
 
 		if (!this.props.trackView) {
-			document.body.removeEventListener('click', this.handleEditStop);
+			document.body.removeEventListener('mousedown', this.handleEditStop);
 			document.body.removeEventListener('keydown', this.handleKeyPress);
 			document.getElementsByClassName('border-layout-center')[0]
 				.removeEventListener('scroll', this.handleScroll);
 		}
 
-		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', e => { this.handleContextMenu(e) });
+		ReactDOM.findDOMNode(this).removeEventListener('mousedown', this.handleContextMenu.bind(this));
+		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', this.suppressContextMenu.bind(this));
+	}
+
+	suppressContextMenu(event) {
+		event.preventDefault();
 	}
 
 	enableResize() {
@@ -60,6 +69,7 @@ export class TrackList extends React.Component {
 			return;
 		}
 
+		// noinspection JSUnusedGlobalSymbols
 		const options = {
 			resizeMode: 'overflow',
 			serialize: true,
@@ -99,24 +109,22 @@ export class TrackList extends React.Component {
 	}
 
 	handleContextMenu(event) {
-		if (!this.context.useRightClickMenu) {
+		if (event.button !== 2) {
 			return;
 		}
 
-		event.preventDefault();
-
-		let row = event.target.closest('.song-row');
-		let rowIndex = [...row.parentElement.children].indexOf(row);
-
-		this.handleRowClick(event, rowIndex);
-
-		this.setState({
-			contextMenuOptions: {
-				expanded: true,
-				trackView: this.props.trackView ? this.context.trackView : TrackView.NOW_PLAYING,
-				x: event.clientX,
-				y: event.clientY + 4
-			}}
+		// When we right click, a click event is also fired to deal with selecting things.
+		// Wrap the context menu in a timeout, because it needs to happen after the selection has resolved
+		setTimeout(() => {
+				this.setState({
+					contextMenuOptions: {
+						expanded: true,
+						trackView: this.props.trackView ? this.context.trackView : TrackView.NOW_PLAYING,
+						x: event.clientX,
+						y: event.clientY + 4
+					}}
+				);
+			}
 		);
 	}
 
@@ -157,30 +165,30 @@ export class TrackList extends React.Component {
 				return;
 			}
 
-			let selected = {};
+			const selected = {};
 			selected[newIndex] = true;
 			this.setState({ selected: selected, lastSelectedIndex: newIndex });
 
-			let trackList = document.getElementById('library-view');
-			let selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
+			const trackList = document.getElementById('library-view');
+			const selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
 
 			if (event.key === 'ArrowDown') {
-				let newScroll = selectedRow.offsetTop - trackList.offsetHeight;
+				const newScroll = selectedRow.offsetTop - trackList.offsetHeight + 30;
 				if (newScroll > trackList.scrollTop) {
 					trackList.scrollTop = newScroll + selectedRow.offsetHeight - 10;
 				}
 			} else {
-				if (selectedRow.offsetTop - selectedRow.offsetHeight < trackList.scrollTop) {
-					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight - 13;
+				if (selectedRow.offsetTop - selectedRow.offsetHeight + 13 < trackList.scrollTop) {
+					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
 				}
 			}
 		}
 	}
 
 	handleScroll() {
-		let scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
+		const scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
 
-		let container = document.getElementsByClassName('border-layout-center')[0];
+		const container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.context.loadingTracks
 			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
 			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
@@ -190,25 +198,25 @@ export class TrackList extends React.Component {
 	}
 
 	handleRowClick(event, userTrackIndex) {
-		let isLeftClick = event.type === 'click';
+		const isLeftClick = event.type === 'mousedown' && event.button === 0;
 
 		if (event.target.tagName === 'INPUT') {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
 		}
 
 		let selected = this.state.selected;
-		this.setState({ lastSelectedIndex: userTrackIndex });
+		const newState = { lastSelectedIndex: userTrackIndex };
 
 		// Always set the first selected if there wasn't one
 		if (this.state.firstSelectedIndex === null) {
-			this.setState({ firstSelectedIndex: userTrackIndex })
+			newState.firstSelectedIndex = userTrackIndex;
 		}
 
 		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
 		// Additionally, if right clicking, we don't want to deselect if we selected an already selected row
 		if (!event.ctrlKey && !event.shiftKey && !(!isLeftClick && selected[userTrackIndex])) {
 			selected = {};
-			this.setState({ firstSelectedIndex: userTrackIndex })
+			newState.firstSelectedIndex = userTrackIndex;
 		}
 
 		// If we're holding shift, we should select the rows between this click and the first click
@@ -229,40 +237,34 @@ export class TrackList extends React.Component {
 		selected[userTrackIndex] = true;
 
 		if (isLeftClick) {
-
+			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
 			// TODO I don't actually make sure you double clicked the SAME row twice. Just that you double clicked. Fix perhaps?
-			if (this.state.withinDoubleClick) {
-				this.cancelDoubleClick();
+			if (withinDoubleClick) {
 				this.context.playFromTrackIndex(userTrackIndex, this.props.trackView);
-				this.setState({ editableCell: null })
-			} else {
-				// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
+				newState.editableCell = null;
 				this.cancelDoubleClick();
-				let pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
+			} else {
+				this.cancelDoubleClick();
+				const pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
 				this.setupDoubleClick(pendingEditableCell);
 			}
+
 		}
 
-		this.setState({ selected: selected });
+		newState.selected = selected;
+		this.setState(newState);
 	}
 
 	setupDoubleClick(pendingEditableCell) {
 		// Set up a timer that will kill our ability to double click if we are too slow
-		let timeout = setTimeout(() => {
-			this.setState({ withinDoubleClick: false });
+		doubleClickTimeout = setTimeout(() => {
+			withinDoubleClick = false;
 			if (pendingEditableCell) {
-				this.setState({
-					editableCell: pendingEditableCell,
-					pendingEditableCell: null
-				})
+				this.setState({ editableCell: pendingEditableCell });
+				pendingEditableCell = null;
 			}
 		}, 300);
-
-		// Set our double clicking state for the next timeout
-		this.setState({
-			withinDoubleClick: true,
-			doubleClickTimeout: timeout
-		});
+		withinDoubleClick = true;
 	}
 
 	setupEdit(event, selectedIndexes, userTrackIndex) {
@@ -276,31 +278,28 @@ export class TrackList extends React.Component {
 			if (event.target.id) {
 				cellId = event.target.id;
 			} else {
-				let elements = event.target.querySelectorAll('[id]');
+				const elements = event.target.querySelectorAll('[id]');
 				cellId = elements ? elements[0].id : null;
 			}
 
-			this.setState({ pendingEditableCell: cellId });
+			pendingEditableCell = cellId;
 
 			return cellId;
 		} else {
-			this.setState({
-				editableCell: null,
-				pendingEditableCell: null
-			});
+			pendingEditableCell = null;
+			this.setState({ editableCell: null });
 
 			return null;
 		}
 	}
 
 	cancelDoubleClick() {
-		if (this.state.doubleClickTimeout) {
-			window.clearTimeout(this.state.doubleClickTimeout);
-			this.setState({
-				withinDoubleClick: false,
-				doubleClickTimeout: null,
-				pendingEditableCell: null
-			});
+		if (doubleClickTimeout) {
+			window.clearTimeout(doubleClickTimeout);
+
+			withinDoubleClick = false;
+			doubleClickTimeout = null;
+			pendingEditableCell = null;
 		}
 	}
 
@@ -341,20 +340,8 @@ export class TrackList extends React.Component {
 		this.context.reloadTracks(sortColumn, sortDir)
 	}
 
-	// I think this is used by that cogwheel thing I should get rid of?
-	handleContextMenuOpen(event) {
-		event.stopPropagation();
-		this.setState({
-			contextMenuOptions: {
-				expanded: true,
-				x: event.clientX,
-				y: event.clientY + 4
-			}
-		})
-	}
-
-	closeContextMenu() {
-		if (this.state.contextMenuOptions.expanded) {
+	closeContextMenu(event) {
+		if (this.state.contextMenuOptions.expanded && event.button === 0) {
 			this.setState({ contextMenuOptions: { expanded: false }})
 		}
 	}
@@ -378,9 +365,9 @@ export class TrackList extends React.Component {
 				<div>
 					<SongPopoutMenu
 						context={this.context} // Pass in as prop, so it can be accessed in getDerivedState
-						closeContextMenu={() => this.closeContextMenu()}
-						getSelectedTracks={() => this.getSelectedTracks()}
-						getSelectedTrackIndexes={() => this.getSelectedTrackIndexes()}
+						closeContextMenu={this.closeContextMenu.bind(this)}
+						getSelectedTracks={this.getSelectedTracks.bind(this)}
+						getSelectedTrackIndexes={this.getSelectedTrackIndexes.bind(this)}
 						expanded={this.state.contextMenuOptions.expanded}
 						trackView={this.state.contextMenuOptions.trackView}
 						x={this.state.contextMenuOptions.x}
@@ -391,7 +378,7 @@ export class TrackList extends React.Component {
 					<thead>
 					<tr>
 						{this.props.columns.map((columnName, index) => {
-							return <th key={index} onClick={(e) => this.handleHeaderClick(e)}>
+							return <th key={index} onMouseDown={this.handleHeaderClick.bind(this)}>
 								<div>
 									<span className="column-name">{columnName}</span>
 									<span className="sort-direction">{this.getSortIndicator(columnName)}</span>
@@ -417,8 +404,6 @@ export class TrackList extends React.Component {
 								played={played}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
-								showContextMenu={index === this.state.lastSelectedIndex && !this.context.useRightClickMenu}
-								openContextMenu={this.handleContextMenuOpen.bind(this)}
 								onClick={this.handleRowClick.bind(this)}
 								stopCellEdits={this.stopCellEdits.bind(this)}
 							/>

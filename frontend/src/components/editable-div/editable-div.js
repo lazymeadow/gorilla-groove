@@ -1,5 +1,4 @@
 import React from 'react';
-import * as ReactDOM from "react-dom";
 
 export class EditableDiv extends React.Component {
 	constructor(props) {

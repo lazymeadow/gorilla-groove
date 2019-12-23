@@ -59,7 +59,6 @@ export class VersionDisplay extends React.Component {
 		return Api.get('version/history/deviceType/WEB', params)
 			.then(result => {
 				this.setState({ historyRecords: result });
-				console.log(result);
 			}).catch(error => {
 				console.error(error);
 			}).finally(() => {
@@ -70,7 +69,7 @@ export class VersionDisplay extends React.Component {
 	render() {
 		return (
 			<div id="version-display">
-				<span onClick={() => this.setState({ modalOpen: true })} className="version-text">{__VERSION__}</span>
+				<span onMouseDown={() => this.setState({ modalOpen: true })} className="version-text">{__VERSION__}</span>
 				{
 					this.state.outOfDate
 						? <i className="fas fa-exclamation-triangle" title="Your GG is out of date. Refresh your browser. Please?"/>

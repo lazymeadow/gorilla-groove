@@ -58,12 +58,12 @@ export class SongPopoutMenu extends React.Component {
 		return ({ menuOptions: options })
 	}
 
-	componentDidMount() {
-		document.body.addEventListener('click', this.props.closeContextMenu);
-	}
-
-	componentWillUnmount() {
-		document.body.removeEventListener('click', this.props.closeContextMenu);
+	componentDidUpdate(prevProps) {
+		if (this.props.expanded && !prevProps.expanded) {
+			document.body.addEventListener('mousedown', this.props.closeContextMenu);
+		} else if (!this.props.expanded && prevProps.expanded) {
+			document.body.removeEventListener('mousedown', this.props.closeContextMenu);
+		}
 	}
 
 	static getBaseMenuOptions(props) {
@@ -301,15 +301,15 @@ export class SongPopoutMenu extends React.Component {
 
 	// TODO should really figure out a nice way for this to utilize popout-menu.js with the changes I had to make
 	render() {
-		let expandedClass = this.props.expanded ? '' : 'hidden';
+		const expandedClass = this.props.expanded ? '' : 'hidden';
 		return (
-			<div className={`song-popout-menu popout-menu ${expandedClass}`} style={{left: this.props.x, top: this.props.y}}>
+			<div className={`song-popout-menu popout-menu ${expandedClass}`} style={{ left: this.props.x, top: this.props.y }}>
 				<ul>
 					{this.state.menuOptions.map((menuItem, index) => {
 						if (menuItem.component) {
 							return <li key={index}>{menuItem.component}</li>
 						} else {
-							return <li key={index} onClick={menuItem.clickHandler}>{menuItem.text}</li>
+							return <li key={index} onMouseDown={menuItem.clickHandler}>{menuItem.text}</li>
 						}
 					})}
 				</ul>

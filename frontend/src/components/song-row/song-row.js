@@ -15,6 +15,7 @@ export class SongRow extends React.Component {
 	// have the same value for the so we can't detect a change properly
 	/*
 	shouldComponentUpdate(nextProps) {
+		return this.props.selected !== nextProps.selected;
 		return this.props.selected !== nextProps.selected
 			|| this.props.played !== nextProps.played
 			|| this.props.userTrack.playCount !== nextProps.userTrack.playCount
@@ -60,19 +61,19 @@ export class SongRow extends React.Component {
 	}
 
 	render() {
-		let selected = this.props.selected ? "selected" : "";
+		let selected = this.props.selected ? 'selected' : '';
 		let playedClass = this.props.played ? 'played' : '';
 
 		return (
 			<tr
-				onClick={(event) => {this.props.onClick(event, this.props.rowIndex)}}
+				onMouseDown={event => { this.props.onClick(event, this.props.rowIndex)}}
 				className={`song-row ${selected} ${playedClass}`}
 			>
 				{this.props.columns.map((columnName, index) => {
 					const cellId = `${this.props.rowIndex}-${index}`;
 					return (
 						<td key={index}>
-							<div className={this.props.showContextMenu && index === 0 ? 'shifted-entry' : ''}>
+							<div>
 								<EditableDiv
 									id={cellId}
 									editable={
@@ -83,7 +84,7 @@ export class SongRow extends React.Component {
 									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
 									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={newValue => {
-										let newProperties = {};
+										const newProperties = {};
 										newProperties[columnName] = newValue;
 
 										this.context.updateTracks([this.props.userTrack], null, newProperties, true);
@@ -94,7 +95,6 @@ export class SongRow extends React.Component {
 						</td>
 					)
 				})}
-				{this.props.showContextMenu ? <td onClick={this.props.openContextMenu} className="song-menu">⚙</td> : <td/>}
 			</tr>
 		);
 	}

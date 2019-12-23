@@ -38,7 +38,7 @@ export class Settings extends React.Component {
 
 	render() {
 		return (
-			<div onClick={() => this.setModalOpen(true)}>
+			<div onMouseDown={() => this.setModalOpen(true)}>
 				Settings
 				<Modal
 					isOpen={this.state.modalOpen}
@@ -72,7 +72,7 @@ export class Settings extends React.Component {
 									return (
 										<li key={index}>
 											<div
-												onClick={e => this.toggleColumnEnabled(e)}
+												onMouseDown={this.toggleColumnEnabled.bind(this)}
 												className={`column-toggle ${columnClass}`}
 												data-column-index={index}
 											/>
@@ -81,31 +81,8 @@ export class Settings extends React.Component {
 								})}
 							</ul>
 						</div>
-						<div>
-
-							<h3>Override browser context menu</h3>
-
-							<input
-								type="radio"
-								id="yes-context-good"
-								name="rightClickMenu"
-								checked={this.context.useRightClickMenu === true}
-								onChange={() => this.context.setUseRightClickMenu(true)}
-							/>
-							<label htmlFor="yes-context-good">Yes please</label>
-
-							<input
-								type="radio"
-								id="no-context-bad"
-								name="rightClickMenu"
-								checked={this.context.useRightClickMenu === false}
-								onChange={() => this.context.setUseRightClickMenu(false)}
-							/>
-							<label htmlFor="no-context-bad">No thanks</label>
-
-						</div>
 					</div>
-					<button onClick={() => this.context.resetColumnPreferences()}>Reset</button>
+					<button onMouseDown={() => this.context.resetColumnPreferences()}>Reset</button>
 				</Modal>
 			</div>
 		)

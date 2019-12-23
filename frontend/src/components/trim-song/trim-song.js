@@ -94,7 +94,7 @@ export class TrimSong extends React.Component {
 	render() {
 		// noinspection HtmlUnknownTarget
 		return (
-			<div onClick={() => this.setModalOpen(true)}>
+			<div onMouseDown={() => this.setModalOpen(true)}>
 				Trim Song
 				<Modal
 					isOpen={this.state.modalOpen}

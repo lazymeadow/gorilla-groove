@@ -41,7 +41,7 @@ export class DraftRelease extends React.Component {
 
 	render() {
 		return (
-			<div onClick={() => this.setModalOpen(true)}>
+			<div onMouseDown={() => this.setModalOpen(true)}>
 				Draft Release
 				<Modal
 					isOpen={this.state.modalOpen}

@@ -15,10 +15,10 @@ export class SiteLayout extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			isLoaded: false, // TODO use this to actually indicate loading
 			ownUser: null,
 			ownPermissions: new Set(),
-			otherUsers: []
+			otherUsers: [],
+			albumArtLink: null // FIXME Really not sure where this should live long term
 		};
 
 		if (!isLoggedIn()) {
@@ -40,28 +40,29 @@ export class SiteLayout extends React.Component {
 
 		Api.get('user/permissions').then(result => {
 			const permissionSet = new Set(result.map(it => PermissionType[it.permissionType]));
-			this.context.setProviderState({ ownPermissions: permissionSet });
+			this.context.setProviderState({
+				ownPermissions: permissionSet,
+				renderCounter: this.context.renderCounter + 1
+			});
 		});
 
-		Api.get('user', { showAll: false })
-			.then(result => {
-				const loggedInEmail = getCookieValue('loggedInEmail').toLowerCase();
-				const ownUserIndex = result.findIndex(user => user.email.toLowerCase() === loggedInEmail);
+		Api.get('user', { showAll: false }).then(result => {
+			const loggedInEmail = getCookieValue('loggedInEmail').toLowerCase();
+			const ownUserIndex = result.findIndex(user => user.email.toLowerCase() === loggedInEmail);
 
-				let ownUser = null;
-				if (ownUserIndex === -1) {
-					console.error("Could not locate own user within Gorilla Groove's users");
-					ownUser = result[0];
-				} else {
-					ownUser = result.splice(ownUserIndex, 1)[0];
-				}
+			let ownUser = null;
+			if (ownUserIndex === -1) {
+				console.error("Could not locate own user within Gorilla Groove's users");
+				ownUser = result[0];
+			} else {
+				ownUser = result.splice(ownUserIndex, 1)[0];
+			}
 
-				this.setState({
-					ownUser: ownUser,
-					otherUsers: result
-				})
+			this.setState({
+				ownUser: ownUser,
+				otherUsers: result
 			})
-			.catch(error => {
+		}).catch(error => {
 				console.error(error);
 				// If we had an error here it PROBABLY means we had a failure to login
 				this.props.history.push('/login');
@@ -74,7 +75,7 @@ export class SiteLayout extends React.Component {
 			return <div/>
 		}
 
-		let displayedColumns = this.context.columnPreferences
+		const displayedColumns = this.context.columnPreferences
 			.filter(columnPreference => columnPreference.enabled)
 			.map(columnPreference => columnPreference.name);
 
@@ -105,10 +106,10 @@ export class SiteLayout extends React.Component {
 					/>
 				</div>
 				<div className="border-layout-southwest">
-					<AlbumArt/>
+					<AlbumArt artLink={this.state.albumArtLink}/>
 				</div>
 				<div className="border-layout-south">
-					<PlaybackControls/>
+					<PlaybackControls setAlbumArt={albumArtLink => this.setState({ albumArtLink })}/>
 				</div>
 				<div className="border-layout-southeast">
 					<SiteStats/>
