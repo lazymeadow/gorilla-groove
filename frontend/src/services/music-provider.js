@@ -297,7 +297,10 @@ export class MusicProvider extends React.Component {
 		let newTracks = this.state.nowPlayingTracks.slice(0);
 		newTracks.splice(this.state.playedTrackIndex + 1, 0, ...tracks);
 
-		this.setState({ nowPlayingTracks: newTracks });
+		this.setState({
+			nowPlayingTracks: newTracks,
+			renderCounter: this.state.renderCounter + 1
+		});
 
 		this.addTrackIndexesToShuffle(this.state.playedTrackIndex, tracks.length);
 	}
@@ -306,7 +309,10 @@ export class MusicProvider extends React.Component {
 		let newTracks = this.state.nowPlayingTracks.slice(0);
 		newTracks.splice(this.state.nowPlayingTracks.length, 0, ...tracks);
 
-		this.setState({ nowPlayingTracks: newTracks });
+		this.setState({
+			nowPlayingTracks: newTracks,
+			renderCounter: this.state.renderCounter + 1
+		});
 
 		this.addTrackIndexesToShuffle(this.state.nowPlayingTracks.length - 1, tracks.length);
 	}
@@ -576,7 +582,10 @@ export class MusicProvider extends React.Component {
 					newViewedTracks.splice(trackIndex, 1);
 				});
 
-				this.setState({ viewedTracks: newViewedTracks })
+				this.setState({
+					viewedTracks: newViewedTracks,
+					renderCounter: this.state.renderCounter + 1
+				})
 			}
 		});
 	}
@@ -605,7 +614,10 @@ export class MusicProvider extends React.Component {
 			this.setState({ playedTrackIndex: this.state.playedTrackIndex - indexesToRemove });
 		}
 
-		this.setState({ nowPlayingTracks: newNowPlaying });
+		this.setState({
+			nowPlayingTracks: newNowPlaying,
+			renderCounter: this.state.renderCounter + 1
+		});
 	}
 
 	createPlaylist() {
