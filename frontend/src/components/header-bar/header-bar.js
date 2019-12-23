@@ -16,8 +16,8 @@ export class HeaderBar extends React.Component {
 				<div className="display-flex">
 					<img src="./images/logo.png" width="50" height="50"/>
 					<div className="vertical-center">
-						<div>Gorilla</div>
-						<div>Groove</div>
+						<div>Gorilla Groove</div>
+						<div className="quantum">Quantum</div>
 					</div>
 					<div className="song-acquisition-icons">
 						<SongUpload/>
