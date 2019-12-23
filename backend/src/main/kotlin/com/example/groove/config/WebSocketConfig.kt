@@ -49,7 +49,7 @@ class SocketTextHandler : TextWebSocketHandler() {
 	}
 
 	override fun afterConnectionEstablished(session: WebSocketSession) {
-		logger.info("New user connected to socket with ID: ${session.id}")
+		logger.debug("New user connected to socket with ID: ${session.id}")
 		sessions.add(session)
 
 		// Tell this new user about all the things being listened to
@@ -61,7 +61,7 @@ class SocketTextHandler : TextWebSocketHandler() {
 	}
 
 	override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
-		logger.info("User disconnected from socket with ID: ${session.id}")
+		logger.debug("User disconnected from socket with ID: ${session.id}")
 		val lastSentUpdate = currentSongListens[session.id]
 
 		sessions.remove(session)
