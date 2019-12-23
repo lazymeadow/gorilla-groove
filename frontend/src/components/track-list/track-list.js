@@ -108,9 +108,6 @@ export class TrackList extends React.Component {
 
 	handleContextMenu(event) {
 		console.log('handle context menu');
-		if (!this.context.useRightClickMenu) {
-			return;
-		}
 
 		event.preventDefault();
 
@@ -262,8 +259,8 @@ export class TrackList extends React.Component {
 		doubleClickTimeout = setTimeout(() => {
 			withinDoubleClick = false;
 			if (pendingEditableCell) {
+				this.setState({ editableCell: pendingEditableCell });
 				pendingEditableCell = null;
-				this.setState({ editableCell: pendingEditableCell })
 			}
 		}, 300);
 		withinDoubleClick = true;
@@ -342,18 +339,6 @@ export class TrackList extends React.Component {
 		this.context.reloadTracks(sortColumn, sortDir)
 	}
 
-	// I think this is used by that cogwheel thing I should get rid of?
-	handleContextMenuOpen(event) {
-		event.stopPropagation();
-		this.setState({
-			contextMenuOptions: {
-				expanded: true,
-				x: event.clientX,
-				y: event.clientY + 4
-			}
-		})
-	}
-
 	closeContextMenu() {
 		if (this.state.contextMenuOptions.expanded) {
 			this.setState({ contextMenuOptions: { expanded: false }})
@@ -422,8 +407,6 @@ export class TrackList extends React.Component {
 								played={played}
 								userTrack={userTrack}
 								selected={this.state.selected[index.toString()]}
-								showContextMenu={index === this.state.lastSelectedIndex && !this.context.useRightClickMenu}
-								openContextMenu={this.handleContextMenuOpen.bind(this)}
 								onClick={this.handleRowClick.bind(this)}
 								stopCellEdits={this.stopCellEdits.bind(this)}
 							/>

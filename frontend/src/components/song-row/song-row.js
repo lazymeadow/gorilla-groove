@@ -15,6 +15,7 @@ export class SongRow extends React.Component {
 	// have the same value for the so we can't detect a change properly
 	/*
 	shouldComponentUpdate(nextProps) {
+		return this.props.selected !== nextProps.selected;
 		return this.props.selected !== nextProps.selected
 			|| this.props.played !== nextProps.played
 			|| this.props.userTrack.playCount !== nextProps.userTrack.playCount
@@ -72,7 +73,7 @@ export class SongRow extends React.Component {
 					const cellId = `${this.props.rowIndex}-${index}`;
 					return (
 						<td key={index}>
-							<div className={this.props.showContextMenu && index === 0 ? 'shifted-entry' : ''}>
+							<div>
 								<EditableDiv
 									id={cellId}
 									editable={
@@ -94,7 +95,6 @@ export class SongRow extends React.Component {
 						</td>
 					)
 				})}
-				{this.props.showContextMenu ? <td onClick={this.props.openContextMenu} className="song-menu">⚙</td> : <td/>}
 			</tr>
 		);
 	}
