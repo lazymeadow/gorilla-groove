@@ -16,7 +16,9 @@ export class AlbumArt extends React.Component {
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-		return nextProps.artLink !== nextState.lastAttemptedLink || this.state.imageUrl !== nextState.imageUrl;
+		return nextProps.artLink !== nextState.lastAttemptedLink
+			|| this.state.imageUrl !== nextState.imageUrl
+			|| this.state.modalOpen !== nextState.modalOpen;
 	}
 
 	// Because we're using a background-image and not a <img>, we need to be creative about
@@ -39,7 +41,6 @@ export class AlbumArt extends React.Component {
 		img.onerror = () => {
 			this.setState({ imageUrl: defaultImageLink });
 		};
-
 	}
 
 	setModalOpen(isOpen) {
