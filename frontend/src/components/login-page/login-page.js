@@ -22,7 +22,6 @@ class LoginPageInternal extends React.Component {
 				// Would be better to have the cookie be HttpOnly, but need to figure out how to send it from the server to do that
 				const ninetyDays = 7776000;
 				addCookie('cookieToken', result.token, ninetyDays);
-				addCookie('loggedInUserName', result.username, ninetyDays);
 				addCookie('loggedInEmail', result.email, ninetyDays);
 
 				this.props.history.push('/'); // Redirect to the main page now that we logged in

@@ -5,8 +5,6 @@ import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
 import {toast} from "react-toastify";
 import {findSpotInSortedArray} from "../util";
-import {getCookieValue} from "../cookie";
-import {isLoggedIn} from "../util";
 
 export const MusicContext = React.createContext();
 
@@ -70,8 +68,6 @@ export class MusicProvider extends React.Component {
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			renderCounter: 0, // Used to determine if we should rerender this component (and therefore most of the site because this component is too large)
-			searchTerm: '',
-			showHidden: false,
 
 			ownPermissions: new Set(), // FIXME Makes NO sense to be in this context. Need to figure out how to make more than one
 

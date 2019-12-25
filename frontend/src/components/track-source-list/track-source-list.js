@@ -6,6 +6,7 @@ import {EditableDiv} from "../editable-div/editable-div";
 import {AddPlaylistButton} from "../add-playlist/add-playlist";
 import {Modal} from "../modal/modal";
 import {SocketContext} from "../../services/socket-provider";
+import {UserContext} from "../../services/user-provider";
 
 let pendingDeletePlaylist = {};
 
@@ -14,6 +15,7 @@ export default function TrackSourceList(props) {
 	const [editedId, setEditedId] = useState(null);
 	const [modalOpen, setModalOpen] = useState(false);
 
+	const userContext = useContext(UserContext);
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
 
@@ -21,7 +23,7 @@ export default function TrackSourceList(props) {
 		{
 			section: TrackView.USER,
 			heading: 'User Libraries',
-			data: props.otherUsers
+			data: userContext.otherUsers
 		}, {
 			section: TrackView.PLAYLIST,
 			heading: <span className="playlist-heading">Playlists <AddPlaylistButton/></span>,
