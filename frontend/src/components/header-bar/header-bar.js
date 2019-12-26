@@ -1,8 +1,9 @@
 import React, {useContext} from 'react';
-import {UserButton, SongUpload} from "..";
 import {YoutubeDlButton} from "../youtube-dl/youtube-dl";
 import SearchBar from "../search-bar/search-bar";
 import {UserContext} from "../../services/user-provider";
+import UserButton from "../user-button/user-button";
+import {SongUpload} from "..";
 
 export default function HeaderBar() {
 	const userContext = useContext(UserContext);

@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {withRouter} from "react-router-dom";
+import {useHistory} from "react-router-dom";
 import {Api} from "../../api";
 import {PopoutMenu} from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
@@ -9,8 +9,9 @@ import {DraftRelease} from "../draft-release/draft-release";
 import {PermissionType} from "../../enums/permission-type";
 import {UserContext} from "../../services/user-provider";
 
-function LogoutButtonInternal(props) {
+export default function UserButton() {
 	const userContext = useContext(UserContext);
+	const history = useHistory();
 
 	const logout = event => {
 		event.preventDefault();
@@ -23,7 +24,7 @@ function LogoutButtonInternal(props) {
 			deleteCookie('cookieToken');
 			deleteCookie('loggedInEmail');
 
-			props.history.push('/login'); // Redirect to the login page now that we logged out
+			history.push('/login'); // Redirect to the login page now that we logged out
 		});
 	};
 
@@ -44,7 +45,3 @@ function LogoutButtonInternal(props) {
 		</div>
 	)
 }
-
-// This page uses the router history. In order to gain access to the history, the class needs
-// to be exported wrapped by the router. Now inside of LogoutButtonInternal, this.props will have a history object
-export const UserButton = withRouter(LogoutButtonInternal);
