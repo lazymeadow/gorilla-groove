@@ -5,7 +5,6 @@ import {formatTimeFromSeconds} from "../../formatters";
 import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
-import {truncateFloatToPrecision} from "../../util";
 import {SocketContext} from "../../services/socket-provider";
 
 // State we don't want to render on
@@ -204,10 +203,7 @@ export default function PlaybackControls(props) {
 		if (duration > 0) {
 			// Truncate the percentage to 2 decimal places, since our progress bar only updates in 1/100 increments.
 			// Doing this allows us to skip many re-renders that do nothing.
-			const nextPercent = truncateFloatToPrecision(currentTime / duration, 3);
-			if (currentTimePercent !== nextPercent) {
-				setCurrentTimePercent(nextPercent);
-			}
+			setCurrentTimePercent(currentTime / duration);
 		}
 
 		const timeElapsed = currentTime - lastTime;

@@ -10,6 +10,7 @@ interface TrackHistoryRepository : CrudRepository<TrackHistory, Long> {
 	@Query("""
 			SELECT th
 			FROM TrackHistory th
+			JOIN FETCH th.track
 			WHERE (:userId IS NULL OR th.track.user.id = :userId)
 			    AND (:loadPrivate IS TRUE OR th.track.private = FALSE)
 			    AND th.track.deleted = FALSE

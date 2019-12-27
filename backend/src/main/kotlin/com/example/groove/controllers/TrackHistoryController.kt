@@ -26,9 +26,11 @@ class TrackHistoryController(
 			TrackHistoryDTO(
 					trackHistoryId = it.id,
 					listenedDate = it.createdAt,
-					trackLength = it.track.length
+					trackLength = it.track.length,
+					trackArtist = it.track.artist,
+					trackAlbum = it.track.album,
+					trackName = it.track.name
 			)
 		}
     }
-
 }

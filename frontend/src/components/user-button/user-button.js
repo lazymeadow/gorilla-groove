@@ -8,6 +8,7 @@ import {deleteCookie} from "../../cookie";
 import {DraftRelease} from "../draft-release/draft-release";
 import {PermissionType} from "../../enums/permission-type";
 import {UserContext} from "../../services/user-provider";
+import TrackHistory from "../track-history/track-history";
 
 export default function UserButton() {
 	const userContext = useContext(UserContext);
@@ -37,6 +38,7 @@ export default function UserButton() {
 				}}
 				menuItems={[
 					{ component: <Settings/> },
+					{ component: <TrackHistory/> },
 					{ component: <InviteUser/> },
 					{ component: <DraftRelease/>, shouldRender: userContext.hasPermission(PermissionType.WRITE_VERSION_HISTORY) },
 					{ text: "Logout", clickHandler: logout }

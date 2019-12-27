@@ -31,7 +31,7 @@ export class SiteStats extends React.Component {
 			endDate: Date.now()
 		};
 
-		return Api.get("track-history", params)
+		return Api.get('track-history', params)
 			.then(result => {
 				let totalTime = result.reduce((totalTime, historyEntry) => {
 					return totalTime + historyEntry.trackLength;
