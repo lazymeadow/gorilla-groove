@@ -2,14 +2,16 @@ import React, {useContext, useEffect, useState} from 'react';
 import {Modal} from "../modal/modal";
 import {UserContext} from "../../services/user-provider";
 import {Api} from "../../api";
+import {formatDate} from "../../formatters";
+import {toast} from "react-toastify";
 
-function TrackHistoryModal() {
+function TrackHistoryModal(props) {
 	const userContext = useContext(UserContext);
 
 	const [selectedUserId, setSelectedUserId] = useState(userContext.ownUser.id);
-	console.log(selectedUserId, userContext.ownUser);
 	const [startDate, setStartDate] = useState(formatDateWithDayOffset(-30));
 	const [endDate, setEndDate] = useState(formatDateWithDayOffset(0));
+	const [pendingDeleteData, setPendingDeleteData] = useState(null);
 	const [historyData, setHistoryData] = useState([]);
 
 	useEffect(() => {
@@ -22,60 +24,104 @@ function TrackHistoryModal() {
 		})
 	}, [selectedUserId, startDate, endDate]);
 
+	const deleteHistory = () => {
+		Api.delete('track-history/' + pendingDeleteData.id).then(() => {
+			const newHistoryData = historyData.filter(datum => datum.id !== pendingDeleteData.id);
+			setPendingDeleteData(null);
+			setHistoryData(newHistoryData);
+			toast.success('The track history was deleted successfully');
+		}).catch(res => {
+			console.error(res);
+			toast.error('The deletion of the track history failed');
+		});
+	};
+
 	return (
 		<div id="track-history-modal" className="full-screen">
 			<h2>Track History</h2>
+
+			<Modal
+				isOpen={pendingDeleteData !== null}
+				fullScreen={false}
+				closeFunction={() => setPendingDeleteData(null)}
+			>
+				<div>
+					Are you sure you want to delete a piece of history?
+				</div>
+				{
+					pendingDeleteData
+						? <div>({pendingDeleteData.trackArtist} - {pendingDeleteData.trackName})</div>
+						: <div/>
+				}
+				<div className="flex-between confirm-modal-buttons">
+					<button onMouseDown={deleteHistory}>Let's get it over with</button>
+					<button onMouseDown={() => setPendingDeleteData(null)}>Wait. I need to reconsider</button>
+				</div>
+			</Modal>
+
 			<div className="content-wrapper flex-between">
 				<div className="left-nav">
-					<div className="top-label">
-						<label>User</label>
-						<select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)}>
-							<option value={userContext.ownUser.id}>
-								{ userContext.ownUser.username }
-							</option>
-							<option value="" disabled="disabled">─────────────</option>
-							{ userContext.otherUsers.map(user => (
-								<option value={user.id} key={user.id}>
-									{ user.username }
+					<div>
+						<div className="top-label">
+							<label>User</label>
+							<select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)}>
+								<option value={userContext.ownUser.id}>
+									{ userContext.ownUser.username }
 								</option>
-							))}
-						</select>
+								<option value="" disabled="disabled">───────────</option>
+								{ userContext.otherUsers.map(user => (
+									<option value={user.id} key={user.id}>
+										{ user.username }
+									</option>
+								))}
+							</select>
+						</div>
+						<div className="top-label">
+							<label>Start</label>
+							<input
+								type="date"
+								value={startDate}
+								onChange={e => setStartDate(e.target.value)}
+							/>
+						</div>
+						<div className="top-label">
+							<label>End</label>
+							<input
+								type="date"
+								value={endDate}
+								onChange={e => setEndDate(e.target.value)}
+							/>
+						</div>
 					</div>
-					<div className="top-label">
-						<label>Start</label>
-						<input
-							type="date"
-							value={startDate}
-							onChange={e => setStartDate(e.target.value)}
-						/>
-					</div>
-					<div className="top-label">
-						<label>End</label>
-						<input
-							type="date"
-							value={endDate}
-							onChange={e => setEndDate(e.target.value)}
-						/>
+
+					<div>
+						<button onClick={props.closeFunction}>Back</button>
 					</div>
 				</div>
 
 				<div className="flex-grow overflow-y-auto">
-					<table className="auto-margin">
+					<table className="stats-table auto-margin">
 						<thead>
 						<tr>
-							<th>Name</th>
+							<th><div>Name</div></th>
 							<th>Artist</th>
 							<th>Album</th>
 							<th>Listened On</th>
+							<th>Device</th>
+							<th/>
 						</tr>
 						</thead>
 						<tbody>
 						{historyData.map(historyDatum => (
-							<tr key={historyDatum.trackHistoryId}>
+							<tr key={historyDatum.id} className="history-row">
 								<td>{historyDatum.trackName}</td>
 								<td>{historyDatum.trackArtist}</td>
 								<td>{historyDatum.trackAlbum}</td>
-								<td>{historyDatum.listenedDate}</td>
+								<td>{formatDate(historyDatum.listenedDate, true)}</td>
+								<td>{historyDatum.deviceName}</td>
+								<td onMouseDown={() => setPendingDeleteData(historyDatum)}>
+									<i className="fas fa-times cursor-pointer"/>
+								</td>
 							</tr>
 						))}
 						</tbody>
@@ -92,15 +138,17 @@ function TrackHistoryModal() {
 export default function TrackHistory() {
 	const [modalOpen, setModalOpen] = useState(false);
 
+	const closeFunction = () => setModalOpen(false);
+
 	return (
 		<div id="track-history" onMouseDown={() => setModalOpen(true)}>
 			Track History
 			<Modal
 				isOpen={modalOpen}
 				fullScreen={true}
-				closeFunction={() => setModalOpen(false)}
+				closeFunction={closeFunction}
 			>
-				{ modalOpen ? <TrackHistoryModal/> : <div/> }
+				{ modalOpen ? <TrackHistoryModal closeFunction={closeFunction}/> : <div/> }
 			</Modal>
 		</div>
 	)

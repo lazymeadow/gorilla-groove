@@ -29,6 +29,7 @@ export class SocketProvider extends React.Component {
 
 		newSocket.onmessage = res => {
 			const data = JSON.parse(res.data);
+			console.debug('Received socket data', data);
 
 			const email = data.userEmail;
 			delete data.userEmail;

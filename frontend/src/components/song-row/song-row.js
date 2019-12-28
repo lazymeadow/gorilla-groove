@@ -52,9 +52,9 @@ export class SongRow extends React.Component {
 			case 'Sample Rate':
 				return userTrack.sampleRate;
 			case 'Added':
-				return formatDate(userTrack.createdAt);
+				return formatDate(userTrack.createdAt, false);
 			case 'Last Played':
-				return formatDate(userTrack.lastPlayed);
+				return formatDate(userTrack.lastPlayed, false);
 			case 'Note':
 				return userTrack.note;
 		}

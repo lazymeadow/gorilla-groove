@@ -2,6 +2,8 @@ package com.example.groove.controllers
 
 import com.example.groove.dto.TrackHistoryDTO
 import com.example.groove.services.TrackHistoryService
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 import org.springframework.web.bind.annotation.*
 import java.sql.Timestamp
@@ -24,13 +26,23 @@ class TrackHistoryController(
 
 		return trackHistoryService.getTrackHistory(userId, Timestamp(startDate), Timestamp(endDate)).map {
 			TrackHistoryDTO(
-					trackHistoryId = it.id,
+					id = it.id,
 					listenedDate = it.createdAt,
 					trackLength = it.track.length,
 					trackArtist = it.track.artist,
 					trackAlbum = it.track.album,
-					trackName = it.track.name
+					trackName = it.track.name,
+					deviceName = it.device?.deviceId
 			)
 		}
+    }
+
+	@DeleteMapping("/{id}")
+    fun deleteTrackHistory(
+			@PathVariable(value = "id") id: Long
+	): ResponseEntity<String> {
+		trackHistoryService.deleteTrackHistory(id)
+
+		return ResponseEntity(HttpStatus.OK)
     }
 }
