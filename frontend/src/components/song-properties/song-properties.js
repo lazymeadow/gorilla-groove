@@ -63,7 +63,7 @@ export class SongProperties extends React.Component {
 	}
 
 	inputChange(stateName, event) {
-		let newState = {};
+		const newState = {};
 		newState[stateName] = event.target.value;
 
 		this.setState(newState);
@@ -297,7 +297,10 @@ export class SongProperties extends React.Component {
 							</div>
 							<div className="property-note">
 								Note
-								<textarea onChange={e => this.inputChange('note', e)}/>
+								<textarea
+									value={this.state.note}
+									onChange={e => this.inputChange('note', e)}
+								/>
 							</div>
 
 							<div>
