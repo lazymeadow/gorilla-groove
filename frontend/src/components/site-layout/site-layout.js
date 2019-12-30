@@ -1,121 +1,88 @@
-import React from 'react';
-import {TrackList, PlaybackControls, Api} from "..";
+import React, {useContext, useEffect, useState} from 'react';
+import {TrackList, Api} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
 import {AlbumArt} from "../album-art/album-art";
-import {TrackSourceList} from "../track-source-list/track-source-list";
-import {HeaderBar} from "../header-bar/header-bar";
+import TrackSourceList from "../track-source-list/track-source-list";
+import HeaderBar from "../header-bar/header-bar";
 import {MusicContext} from "../../services/music-provider";
 import {SiteStats} from "../site-stats/site-stats";
 import {isLoggedIn} from "../../util";
-import {getCookieValue} from "../../cookie";
 import {notifyVersion} from "../../services/version";
-import {PermissionType} from "../../enums/permission-type";
+import {SocketContext} from "../../services/socket-provider";
+import PlaybackControls from "../playback-controls/playback-controls";
+import {UserContext} from "../../services/user-provider";
+import {deleteCookie} from "../../cookie";
 
-export class SiteLayout extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			ownUser: null,
-			ownPermissions: new Set(),
-			otherUsers: [],
-			albumArtLink: null // FIXME Really not sure where this should live long term
-		};
+export default function SiteLayout(props) {
+	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
 
-		if (!isLoggedIn()) {
-			this.props.history.push('/login'); // Redirect to the login page now that we logged out
-		}
+	if (!isLoggedIn()) {
+		console.info('Not logged in. Awaiting redirect');
+		props.history.push('/login'); // Redirect to the login page now that we logged out
+
+		return <div/>;
 	}
 
-	componentDidMount() {
-		if (!isLoggedIn()) {
-			console.info('Not logged in. Awaiting redirect');
-			return;
-		}
+	// TODO remove this in the future when it has been removed from everyone
+	deleteCookie('loggedInUserName');
 
-		this.context.connectToSocket();
-		this.context.loadSongsForUser();
-		this.context.loadPlaylists();
+	// Is it possible to call functions on these contexts without being affected by their re-renders?
+	// All this view does is initialize state. It doesn't need to be re-rendered by the result.
+	// If this is possible it'll cut down on the site-wide re-renders
+	const musicContext = useContext(MusicContext);
+	const socketContext = useContext(SocketContext);
+	const userContext = useContext(UserContext);
+
+	useEffect(() => {
+		userContext.initialize().catch(error => {
+			console.error(error);
+			// If we had an error here it PROBABLY means we had a failure to login
+			props.history.push('/login');
+		});
+		socketContext.connectToSocket();
+		musicContext.loadSongsForUser();
+		musicContext.loadPlaylists();
 
 		notifyVersion();
+	}, []);
 
-		Api.get('user/permissions').then(result => {
-			const permissionSet = new Set(result.map(it => PermissionType[it.permissionType]));
-			this.context.setProviderState({
-				ownPermissions: permissionSet,
-				renderCounter: this.context.renderCounter + 1
-			});
-		});
+	const displayedColumns = musicContext.columnPreferences
+		.filter(columnPreference => columnPreference.enabled)
+		.map(columnPreference => columnPreference.name);
 
-		Api.get('user', { showAll: false }).then(result => {
-			const loggedInEmail = getCookieValue('loggedInEmail').toLowerCase();
-			const ownUserIndex = result.findIndex(user => user.email.toLowerCase() === loggedInEmail);
-
-			let ownUser = null;
-			if (ownUserIndex === -1) {
-				console.error("Could not locate own user within Gorilla Groove's users");
-				ownUser = result[0];
-			} else {
-				ownUser = result.splice(ownUserIndex, 1)[0];
-			}
-
-			this.setState({
-				ownUser: ownUser,
-				otherUsers: result
-			})
-		}).catch(error => {
-				console.error(error);
-				// If we had an error here it PROBABLY means we had a failure to login
-				this.props.history.push('/login');
-			});
-	}
-
-	render() {
-		if (!isLoggedIn()) {
-			// Just do nothing until the redirect catches up and takes us to the login page
-			return <div/>
-		}
-
-		const displayedColumns = this.context.columnPreferences
-			.filter(columnPreference => columnPreference.enabled)
-			.map(columnPreference => columnPreference.name);
-
-		return (
-			<div className="full-screen border-layout">
-				<div className="border-layout-north">
-					<HeaderBar/>
-				</div>
-				<div className="border-layout-west">
-					<TrackSourceList
-						ownUser={this.state.ownUser}
-						otherUsers={this.state.otherUsers}
-						playlists={this.context.playlists}
-					/>
-				</div>
-				<div id="library-view" className="border-layout-center track-list-container p-relative">
-					<TrackList
-						columns={displayedColumns}
-						userTracks={this.context.viewedTracks}
-						trackView={true}
-					/>
-				</div>
-				<div className="border-layout-east track-list-container">
-					<NowPlayingList
-						columns={["#", "Name"]}
-						userTracks={this.context.nowPlayingTracks}
-						trackView={false}
-					/>
-				</div>
-				<div className="border-layout-southwest">
-					<AlbumArt artLink={this.state.albumArtLink}/>
-				</div>
-				<div className="border-layout-south">
-					<PlaybackControls setAlbumArt={albumArtLink => this.setState({ albumArtLink })}/>
-				</div>
-				<div className="border-layout-southeast">
-					<SiteStats/>
-				</div>
+	return (
+		<div className="full-screen border-layout">
+			<div className="border-layout-north">
+				<HeaderBar/>
 			</div>
-		);
-	}
+			<div className="border-layout-west">
+				<TrackSourceList
+					playlists={musicContext.playlists}
+				/>
+			</div>
+			<div id="library-view" className="border-layout-center track-list-container p-relative">
+				<TrackList
+					columns={displayedColumns}
+					userTracks={musicContext.viewedTracks}
+					trackView={true}
+				/>
+			</div>
+			<div className="border-layout-east track-list-container">
+				<NowPlayingList
+					columns={["#", "Name"]}
+					userTracks={musicContext.nowPlayingTracks}
+					trackView={false}
+				/>
+			</div>
+			<div className="border-layout-southwest">
+				<AlbumArt artLink={albumArtLink}/>
+			</div>
+			<div className="border-layout-south">
+				<PlaybackControls setAlbumArt={setAlbumArtLink}/>
+			</div>
+			<div className="border-layout-southeast">
+				<SiteStats/>
+			</div>
+		</div>
+	)
 }
-SiteLayout.contextType = MusicContext;

@@ -1,94 +1,76 @@
-import React from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
 import {TrackView} from "../../enums/track-view";
 import {EditableDiv} from "../editable-div/editable-div";
 import {AddPlaylistButton} from "../add-playlist/add-playlist";
 import {Modal} from "../modal/modal";
+import {SocketContext} from "../../services/socket-provider";
+import {UserContext} from "../../services/user-provider";
 
-export class TrackSourceList extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			collapsedBookkeeping: [false, false, false],
-			dataSource: [
-				{
-					section: TrackView.USER,
-					heading: 'User Libraries',
-					data: []
-				}, {
-					section: TrackView.PLAYLIST,
-					heading: <span className="playlist-heading">Playlists <AddPlaylistButton/></span>,
-					data: []
-				}
-			],
-			editedId: null,
-			modalOpen: false,
-			pendingDeletePlaylist: {}
-		};
-	}
+let pendingDeletePlaylist = {};
 
-	componentDidMount() {
-		document.body.addEventListener('click', this.handleEditStop.bind(this));
-	}
+export default function TrackSourceList(props) {
+	const [collapsedBookkeeping, setCollapsedBookkeeping] = useState([false, false, false]);
+	const [editedId, setEditedId] = useState(null);
+	const [modalOpen, setModalOpen] = useState(false);
 
-	componentWillUnmount() {
-		document.body.removeEventListener('click', this.handleEditStop.bind(this));
-	}
+	const userContext = useContext(UserContext);
+	const musicContext = useContext(MusicContext);
+	const socketContext = useContext(SocketContext);
 
-	componentWillReceiveProps(props) {
-		const userIndex = this.state.dataSource.findIndex(data => {
-			return data.section === TrackView.USER
-		});
+	const dataSource = [
+		{
+			section: TrackView.USER,
+			heading: 'User Libraries',
+			data: userContext.otherUsers
+		}, {
+			section: TrackView.PLAYLIST,
+			heading: <span className="playlist-heading">Playlists <AddPlaylistButton/></span>,
+			data: props.playlists
+		}
+	];
 
-		const playlistsIndex = this.state.dataSource.findIndex(data => {
-			return data.section === TrackView.PLAYLIST
-		});
-
-		// Update the data to have the latest user data
-		let dataSource = this.state.dataSource;
-		dataSource[userIndex].data = props.otherUsers;
-		dataSource[playlistsIndex].data = props.playlists;
-
-		this.setState({ dataSource });
-	}
-
-	handleEditStop(event) {
+	const handleEditStop = event => {
 		if (
 			event.target.tagName !== 'INPUT'
-			&& event.target.id !== this.state.editedId
-			&& this.state.editedId !== null
+			&& event.target.id !== editedId
+			&& editedId !== null
 		) {
-			this.setState({ editedId: null })
+			setEditedId(null);
 		}
-	}
+	};
 
-	handleParentNodeClick(i) {
-		let [...collapsedBookkeeping] = this.state.collapsedBookkeeping;
-		collapsedBookkeeping[i] = !collapsedBookkeeping[i];
-		this.setState({collapsedBookkeeping: collapsedBookkeeping});
-	}
+	useEffect(() => {
+		document.body.addEventListener('click', handleEditStop);
 
-	loadOwnLibrary() {
-		this.context.loadSongsForUser();
-	}
+		return () => {
+			document.body.removeEventListener('click', handleEditStop);
+		}
+	}, [editedId]);
 
-	selectEntry(section, entry, elementId) {
-		if (section === this.context.trackView && entry.id === this.context.viewedEntityId) {
-			this.setState({ editedId: elementId });
+	const handleParentNodeClick = i => {
+		const [...bookkeeping] = collapsedBookkeeping;
+		bookkeeping[i] = !bookkeeping[i];
+		setCollapsedBookkeeping(bookkeeping);
+	};
+
+	const selectEntry = (section, entry, elementId) => {
+		if (section === musicContext.trackView && entry.id === musicContext.viewedEntityId) {
+			setEditedId(elementId);
 			return; // User selected the same thing as before
 		}
-		this.setState({ editedId: null });
+		setEditedId(null);
 
 		if (section === TrackView.USER) {
-			this.context.loadSongsForUser(entry.id, false);
+			musicContext.loadSongsForUser(entry.id, false);
 		} else {
-			this.context.loadSongsForPlaylist(entry.id, false);
+			musicContext.loadSongsForPlaylist(entry.id, false);
 		}
-	}
+	};
 
-	getNowPlayingElement(entry) {
-		const song = this.context.nowListeningUsers[entry.email];
+	const getNowPlayingElement = (entry) => {
+		const song = socketContext.nowListeningUsers[entry.email];
 		if (!song || !song.trackId) {
 			return <span/>
 		}
@@ -97,91 +79,81 @@ export class TrackSourceList extends React.Component {
 		const name = song.trackName ? song.trackName : 'Unknown';
 
 		return <span className="user-listening" title={`${artist} - ${name}`}>♬</span>
-	}
+	};
 
-	render() {
-		const librarySelected = this.context.trackView === TrackView.LIBRARY ? 'selected' : '';
-		return (
-			<div id="view-source-list">
-				<div
-					className={`library-option ${librarySelected}`}
-					onMouseDown={this.loadOwnLibrary.bind(this)}
-				>
-					<span className="my-library">My Library</span>
-				</div>
-				{this.state.dataSource.map((node, i) => {
-					const label =
-						<div className="tree-node" onMouseDown={() => this.handleParentNodeClick(i)}>
-							{node.heading}
-						</div>;
-					return (
-						<TreeView
-							key={i}
-							nodeLabel={label}
-							collapsed={this.state.collapsedBookkeeping[i]}
-							onClick={() => this.handleParentNodeClick(i)}
-						>
-							{node.data.map(entry => {
-								const entrySelected = this.context.trackView === node.section & entry.id === this.context.viewedEntityId;
-								const entryClass = entrySelected ? 'selected' : '';
-								const cellId = i + '-' + entry.id;
-								return (
-									<div
-										id={cellId}
-										className={`tree-child ${entryClass}`}
-										key={entry.id}
-										onMouseDown={() => this.selectEntry(node.section, entry, cellId)}
-									>
-										<EditableDiv
-											editable={this.state.editedId === cellId && node.section === TrackView.PLAYLIST}
-											text={entry.username ? entry.username : entry.name}
-											stopEdit={() => this.setState({ editedId: null })}
-											updateHandler={newValue => {
-												this.context.renamePlaylist(entry, newValue);
-												this.forceUpdate();
-											}}
-										/>
-										{ this.getNowPlayingElement(entry) }
+	const librarySelected = musicContext.trackView === TrackView.LIBRARY ? 'selected' : '';
 
-										<div className="playlist-delete">
-											{ node.section === TrackView.PLAYLIST
-												? <i className="fas fa-times" onMouseDown={e => {
-													e.stopPropagation();
-													this.setState({
-														modalOpen: true,
-														pendingDeletePlaylist: entry
-													});
-												}}/>
-												: <i/>
-											}
-										</div>
-
-
-									</div>
-								)
-							})}
-						</TreeView>
-					);
-				})}
-				<Modal
-					isOpen={this.state.modalOpen}
-					closeFunction={() => this.setState({ modalOpen: false })}
-				>
-					<div id="playlist-delete-modal">
-						<div>Are you sure you want to delete the playlist '{this.state.pendingDeletePlaylist.name}'?</div>
-						<div className="flex-between confirm-modal-buttons">
-							<button onMouseDown={() => {
-								this.context.deletePlaylist(this.state.pendingDeletePlaylist).then(() => {
-									this.setState({ modalOpen: false });
-								})
-							}}>You know I do</button>
-							<button onMouseDown={() => this.setState({ modalOpen: false })}>No. Woops</button>
-						</div>
-					</div>
-				</Modal>
-
+	return (
+		<div id="view-source-list">
+			<div
+				className={`library-option ${librarySelected}`}
+				onMouseDown={() => musicContext.loadSongsForUser()}
+			>
+				<span className="my-library">My Library</span>
 			</div>
-		);
-	}
+			{dataSource.map((node, i) => {
+				const label =
+					<div className="tree-node" onMouseDown={() => handleParentNodeClick(i)}>
+						{node.heading}
+					</div>;
+				return (
+					<TreeView
+						key={i}
+						nodeLabel={label}
+						collapsed={collapsedBookkeeping[i]}
+						onClick={() => handleParentNodeClick(i)}
+					>
+						{node.data.map(entry => {
+							const entrySelected = musicContext.trackView === node.section & entry.id === musicContext.viewedEntityId;
+							const entryClass = entrySelected ? 'selected' : '';
+							const cellId = i + '-' + entry.id;
+							return (
+								<div
+									id={cellId}
+									className={`tree-child ${entryClass}`}
+									key={entry.id}
+									onMouseDown={() => selectEntry(node.section, entry, cellId)}
+								>
+									<EditableDiv
+										editable={editedId === cellId && node.section === TrackView.PLAYLIST}
+										text={entry.username ? entry.username : entry.name}
+										stopEdit={() => setEditedId(null)}
+										updateHandler={newValue => musicContext.renamePlaylist(entry, newValue)}
+									/>
+									{ getNowPlayingElement(entry) }
+
+									<div className="playlist-delete">
+										{ node.section === TrackView.PLAYLIST
+											? <i className="fas fa-times" onMouseDown={e => {
+												e.stopPropagation();
+												pendingDeletePlaylist = entry;
+												setModalOpen(true);
+											}}/>
+											: <i/>
+										}
+									</div>
+
+								</div>
+							)
+						})}
+					</TreeView>
+				);
+			})}
+			<Modal
+				isOpen={modalOpen}
+				closeFunction={() => setModalOpen(false)}
+			>
+				<div id="playlist-delete-modal">
+					<div>Are you sure you want to delete the playlist '{pendingDeletePlaylist.name}'?</div>
+					<div className="flex-between confirm-modal-buttons">
+						<button onMouseDown={() => {
+							musicContext.deletePlaylist(pendingDeletePlaylist).then(() => setModalOpen(false))
+						}}>You know I do</button>
+						<button onMouseDown={() => setModalOpen(true)}>No. Woops</button>
+					</div>
+				</div>
+			</Modal>
+
+		</div>
+	);
 }
-TrackSourceList.contextType = MusicContext;

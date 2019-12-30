@@ -1,0 +1,75 @@
+#track-history {
+
+}
+
+#track-history-modal {
+  background-color: @light-blue;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 0;
+    text-align: center;
+    border-bottom: 3px solid @deeper-blue;
+  }
+
+  .content-wrapper {
+    height: calc(100% - 30px); // FIXME damnit ayrton you're better than this
+  }
+
+  .left-nav {
+    border-right: 3px solid @deeper-blue;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .right-nav {
+    overflow-y: auto;
+  }
+
+  .top-label {
+    label {
+      display: block;
+    }
+  }
+
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    text-align: left;
+    font-size: 0.9em;
+  }
+
+  tbody {
+    font-size: 0.85em;
+  }
+
+  th {
+    background-color: @light-blue;
+    padding: 0;
+
+    border-bottom: 2px solid @deeper-blue;
+    border-left: 2px solid @deeper-blue;
+    &:first-child {
+      border-left: none;
+    }
+  }
+
+  td {
+    padding-left: 2px;
+  }
+
+  .history-row {
+    &:nth-child(even) {
+      background-color: @deep-blue;
+    }
+
+    &:nth-child(odd) {
+      background-color: @light-blue;
+    }
+  }
+}

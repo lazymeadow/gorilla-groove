@@ -1,205 +1,124 @@
-import React from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
 import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
+import {SocketContext} from "../../services/socket-provider";
 
+// State we don't want to render on
 let loadingTrackId = null;
+let lastSongPlayHeartbeatTime = 0;
+let lastTime = 0;
+let timeTarget = null;
+let totalTimeListened = 0;
+let listenedTo = false;
 
-export class PlaybackControls extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			currentSessionPlayCounter: 0, // Used to detect when we should play a new song
-			lastTime: 0,
-			currentTimePercent: 0,
-			totalTimeListened: 0,
-			lastSongPlayHeartbeatTime: 0,
-			timeTarget: null,
-			duration: 0,
-			listenedTo: false,
-			songUrl: null,
-			volume: 1,
-			muted: false,
-			playing: false,
-		}
-	}
+// In a functional component we need to keep around some previous state to do things when changes occur
+let previousPlaying = false;
+let previousCurrentSessionPlayCounter = 0;
 
-	componentDidMount() {
-		let audio = document.getElementById('audio');
-		audio.addEventListener('timeupdate', (e) => { this.handleTimeTick(e.target.currentTime) });
-		audio.addEventListener('durationchange', (e) => { this.handleDurationChange(e.target.duration) });
-		audio.addEventListener('ended', () => { this.handleSongEnd() });
+export default function PlaybackControls(props) {
+	const [currentSessionPlayCounter, setCurrentSessionPlayCounter] = useState(0);
+	const [currentTimePercent, setCurrentTimePercent] = useState(0);
+	const [duration, setDuration] = useState(0);
+	const [songUrl, setSongUrl] = useState(null);
+	const [volume, setVolume] = useState(1);
+	const [muted, setMuted] = useState(false);
+	const [playing, setPlaying] = useState(false);
 
-		audio.volume = LocalStorage.getNumber('volume', 1);
-		this.setState({ volume: audio.volume});
+	const musicContext = useContext(MusicContext);
+	const socketContext = useContext(SocketContext);
 
-		audio.muted = LocalStorage.getBoolean('muted', false);
-		this.setState({ muted: audio.muted });
-	}
-
-	handleSongEnd() {
-		let playingNewSong = this.context.playNext();
+	const handleSongEnd = () => {
+		const playingNewSong = musicContext.playNext();
 		if (!playingNewSong) {
-			this.setState({
-				playing: false
-			})
+			setPlaying(false);
 		}
-	}
-
-	componentDidUpdate(prevProps, prevState) {
-		if (
-			(!prevState.playing && this.state.playing) // Started playing something when we weren't playing anything
-			|| (prevState.currentSessionPlayCounter !== this.state.currentSessionPlayCounter) // Song changed
-		) {
-			this.context.sendPlayEvent(this.context.playedTrack);
-			this.setState({ lastSongPlayHeartbeatTime: Date.now() })
-		} else if (prevState.playing && !this.state.playing) {
-			this.context.sendPlayEvent(null);
-		}
-
-		// No track to play. Nothing to do
-		if (!this.context.playedTrack) {
-			return;
-		}
-
-		// If our track and time haven't changed, there is nothing to do
-		// This breaks some problems with infinite re-rendering we can get into otherwise
-		if (this.context.sessionPlayCounter === this.state.currentSessionPlayCounter) {
-			return;
-		}
-
-		this.handleSongChange();
-	}
+	};
 
 	// You might think that this could be calculated in handleSongChange() and not need its own function. However,
 	// the duration is NOT YET KNOWN when the song changes, because it hasn't fully loaded the metadata. This event
 	// triggers some time after the song change, once the metadata itself is loaded
-	handleDurationChange(duration) {
+	const handleDurationChange = event => {
+		const duration = event.target.duration;
 		// If someone listens to 60% of a song, we want to mark it as listened to. Keep track of what that target is
-		this.setState({
-			timeTarget: duration * 0.60,
-			duration: duration
-		})
-	}
+		timeTarget = duration * 0.60;
+		setDuration(duration);
+	};
 
-	handleSongChange() {
-		if (this.context.playedTrackIndex == null) {
-			this.setState({ playing: false });
+	const handleSongChange = () => {
+		if (musicContext.playedTrackIndex == null) {
+			setPlaying(false);
 			return;
 		}
 
-		if (this.context.playedTrack.id === loadingTrackId) {
+		if (musicContext.playedTrack.id === loadingTrackId) {
 			return;
 		}
 
-		loadingTrackId = this.context.playedTrack.id;
+		loadingTrackId = musicContext.playedTrack.id;
 
-		Api.get('file/link/' + this.context.playedTrack.id).then(links => {
-			this.props.setAlbumArt(links.albumArtLink);
+		Api.get('file/link/' + musicContext.playedTrack.id).then(links => {
+			props.setAlbumArt(links.albumArtLink);
 
-			// Start playing the new song
-			this.setState({
-				currentSessionPlayCounter: this.context.sessionPlayCounter,
-				lastTime: 0,
-				currentTime: 0,
-				totalTimeListened: 0,
-				duration: 0,
-				listenedTo: false,
-				songUrl: links.songLink,
-				playing: true
-			}, () => {
-				loadingTrackId = null;
+			lastTime = 0;
+			listenedTo = false;
+			totalTimeListened = 0;
+			setDuration(0);
+			setPlaying(true);
+			setSongUrl(links.songLink);
 
-				const audio = document.getElementById('audio');
-				audio.currentTime = 0;
-				audio.src = links.songLink;
-				const playPromise = audio.play();
-				playPromise.catch(e => {
-					// Code 20 is when the loading gets aborted. This happens all the time if you skip around.
-					// I'm sick of seeing them in the logs so ignore them
-					if (e.code !== 20) {
-						console.error(e);
-					}
-				})
+			previousCurrentSessionPlayCounter = currentSessionPlayCounter;
+			setCurrentSessionPlayCounter(musicContext.sessionPlayCounter);
+
+			loadingTrackId = null;
+
+			const audio = document.getElementById('audio');
+			audio.currentTime = 0;
+			audio.src = links.songLink;
+			const playPromise = audio.play();
+			playPromise.catch(e => {
+				// Code 20 is when the loading gets aborted. This happens all the time if you skip around.
+				// I'm sick of seeing them in the logs so ignore them
+				if (e.code !== 20) {
+					console.error(e);
+				}
 			})
 		});
-	}
-
-	handleTimeTick(currentTime) {
-		let newProperties = { lastTime: currentTime };
-
-		if (this.state.duration > 0) {
-			newProperties.currentTimePercent = currentTime / this.state.duration;
-		}
-
-		let timeElapsed = currentTime - this.state.lastTime;
-		// If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
-		// manually altered the song's progress. Do no other checks or updates
-		if (timeElapsed < 0 || timeElapsed > 1) {
-			this.setState(newProperties);
-			return;
-		}
-
-		newProperties.totalTimeListened = this.state.totalTimeListened + timeElapsed;
-
-		if (this.state.timeTarget && newProperties.totalTimeListened > this.state.timeTarget && !this.state.listenedTo) {
-			newProperties.listenedTo = true;
-
-			let playedTrack = this.context.playedTrack;
-			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceId: getDeviceId() })
-				.then(() => {
-					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
-					playedTrack.playCount++;
-					playedTrack.lastPlayed = new Date();
-
-					// We updated the reference rather than dealing with the hassle of updating via setState for multiple collections
-					// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
-					this.context.forceTrackUpdate();
-				})
-				.catch(e => {
-					console.error('Failed to update play count');
-					console.error(e);
-				});
-		}
-
-		this.broadcastListenHeartbeatIfNeeded();
-		this.setState(newProperties);
-	}
+	};
 
 	// Send an event that says we are listening to a particular song so other people can see it
-	broadcastListenHeartbeatIfNeeded() {
+	const broadcastListenHeartbeatIfNeeded = () => {
 		const currentTimeMillis = Date.now();
 		const heartbeatInterval = 15000; // Don't need to spam everyone. Only check every 15 seconds
 
-		if (this.state.lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
-			this.context.sendPlayEvent(this.context.playedTrack);
-			this.setState({ lastSongPlayHeartbeatTime: currentTimeMillis })
+		if (lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
+			lastSongPlayHeartbeatTime = currentTimeMillis;
+			socketContext.sendPlayEvent(musicContext.playedTrack);
 		}
-	}
+	};
 
-	changeVolume(event) {
-		let audio = document.getElementById('audio');
-		let volume = event.target.value;
+	const changeVolume = event => {
+		const audio = document.getElementById('audio');
+		const volume = event.target.value;
 
 		audio.volume = volume;
-		this.setState({ volume: volume });
+		setVolume(volume);
 		LocalStorage.setNumber('volume', volume);
-	}
+	};
 
-	// noinspection JSMethodCanBeStatic
-	changePlayTime(event) {
-		let audio = document.getElementById('audio');
-		let playPercent = event.target.value;
+	const changePlayTime = event => {
+		const audio = document.getElementById('audio');
+		const playPercent = event.target.value;
 
 		// Don't need to update state, as an event will fire and we will handle it afterwards
 		audio.currentTime = playPercent * audio.duration;
-	}
+	};
 
-	getDisplayedSongName() {
-		const playedTrack = this.context.playedTrack;
+	const getDisplayedSongName = () => {
+		const playedTrack = musicContext.playedTrack;
 		if (!playedTrack) {
 			return '';
 		} else if (playedTrack.name && playedTrack.artist) {
@@ -211,117 +130,191 @@ export class PlaybackControls extends React.Component {
 		} else {
 			return '-----'
 		}
-	}
+	};
 
-	getVolumeIcon() {
-		if (this.state.muted) {
+	const getVolumeIcon = () => {
+		if (muted) {
 			return 'fa-volume-mute'
-		} else if (this.state.volume > 0.5) {
+		} else if (volume > 0.5) {
 			return 'fa-volume-up';
-		} else if (this.state.volume > 0) {
+		} else if (volume > 0) {
 			return 'fa-volume-down'
 		} else {
 			return 'fa-volume-off'
 		}
-	}
+	};
 
-	togglePause() {
-		let playing = this.state.playing;
-		let audio = document.getElementById('audio');
+	const togglePause = () => {
+		const audio = document.getElementById('audio');
 		if (playing) {
 			audio.pause();
 		} else {
 			audio.play();
 		}
 
-		this.setState({ playing: !playing });
-	}
+		setPlaying(!playing);
+	};
 
-	toggleMute() {
-		let audio = document.getElementById('audio');
-		let newMute = !this.state.muted;
+	const toggleMute = () => {
+		const audio = document.getElementById('audio');
+		const newMute = !muted;
 		audio.muted = newMute;
 
-		this.setState({ muted: newMute });
 		LocalStorage.setBoolean('muted', newMute);
+		setMuted(newMute);
+	};
+
+	useEffect(() => {
+		const audio = document.getElementById('audio');
+		audio.addEventListener('timeupdate', handleTimeTick);
+		audio.addEventListener('durationchange', handleDurationChange);
+		audio.addEventListener('ended', handleSongEnd);
+
+		audio.volume = LocalStorage.getNumber('volume', 1);
+		audio.muted = LocalStorage.getBoolean('muted', false);
+		setVolume(audio.volume);
+		setMuted(audio.muted);
+
+		return () => {
+			audio.removeEventListener('timeupdate', handleTimeTick);
+			audio.removeEventListener('durationchange', handleDurationChange);
+			audio.removeEventListener('ended', handleSongEnd);
+		}
+	}, [duration, musicContext.playedTrack ? musicContext.playedTrack.id : 0]);
+
+	if (
+		(!previousPlaying && playing) // Started playing something when we weren't playing anything
+		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
+	) {
+		socketContext.sendPlayEvent(musicContext.playedTrack);
+		lastSongPlayHeartbeatTime = Date.now();
+	} else if (previousPlaying && !playing) {
+		socketContext.sendPlayEvent(null);
 	}
 
-	render() {
-		let playedTrack = this.context.playedTrack;
-		let src = playedTrack ? this.state.songUrl : '';
-		return (
-			<div className="playback-controls display-flex">
-				<div>
-					<audio id="audio" src={src}>
-						Your browser is ancient. Be less ancient.
-					</audio>
+	if (musicContext.playedTrack && musicContext.sessionPlayCounter !== currentSessionPlayCounter) {
+		handleSongChange();
+	}
 
-					<div className="played-song-name">
-						{this.getDisplayedSongName()}
-					</div>
+	const handleTimeTick = event => {
+		const currentTime = event.target.currentTime;
 
-					<div>
-						<div className="display-flex">
-							<i
-								onMouseDown={this.context.playPrevious}
-								className="fas fa-fast-backward control"
-							/>
-							<i
-								onMouseDown={this.togglePause.bind(this)}
-								className={`fas fa-${this.state.playing ? 'pause' : 'play'} control`}
-							/>
-							<i
-								onMouseDown={this.context.playNext}
-								className="fas fa-fast-forward control"
-							/>
-							<i
-								onMouseDown={() => this.context.setShuffleSongs(!this.context.shuffleSongs)}
-								className={`fas fa-random control ${this.context.shuffleSongs ? 'enabled' : ''}`}
-							/>
-							<i
-								onMouseDown={() => this.context.setRepeatSongs(!this.context.repeatSongs)}
-								className={`fas fa-sync-alt control ${this.context.repeatSongs ? 'enabled' : ''}`}
-							/>
-						</div>
+		if (duration > 0) {
+			// Truncate the percentage to 2 decimal places, since our progress bar only updates in 1/100 increments.
+			// Doing this allows us to skip many re-renders that do nothing.
+			setCurrentTimePercent(currentTime / duration);
+		}
 
-						<div className="play-time-wrapper">
-							<div>
-								{formatTimeFromSeconds(this.state.currentTimePercent * this.state.duration)} / {formatTimeFromSeconds(this.state.duration)}
-							</div>
-							<input
-								type="range"
-								className="time-slider"
-								onChange={(e) => this.changePlayTime(e)}
-								min="0"
-								max="1"
-								step="0.01"
-								value={this.state.currentTimePercent}
-							/>
-						</div>
+		const timeElapsed = currentTime - lastTime;
+		lastTime = currentTime;
+		// If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
+		// manually altered the song's progress. Do no other checks or updates
+		if (timeElapsed < 0 || timeElapsed > 1) {
+			return;
+		}
 
-						<div className="volume-wrapper">
-							<i
-								className={`fas ${this.getVolumeIcon()}`}
-								onMouseDown={this.toggleMute.bind(this)}
-							/>
-							<input
-								type="range"
-								className="volume-slider"
-								onChange={this.changeVolume.bind(this)}
-								min="0"
-								max="1"
-								step="0.01"
-								value={this.state.volume}
-							/>
-						</div>
-					</div>
+		totalTimeListened = totalTimeListened + timeElapsed;
+
+		if (timeTarget && totalTimeListened > timeTarget && !listenedTo) {
+			listenedTo = true;
+
+			const playedTrack = musicContext.playedTrack;
+			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceId: getDeviceId() })
+				.then(() => {
+					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
+					playedTrack.playCount++;
+					playedTrack.lastPlayed = new Date();
+
+					// We updated the reference rather than dealing with the hassle of updating via setState for multiple collections
+					// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
+					musicContext.forceTrackUpdate();
+				})
+				.catch(e => {
+					console.error('Failed to update play count');
+					console.error(e);
+				});
+		}
+
+		broadcastListenHeartbeatIfNeeded();
+	};
+
+	const playedTrack = musicContext.playedTrack;
+	const src = playedTrack ? songUrl : '';
+
+	previousCurrentSessionPlayCounter = currentSessionPlayCounter;
+	previousPlaying = playing;
+
+	return (
+		<div className="playback-controls d-flex">
+			<div>
+				<audio id="audio" src={src}>
+					Your browser is ancient. Be less ancient.
+				</audio>
+
+				<div className="played-song-name">
+					{getDisplayedSongName()}
 				</div>
 
-				<div id="shuffle-wrapper">
-					{ this.context.shuffleSongs ? <ShuffleChaos/> : <div/> }
+				<div>
+					<div className="d-flex">
+						<i
+							onMouseDown={musicContext.playPrevious}
+							className="fas fa-fast-backward control"
+						/>
+						<i
+							onMouseDown={togglePause}
+							className={`fas fa-${playing ? 'pause' : 'play'} control`}
+						/>
+						<i
+							onMouseDown={musicContext.playNext}
+							className="fas fa-fast-forward control"
+						/>
+						<i
+							onMouseDown={() => musicContext.setShuffleSongs(!musicContext.shuffleSongs)}
+							className={`fas fa-random control ${musicContext.shuffleSongs ? 'enabled' : ''}`}
+						/>
+						<i
+							onMouseDown={() => musicContext.setRepeatSongs(!musicContext.repeatSongs)}
+							className={`fas fa-sync-alt control ${musicContext.repeatSongs ? 'enabled' : ''}`}
+						/>
+					</div>
+
+					<div className="play-time-wrapper">
+						<div>
+							{formatTimeFromSeconds(currentTimePercent * duration)} / {formatTimeFromSeconds(duration)}
+						</div>
+						<input
+							type="range"
+							className="time-slider"
+							onChange={changePlayTime}
+							min="0"
+							max="1"
+							step="0.01"
+							value={currentTimePercent}
+						/>
+					</div>
+
+					<div className="volume-wrapper">
+						<i
+							className={`fas ${getVolumeIcon()}`}
+							onMouseDown={toggleMute}
+						/>
+						<input
+							type="range"
+							className="volume-slider"
+							onChange={changeVolume}
+							min="0"
+							max="1"
+							step="0.01"
+							value={volume}
+						/>
+					</div>
 				</div>
 			</div>
-		)
-	}
+
+			<div id="shuffle-wrapper">
+				{ musicContext.shuffleSongs ? <ShuffleChaos/> : <div/> }
+			</div>
+		</div>
+	)
 }
-PlaybackControls.contextType = MusicContext;

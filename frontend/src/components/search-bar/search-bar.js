@@ -44,7 +44,7 @@ export default function SearchBar() {
 	};
 
 	return (
-		<div className="display-flex search" onKeyDown={e => e.nativeEvent.propagationStopped = true}>
+		<div className="d-flex search" onKeyDown={e => e.nativeEvent.propagationStopped = true}>
 			<div className="p-relative">
 				Search
 				<input

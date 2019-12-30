@@ -5,8 +5,6 @@ import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
 import {toast} from "react-toastify";
 import {findSpotInSortedArray} from "../util";
-import {getCookieValue} from "../cookie";
-import {isLoggedIn} from "../util";
 
 export const MusicContext = React.createContext();
 
@@ -70,10 +68,6 @@ export class MusicProvider extends React.Component {
 			columnPreferences: this.loadColumnPreferences(),
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			renderCounter: 0, // Used to determine if we should rerender this component (and therefore most of the site because this component is too large)
-			searchTerm: '',
-			showHidden: false,
-			nowListeningUsers: {},
-			socket: null,
 
 			ownPermissions: new Set(), // FIXME Makes NO sense to be in this context. Need to figure out how to make more than one
 
@@ -108,11 +102,6 @@ export class MusicProvider extends React.Component {
 			setProviderState: (...args) => this.setProviderState(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
 			resetSessionState: (...args) => this.resetSessionState(...args),
-
-			// Socket
-			connectToSocket: (...args) => this.connectToSocket(...args),
-			disconnectSocket: (...args) => this.disconnectSocket(...args),
-			sendPlayEvent: (...args) => this.sendPlayEvent(...args)
 		};
 	}
 
@@ -320,7 +309,8 @@ export class MusicProvider extends React.Component {
 	forceTrackUpdate() {
 		this.setState({
 			nowPlayingTracks: this.state.nowPlayingTracks,
-			viewedTracks: this.state.viewedTracks
+			viewedTracks: this.state.viewedTracks,
+			renderCounter: this.state.renderCounter + 1
 		});
 	}
 
@@ -691,6 +681,11 @@ export class MusicProvider extends React.Component {
 	renamePlaylist(playlist, newName) {
 		playlist.name = newName;
 
+		this.setState({
+			playlists: this.state.playlists,
+			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+		});
+
 		return Api.put(`playlist/${playlist.id}`, { name: newName }).catch((error) => {
 			console.error(error);
 			toast.error("Failed to updated playlist name")
@@ -798,76 +793,6 @@ export class MusicProvider extends React.Component {
 		}
 
 		this.setState({ songIndexesToShuffle: adjustedIndexes })
-	}
-
-	connectToSocket() {
-		if (!isLoggedIn()) {
-			return;
-		}
-
-		const socket = new WebSocket(Api.getSocketUri());
-
-		socket.onmessage = res => {
-			const data = JSON.parse(res.data);
-
-			const email = data.userEmail;
-			delete data.userEmail;
-
-			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
-			newNowListeningUsers[email] = data;
-
-			this.setState({ nowListeningUsers: newNowListeningUsers })
-		};
-		socket.onclose = () => {
-			console.debug('WebSocket was closed. Reconnecting');
-			this.connectToSocket();
-		};
-
-		this.setState({
-			socket,
-			nowListeningUsers: {}
-		});
-	}
-
-	disconnectSocket() {
-		if (this.state.socket) {
-			this.state.socket.close();
-		}
-	}
-
-	sendPlayEvent(track) {
-		if (!this.state.socket) {
-			return;
-		}
-
-		const payload = {
-			userEmail: getCookieValue('loggedInEmail')
-		};
-
-		// Had a server-side deserialization error once saying this was missing... Not sure how
-		if (!payload.userEmail) {
-			console.error('No user email found!? Not sending socket message');
-			return;
-		}
-
-		if (track) {
-			payload.trackId = track.id;
-			payload.trackArtist = track.private ? 'This track' : track.artist;
-			payload.trackName = track.private ? 'is private' : track.name;
-		}
-
-		console.debug('About to send socket data', new Date());
-		console.debug(payload);
-		const readyState = this.state.socket.readyState;
-
-		if (readyState === WebSocket.OPEN) {
-			this.state.socket.send(JSON.stringify(payload))
-		} else if (readyState === WebSocket.CONNECTING) {
-			console.info('Socket was still connecting. Ignoring socket send request');
-		} else {
-			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
-			this.connectToSocket();
-		}
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {

@@ -65,8 +65,8 @@ export function arrayDifference(array1, array2) {
 }
 
 export function mapKeys(object, transformFunction) {
-	let keys = Object.keys(object);
-	let newObject = {};
+	const keys = Object.keys(object);
+	const newObject = {};
 
 	keys.forEach(key => {
 		let newKey = transformFunction(key);

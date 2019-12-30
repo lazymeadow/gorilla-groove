@@ -17,10 +17,50 @@ class DeviceController(
 ) {
 
 	@GetMapping
-    fun getDevices(): List<Device> {
+    fun getDevices(@RequestParam showAll: Boolean = false): List<Device> {
 		return deviceService.getDevices(loadLoggedInUser())
+				.filter { showAll || (!it.archived && it.mergedDevice == null )}
     }
 
+	// Gives the effective device for a given device ID. So if you sent a device that was merged, you'll get the parent
+	@GetMapping("/{deviceId}")
+    fun getDevice(@PathVariable("deviceId") deviceId: String): Device {
+		val device = deviceService.getDevice(deviceId)
+		return device.mergedDevice ?: device
+    }
+
+
+	@PutMapping("/update/{id}")
+    fun updateDevice(
+			@PathVariable("id") id: Long,
+			@RequestBody body: UpdateDeviceDTO
+	) {
+		deviceService.updateDevice(id = id, deviceName = body.deviceName)
+    }
+
+	@PutMapping("/merge")
+    fun mergeDevice(@RequestBody body: MergeDevicesDTO) {
+		if (body.id == body.targetId) {
+			throw IllegalArgumentException("IDs must be different!")
+		}
+
+		deviceService.mergeDevices(id = body.id, targetId = body.targetId)
+    }
+
+	@PutMapping("/archive/{id}")
+    fun archiveDevice(
+			@PathVariable("id") id: Long,
+			@RequestBody body: ArchiveDeviceDTO
+	) {
+		deviceService.archiveDevice(id, body.archived)
+    }
+
+	@DeleteMapping("/{id}")
+    fun deleteDevice(@PathVariable("id") id: Long) {
+		deviceService.deleteDevice(id)
+    }
+
+	// Hmm. Probably should have made this not use the base URL... since it's really only for the version
 	@PutMapping
     fun updateDeviceVersion(
 			@RequestBody body: UpdateDeviceVersionDTO,
@@ -40,6 +80,15 @@ class DeviceController(
 		// This basically is a "log in". Update our last login time here
 		userService.updateOwnLastLogin()
     }
+
+	data class UpdateDeviceDTO(val deviceName: String)
+
+	data class ArchiveDeviceDTO(val archived: Boolean)
+
+	data class MergeDevicesDTO(
+			val id: Long,
+			val targetId: Long
+	)
 
 	data class UpdateDeviceVersionDTO(
 			val deviceId: String,

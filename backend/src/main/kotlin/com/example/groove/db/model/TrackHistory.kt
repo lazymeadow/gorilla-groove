@@ -1,9 +1,7 @@
 package com.example.groove.db.model
 
-import com.example.groove.db.model.enums.DeviceType
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
-import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -27,6 +25,10 @@ data class TrackHistory(
 		@JsonIgnore
 		@Column(name = "ip_address")
 		val ipAddress: String?,
+
+		@JsonIgnore
+		@Column(columnDefinition = "BIT")
+		var deleted: Boolean = false,
 
 		@Column(name = "created_at")
 		val createdAt: Timestamp = Timestamp(System.currentTimeMillis())

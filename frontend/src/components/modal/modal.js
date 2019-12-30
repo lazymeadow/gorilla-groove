@@ -3,13 +3,23 @@ import ReactModal from 'react-modal';
 
 const customStyles = {
 	content : {
-		top                   : '50%',
-		left                  : '50%',
-		right                 : 'auto',
-		bottom                : 'auto',
-		marginRight           : '-50%',
-		transform             : 'translate(-50%, -50%)'
+		top: '50%',
+		left: '50%',
+		right: 'auto',
+		bottom: 'auto',
+		padding: '20px',
+		transform: 'translate(-50%, -50%)'
 	}
+};
+
+const fullScreenOverrides = {
+	padding: '0',
+	width: '100%',
+	height: '100%'
+};
+
+const fullScreenStyles = {
+	content: Object.assign({}, customStyles.content, fullScreenOverrides)
 };
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
@@ -43,8 +53,8 @@ export class Modal extends React.Component {
 			<ReactModal
 				isOpen={this.props.isOpen}
 				// onAfterOpen={this.afterOpenModal}
-				onRequestClose={(e) => this.closeModal(e)}
-				style={customStyles}
+				onRequestClose={this.closeModal.bind(this)}
+				style={this.props.fullScreen ? fullScreenStyles : customStyles}
 				contentLabel="Example Modal"
 			>
 				<span className="modal-close" onMouseDown={this.closeModal.bind(this)}>✗</span>

@@ -25,17 +25,23 @@
 @import "components/version-display/version-display";
 @import "components/loading-spinner/loading-spinner";
 @import "components/draft-release/draft-release";
+@import "components/track-history/track-history";
+@import "components/device-management/device-management";
+@import "table";
 @import "animation.less";
 
 @deep-blue: #99D5F1;
 @light-blue: #B0DEF4;
 @deeper-blue: #4A9FC8;
 @select-blue: #626FAB;
+@light-grey: #E9E9E9;
 
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background-color: @light-blue;
+  overflow-y: hidden; // We never want the body itself to scroll. But when we have a full page modal open, it can confuse
+                      // the body and make it think it should scroll, and thus gives us a scrollbar when we don't want one
 }
 
 ul {
@@ -54,13 +60,38 @@ input {
   display: none;
 }
 
-.display-flex {
+.bold {
+  font-weight: bold;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.d-flex {
   display: flex;
+}
+
+.d-block {
+  display: block;
 }
 
 .flex-between {
   display: flex;
   justify-content: space-between;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.auto-margin {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.flex-grow {
+  flex-grow: 1;
 }
 
 .vertical-center {

@@ -8,5 +8,5 @@ import {Api} from "../api"
 import {UserButton} from "./user-button/user-button";
 import {SongRow} from "./song-row/song-row";
 
-export {TrackList, PlaybackControls, PageRouter, LoginPage, SiteLayout,
-	SongUpload, Api, UserButton, SongRow};
+export {TrackList, PageRouter, LoginPage,
+	SongUpload, Api, SongRow};
