@@ -198,7 +198,6 @@ export default function PlaybackControls(props) {
 
 	const handleTimeTick = event => {
 		const currentTime = event.target.currentTime;
-		lastTime = currentTime;
 
 		if (duration > 0) {
 			// Truncate the percentage to 2 decimal places, since our progress bar only updates in 1/100 increments.
@@ -207,6 +206,7 @@ export default function PlaybackControls(props) {
 		}
 
 		const timeElapsed = currentTime - lastTime;
+		lastTime = currentTime;
 		// If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
 		// manually altered the song's progress. Do no other checks or updates
 		if (timeElapsed < 0 || timeElapsed > 1) {

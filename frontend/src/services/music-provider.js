@@ -309,7 +309,8 @@ export class MusicProvider extends React.Component {
 	forceTrackUpdate() {
 		this.setState({
 			nowPlayingTracks: this.state.nowPlayingTracks,
-			viewedTracks: this.state.viewedTracks
+			viewedTracks: this.state.viewedTracks,
+			renderCounter: this.state.renderCounter + 1
 		});
 	}
 
