@@ -105,6 +105,10 @@ class DeviceService(
 		val device = findActiveDevice(id)
 		val targetDevice = findActiveDevice(targetId)
 
+		if (device.deviceType != targetDevice.deviceType) {
+			throw IllegalArgumentException("Cannot merge two devices that have a different device type!")
+		}
+
 		device.mergedDevice = targetDevice
 		deviceRepository.save(device)
 

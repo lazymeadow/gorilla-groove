@@ -6,9 +6,6 @@ UPDATE `groovatron`.`device` SET device_name = device_id WHERE id > 0;
 ALTER TABLE `groovatron`.`device`
 CHANGE COLUMN `device_name` `device_name` VARCHAR(128) NOT NULL ;
 
-ALTER TABLE `groovatron`.`device`
-ADD UNIQUE INDEX `device_name_user_uniq` (`user_id` ASC, `device_name` ASC);
-
 -- Deleting device sets device_id as NULL for track_history
 ALTER TABLE `groovatron`.`track_history`
 DROP FOREIGN KEY `FKtrackhistorydeviceid`;

@@ -209,7 +209,7 @@ function DeviceManagementModal() {
 									</label>
 									<select id="device-merge-select">
 										{ devices
-											.filter(device => device.id !== clickedDevice.id)
+											.filter(device => device.id !== clickedDevice.id && device.deviceType === clickedDevice.deviceType)
 											.map(device => (
 												<option value={device.id} key={device.id}>
 													{ device.deviceName }
