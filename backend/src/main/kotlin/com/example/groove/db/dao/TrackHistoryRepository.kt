@@ -21,6 +21,7 @@ interface TrackHistoryRepository : CrudRepository<TrackHistory, Long> {
 			    AND (:loadPrivate IS TRUE OR th.track.private = FALSE)
 				AND th.createdAt > :startDate
 				AND th.createdAt < :endDate
+			ORDER BY th.createdAt DESC
 			""")
 	fun findAllByUserAndTimeRange(
 			@Param("userId") userId: Long?,

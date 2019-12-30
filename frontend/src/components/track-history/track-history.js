@@ -15,10 +15,14 @@ function TrackHistoryModal(props) {
 	const [historyData, setHistoryData] = useState([]);
 
 	useEffect(() => {
+		// We want the end date to happen at the very end of the day. So just add one day to it
+		const endOfDayEndDate = new Date(endDate);
+		endOfDayEndDate.setDate(endOfDayEndDate.getDate() + 1);
+
 		Api.get('track-history', {
 			userId: selectedUserId,
 			startDate: (new Date(startDate)).getTime(),
-			endDate: (new Date(endDate)).getTime()
+			endDate: endOfDayEndDate.getTime()
 		}).then(history => {
 			setHistoryData(history);
 		})
