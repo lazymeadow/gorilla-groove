@@ -1,0 +1,37 @@
+#device-management {
+}
+
+#device-management-modal {
+  max-height: 600px;
+  overflow: auto;
+  width: calc(100% + 20px); // Kinda dumb, but make extra room for a potential scroll bar so it doesn't push stuff around
+
+  #current-device {
+    margin-bottom: 8px;
+  }
+
+  td {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  h2 {
+    margin-top: 5px;
+    margin-bottom: 15px;
+  }
+
+  .device-actions {
+    i {
+      margin-right: 2px;
+      margin-left: 2px;
+      cursor: pointer;
+    }
+  }
+}
+
+.additional-device-action-info {
+  white-space: pre-line;
+  text-align: left;
+
+  font-size: 0.9em;
+}

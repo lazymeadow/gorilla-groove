@@ -10,7 +10,7 @@ export default function HeaderBar() {
 
 	return (
 		<div className="header-bar">
-			<div className="display-flex">
+			<div className="d-flex">
 				<img src="./images/logo.png" width="50" height="50"/>
 				<div className="vertical-center">
 					<div>Gorilla Groove</div>

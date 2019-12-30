@@ -154,7 +154,7 @@ class TrackController(
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
-			@Deprecated("'deviceId' should not be null after clients are updated")
+			@Deprecated("'id' should not be null after clients are updated")
 			val deviceId: String?
 	)
 

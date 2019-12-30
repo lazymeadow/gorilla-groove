@@ -1,0 +1,67 @@
+.song-table {
+  border-collapse: collapse;
+
+  thead {
+    text-align: left;
+    font-size: 0.9em;
+  }
+
+  tbody {
+    font-size: 0.85em;
+
+    tr {
+      &:nth-child(even) {
+        background-color: @deep-blue;
+      }
+
+      &:nth-child(odd) {
+        background-color: @light-blue;
+      }
+    }
+  }
+
+  th {
+    background-color: @light-blue;
+    padding: 0;
+
+    border-bottom: 2px solid @deeper-blue;
+    border-left: 2px solid @deeper-blue;
+    &:first-child {
+      border-left: none;
+    }
+  }
+
+  td {
+    padding-left: 2px;
+  }
+}
+
+.data-table {
+  border-collapse: collapse;
+
+  td {
+    padding: 3px 6px 3px 5px;
+    font-size: 0.9em;
+  }
+
+  th {
+    padding: 10px 20px 10px 5px;
+  }
+
+  thead {
+    text-align: left;
+
+    tr {
+      background-color: @light-blue;
+    }
+  }
+
+  tbody {
+    tr {
+      &:nth-child(even) {
+        background-color: @light-grey;
+      }
+
+    }
+  }
+}

@@ -245,7 +245,7 @@ export default function PlaybackControls(props) {
 	previousPlaying = playing;
 
 	return (
-		<div className="playback-controls display-flex">
+		<div className="playback-controls d-flex">
 			<div>
 				<audio id="audio" src={src}>
 					Your browser is ancient. Be less ancient.
@@ -256,7 +256,7 @@ export default function PlaybackControls(props) {
 				</div>
 
 				<div>
-					<div className="display-flex">
+					<div className="d-flex">
 						<i
 							onMouseDown={musicContext.playPrevious}
 							className="fas fa-fast-backward control"

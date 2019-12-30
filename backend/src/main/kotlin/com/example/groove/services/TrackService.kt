@@ -98,8 +98,11 @@ class TrackService(
 			val savedDevice = deviceRepository.findByDeviceIdAndUser(id, user)
 			if (savedDevice == null) {
 				logger.error("No device found with ID $id for user ${user.name} when saving track history!")
+				return@let null
 			}
-			savedDevice
+
+			// Device we used might have been merged into another device. If it was, use the parent device
+			savedDevice.mergedDevice ?: savedDevice
 		}
 
 		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp)

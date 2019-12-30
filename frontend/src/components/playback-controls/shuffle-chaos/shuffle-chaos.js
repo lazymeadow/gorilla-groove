@@ -17,7 +17,7 @@ export class ShuffleChaos extends React.Component {
 
 	render() {
 		return (
-			<div id="shuffle-chaos" className="display-flex">
+			<div id="shuffle-chaos" className="d-flex">
 				<div className="p-relative">
 					<div className="text-center">
 					<span title="Shuffle the music, favoring more played or less played songs">

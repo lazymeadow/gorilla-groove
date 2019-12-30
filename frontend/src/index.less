@@ -26,12 +26,15 @@
 @import "components/loading-spinner/loading-spinner";
 @import "components/draft-release/draft-release";
 @import "components/track-history/track-history";
+@import "components/device-management/device-management";
+@import "table";
 @import "animation.less";
 
 @deep-blue: #99D5F1;
 @light-blue: #B0DEF4;
 @deeper-blue: #4A9FC8;
 @select-blue: #626FAB;
+@light-grey: #E9E9E9;
 
 body {
   margin: 0;
@@ -57,12 +60,20 @@ input {
   display: none;
 }
 
+.bold {
+  font-weight: bold;
+}
+
 .overflow-y-auto {
   overflow-y: auto;
 }
 
-.display-flex {
+.d-flex {
   display: flex;
+}
+
+.d-block {
+  display: block;
 }
 
 .flex-between {

@@ -32,7 +32,7 @@ class TrackHistoryController(
 					trackArtist = it.track.artist,
 					trackAlbum = it.track.album,
 					trackName = it.track.name,
-					deviceName = it.device?.deviceId
+					deviceName = it.device?.deviceName
 			)
 		}
     }

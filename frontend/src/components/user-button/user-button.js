@@ -9,6 +9,7 @@ import {DraftRelease} from "../draft-release/draft-release";
 import {PermissionType} from "../../enums/permission-type";
 import {UserContext} from "../../services/user-provider";
 import TrackHistory from "../track-history/track-history";
+import DeviceManagement from "../device-management/device-management";
 
 export default function UserButton() {
 	const userContext = useContext(UserContext);
@@ -38,6 +39,7 @@ export default function UserButton() {
 				}}
 				menuItems={[
 					{ component: <Settings/> },
+					{ component: <DeviceManagement/> },
 					{ component: <TrackHistory/> },
 					{ component: <InviteUser/> },
 					{ component: <DraftRelease/>, shouldRender: userContext.hasPermission(PermissionType.WRITE_VERSION_HISTORY) },

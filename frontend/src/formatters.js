@@ -21,3 +21,9 @@ export function formatTimeFromSeconds(lotsOfSeconds) {
 	const paddedSeconds = (seconds < 10 ? '0' : '') + seconds;
 	return `${minutes}:${paddedSeconds}`;
 }
+
+export function toTitleCaseFromSnakeCase(snakeCase) {
+	return snakeCase.split('_')
+		.map(word => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase())
+		.join(' ');
+}
