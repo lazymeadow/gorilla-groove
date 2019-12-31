@@ -1,4 +1,4 @@
-(cd frontend; npx webpack)
+(cd frontend; npm ci; npx webpack --mode production)
 
 mkdir --parents backend/src/main/resources/static/dist
 mkdir --parents backend/src/main/resources/static/images
