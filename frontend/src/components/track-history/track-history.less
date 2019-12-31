@@ -5,6 +5,10 @@
 #track-history-modal {
   background-color: @light-blue;
 
+  table {
+    table-layout: fixed;
+  }
+
   h2 {
     margin-top: 0;
     margin-bottom: 0;
@@ -71,5 +75,12 @@
     &:nth-child(odd) {
       background-color: @light-blue;
     }
+  }
+
+  .long-column {
+    width: 25%;
+  }
+  .medium-column {
+    width: 10%
   }
 }

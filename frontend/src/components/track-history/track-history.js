@@ -107,22 +107,22 @@ function TrackHistoryModal(props) {
 					<table className="stats-table auto-margin">
 						<thead>
 						<tr>
-							<th><div>Name</div></th>
-							<th>Artist</th>
-							<th>Album</th>
-							<th>Listened On</th>
-							<th>Device</th>
+							<th className="long-column">Name</th>
+							<th className="long-column">Artist</th>
+							<th className="long-column">Album</th>
+							<th className="medium-column">Listened On</th>
+							<th className="medium-column">Device</th>
 							<th/>
 						</tr>
 						</thead>
 						<tbody>
 						{historyData.map(historyDatum => (
 							<tr key={historyDatum.id} className="history-row">
-								<td>{historyDatum.trackName}</td>
-								<td>{historyDatum.trackArtist}</td>
-								<td>{historyDatum.trackAlbum}</td>
-								<td>{formatDate(historyDatum.listenedDate, true)}</td>
-								<td>{historyDatum.deviceName}</td>
+								<td><div className="cutoff-text">{historyDatum.trackName}</div></td>
+								<td><div className="cutoff-text">{historyDatum.trackArtist}</div></td>
+								<td><div className="cutoff-text">{historyDatum.trackAlbum}</div></td>
+								<td><div className="cutoff-text">{formatDate(historyDatum.listenedDate, true)}</div></td>
+								<td><div className="cutoff-text">{historyDatum.deviceName}</div></td>
 								<td onMouseDown={() => setPendingDeleteData(historyDatum)}>
 									<i className="fas fa-times cursor-pointer"/>
 								</td>
