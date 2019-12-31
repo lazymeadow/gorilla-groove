@@ -22,7 +22,7 @@ export class TrackList extends React.Component {
 			firstSelectedIndex: null,
 			lastSelectedIndex: null,
 			editableCell: null,
-			id: this.props.trackView ? 'track-list' : '',
+			id: this.props.trackView ? 'track-list' : 'now-playing-list',
 			contextMenuOptions: {
 				expanded: false,
 				x: 0,
@@ -34,7 +34,8 @@ export class TrackList extends React.Component {
 	componentDidMount() {
 		this.enableResize();
 
-		ReactDOM.findDOMNode(this).addEventListener('mousedown', this.handleContextMenu.bind(this));
+		const tableBody = document.querySelector(`#${this.state.id} .track-list-table-body`);
+		tableBody.addEventListener('mousedown', this.handleContextMenu.bind(this));
 
 		// Only the trackView has editable cells. The other view doesn't need to worry about closing them
 		if (this.props.trackView) {
@@ -43,7 +44,7 @@ export class TrackList extends React.Component {
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', this.handleScroll.bind(this));
 		}
-		ReactDOM.findDOMNode(this).addEventListener('contextmenu', this.suppressContextMenu.bind(this));
+		tableBody.addEventListener('contextmenu', this.suppressContextMenu.bind(this));
 	}
 
 	componentWillUnmount() {
@@ -319,11 +320,11 @@ export class TrackList extends React.Component {
 
 	handleHeaderClick(event) {
 		// We don't want the 'now playing' view to be able to sort things (at least for now). It gets messy
-		if (!this.props.trackView) {
+		if (!this.props.trackView || event.button !== 0) {
 			return;
 		}
 
-		let sortColumn = event.currentTarget.querySelector('.column-name').innerHTML.trim();
+		const sortColumn = event.currentTarget.querySelector('.column-name').innerHTML.trim();
 		let sortDir;
 
 		if (this.context.trackSortColumn === sortColumn) {
@@ -387,7 +388,7 @@ export class TrackList extends React.Component {
 						})}
 					</tr>
 					</thead>
-					<tbody>
+					<tbody className="track-list-table-body">
 					{this.props.userTracks.map((userTrack, index) => {
 						let played;
 						if (this.props.trackView) {
