@@ -68,7 +68,7 @@ function TrackHistoryModal(props) {
 					<div>
 						<div className="top-label">
 							<label>User</label>
-							<select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)}>
+							<select value={selectedUserId} onChange={e => setSelectedUserId(parseInt(e.target.value))}>
 								<option value={userContext.ownUser.id}>
 									{ userContext.ownUser.username }
 								</option>
@@ -123,8 +123,11 @@ function TrackHistoryModal(props) {
 								<td><div className="cutoff-text">{historyDatum.trackAlbum}</div></td>
 								<td><div className="cutoff-text">{formatDate(historyDatum.listenedDate, true)}</div></td>
 								<td><div className="cutoff-text">{historyDatum.deviceName}</div></td>
-								<td onMouseDown={() => setPendingDeleteData(historyDatum)}>
-									<i className="fas fa-times cursor-pointer"/>
+								<td className="text-center">
+									{ userContext.ownUser.id === selectedUserId
+										? <i className="fas fa-times cursor-pointer" onClick={() => setPendingDeleteData(historyDatum)}/>
+										: <React.Fragment/>
+									}
 								</td>
 							</tr>
 						))}
