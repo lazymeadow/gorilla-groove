@@ -353,7 +353,7 @@ export class TrackList extends React.Component {
 		}
 
 		if (columnName === this.context.trackSortColumn) {
-			return this.context.trackSortDir === 'asc' ? ' ▲' : ' ▼';
+			return this.context.trackSortDir === 'asc' ? '▲' : '▼';
 		} else {
 			return '';
 		}
