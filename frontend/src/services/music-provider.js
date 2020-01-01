@@ -149,7 +149,7 @@ export class MusicProvider extends React.Component {
 		}
 
 		if (!params.sort) {
-			params.sort = this.buildTrackSortParameter(this.state.currentSort);
+			params.sort = this.buildTrackSortParameter(false);
 		}
 
 		this.buildTrackLoadParams(params);
@@ -188,9 +188,14 @@ export class MusicProvider extends React.Component {
 		}
 	}
 
-	buildTrackSortParameter(sorts) {
+	buildTrackSortParameter(usePlaylistKeys) {
 		// Build the parameters like the backend expects them in the query string
-		return sorts.map(sortObject => sortObject.column + ',' + (sortObject.isAscending ? 'ASC' : 'DESC'));
+		return this.state.currentSort.map(sortObject => {
+			// Messing around with the JPA sorting setup is more hassle than it is worth
+			// For sorting playlists, just append 'track.' in front so the key is correct for playlist tracks
+			const key = usePlaylistKeys ? 'track.' + sortObject.column : sortObject.column;
+			return key + ',' + (sortObject.isAscending ? 'ASC' : 'DESC')
+		});
 	}
 
 	setSort(sort) {
@@ -457,11 +462,7 @@ export class MusicProvider extends React.Component {
 		params = params ? params : {};
 		params.playlistId = playlistId;
 
-		// Messing around with the JPA sorting setup is more hassle than it is worth
-		// For sorting playlists, just append 'track.' in front so the key is correct for playlist tracks
-		if ('sort' in params) {
-			params.sort = params.sort.map(sortTerm => 'track.' + sortTerm);
-		}
+		params.sort = this.buildTrackSortParameter(true);
 
 		this.buildTrackLoadParams(params);
 
