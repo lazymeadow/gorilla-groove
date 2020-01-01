@@ -5,46 +5,13 @@ import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
 import {toast} from "react-toastify";
 import {findSpotInSortedArray} from "../util";
+import {getAllPossibleDisplayColumns} from "../util";
 
 export const MusicContext = React.createContext();
 
 export class MusicProvider extends React.Component {
 	constructor(props) {
 		super(props);
-
-		this.trackKeyConversions = {
-			'Name': 'name',
-			'Artist': 'artist',
-			'Featuring': 'featuring',
-			'Album': 'album',
-			'Track #' : 'trackNumber',
-			'Length': 'length',
-			'Year': 'releaseYear',
-			'Genre' : 'genre',
-			'Play Count': 'playCount',
-			'Bit Rate': 'bitRate',
-			'Sample Rate': 'sampleRate',
-			'Added': 'createdAt',
-			'Last Played': 'lastPlayed',
-			'Note' : 'note'
-		};
-
-		this.columnSortKeys = {
-			'Name': [{ key: 'name' }],
-			'Artist': [{ key: 'artist' }, { key: 'album', dir: 'asc' }, { key: 'trackNumber', dir: 'asc' }],
-			'Album': [{ key: 'album' }, { key: 'trackNumber', dir: 'asc' }],
-			'Featuring': [{ key: 'featuring' }],
-			'Length': [{ key: 'length' }],
-			'Year': [{ key: 'releaseYear' }, { key: 'album', dir: 'asc' }, { key: 'trackNumber', dir: 'asc' }],
-			'Play Count': [{ key: 'playCount' }],
-			'Genre': [{ key: 'genre' }],
-			'Bit Rate': [{ key: 'bitRate' }],
-			'Sample Rate': [{ key: 'sampleRate' }],
-			'Added': [{ key: 'createdAt' }],
-			'Last Played': [{ key: 'lastPlayed' }],
-			'Track #' : [{ key: 'trackNumber' }],
-			'Note' : [{ key: 'note' }]
-		};
 
 		this.pageSize = 75;
 
@@ -54,8 +21,11 @@ export class MusicProvider extends React.Component {
 			trackView: TrackView.LIBRARY,
 			viewedEntityId: null, // An ID for the user or library being viewed, or null if viewing the user's own library
 			totalTracksToFetch: 0,
-			trackSortColumn: 'Artist',
-			trackSortDir: 'asc',
+			currentSort: [
+				{ column: 'artist', isAscending: true },
+				{ column: 'album', isAscending: true, hidden: true },
+				{ column: 'trackNumber', isAscending: true, hidden: true }
+			],
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
@@ -74,6 +44,7 @@ export class MusicProvider extends React.Component {
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
 			reloadTracks: (...args) => this.reloadTracks(...args),
+			setSort: (...args) => this.setSort(...args),
 			addUploadToExistingLibraryView: (...args) => this.addUploadToExistingLibraryView(...args),
 			forceTrackUpdate: (...args) => this.forceTrackUpdate(...args),
 			playFromTrackIndex: (...args) => this.playFromTrackIndex(...args),
@@ -101,7 +72,7 @@ export class MusicProvider extends React.Component {
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
 			setProviderState: (...args) => this.setProviderState(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
-			resetSessionState: (...args) => this.resetSessionState(...args),
+			resetSessionState: (...args) => this.resetSessionState(...args)
 		};
 	}
 
@@ -109,7 +80,7 @@ export class MusicProvider extends React.Component {
 	// [{ name: 'Name', enabled: true }, { name: 'Artist', enabled: false }]
 	loadColumnPreferences() {
 		// Grab the (potentially) already existing preferences
-		const columnOptions = Object.keys(this.trackKeyConversions);
+		const columnOptions = getAllPossibleDisplayColumns();
 
 		let columnPreferences = LocalStorage.getObject('columnPreferences');
 
@@ -178,7 +149,7 @@ export class MusicProvider extends React.Component {
 		}
 
 		if (!params.sort) {
-			params.sort = this.buildTrackSortParameter(this.state.trackSortColumn, this.state.trackSortDir);
+			params.sort = this.buildTrackSortParameter(this.state.currentSort);
 		}
 
 		this.buildTrackLoadParams(params);
@@ -200,7 +171,7 @@ export class MusicProvider extends React.Component {
 	}
 
 	loadMoreTracks() {
-		let page = parseInt(this.state.viewedTracks.length / this.pageSize);
+		const page = parseInt(this.state.viewedTracks.length / this.pageSize);
 
 		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
 			return this.loadSongsForUser(this.state.viewedEntityId, { page: page }, true);
@@ -209,34 +180,35 @@ export class MusicProvider extends React.Component {
 		}
 	}
 
-	reloadTracks(sortColumn, sortDir) {
-		let params = {};
-
-		if (sortColumn && sortDir) {
-			params.sort = this.buildTrackSortParameter(sortColumn, sortDir);
-
-			this.setState({
-				trackSortColumn: sortColumn,
-				trackSortDir: sortDir
-			});
-		} else {
-			params.sort = this.buildTrackSortParameter(this.state.trackSortColumn, this.state.trackSortDir);
-		}
-
+	reloadTracks() {
 		if (this.state.trackView === TrackView.USER || this.state.trackView === TrackView.LIBRARY) {
-			this.loadSongsForUser(this.state.viewedEntityId, params, false);
+			this.loadSongsForUser(this.state.viewedEntityId, {}, false);
 		} else if (this.state.trackView === TrackView.PLAYLIST) {
-			this.loadSongsForPlaylist(this.state.viewedEntityId, params, false);
+			this.loadSongsForPlaylist(this.state.viewedEntityId, {}, false);
 		}
 	}
 
-	buildTrackSortParameter(columnName, sortDir) {
-		let sort = this.columnSortKeys[columnName].slice(0);
+	buildTrackSortParameter(sorts) {
+		// Build the parameters like the backend expects them in the query string
+		return sorts.map(sortObject => sortObject.column + ',' + (sortObject.isAscending ? 'ASC' : 'DESC'));
+	}
 
-		// The first element in the sorting needs to have the direction applied. The other columns don't. They have their own
-		sort[0].dir = sortDir;
+	setSort(sort) {
+		const augmentedSort = sort.slice(0);
 
-		return sort.map(sortObject => sortObject.key + ',' + sortObject.dir);
+		const sortedColumns = new Set(sort.map(it => it.column));
+		// artist / year
+		if ((sortedColumns.has('artist') || sortedColumns.has('releaseYear')) && !sortedColumns.has('album')) {
+			augmentedSort.push({ column: 'album', isAscending: true, hidden: true });
+			sortedColumns.add('album');
+		}
+
+		if (sortedColumns.has('album') && !sortedColumns.has('trackNumber')) {
+			augmentedSort.push({ column: 'trackNumber', isAscending: true , hidden: true});
+		}
+
+		// There are implicit secondary sorts that need to be added if the user didn't pick stuff
+		this.setState({ currentSort: augmentedSort }, this.reloadTracks);
 	}
 
 	addUploadToExistingLibraryView(track) {
@@ -244,10 +216,7 @@ export class MusicProvider extends React.Component {
 			return;
 		}
 
-		let sort = this.columnSortKeys[this.state.trackSortColumn].slice(0);
-		sort[0].dir = this.state.trackSortDir;
-
-		const newTrackIndex = findSpotInSortedArray(track, this.state.viewedTracks, sort);
+		const newTrackIndex = findSpotInSortedArray(track, this.state.viewedTracks, this.state.currentSort);
 		this.state.viewedTracks.splice(newTrackIndex, 0, track);
 
 		this.setState({
@@ -629,28 +598,17 @@ export class MusicProvider extends React.Component {
 			});
 	}
 
-	updateTracks(tracks, albumArt, trackData, usingDisplayNames) {
-		// Convert frontend column names to backend names
-		let trackParams;
-
-		if (usingDisplayNames) {
-			trackParams = Util.mapKeys(trackData, (key) => {
-				return this.trackKeyConversions[key];
-			});
-		} else {
-			trackParams = trackData;
-		}
-
-		trackParams.trackIds = tracks.map(track => track.id);
+	updateTracks(tracks, albumArt, trackData) {
+		trackData.trackIds = tracks.map(track => track.id);
 
 		// Update the local track data to be in sync
 		tracks.forEach(track => {
-			Object.keys(trackParams).forEach(property => {
-				track[property] = trackParams[property];
+			Object.keys(trackData).forEach(property => {
+				track[property] = trackData[property];
 			});
 		});
 
-		let params = { updateTrackJson: JSON.stringify(trackParams) };
+		const params = { updateTrackJson: JSON.stringify(trackData) };
 		if (albumArt) {
 			params.albumArt = albumArt;
 		}

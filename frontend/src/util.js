@@ -36,12 +36,12 @@ export function findSpotInSortedArray(item, array, sortKeys) {
 					continue;
 				}
 			} else {
-				let sortDirection = sortKeys[j].dir;
+				const isAscending = sortKeys[j].isAscending;
 
 				// If we are ascending, and our value is smaller than the next value, then we have found our spot
-				if (sortDirection === 'asc' && itemValue < compareValue) {
+				if (isAscending && itemValue < compareValue) {
 					return i;
-				} else if (sortDirection === 'desc' && itemValue > compareValue) {
+				} else if (!isAscending && itemValue > compareValue) {
 					return i;
 				} else {
 					// We already know that the keys we're comparing aren't equal. So we don't have to check the next keys.
@@ -86,4 +86,29 @@ export function uuidv4() {
 	return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
 		(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
 	);
+}
+
+const displayKeyToTrackKeyMap = {
+	'Name': 'name',
+	'Artist': 'artist',
+	'Featuring': 'featuring',
+	'Album': 'album',
+	'Track #' : 'trackNumber',
+	'Length': 'length',
+	'Year': 'releaseYear',
+	'Genre' : 'genre',
+	'Play Count': 'playCount',
+	'Bit Rate': 'bitRate',
+	'Sample Rate': 'sampleRate',
+	'Added': 'createdAt',
+	'Last Played': 'lastPlayed',
+	'Note' : 'note'
+};
+
+export function displayKeyToTrackKey(displayKey) {
+	return displayKeyToTrackKeyMap[displayKey];
+}
+
+export function getAllPossibleDisplayColumns() {
+	return Object.keys(displayKeyToTrackKeyMap)
 }

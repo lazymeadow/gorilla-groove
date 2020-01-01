@@ -3,6 +3,7 @@ import {formatDate, formatTimeFromSeconds} from "../../formatters";
 import {MusicContext} from "../../services/music-provider";
 import {EditableDiv} from "../editable-div/editable-div";
 import {TrackView} from "../../enums/track-view";
+import {displayKeyToTrackKey} from "../../util";
 
 export class SongRow extends React.Component {
 	constructor(props) {
@@ -22,47 +23,24 @@ export class SongRow extends React.Component {
 	}
 	*/
 
-	// FIXME Would probably be good to keep a mapping of these conversions in one location...
-	// they also exist in the music-provider
-	// noinspection JSMethodCanBeStatic
 	getUserTrackPropertyValue(property, userTrack, rowIndex) {
 		switch (property) {
 			case '#':
 				return rowIndex;
-			case 'Name':
-				return userTrack.name;
-			case 'Artist':
-				return userTrack.artist;
-			case 'Featuring':
-				return userTrack.featuring;
-			case 'Album':
-				return userTrack.album;
-			case 'Track #':
-				return userTrack.trackNumber;
 			case 'Length':
 				return formatTimeFromSeconds(userTrack.length);
-			case 'Year':
-				return userTrack.releaseYear;
-			case 'Genre':
-				return userTrack.genre;
-			case 'Play Count':
-				return userTrack.playCount;
-			case 'Bit Rate':
-				return userTrack.bitRate;
-			case 'Sample Rate':
-				return userTrack.sampleRate;
 			case 'Added':
 				return formatDate(userTrack.createdAt, false);
 			case 'Last Played':
 				return formatDate(userTrack.lastPlayed, false);
-			case 'Note':
-				return userTrack.note;
+			default:
+				return userTrack[displayKeyToTrackKey(property)];
 		}
 	}
 
 	render() {
-		let selected = this.props.selected ? 'selected' : '';
-		let playedClass = this.props.played ? 'played' : '';
+		const selected = this.props.selected ? 'selected' : '';
+		const playedClass = this.props.played ? 'played' : '';
 
 		return (
 			<tr
@@ -85,9 +63,9 @@ export class SongRow extends React.Component {
 									stopEdit={this.props.stopCellEdits.bind(this)}
 									updateHandler={newValue => {
 										const newProperties = {};
-										newProperties[columnName] = newValue;
+										newProperties[displayKeyToTrackKey(columnName)] = newValue;
 
-										this.context.updateTracks([this.props.userTrack], null, newProperties, true);
+										this.context.updateTracks([this.props.userTrack], null, newProperties);
 										this.forceUpdate();
 									}}
 								/>

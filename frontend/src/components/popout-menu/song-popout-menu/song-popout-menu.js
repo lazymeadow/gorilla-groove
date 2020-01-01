@@ -163,7 +163,7 @@ export class SongPopoutMenu extends React.Component {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const propertyChange = { hidden: true };
-					props.context.updateTracks(tracks, null, propertyChange, false).then(() => {
+					props.context.updateTracks(tracks, null, propertyChange).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was hidden`);
 						} else {
@@ -179,7 +179,7 @@ export class SongPopoutMenu extends React.Component {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const propertyChange = { hidden: false };
-					props.context.updateTracks(tracks, null, propertyChange, false).then(() => {
+					props.context.updateTracks(tracks, null, propertyChange).then(() => {
 						if (tracks.length === 1) {
 							toast.success(`'${tracks[0].name}' was revealed again`);
 						} else {

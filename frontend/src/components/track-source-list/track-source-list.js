@@ -63,9 +63,9 @@ export default function TrackSourceList(props) {
 		setEditedId(null);
 
 		if (section === TrackView.USER) {
-			musicContext.loadSongsForUser(entry.id, false);
+			musicContext.loadSongsForUser(entry.id, {}, false);
 		} else {
-			musicContext.loadSongsForPlaylist(entry.id, false);
+			musicContext.loadSongsForPlaylist(entry.id, {}, false);
 		}
 	};
 

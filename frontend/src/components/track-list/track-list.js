@@ -7,6 +7,7 @@ import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
 import {TrackView} from "../../enums/track-view";
 import * as LocalStorage from "../../local-storage";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
+import {displayKeyToTrackKey} from "../../util";
 
 
 let doubleClickTimeout = null;
@@ -324,39 +325,65 @@ export class TrackList extends React.Component {
 			return;
 		}
 
-		const sortColumn = event.currentTarget.querySelector('.column-name').innerHTML.trim();
-		let sortDir;
+		const columnDisplayName = event.currentTarget.querySelector('.column-name').innerHTML.trim();
+		const columnName = displayKeyToTrackKey(columnDisplayName);
 
-		if (this.context.trackSortColumn === sortColumn) {
-			sortDir = this.context.trackSortDir === 'desc' ? 'asc' : 'desc';
-		} else {
-			sortDir = 'asc';
+		const currentSort = this.context.currentSort.filter(sort => sort.hidden !== true);
+
+		// If we aren't holding the shift key, then we only care about setting or swapping the primary sort
+		if (!event.shiftKey) {
+			return this.context.setSort([{
+				column: columnName,
+				isAscending: currentSort[0].column === columnName ? !currentSort[0].isAscending : true
+			}]);
 		}
+
+		const sortPriority = currentSort.findIndex(sort => sort.column === columnName);
+
+		if (sortPriority === -1) { // Column we clicked isn't yet sorted on. Appended the new sort
+			const newSort = currentSort.slice(0);
+			newSort.push({ column: columnName, isAscending: true });
+			return this.context.setSort(newSort);
+		}
+
+		// Drop all the columns after the sort priority was clicked. So if we were sorting off of 3 columns,
+		// and we toggled the sort direction of the 2nd one, first is unchanged, second is flipped, third is dropped
+		const newSort = currentSort.slice(0, sortPriority + 1);
+		// Swap the sort direction on the already-existing column
+		newSort[sortPriority].isAscending = !newSort[sortPriority].isAscending;
 
 		this.setState({
 			selected: {},
 			lastSelectedIndex: null
 		});
 
-		this.context.reloadTracks(sortColumn, sortDir)
+		this.context.setSort(newSort);
 	}
 
 	closeContextMenu(event) {
 		if (this.state.contextMenuOptions.expanded && event.button === 0) {
-			this.setState({ contextMenuOptions: { expanded: false }})
+			this.setState({ contextMenuOptions: { expanded: false }});
 		}
 	}
 
 	getSortIndicator(columnName) {
 		if (!this.props.trackView) {
-			return;
+			return <span/>;
 		}
 
-		if (columnName === this.context.trackSortColumn) {
-			return this.context.trackSortDir === 'asc' ? '▲' : '▼';
-		} else {
-			return '';
+		const sortPriority = this.context.currentSort.findIndex(sort =>
+			sort.column === displayKeyToTrackKey(columnName) && sort.hidden !== true
+		);
+
+		if (sortPriority === -1) {
+			return <span/>;
 		}
+
+		const sortCaret = this.context.currentSort[sortPriority].isAscending ? '▲' : '▼';
+		const sortPriorityText = sortPriority === 0 ? '' : `(${sortPriority + 1})`;
+		return <React.Fragment>
+			{sortCaret}<span className="sort-priority-text">{sortPriorityText}</span>
+		</React.Fragment>
 	}
 
 	render() {
@@ -382,7 +409,7 @@ export class TrackList extends React.Component {
 							return <th key={index} onMouseDown={this.handleHeaderClick.bind(this)}>
 								<div>
 									<span className="column-name">{columnName}</span>
-									<span className="sort-direction">{this.getSortIndicator(columnName)}</span>
+									<span className="sort-indicator">{this.getSortIndicator(columnName)}</span>
 								</div>
 							</th>
 						})}

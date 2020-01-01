@@ -37,8 +37,8 @@ export class SongProperties extends React.Component {
 	}
 
 	initializeInputs() {
-		let tracks = this.props.getSelectedTracks();
-		let newState = {};
+		const tracks = this.props.getSelectedTracks();
+		const newState = {};
 		newState.originalValues = {}; // Keep track of original values so we know what to actually update when saving
 
 		let initializeKey = (key) => {
@@ -46,7 +46,7 @@ export class SongProperties extends React.Component {
 		};
 
 		this.inputNames.forEach(inputName => {
-			let originalValue = initializeKey(inputName);
+			const originalValue = initializeKey(inputName);
 			newState[inputName] = originalValue;
 			newState.originalValues[inputName] = originalValue;
 		});
@@ -85,8 +85,7 @@ export class SongProperties extends React.Component {
 		this.context.updateTracks(
 			this.props.getSelectedTracks(),
 			this.state.albumArt,
-			changedProperties,
-			false
+			changedProperties
 		).then(() => {
 			this.setState({ modalOpen: false });
 			this.context.forceTrackUpdate();
@@ -95,11 +94,11 @@ export class SongProperties extends React.Component {
 	}
 
 	getChangedProperties() {
-		let changedProperties = {};
+		const changedProperties = {};
 
 		this.inputNames.forEach(inputName => {
-			let originalValue = this.state.originalValues[inputName];
-			let currentValue = this.state[inputName];
+			const originalValue = this.state.originalValues[inputName];
+			const currentValue = this.state[inputName];
 
 			if (currentValue !== originalValue) {
 				changedProperties[inputName] = currentValue;
