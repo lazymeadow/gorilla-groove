@@ -111,7 +111,7 @@ export class TrackList extends React.Component {
 	}
 
 	handleContextMenu(event) {
-		if (event.button !== 2) {
+		if (event.button !== 2 || event.shiftKey) {
 			return;
 		}
 
@@ -201,6 +201,9 @@ export class TrackList extends React.Component {
 
 	handleRowClick(event, userTrackIndex) {
 		const isLeftClick = event.type === 'mousedown' && event.button === 0;
+		if (!isLeftClick && event.shiftKey) {
+			return;
+		}
 
 		if (event.target.tagName === 'INPUT') {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
@@ -332,9 +335,12 @@ export class TrackList extends React.Component {
 
 		// If we aren't holding the shift key, then we only care about setting or swapping the primary sort
 		if (!event.shiftKey) {
+			// We specifically want a normal click to "reset" the sort if there were any additional sorts specified.
+			// So the first click will always be ascending if there were more than 1 sorts specified.
+			const descending = currentSort[0].column === columnName && currentSort.length === 1 && currentSort[0].isAscending;
 			return this.context.setSort([{
 				column: columnName,
-				isAscending: currentSort[0].column === columnName ? !currentSort[0].isAscending : true
+				isAscending: !descending
 			}]);
 		}
 
@@ -346,11 +352,14 @@ export class TrackList extends React.Component {
 			return this.context.setSort(newSort);
 		}
 
-		// Drop all the columns after the sort priority was clicked. So if we were sorting off of 3 columns,
-		// and we toggled the sort direction of the 2nd one, first is unchanged, second is flipped, third is dropped
-		const newSort = currentSort.slice(0, sortPriority + 1);
-		// Swap the sort direction on the already-existing column
-		newSort[sortPriority].isAscending = !newSort[sortPriority].isAscending;
+		const newSort = currentSort.slice(0);
+		// First click is ascending, second is descending, third is removal (but ONLY if not selecting the primary sort)
+		const ascending = newSort[sortPriority].isAscending;
+		if (ascending || !ascending && sortPriority === 0) {
+			newSort[sortPriority].isAscending = !ascending
+		} else {
+			newSort.splice(sortPriority, 1);
+		}
 
 		this.setState({
 			selected: {},
@@ -371,7 +380,9 @@ export class TrackList extends React.Component {
 			return <span/>;
 		}
 
-		const sortPriority = this.context.currentSort.findIndex(sort =>
+		const explicitSorts = this.context.currentSort.filter(sort => sort.hidden !== true);
+
+		const sortPriority = explicitSorts.findIndex(sort =>
 			sort.column === displayKeyToTrackKey(columnName) && sort.hidden !== true
 		);
 
@@ -380,7 +391,7 @@ export class TrackList extends React.Component {
 		}
 
 		const sortCaret = this.context.currentSort[sortPriority].isAscending ? '▲' : '▼';
-		const sortPriorityText = sortPriority === 0 ? '' : `(${sortPriority + 1})`;
+		const sortPriorityText = explicitSorts.length === 1 ? '' : `${sortPriority + 1}`;
 		return <React.Fragment>
 			{sortCaret}<span className="sort-priority-text">{sortPriorityText}</span>
 		</React.Fragment>
