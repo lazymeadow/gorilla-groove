@@ -18,8 +18,8 @@ export function findSpotInSortedArray(item, array, sortKeys) {
 	for (let i = 0; i < array.length; i++) {
 		// For each key in the objects that we are comparing
 		for (let j = 0; j < sortKeys.length; j++) {
-			let rawItemValue = item[sortKeys[j].key];
-			let rawCompareValue = array[i][sortKeys[j].key];
+			let rawItemValue = item[sortKeys[j].column];
+			let rawCompareValue = array[i][sortKeys[j].column];
 
 			let itemValue = rawItemValue !== null ? rawItemValue.toString().toLowerCase() : '';
 			let compareValue = rawCompareValue !== null ? rawCompareValue.toString().toLowerCase() : '';
