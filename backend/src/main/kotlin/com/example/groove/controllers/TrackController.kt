@@ -9,6 +9,7 @@ import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeService
 import com.example.groove.util.loadLoggedInUser
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
 
@@ -102,7 +103,7 @@ class TrackController(
 			@RequestParam("albumArt") albumArt: MultipartFile?,
 			@RequestParam("updateTrackJson") updateTrackJson: String
 	): ResponseEntity<String> {
-		val mapper = ObjectMapper().registerKotlinModule()
+		val mapper = jacksonObjectMapper()
 		val updateTrackDTO = mapper.readValue(updateTrackJson, UpdateTrackDTO::class.java)
 
 		trackService.updateTracks(loadLoggedInUser(), updateTrackDTO, albumArt)
