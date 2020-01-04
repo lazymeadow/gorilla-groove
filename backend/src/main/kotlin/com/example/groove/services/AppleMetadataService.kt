@@ -4,9 +4,11 @@ import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.util.createMapper
 import org.apache.http.client.utils.URIBuilder
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.sql.Timestamp
 
+@Service
 class AppleMetadataService(private val restTemplate: RestTemplate) {
 	private val objectMapper = createMapper()
 
@@ -29,6 +31,8 @@ class AppleMetadataService(private val restTemplate: RestTemplate) {
 				.setHost("itunes.apple.com")
 				.setPath("search")
 				.addParameter("entity", "musicTrack")
+				 // 200 is the max they allow. For artists with a lot of songs this gives us the best chance of finding a match
+				.addParameter("limit", "200")
 	}
 
 	private fun matchByArtist(name: String, artist: String): AppleTrack? {
@@ -84,7 +88,7 @@ class AppleMetadataService(private val restTemplate: RestTemplate) {
 				genre = appleTrack.primaryGenreName,
 				releaseYear = appleTrack.releaseDate.toLocalDateTime().year,
 				trackNumber = appleTrack.trackNumber,
-				albumArtLink = appleTrack.artworkUrl100
+				albumArtLink = appleTrack.artworkUrl100 // TODO Need to try to get larger size
 		)
 	}
 
