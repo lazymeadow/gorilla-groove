@@ -23,6 +23,9 @@
                                 <nil key="textColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" textContentType="email"/>
+                                <connections>
+                                    <action selector="login:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="Z5B-wl-4as"/>
+                                </connections>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Gorilla Groove" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="80q-pX-DJG">
                                 <rect key="frame" x="106" y="55" width="163" height="45"/>
@@ -44,6 +47,9 @@
                                 <nil key="textColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="12"/>
                                 <textInputTraits key="textInputTraits" secureTextEntry="YES" textContentType="password"/>
+                                <connections>
+                                    <action selector="login:" destination="BYZ-38-t0r" eventType="primaryActionTriggered" id="qif-u6-HdQ"/>
+                                </connections>
                             </textField>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Password" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rIB-q7-7bz">
                                 <rect key="frame" x="75" y="254" width="74" height="21"/>
@@ -65,16 +71,21 @@
                                     <action selector="login:" destination="BYZ-38-t0r" eventType="touchUpInside" id="n1p-pN-5MI"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="App Version" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JEr-Bg-RXf">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="App Version" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JEr-Bg-RXf">
                                 <rect key="frame" x="6" y="641" width="172" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="21" id="6am-Bd-Raq"/>
+                                    <constraint firstAttribute="width" constant="172" id="RJO-hg-u2L"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="12"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hGS-IC-LTt">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hGS-IC-LTt">
                                 <rect key="frame" x="180" y="640" width="189" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="21" id="e4s-jm-P8K"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="12"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -92,6 +103,13 @@
                             </label>
                         </subviews>
                         <color key="backgroundColor" red="0.69019607843137254" green="0.87058823529411766" blue="0.95686274509803915" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstItem="rVd-im-11l" firstAttribute="bottom" secondItem="JEr-Bg-RXf" secondAttribute="bottom" constant="5" id="8a8-S3-2KE"/>
+                            <constraint firstItem="rVd-im-11l" firstAttribute="bottom" secondItem="hGS-IC-LTt" secondAttribute="bottom" constant="6" id="SIU-It-nT4"/>
+                            <constraint firstItem="rVd-im-11l" firstAttribute="trailing" secondItem="hGS-IC-LTt" secondAttribute="trailing" constant="6" id="cFp-6y-p4f"/>
+                            <constraint firstItem="hGS-IC-LTt" firstAttribute="leading" secondItem="JEr-Bg-RXf" secondAttribute="trailing" constant="2" id="fex-aq-oKD"/>
+                            <constraint firstItem="JEr-Bg-RXf" firstAttribute="leading" secondItem="rVd-im-11l" secondAttribute="leading" constant="6" id="vgp-iN-7o3"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="rVd-im-11l"/>
                     </view>
                     <connections>
