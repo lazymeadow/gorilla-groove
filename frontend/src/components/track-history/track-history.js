@@ -11,7 +11,7 @@ function TrackHistoryModal(props) {
 
 	const [selectedUserId, setSelectedUserId] = useState(userContext.ownUser.id);
 	const [startDate, setStartDate] = useState(formatDateWithDayOffset(-30));
-	const [endDate, setEndDate] = useState(formatDateWithDayOffset(0));
+	const [endDate, setEndDate] = useState(formatDateWithDayOffset(1));
 	const [pendingDeleteData, setPendingDeleteData] = useState(null);
 	const [historyData, setHistoryData] = useState([]);
 	const [loading, setLoading] = useState(true);
