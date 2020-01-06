@@ -36,17 +36,25 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("hello, console!")
-        getApiVersion()
-        loginToken.text = readLoginState()
-        
-        
         let tap = UITapGestureRecognizer(
             target: self.view,
             action: #selector(UIView.endEditing)
         )
         
         view.addGestureRecognizer(tap)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        getApiVersion()
+        let token = LoginState.read()?.token
+        
+        if (token != nil) {
+            print("Perform segue")
+            self.performSegue(withIdentifier: "loginSegue", sender: nil)
+            return
+        }
     }
     
     @IBAction func login(_ sender: Any) {
@@ -79,20 +87,23 @@ class ViewController: UIViewController {
             }
             
             let decodedData = try! JSONDecoder().decode(LoginResponse.self, from: data!)
-            self.saveLoginState(decodedData)
+            LoginState.save(decodedData)
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
                 self.loginToken.text = decodedData.token
+                self.performSegue(withIdentifier: "loginSegue", sender: sender)
             }
         }
         dataTask.resume()
     }
     
     func getApiVersion() {
+        print("Getting version")
         let session = URLSession(configuration: .default, delegate: nil, delegateQueue: .main)
         let url = URL(string: "https://gorillagroove.net/api/version")!
         let task = session.dataTask(with: url, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             let decodedData = try! JSONDecoder().decode(VersionResponse.self, from: data!)
+            print("Got versoin " + decodedData.version)
             self.apiVersion.text = decodedData.version
         })
         task.resume()
@@ -109,42 +120,6 @@ class ViewController: UIViewController {
         self.present(alertController, animated: true, completion: nil)
     }
     
-    func saveLoginState(_ loginResponse: LoginResponse) {
-        let encoder = PropertyListEncoder()
-        encoder.outputFormat = .xml
-        
-        let path = getPlistPath()
-        
-        print("Saving to path")
-        print(path)
-        do {
-            let data = try encoder.encode(loginResponse)
-            try data.write(to: URL(fileURLWithPath: path))
-        } catch {
-            print(error)
-        }
-    }
-    
-    func readLoginState() -> String? {
-        print("Read state")
-        let path = getPlistPath()
-        print(path)
-        
-        let xml = FileManager.default.contents(atPath: path)
-        if (xml == nil) {
-            return nil
-        }
-        let savedState = try? PropertyListDecoder().decode(LoginResponse.self, from: xml!)
-        
-        return savedState?.token
-    }
-    
-    private func getPlistPath() -> String {
-        let plistFileName = "data.plist"
-        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-        let documentPath = paths[0] as NSString
-        let plistPath = documentPath.appendingPathComponent(plistFileName)
-        return plistPath
-    }
+
 }
 
