@@ -4,6 +4,7 @@ import {UserContext} from "../../services/user-provider";
 import {Api} from "../../api";
 import {formatDate} from "../../formatters";
 import {toast} from "react-toastify";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 function TrackHistoryModal(props) {
 	const userContext = useContext(UserContext);
@@ -13,18 +14,22 @@ function TrackHistoryModal(props) {
 	const [endDate, setEndDate] = useState(formatDateWithDayOffset(0));
 	const [pendingDeleteData, setPendingDeleteData] = useState(null);
 	const [historyData, setHistoryData] = useState([]);
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		// We want the end date to happen at the very end of the day. So just add one day to it
 		const endOfDayEndDate = new Date(endDate);
 		endOfDayEndDate.setDate(endOfDayEndDate.getDate() + 1);
 
+		setLoading(true);
 		Api.get('track-history', {
 			userId: selectedUserId,
 			startDate: (new Date(startDate)).getTime(),
 			endDate: endOfDayEndDate.getTime()
 		}).then(history => {
 			setHistoryData(history);
+		}).finally(() => {
+			setLoading(false);
 		})
 	}, [selectedUserId, startDate, endDate]);
 
@@ -63,7 +68,8 @@ function TrackHistoryModal(props) {
 				</div>
 			</Modal>
 
-			<div className="content-wrapper flex-between">
+			<div className="content-wrapper flex-between p-relative">
+				<LoadingSpinner visible={loading}/>
 				<div className="left-nav">
 					<div>
 						<div className="top-label">
