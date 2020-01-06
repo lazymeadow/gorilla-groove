@@ -17,31 +17,31 @@ data class Track(
 		@JoinColumn(name = "user_id", nullable = false)
 		val user: User,
 
-		@Column(nullable = false)
+		@Column
 		var name: String,
 
-		@Column(nullable = false)
+		@Column
 		var artist: String = "",
 
-		@Column(nullable = false)
+		@Column
 		var featuring: String = "",
 
-		@Column(nullable = false)
+		@Column
 		var album: String = "",
 
 		@Column(name = "track_number")
 		var trackNumber: Int? = null,
 
-		@Column(name = "file_name", nullable = false)
+		@Column(name = "file_name")
 		var fileName: String,
 
-		@Column(name = "bit_rate", nullable = false)
+		@Column(name = "bit_rate")
 		var bitRate: Long,
 
-		@Column(name = "sample_rate", nullable = false)
+		@Column(name = "sample_rate")
 		var sampleRate: Int,
 
-		@Column(nullable = false)
+		@Column
 		var length: Int,
 
 		@Column(name = "release_year")
@@ -50,7 +50,7 @@ data class Track(
 		@Column
 		var genre: String? = null,
 
-		@Column(name = "play_count", nullable = false)
+		@Column(name = "play_count")
 		var playCount: Int = 0,
 
 		@Column(columnDefinition = "BIT") // MySQL lacks a Boolean type. Need to label it as a BIT column
@@ -62,11 +62,11 @@ data class Track(
 		@Column(name = "last_played")
 		var lastPlayed: Timestamp? = null,
 
-		@Column(name = "created_at", nullable = false)
+		@Column(name = "created_at")
 		var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
 		@JsonIgnore // Currently breaks GG app to include this and offers no current benefit to be exposed
-		@Column(name = "updated_at", nullable = false)
+		@Column(name = "updated_at")
 		var updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
 		@JsonIgnore

@@ -57,7 +57,7 @@ export class Modal extends React.Component {
 				style={this.props.fullScreen ? fullScreenStyles : customStyles}
 				contentLabel="Example Modal"
 			>
-				<span className="modal-close" onMouseDown={this.closeModal.bind(this)}>✗</span>
+				<span className="modal-close" onClick={this.closeModal.bind(this)}>✗</span>
 				<div onKeyDown={this.stopPropagation.bind(this)}>
 					{this.props.children}
 				</div>

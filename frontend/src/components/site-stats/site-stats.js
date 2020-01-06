@@ -3,7 +3,7 @@ import {Api} from "..";
 import {MusicContext} from "../../services/music-provider";
 import {VersionDisplay} from "../version-display/version-display";
 
-let oneWeekAgo = Date.now() - (1000 * 60 * 60 * 24 * 7);
+const oneWeekAgo = Date.now() - (1000 * 60 * 60 * 24 * 7);
 
 export class SiteStats extends React.Component {
 	constructor(props) {

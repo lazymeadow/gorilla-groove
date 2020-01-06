@@ -125,7 +125,7 @@ function TrackHistoryModal(props) {
 								<td><div className="cutoff-text">{historyDatum.deviceName}</div></td>
 								<td className="text-center">
 									{ userContext.ownUser.id === selectedUserId
-										? <i className="fas fa-times cursor-pointer" onClick={() => setPendingDeleteData(historyDatum)}/>
+										? <i className="fas fa-times clickable" onClick={() => setPendingDeleteData(historyDatum)}/>
 										: <React.Fragment/>
 									}
 								</td>

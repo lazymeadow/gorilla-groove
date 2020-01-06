@@ -27,6 +27,7 @@
 @import "components/draft-release/draft-release";
 @import "components/track-history/track-history";
 @import "components/device-management/device-management";
+@import "components/metadata-request/metadata-request";
 @import "table";
 @import "animation.less";
 
@@ -81,7 +82,7 @@ input {
   justify-content: space-between;
 }
 
-.cursor-pointer {
+.clickable {
   cursor: pointer;
 }
 
@@ -114,10 +115,15 @@ input {
   position: relative;
 }
 
+.full-width {
+  width: 100%;
+}
+
 // Only toast library override. Just looks a little nicer
 #root {
   .Toastify__toast-body {
     margin-left: 5px;
+    white-space: pre-wrap;
   }
 }
 

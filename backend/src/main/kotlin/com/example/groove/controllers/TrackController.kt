@@ -1,16 +1,13 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
-import com.example.groove.dto.TrackChangesDTO
-import com.example.groove.dto.TrackTrimDTO
-import com.example.groove.dto.UpdateTrackDTO
-import com.example.groove.dto.YoutubeDownloadDTO
+import com.example.groove.dto.*
+import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeService
+import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.loadLoggedInUser
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
@@ -26,7 +23,8 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val youTubeService: YoutubeService
+		private val youTubeService: YoutubeService,
+		private val metadataRequestService: MetadataRequestService
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
@@ -135,17 +133,22 @@ class TrackController(
 
 		val regex = Regex("^[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?\$")
 
-		trackTrimDTO.startTime?.let {
-			regex.matches(it)
-		}
-
-		trackTrimDTO.duration?.let {
-			regex.matches(it)
-		}
+		trackTrimDTO.startTime?.let { regex.matches(it) }
+		trackTrimDTO.duration?.let { regex.matches(it) }
 
 		val newLength = trackService.trimTrack(trackTrimDTO.trackId, trackTrimDTO.startTime, trackTrimDTO.duration)
 
 		return mapOf("newLength" to newLength)
+	}
+
+	@PostMapping("/data-update-request")
+	fun dataUpdateRequest(@RequestBody metadataUpdateRequestDTO: MetadataUpdateRequestDTO): DataUpdateResponseDTO {
+		val (updatedTracks, failedTrackIds) =  metadataRequestService.requestTrackMetadata(metadataUpdateRequestDTO)
+
+		return DataUpdateResponseDTO(
+				successfulUpdates = updatedTracks,
+				failedUpdateIds = failedTrackIds
+		)
 	}
 
 	@GetMapping("/public/{trackId}")

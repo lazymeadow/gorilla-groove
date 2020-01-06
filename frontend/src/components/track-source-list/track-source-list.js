@@ -149,7 +149,7 @@ export default function TrackSourceList(props) {
 						<button onMouseDown={() => {
 							musicContext.deletePlaylist(pendingDeletePlaylist).then(() => setModalOpen(false))
 						}}>You know I do</button>
-						<button onMouseDown={() => setModalOpen(true)}>No. Woops</button>
+						<button onMouseDown={() => setModalOpen(false)}>No. Woops</button>
 					</div>
 				</div>
 			</Modal>

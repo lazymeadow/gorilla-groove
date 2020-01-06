@@ -5,6 +5,7 @@ import {TrackView} from "../../../enums/track-view";
 import {SongProperties} from "../../song-properties/song-properties";
 import {Api} from "../../../api";
 import {TrimSong} from "../../trim-song/trim-song";
+import MetadataRequest from "../../metadata-request/metadata-request";
 
 export class SongPopoutMenu extends React.Component {
 	constructor(props) {
@@ -191,6 +192,10 @@ export class SongPopoutMenu extends React.Component {
 					});
 				}
 			}, {
+				component: <SongProperties getSelectedTracks={props.getSelectedTracks.bind(this)}/>
+			}, {
+				component: <MetadataRequest getSelectedTracks={props.getSelectedTracks.bind(this)}/>
+			}, {
 				text: 'Delete', clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
@@ -205,8 +210,6 @@ export class SongPopoutMenu extends React.Component {
 						toast.error('Failed to delete the selected tracks');
 					});
 				}
-			}, {
-				component: <SongProperties getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}
 		];
 

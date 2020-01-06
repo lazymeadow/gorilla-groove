@@ -21,6 +21,8 @@ abstract class FileStorageService(
 		private val trackLinkRepository: TrackLinkRepository,
 		private val fileStorageProperties: FileStorageProperties
 ) {
+	val test = fileStorageProperties.tmpDir
+
 	abstract fun storeSong(song: File, trackId: Long)
 	abstract fun loadSong(track: Track): File
 	abstract fun storeAlbumArt(albumArt: File, trackId: Long)
@@ -33,7 +35,7 @@ abstract class FileStorageService(
 
 	// Do all of this in a synchronized, new transaction to prevent race conditions with link creation / searching
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	fun getCachedSongLink(trackId: Long, anonymousAccess: Boolean, newLinkFun: (track: Track) -> String): String {
+	protected fun getCachedSongLink(trackId: Long, anonymousAccess: Boolean, newLinkFun: (track: Track) -> String): String {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
 		synchronized(this) {
@@ -55,11 +57,11 @@ abstract class FileStorageService(
 		return link
 	}
 
-	fun getTrackForAlbumArt(trackId: Long, anonymousAccess: Boolean): Track {
+	protected fun getTrackForAlbumArt(trackId: Long, anonymousAccess: Boolean): Track {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
 		// If we are doing anonymous access, also make sure that the track is within its temporary access time
-		if  (anonymousAccess) {
+		if (anonymousAccess) {
 			trackLinkRepository.findUnexpiredByTrackId(track.id)
 					?: throw IllegalArgumentException("Album art for track ID: $trackId not available to anonymous users!")
 		}
