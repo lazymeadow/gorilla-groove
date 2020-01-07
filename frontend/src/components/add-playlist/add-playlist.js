@@ -1,18 +1,13 @@
-import React from 'react';
-import {MusicContext} from "../../services/music-provider";
+import React, {useContext} from 'react';
+import {PlaylistContext} from "../../services/playlist-provider";
 
-export class AddPlaylistButton extends React.Component {
-	constructor(props) {
-		super(props);
-	}
+export default function AddPlaylistButton() {
+	const playlistContext = useContext(PlaylistContext);
 
-	render() {
-		return (
-			<i className="fas fa-plus add-playlist-button" onMouseDown={(e) => {
-				e.stopPropagation();
-				this.context.createPlaylist(e)
-			}}/>
-		)
-	}
+	return (
+		<i className="fas fa-plus add-playlist-button" onMouseDown={(e) => {
+			e.stopPropagation();
+			playlistContext.createPlaylist(e)
+		}}/>
+	)
 }
-AddPlaylistButton.contextType = MusicContext;

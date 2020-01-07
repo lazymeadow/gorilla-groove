@@ -29,7 +29,6 @@ export class MusicProvider extends React.Component {
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
-			playlists: [],
 			songIndexesToShuffle: [],
 			shuffledSongIndexes: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
@@ -39,9 +38,8 @@ export class MusicProvider extends React.Component {
 			sessionPlayCounter: 0, // This determines when to "refresh" our now playing song, because you can play an identical song back to back and it's difficult to detect a song change otherwise
 			renderCounter: 0, // Used to determine if we should rerender this component (and therefore most of the site because this component is too large)
 
-			ownPermissions: new Set(), // FIXME Makes NO sense to be in this context. Need to figure out how to make more than one
-
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
+			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
 			reloadTracks: (...args) => this.reloadTracks(...args),
 			setSort: (...args) => this.setSort(...args),
@@ -56,16 +54,9 @@ export class MusicProvider extends React.Component {
 			deleteTracks: (...args) => this.deleteTracks(...args),
 			setPrivate: (...args) => this.setPrivate(...args),
 			importTracks: (...args) => this.importTracks(...args),
-			loadPlaylists: (...args) => this.loadPlaylists(...args),
-			deletePlaylist: (...args) => this.deletePlaylist(...args),
-			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
-			addToPlaylist: (...args) => this.addToPlaylist(...args),
-			createPlaylist: (...args) => this.createPlaylist(...args),
-			removeFromPlaylist: (...args) => this.removeFromPlaylist(...args),
 			removeFromNowPlaying: (...args) => this.removeFromNowPlaying(...args),
 			trimTrack: (...args) => this.trimTrack(...args),
 			updateTracks: (...args) => this.updateTracks(...args),
-			renamePlaylist: (...args) => this.renamePlaylist(...args),
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
 			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
 			setShuffleChaos: (...args) => this.setShuffleChaos(...args),
@@ -164,6 +155,41 @@ export class MusicProvider extends React.Component {
 			this.addTracksToView(result, append);
 		}).catch((error) => {
 			console.error(error)
+		}).finally(() => this.setState({
+			loadingTracks: false,
+			renderCounter: this.state.renderCounter + 1
+		}));
+	}
+
+	loadSongsForPlaylist(playlistId, params, append) {
+		params = params ? params : {};
+		params.playlistId = playlistId;
+
+		params.sort = this.buildTrackSortParameter(true);
+
+		this.buildTrackLoadParams(params);
+
+		this.setState({
+			trackView: TrackView.PLAYLIST,
+			viewedEntityId: playlistId,
+			loadingTracks: true,
+			renderCounter: this.state.renderCounter + 1
+		});
+
+		if (!append) {
+			this.setState({ viewedTracks: [] });
+		}
+
+		return Api.get('playlist/track', params).then(result => {
+			// We need to store the playlistTrackId for later, in case we want to remove an entry from the playlist
+			// Add this as extra data to the track data, to make sharing the track-list view easy between playlist
+			// views, and library / user views
+			result.content = result.content.map(playlistTrack => {
+				let trackData = playlistTrack.track;
+				trackData.playlistTrackId = playlistTrack.id;
+				return trackData
+			});
+			this.addTracksToView(result, append);
 		}).finally(() => this.setState({
 			loadingTracks: false,
 			renderCounter: this.state.renderCounter + 1
@@ -434,65 +460,6 @@ export class MusicProvider extends React.Component {
 		})
 	}
 
-	loadPlaylists() {
-		return Api.get('playlist').then(playlists => {
-			this.setState({
-				playlists: playlists,
-				renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
-			});
-		})
-	}
-
-	deletePlaylist(playlist) {
-		const deleteId = playlist.id;
-		return Api.delete(`playlist/${deleteId}`).then(() => {
-			const newPlaylists = this.state.playlists.filter(playlist => playlist.id !== deleteId);
-			this.setState({
-				playlists: newPlaylists,
-				renderCounter: this.state.renderCounter + 1
-			});
-
-			if (this.state.trackView === TrackView.PLAYLIST && this.state.viewedEntityId === deleteId) {
-				this.loadSongsForUser();
-			}
-		})
-	}
-
-	loadSongsForPlaylist(playlistId, params, append) {
-		params = params ? params : {};
-		params.playlistId = playlistId;
-
-		params.sort = this.buildTrackSortParameter(true);
-
-		this.buildTrackLoadParams(params);
-
-		this.setState({
-			trackView: TrackView.PLAYLIST,
-			viewedEntityId: playlistId,
-			loadingTracks: true,
-			renderCounter: this.state.renderCounter + 1
-		});
-
-		if (!append) {
-			this.setState({ viewedTracks: [] });
-		}
-
-		return Api.get('playlist/track', params).then(result => {
-			// We need to store the playlistTrackId for later, in case we want to remove an entry from the playlist
-			// Add this as extra data to the track data, to make sharing the track-list view easy between playlist
-			// views, and library / user views
-			result.content = result.content.map(playlistTrack => {
-				let trackData = playlistTrack.track;
-				trackData.playlistTrackId = playlistTrack.id;
-				return trackData
-			});
-			this.addTracksToView(result, append);
-		}).finally(() => this.setState({
-			loadingTracks: false,
-			renderCounter: this.state.renderCounter + 1
-		}));
-	}
-
 	addTracksToView(result, append) {
 		this.setState({ totalTracksToFetch: result.totalElements });
 
@@ -513,41 +480,6 @@ export class MusicProvider extends React.Component {
 		} else {
 			this.setState({ viewedTracks: result.content });
 		}
-	}
-
-	addToPlaylist(playlistId, trackIds) {
-		return Api.post('playlist/track', {
-			playlistId: playlistId,
-			trackIds: trackIds
-		}).then(() => {
-			console.log("Wow, Ayrton. Great moves. Keep it up. I'm proud of you.");
-		})
-	}
-
-	removeFromPlaylist(playlistTrackIds) {
-		// It's kind of dumb to assume that the playlist we're deleting from is the one we're looking at
-		// It's always true right now. But maybe it won't be one day and this will be problematic
-		let playlistId = this.state.viewedEntityId;
-
-		return Api.delete('playlist/track', {
-			playlistTrackIds: playlistTrackIds
-		}).then(() => {
-			// Make sure we're still looking at the same playlist before we force the reload
-			if (this.state.trackView === TrackView.PLAYLIST && this.state.viewedEntityId === playlistId) {
-				let newViewedTracks = this.state.viewedTracks.slice(0);
-
-				// This is a pretty inefficient way to remove stuff. But it's probably fine... right?
-				playlistTrackIds.forEach(playlistTrackId => {
-					let trackIndex = newViewedTracks.findIndex(track => track.playlistTrackId === playlistTrackId);
-					newViewedTracks.splice(trackIndex, 1);
-				});
-
-				this.setState({
-					viewedTracks: newViewedTracks,
-					renderCounter: this.state.renderCounter + 1
-				})
-			}
-		});
 	}
 
 	removeFromNowPlaying(trackIndexes) {
@@ -578,25 +510,6 @@ export class MusicProvider extends React.Component {
 			nowPlayingTracks: newNowPlaying,
 			renderCounter: this.state.renderCounter + 1
 		});
-	}
-
-	createPlaylist() {
-		Api.post('playlist', {name: 'New Playlist'})
-			.then(playlist => {
-				let playlists = this.state.playlists.slice(0);
-				playlists.push(playlist);
-
-				this.setState({
-					playlists: playlists,
-					renderCounter: this.state.renderCounter + 1
-				});
-
-				toast.success('New playlist created')
-			})
-			.catch(error => {
-				console.error(error);
-				toast.error('The creation of a new playlist failed');
-			});
 	}
 
 	updateTracks(tracks, albumArt, trackData) {
@@ -637,20 +550,6 @@ export class MusicProvider extends React.Component {
 		})
 	}
 
-	renamePlaylist(playlist, newName) {
-		playlist.name = newName;
-
-		this.setState({
-			playlists: this.state.playlists,
-			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
-		});
-
-		return Api.put(`playlist/${playlist.id}`, { name: newName }).catch((error) => {
-			console.error(error);
-			toast.error("Failed to updated playlist name")
-		})
-	}
-
 	setShuffleSongs(shuffleSongs) {
 		this.setState({
 			shuffleSongs: shuffleSongs,
@@ -687,13 +586,8 @@ export class MusicProvider extends React.Component {
 		LocalStorage.setObject('columnPreferences', columnPreferences);
 	}
 
-	setProviderState(state, reloadSongs) {
-		const reloadCallback = () => {
-			if (reloadSongs) {
-				this.reloadTracks();
-			}
-		};
-		this.setState(state, reloadCallback);
+	setProviderState(state, callback) {
+		this.setState(state, callback);
 	}
 
 	resetColumnPreferences() {

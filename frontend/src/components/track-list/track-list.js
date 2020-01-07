@@ -3,7 +3,7 @@ import ColumnResizer from 'column-resizer';
 import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
-import {SongPopoutMenu} from "../popout-menu/song-popout-menu/song-popout-menu";
+import SongPopoutMenu from "../popout-menu/song-popout-menu/song-popout-menu";
 import {TrackView} from "../../enums/track-view";
 import * as LocalStorage from "../../local-storage";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
@@ -403,7 +403,6 @@ export class TrackList extends React.Component {
 			<div className="track-list">
 				<div>
 					<SongPopoutMenu
-						context={this.context} // Pass in as prop, so it can be accessed in getDerivedState
 						closeContextMenu={this.closeContextMenu.bind(this)}
 						getSelectedTracks={this.getSelectedTracks.bind(this)}
 						getSelectedTrackIndexes={this.getSelectedTrackIndexes.bind(this)}

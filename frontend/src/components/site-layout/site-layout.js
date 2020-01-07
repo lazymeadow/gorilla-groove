@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {TrackList, Api} from "..";
+import {TrackList} from "..";
 import {NowPlayingList} from "../now-playing-list/now-playing-list";
 import {AlbumArt} from "../album-art/album-art";
 import TrackSourceList from "../track-source-list/track-source-list";
@@ -12,6 +12,7 @@ import {SocketContext} from "../../services/socket-provider";
 import PlaybackControls from "../playback-controls/playback-controls";
 import {UserContext} from "../../services/user-provider";
 import {deleteCookie} from "../../cookie";
+import {PlaylistContext} from "../../services/playlist-provider";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
@@ -32,6 +33,7 @@ export default function SiteLayout(props) {
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
 	const userContext = useContext(UserContext);
+	const playlistContext = useContext(PlaylistContext);
 
 	useEffect(() => {
 		userContext.initialize().catch(error => {
@@ -41,7 +43,7 @@ export default function SiteLayout(props) {
 		});
 		socketContext.connectToSocket();
 		musicContext.loadSongsForUser();
-		musicContext.loadPlaylists();
+		playlistContext.loadPlaylists();
 
 		notifyVersion();
 	}, []);
@@ -57,7 +59,7 @@ export default function SiteLayout(props) {
 			</div>
 			<div className="border-layout-west">
 				<TrackSourceList
-					playlists={musicContext.playlists}
+					playlists={playlistContext.playlists}
 				/>
 			</div>
 			<div id="library-view" className="border-layout-center track-list-container p-relative">

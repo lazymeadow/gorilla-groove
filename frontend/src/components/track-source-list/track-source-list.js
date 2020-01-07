@@ -3,10 +3,11 @@ import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
 import {TrackView} from "../../enums/track-view";
 import {EditableDiv} from "../editable-div/editable-div";
-import {AddPlaylistButton} from "../add-playlist/add-playlist";
+import AddPlaylistButton from "../add-playlist/add-playlist";
 import {Modal} from "../modal/modal";
 import {SocketContext} from "../../services/socket-provider";
 import {UserContext} from "../../services/user-provider";
+import {PlaylistContext} from "../../services/playlist-provider";
 
 let pendingDeletePlaylist = {};
 
@@ -18,6 +19,7 @@ export default function TrackSourceList(props) {
 	const userContext = useContext(UserContext);
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
+	const playlistContext = useContext(PlaylistContext);
 
 	const dataSource = [
 		{
@@ -118,7 +120,7 @@ export default function TrackSourceList(props) {
 										editable={editedId === cellId && node.section === TrackView.PLAYLIST}
 										text={entry.username ? entry.username : entry.name}
 										stopEdit={() => setEditedId(null)}
-										updateHandler={newValue => musicContext.renamePlaylist(entry, newValue)}
+										updateHandler={newValue => playlistContext.renamePlaylist(entry, newValue)}
 									/>
 									{ getNowPlayingElement(entry) }
 
@@ -147,7 +149,13 @@ export default function TrackSourceList(props) {
 					<div>Are you sure you want to delete the playlist '{pendingDeletePlaylist.name}'?</div>
 					<div className="flex-between confirm-modal-buttons">
 						<button onMouseDown={() => {
-							musicContext.deletePlaylist(pendingDeletePlaylist).then(() => setModalOpen(false))
+							playlistContext.deletePlaylist(pendingDeletePlaylist).then(() => {
+								if (musicContext.trackView === TrackView.PLAYLIST
+									&& musicContext.viewedEntityId === pendingDeletePlaylist.id) {
+									musicContext.loadSongsForUser();
+								}
+								setModalOpen(false)
+							})
 						}}>You know I do</button>
 						<button onMouseDown={() => setModalOpen(false)}>No. Woops</button>
 					</div>
@@ -157,3 +165,5 @@ export default function TrackSourceList(props) {
 		</div>
 	);
 }
+
+
