@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08723C2EE05003899B8 /* MyLibraryController.swift */; };
 		A815B08B23C2FC4C003899B8 /* LoginState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08A23C2FC4C003899B8 /* LoginState.swift */; };
+		A815B08E23C43B08003899B8 /* Track.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A815B08C23C43B08003899B8 /* Track.xcdatamodeld */; };
+		A829ABF723C597E90034AD69 /* TrackPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829ABF623C597E90034AD69 /* TrackPersistence.swift */; };
 		A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100ED23BD339D00D6EA2D /* AppDelegate.swift */; };
 		A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100EF23BD339D00D6EA2D /* ViewController.swift */; };
 		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
@@ -19,6 +21,8 @@
 /* Begin PBXFileReference section */
 		A815B08723C2EE05003899B8 /* MyLibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryController.swift; sourceTree = "<group>"; };
 		A815B08A23C2FC4C003899B8 /* LoginState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginState.swift; sourceTree = "<group>"; };
+		A815B08D23C43B08003899B8 /* Track.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Track.xcdatamodel; sourceTree = "<group>"; };
+		A829ABF623C597E90034AD69 /* TrackPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPersistence.swift; sourceTree = "<group>"; };
 		A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gorilla Groove.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A89100ED23BD339D00D6EA2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A89100EF23BD339D00D6EA2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -66,6 +70,8 @@
 				A89100F923BD339E00D6EA2D /* Info.plist */,
 				A815B08723C2EE05003899B8 /* MyLibraryController.swift */,
 				A815B08A23C2FC4C003899B8 /* LoginState.swift */,
+				A815B08C23C43B08003899B8 /* Track.xcdatamodeld */,
+				A829ABF623C597E90034AD69 /* TrackPersistence.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -143,8 +149,10 @@
 			files = (
 				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* LoginState.swift in Sources */,
+				A815B08E23C43B08003899B8 /* Track.xcdatamodeld in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */,
+				A829ABF723C597E90034AD69 /* TrackPersistence.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,6 +352,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		A815B08C23C43B08003899B8 /* Track.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				A815B08D23C43B08003899B8 /* Track.xcdatamodel */,
+			);
+			currentVersion = A815B08D23C43B08003899B8 /* Track.xcdatamodel */;
+			path = Track.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = A89100E223BD339C00D6EA2D /* Project object */;
 }

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 import Foundation
 
 struct VersionResponse: Codable {
@@ -25,6 +26,7 @@ struct LoginResponse: Codable {
 }
 
 class ViewController: UIViewController {
+    var container: NSPersistentContainer!
     
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
@@ -35,6 +37,10 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        guard container != nil else {
+            fatalError("This view needs a persistent container.")
+        }
         
         let tap = UITapGestureRecognizer(
             target: self.view,
@@ -58,6 +64,9 @@ class ViewController: UIViewController {
     }
     
     @IBAction func login(_ sender: Any) {
+        // TODO check for empty inputs here maybe?
+        // Might be able to use the "show()" function for a simple error message
+        
         let session = URLSession(configuration: .default)
         let url = URL(string: "https://gorillagroove.net/api/authentication/login")
         var request : URLRequest = URLRequest(url: url!)
