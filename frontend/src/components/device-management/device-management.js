@@ -61,7 +61,6 @@ function DeviceManagementModal() {
 		}).then(() => {
 			if (clickedDevice.id === currentDevice.id) {
 				const targetDevice = devices.find(device => device.id === targetId);
-				console.log(targetDevice, Object.assign({}, devices), targetId);
 				setCurrentDevice(targetDevice);
 			}
 

@@ -8,14 +8,12 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-private const val CHECK_INTERVAL = 2000L
-private const val NUM_CHECKS = 5
 
-@RestController("api/currently-listening")
+@RestController
+@RequestMapping("api/currently-listening")
 class CurrentlyListeningController(
 		private val currentlyListeningService: CurrentlyListeningService
 ) {
-
 	@GetMapping
 	fun getCurrentlyListening(
 			@RequestParam("lastUpdate") lastUpdate: Int
@@ -33,12 +31,7 @@ class CurrentlyListeningController(
 			}
 		}
 
-		return ResponseEntity
-				.status(HttpStatus.NOT_FOUND)
-				.body(CurrentlyListeningUsersDTO(
-						currentlyListeningUsers = null,
-						lastUpdate = lastUpdate
-				))
+		return ResponseEntity(HttpStatus.NOT_FOUND)
 	}
 
 	@PostMapping
@@ -47,9 +40,12 @@ class CurrentlyListeningController(
 		currentlyListeningService.setListeningUser(loadLoggedInUser(), body.song)
 	}
 
-	data class NewCurrentlyListening(val song: String)
+	data class NewCurrentlyListening(val song: String?)
 
 	companion object {
 		private val logger = logger<CurrentlyListeningService>()
+
+		private const val CHECK_INTERVAL = 2000L
+		private const val NUM_CHECKS = 5
 	}
 }

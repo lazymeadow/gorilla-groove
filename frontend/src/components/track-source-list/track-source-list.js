@@ -71,16 +71,13 @@ export default function TrackSourceList(props) {
 		}
 	};
 
-	const getNowPlayingElement = (entry) => {
-		const song = socketContext.nowListeningUsers[entry.email];
-		if (!song || !song.trackId) {
+	const getNowPlayingElement = entry => {
+		const song = socketContext.nowListeningUsers[entry.id];
+		if (!song) {
 			return <span/>
 		}
 
-		const artist = song.trackArtist ? song.trackArtist : 'Unknown';
-		const name = song.trackName ? song.trackName : 'Unknown';
-
-		return <span className="user-listening" title={`${artist} - ${name}`}>♬</span>
+		return <span className="user-listening" title={song}>♬</span>
 	};
 
 	const librarySelected = musicContext.trackView === TrackView.LIBRARY ? 'selected' : '';
@@ -122,7 +119,7 @@ export default function TrackSourceList(props) {
 										stopEdit={() => setEditedId(null)}
 										updateHandler={newValue => playlistContext.renamePlaylist(entry, newValue)}
 									/>
-									{ getNowPlayingElement(entry) }
+									{ node.section === TrackView.USER ? getNowPlayingElement(entry) : <React.Fragment/> }
 
 									<div className="playlist-delete">
 										{ node.section === TrackView.PLAYLIST

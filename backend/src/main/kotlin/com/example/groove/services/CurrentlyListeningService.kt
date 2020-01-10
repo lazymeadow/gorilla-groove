@@ -3,7 +3,6 @@ package com.example.groove.services
 import com.example.groove.db.model.User
 import com.example.groove.dto.CurrentlyListeningUsersDTO
 import com.example.groove.util.DateUtils.now
-import com.example.groove.util.logger
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
@@ -11,17 +10,22 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class CurrentlyListeningService {
 	private val currentlyListeningUsers = ConcurrentHashMap<Long, SongListen>()
-	private var updateCount = 0
+	private var updateCount = -1
 
-	fun setListeningUser(user: User, song: String) {
+	fun setListeningUser(user: User, song: String?) {
 		val newTime = now().time
 		synchronized(this) {
+			if (song == null) {
+				currentlyListeningUsers.remove(user.id)
+				incrementUpdate()
+				return
+			}
+
 			val currentListen = currentlyListeningUsers[user.id]
-			val newListen = currentListen?.apply { lastUpdate = newTime } ?: SongListen(song, newTime)
+			val newListen = SongListen(song, newTime)
 
 			if (newListen.song != currentListen?.song) {
-				updateCount++
-				updateCount %= Int.MAX_VALUE
+				incrementUpdate()
 			}
 
 			currentlyListeningUsers[user.id] = newListen
@@ -29,42 +33,38 @@ class CurrentlyListeningService {
 	}
 
 	fun getListeningUsersIfNew(currentUser: User, lastUpdateCount: Int): CurrentlyListeningUsersDTO? {
-		return if (lastUpdateCount != updateCount) {
-			val listeningUsers = currentlyListeningUsers
-					.map { (userId, listen) -> userId to listen.song }
-					.filter { (userId, _) -> userId != currentUser.id }
-
-			if (listeningUsers.isEmpty()) {
-				return null
-			}
-
-			return CurrentlyListeningUsersDTO(currentlyListeningUsers = listeningUsers, lastUpdate = updateCount)
-		} else {
-			null
+		if (lastUpdateCount == updateCount) {
+			return null
 		}
+
+		val listeningUsers = currentlyListeningUsers
+				.mapValues { it.value.song }
+				.filter { (userId, _) -> userId != currentUser.id }
+
+		return CurrentlyListeningUsersDTO(currentlyListeningUsers = listeningUsers, lastUpdate = updateCount)
 	}
 
-	@Scheduled(fixedRate = 1000)
-	private fun cleanupOldListens() {
-		logger.info("Cleaning up old listens...")
+	@Scheduled(fixedRate = 10000, initialDelay = 30000)
+	fun cleanupOldListens() {
 		val deleteOlderThan = now().time - 35 * 1000 // We should be updating every 15 seconds, but build in a buffer
 		synchronized(this) {
 			val listens = currentlyListeningUsers.toList()
 			listens.forEach { (userId, songListen) ->
 				if (songListen.lastUpdate < deleteOlderThan) {
-					logger.info("Deleting listen for user $userId")
 					currentlyListeningUsers.remove(userId)
+					incrementUpdate()
 				}
 			}
 		}
 	}
 
-	data class SongListen(
-		val song: String,
-		var lastUpdate: Long // millis
-	)
-
-	companion object {
-		private val logger = logger<CurrentlyListeningService>()
+	private fun incrementUpdate() {
+		updateCount++
+		updateCount %= Int.MAX_VALUE
 	}
+
+	data class SongListen(
+			val song: String,
+			val lastUpdate: Long // millis
+	)
 }

@@ -33,7 +33,15 @@ export class Api {
 				'Content-Type': 'application/json'
 			}),
 			credentials: 'include'
-		}).then(res => res.json())
+		}).then(res => {
+			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
+			// I don't like this behavior, since there was an issue. Throw an error so they fall into catch()
+			if (!res.ok) {
+				throw Error(res.statusText)
+			}
+
+			return res.json()
+		})
 	}
 
 	static put(url, params) {
