@@ -6,6 +6,9 @@ import {getCookieValue} from "../cookie";
 export const SocketContext = React.createContext();
 
 let socket = null;
+let lastUpdate = -1;
+
+let active = false;
 
 export class SocketProvider extends React.Component {
 	constructor(props) {
@@ -20,11 +23,30 @@ export class SocketProvider extends React.Component {
 		}
 	}
 
+	fetchLatestData() {
+		if (!active) {
+			return;
+		}
+
+		Api.get('currently-listening', { lastUpdate }).then(result => {
+			console.log('Then', result);
+			this.fetchLatestData();
+		}).catch(result => {
+			console.error('Catch', result);
+			setTimeout(this.fetchLatestData, 5000);
+		});
+	}
+
 	connectToSocket() {
 		if (!isLoggedIn()) {
 			return;
 		}
 
+		active = true;
+
+		this.fetchLatestData();
+
+		/*
 		const newSocket = new WebSocket(Api.getSocketUri());
 
 		newSocket.onmessage = res => {
@@ -48,47 +70,17 @@ export class SocketProvider extends React.Component {
 		this.setState({
 			nowListeningUsers: {}
 		});
+	*/
 	}
 
 	disconnectSocket() {
-		if (socket) {
-			socket.close();
-		}
+		active = false;
 	}
 
 	sendPlayEvent(track) {
-		if (!socket) {
-			return;
-		}
+		const song = track.private ? 'This track is private' : track.artist + ' - ' + track.name;
 
-		const payload = {
-			userEmail: getCookieValue('loggedInEmail')
-		};
-
-		// Had a server-side deserialization error once saying this was missing... Not sure how
-		if (!payload.userEmail) {
-			console.error('No user email found!? Not sending socket message');
-			return;
-		}
-
-		if (track) {
-			payload.trackId = track.id;
-			payload.trackArtist = track.private ? 'This track' : track.artist;
-			payload.trackName = track.private ? 'is private' : track.name;
-		}
-
-		console.debug('About to send socket data', new Date());
-		console.debug(payload);
-		const readyState = socket.readyState;
-
-		if (readyState === WebSocket.OPEN) {
-			socket.send(JSON.stringify(payload))
-		} else if (readyState === WebSocket.CONNECTING) {
-			console.info('Socket was still connecting. Ignoring socket send request');
-		} else {
-			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
-			this.connectToSocket();
-		}
+		Api.post('currently-listening', { song });
 	}
 
 	render() {
