@@ -3,6 +3,8 @@ package com.example.groove.util
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.awt.Image
 import java.util.*
 import java.io.IOException
@@ -28,4 +30,8 @@ fun Image.writeToFile(destination: File, imageType: String) {
 	val bufferedImage = BufferedImage(this.getWidth(null), this.getHeight(null), BufferedImage.TYPE_INT_RGB)
 	bufferedImage.graphics.drawImage(this, 0, 0, null)
 	ImageIO.write(bufferedImage, imageType, destination)
+}
+
+inline fun <reified T> logger(): Logger {
+	return LoggerFactory.getLogger(T::class.java)
 }

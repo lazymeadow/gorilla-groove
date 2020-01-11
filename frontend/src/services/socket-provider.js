@@ -1,11 +1,10 @@
 import React from "react";
 import {isLoggedIn} from "../util";
 import {Api} from "../api";
-import {getCookieValue} from "../cookie";
 
 export const SocketContext = React.createContext();
 
-let socket = null;
+let lastUpdate = -1;
 
 export class SocketProvider extends React.Component {
 	constructor(props) {
@@ -15,9 +14,25 @@ export class SocketProvider extends React.Component {
 			nowListeningUsers: {},
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
-			disconnectSocket: (...args) => this.disconnectSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args)
 		}
+	}
+
+	componentDidMount() {
+		// Clear the song immediately if someone refreshed their browser
+		Api.post('currently-listening', { song: null });
+
+		window.addEventListener("beforeunload", this.disconnectSocket.bind(this));
+	}
+
+	fetchLatestData() {
+		Api.get('currently-listening', { lastUpdate }).then(result => {
+			lastUpdate = result.lastUpdate;
+			this.setState({ nowListeningUsers: result.currentlyListeningUsers });
+			this.fetchLatestData();
+		}).catch(() => {
+			setTimeout(this.fetchLatestData.bind(this), 2000);
+		});
 	}
 
 	connectToSocket() {
@@ -25,69 +40,19 @@ export class SocketProvider extends React.Component {
 			return;
 		}
 
-		const newSocket = new WebSocket(Api.getSocketUri());
-
-		newSocket.onmessage = res => {
-			const data = JSON.parse(res.data);
-			console.debug('Received socket data', data);
-
-			const email = data.userEmail;
-			delete data.userEmail;
-
-			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
-			newNowListeningUsers[email] = data;
-
-			this.setState({ nowListeningUsers: newNowListeningUsers })
-		};
-		newSocket.onclose = () => {
-			console.debug('WebSocket was closed. Reconnecting');
-			this.connectToSocket();
-		};
-
-		socket = newSocket;
-		this.setState({
-			nowListeningUsers: {}
-		});
+		this.fetchLatestData();
 	}
 
 	disconnectSocket() {
-		if (socket) {
-			socket.close();
-		}
+		Api.post('currently-listening', { song: null });
 	}
 
 	sendPlayEvent(track) {
-		if (!socket) {
-			return;
-		}
-
-		const payload = {
-			userEmail: getCookieValue('loggedInEmail')
-		};
-
-		// Had a server-side deserialization error once saying this was missing... Not sure how
-		if (!payload.userEmail) {
-			console.error('No user email found!? Not sending socket message');
-			return;
-		}
-
-		if (track) {
-			payload.trackId = track.id;
-			payload.trackArtist = track.private ? 'This track' : track.artist;
-			payload.trackName = track.private ? 'is private' : track.name;
-		}
-
-		console.debug('About to send socket data', new Date());
-		console.debug(payload);
-		const readyState = socket.readyState;
-
-		if (readyState === WebSocket.OPEN) {
-			socket.send(JSON.stringify(payload))
-		} else if (readyState === WebSocket.CONNECTING) {
-			console.info('Socket was still connecting. Ignoring socket send request');
+		if (!track) {
+			Api.post('currently-listening', { song: null });
 		} else {
-			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
-			this.connectToSocket();
+			const song = track.private ? 'This track is private' : track.artist + ' - ' + track.name;
+			Api.post('currently-listening', { song });
 		}
 	}
 

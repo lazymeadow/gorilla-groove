@@ -11,7 +11,9 @@ export default function LoginPageWrapper() {
 	// This should really be handled by the logout button, but because withRouter is stupid, I made a
 	// wrapper component that will disconnect the socket on the login page
 	// https://github.com/facebook/react/issues/14061
-	socketContext.disconnectSocket();
+	// FIXME this no longer works because sending song stuff requires an active session so we can't do it post-logout
+	// Not a huge deal though because the song listen events will be cleaned up by the server in ~40 seconds
+	// socketContext.disconnectSocket();
 
 	// It would be nice to put the <MusicContext> around just the logged-in parts of the site.
 	// Then whenever you log out, you'll get a fresh Context upon log in. But because of the issue with
