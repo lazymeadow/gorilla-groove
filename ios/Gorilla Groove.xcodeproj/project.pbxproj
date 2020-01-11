@@ -9,8 +9,11 @@
 /* Begin PBXBuildFile section */
 		A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08723C2EE05003899B8 /* MyLibraryController.swift */; };
 		A815B08B23C2FC4C003899B8 /* LoginState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08A23C2FC4C003899B8 /* LoginState.swift */; };
-		A815B08E23C43B08003899B8 /* Track.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A815B08C23C43B08003899B8 /* Track.xcdatamodeld */; };
-		A829ABF723C597E90034AD69 /* TrackPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829ABF623C597E90034AD69 /* TrackPersistence.swift */; };
+		A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829ABF623C597E90034AD69 /* GroovePersistence.swift */; };
+		A829ABFA23C6CD950034AD69 /* Groove.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A829ABF823C6CD950034AD69 /* Groove.xcdatamodeld */; };
+		A829AC0223C804350034AD69 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0123C804350034AD69 /* CoreDataManager.swift */; };
+		A829AC0723CA3CA90034AD69 /* Track+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0523CA3CA90034AD69 /* Track+CoreDataClass.swift */; };
+		A829AC0823CA3CA90034AD69 /* Track+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0623CA3CA90034AD69 /* Track+CoreDataProperties.swift */; };
 		A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100ED23BD339D00D6EA2D /* AppDelegate.swift */; };
 		A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100EF23BD339D00D6EA2D /* ViewController.swift */; };
 		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
@@ -21,8 +24,11 @@
 /* Begin PBXFileReference section */
 		A815B08723C2EE05003899B8 /* MyLibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryController.swift; sourceTree = "<group>"; };
 		A815B08A23C2FC4C003899B8 /* LoginState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginState.swift; sourceTree = "<group>"; };
-		A815B08D23C43B08003899B8 /* Track.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Track.xcdatamodel; sourceTree = "<group>"; };
-		A829ABF623C597E90034AD69 /* TrackPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPersistence.swift; sourceTree = "<group>"; };
+		A829ABF623C597E90034AD69 /* GroovePersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroovePersistence.swift; sourceTree = "<group>"; };
+		A829ABF923C6CD950034AD69 /* Groove.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Groove.xcdatamodel; sourceTree = "<group>"; };
+		A829AC0123C804350034AD69 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
+		A829AC0523CA3CA90034AD69 /* Track+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Track+CoreDataClass.swift"; sourceTree = "<group>"; };
+		A829AC0623CA3CA90034AD69 /* Track+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Track+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gorilla Groove.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A89100ED23BD339D00D6EA2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A89100EF23BD339D00D6EA2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -62,6 +68,8 @@
 		A89100EC23BD339D00D6EA2D /* Gorilla Groove */ = {
 			isa = PBXGroup;
 			children = (
+				A829AC0523CA3CA90034AD69 /* Track+CoreDataClass.swift */,
+				A829AC0623CA3CA90034AD69 /* Track+CoreDataProperties.swift */,
 				A89100ED23BD339D00D6EA2D /* AppDelegate.swift */,
 				A89100EF23BD339D00D6EA2D /* ViewController.swift */,
 				A89100F123BD339D00D6EA2D /* Main.storyboard */,
@@ -70,8 +78,9 @@
 				A89100F923BD339E00D6EA2D /* Info.plist */,
 				A815B08723C2EE05003899B8 /* MyLibraryController.swift */,
 				A815B08A23C2FC4C003899B8 /* LoginState.swift */,
-				A815B08C23C43B08003899B8 /* Track.xcdatamodeld */,
-				A829ABF623C597E90034AD69 /* TrackPersistence.swift */,
+				A829ABF623C597E90034AD69 /* GroovePersistence.swift */,
+				A829ABF823C6CD950034AD69 /* Groove.xcdatamodeld */,
+				A829AC0123C804350034AD69 /* CoreDataManager.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -148,11 +157,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
+				A829ABFA23C6CD950034AD69 /* Groove.xcdatamodeld in Sources */,
+				A829AC0823CA3CA90034AD69 /* Track+CoreDataProperties.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* LoginState.swift in Sources */,
-				A815B08E23C43B08003899B8 /* Track.xcdatamodeld in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */,
-				A829ABF723C597E90034AD69 /* TrackPersistence.swift in Sources */,
+				A829AC0723CA3CA90034AD69 /* Track+CoreDataClass.swift in Sources */,
+				A829AC0223C804350034AD69 /* CoreDataManager.swift in Sources */,
+				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,13 +366,13 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
-		A815B08C23C43B08003899B8 /* Track.xcdatamodeld */ = {
+		A829ABF823C6CD950034AD69 /* Groove.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				A815B08D23C43B08003899B8 /* Track.xcdatamodel */,
+				A829ABF923C6CD950034AD69 /* Groove.xcdatamodel */,
 			);
-			currentVersion = A815B08D23C43B08003899B8 /* Track.xcdatamodel */;
-			path = Track.xcdatamodeld;
+			currentVersion = A829ABF923C6CD950034AD69 /* Groove.xcdatamodel */;
+			path = Groove.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};
