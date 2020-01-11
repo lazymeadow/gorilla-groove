@@ -36,16 +36,13 @@ class CurrentlyListeningController(
 
 	@PostMapping
 	fun setCurrentlyListening(@RequestBody body: NewCurrentlyListening) {
-		logger.info("Set currently listening to ${body.song}")
 		currentlyListeningService.setListeningUser(loadLoggedInUser(), body.song)
 	}
 
 	data class NewCurrentlyListening(val song: String?)
 
 	companion object {
-		private val logger = logger<CurrentlyListeningService>()
-
 		private const val CHECK_INTERVAL = 2000L
-		private const val NUM_CHECKS = 5
+		private const val NUM_CHECKS = 25
 	}
 }
