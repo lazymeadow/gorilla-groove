@@ -22,8 +22,12 @@ class AuthenticationController(
 
 		logger.info(userAuthenticationDTO.email + " logged in")
 
-		return ResponseEntity
-				.ok(AuthResponseDTO(token, userAuthenticationDTO.email, user.name))
+		return ResponseEntity.ok(AuthResponseDTO(
+				id = user.id,
+				token = token,
+				email = userAuthenticationDTO.email,
+				username = user.name
+		))
 	}
 
 	@PostMapping("/logout")
@@ -47,6 +51,7 @@ class AuthenticationController(
 	)
 
 	data class AuthResponseDTO(
+			val id: Long,
 			val token: String,
 			val email: String,
 			val username: String
