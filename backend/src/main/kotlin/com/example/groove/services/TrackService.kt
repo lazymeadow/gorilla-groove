@@ -65,18 +65,20 @@ class TrackService(
 
 	@Transactional(readOnly = true)
 	fun getTracksUpdatedSinceTimestamp(
-			timestamp: Timestamp,
+			minimum: Timestamp,
+			maximum: Timestamp,
 			page: Int,
 			size: Int
 	): TrackChangesResponseDTO {
-		val tracks = trackRepository.getTracksUpdatedSinceTimestamp(
+		val tracks = trackRepository.getTracksUpdatedBetweenTimestamp(
 				userId = loadLoggedInUser().id,
-				timestamp = timestamp,
+				minimum = minimum,
+				maximum = maximum,
 				pageable = PageRequest.of(page, size)
 		)
 
 		val (deletedTracks, aliveTracks) = tracks.partition { it.deleted }
-		val (newTracks, modifiedTracks) = aliveTracks.partition { it.createdAt > timestamp }
+		val (newTracks, modifiedTracks) = aliveTracks.partition { it.createdAt > minimum }
 
 		return TrackChangesResponseDTO(
 				content = TrackChangesDTO(

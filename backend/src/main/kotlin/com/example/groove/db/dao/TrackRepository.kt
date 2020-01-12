@@ -76,13 +76,15 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Query("""
 			SELECT t
 			FROM Track t
-			WHERE t.updatedAt > :timestamp
+			WHERE t.updatedAt > :minimum
+			AND t.updatedAt < :maximum
 			AND t.user.id = :userId
 			ORDER BY t.id
 			""") // Order by ID so the pagination is predictable
-	fun getTracksUpdatedSinceTimestamp(
+	fun getTracksUpdatedBetweenTimestamp(
 			@Param("userId") userId: Long,
-			@Param("timestamp") timestamp: Timestamp,
+			@Param("minimum") minimum: Timestamp,
+			@Param("maximum") maximum: Timestamp,
 			pageable: Pageable
 	): Page<Track>
 }
