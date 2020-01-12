@@ -65,17 +65,12 @@ class TrackService(
 
 	@Transactional(readOnly = true)
 	fun getTracksUpdatedSinceTimestamp(
-			userId: Long,
 			timestamp: Timestamp,
 			page: Int,
 			size: Int
 	): TrackChangesResponseDTO {
-		if (userId != loadLoggedInUser().id) {
-			throw IllegalArgumentException("Not allowed to access track changes for anyone but yourself")
-		}
-
 		val tracks = trackRepository.getTracksUpdatedSinceTimestamp(
-				userId = userId,
+				userId = loadLoggedInUser().id,
 				timestamp = timestamp,
 				pageable = PageRequest.of(page, size)
 		)

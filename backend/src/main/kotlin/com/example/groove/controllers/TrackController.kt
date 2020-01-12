@@ -48,15 +48,18 @@ class TrackController(
 		)
 	}
 
-	// Used by the Android App
-	@GetMapping("/changes-since-timestamp/userId/{userId}/timestamp/{timestamp}")
+	// Used by the apps to keep local data in sync
+	@GetMapping("/changes-since-timestamp/timestamp/{timestamp}")
 	fun getTracksChangedSinceTimestamp(
-			@PathVariable("userId") userId: Long,
 			@PathVariable("timestamp") unixTimestamp: Long,
 			@RequestParam(value = "page", defaultValue = "0") page: Int,
 			@RequestParam(value = "size", defaultValue = "20") size: Int
 	): TrackChangesResponseDTO {
-		return trackService.getTracksUpdatedSinceTimestamp(userId, Timestamp(unixTimestamp), page, size)
+		return trackService.getTracksUpdatedSinceTimestamp(
+				timestamp = Timestamp(unixTimestamp),
+				page = page,
+				size = size
+		)
 	}
 
 	// This endpoint is laughably narrow in scope. But I don't know for sure how this is going to evolve later

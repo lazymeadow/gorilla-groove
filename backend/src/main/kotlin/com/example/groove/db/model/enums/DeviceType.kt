@@ -4,5 +4,7 @@ package com.example.groove.db.model.enums
 // Use caution when editing the order, and only add new ones to the end
 enum class DeviceType {
 	WEB,
-	ANDROID;
+	ANDROID,
+	IPHONE
+	;
 }
