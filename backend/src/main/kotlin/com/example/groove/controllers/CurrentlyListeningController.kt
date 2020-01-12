@@ -3,7 +3,6 @@ package com.example.groove.controllers
 import com.example.groove.dto.CurrentlyListeningUsersDTO
 import com.example.groove.services.CurrentlyListeningService
 import com.example.groove.util.loadLoggedInUser
-import com.example.groove.util.logger
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -22,13 +21,11 @@ class CurrentlyListeningController(
 
 		// Long poll for updates to the currently listening
 		for (i in 0..NUM_CHECKS) {
-			val result = currentlyListeningService.getListeningUsersIfNew(currentUser, lastUpdate)
-
-			if (result != null) {
-				return ResponseEntity.ok(result)
-			} else {
-				Thread.sleep(CHECK_INTERVAL)
+			currentlyListeningService.getListeningUsersIfNew(currentUser, lastUpdate)?.let {
+				return ResponseEntity.ok(it)
 			}
+
+			Thread.sleep(CHECK_INTERVAL)
 		}
 
 		return ResponseEntity(HttpStatus.NOT_FOUND)

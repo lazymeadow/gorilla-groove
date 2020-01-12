@@ -7,3 +7,16 @@ data class TrackChangesDTO(
 		val modifiedTracks: List<Track>,
 		val removedTrackIds: List<Long>
 )
+
+data class PageResponseDTO(
+		val offset: Long,
+		val pageSize: Int,
+		val pageNumber: Int,
+		val totalPages: Int,
+		val totalElements: Long
+)
+
+data class TrackChangesResponseDTO(
+		val content: TrackChangesDTO,
+		val pageable: PageResponseDTO
+)

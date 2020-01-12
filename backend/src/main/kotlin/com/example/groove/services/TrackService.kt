@@ -6,19 +6,21 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
+import com.example.groove.dto.PageResponseDTO
 import com.example.groove.dto.TrackChangesDTO
+import com.example.groove.dto.TrackChangesResponseDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
-import kotlin.math.log
 
 
 @Service
@@ -62,20 +64,38 @@ class TrackService(
 	}
 
 	@Transactional(readOnly = true)
-	fun getTracksUpdatedSinceTimestamp(userId: Long, timestamp: Timestamp): TrackChangesDTO {
+	fun getTracksUpdatedSinceTimestamp(
+			userId: Long,
+			timestamp: Timestamp,
+			page: Int,
+			size: Int
+	): TrackChangesResponseDTO {
 		if (userId != loadLoggedInUser().id) {
 			throw IllegalArgumentException("Not allowed to access track changes for anyone but yourself")
 		}
 
-		val tracks = trackRepository.getTracksUpdatedSinceTimestamp(userId = userId, timestamp = timestamp)
+		val tracks = trackRepository.getTracksUpdatedSinceTimestamp(
+				userId = userId,
+				timestamp = timestamp,
+				pageable = PageRequest.of(page, size)
+		)
 
 		val (deletedTracks, aliveTracks) = tracks.partition { it.deleted }
 		val (newTracks, modifiedTracks) = aliveTracks.partition { it.createdAt > timestamp }
 
-		return TrackChangesDTO(
-				newTracks = newTracks,
-				modifiedTracks = modifiedTracks,
-				removedTrackIds = deletedTracks.map { it.id }
+		return TrackChangesResponseDTO(
+				content = TrackChangesDTO(
+						newTracks = newTracks,
+						modifiedTracks = modifiedTracks,
+						removedTrackIds = deletedTracks.map { it.id }
+				),
+				pageable = PageResponseDTO(
+						offset = tracks.pageable.offset,
+						pageNumber = tracks.pageable.pageNumber,
+						pageSize = tracks.pageable.pageSize,
+						totalPages = tracks.totalPages,
+						totalElements = tracks.totalElements
+				)
 		)
 	}
 

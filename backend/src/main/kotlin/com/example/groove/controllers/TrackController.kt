@@ -5,7 +5,6 @@ import com.example.groove.dto.*
 import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeService
-import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.loadLoggedInUser
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
@@ -29,13 +28,13 @@ class TrackController(
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
 	@GetMapping
-    fun getTracks(
-			@RequestParam(value = "userId") userId: Long?,
-			@RequestParam(value = "name") name: String?,
-			@RequestParam(value = "artist") artist: String?,
-			@RequestParam(value = "album") album: String?,
-			@RequestParam(value = "searchTerm") searchTerm: String?,
-			@RequestParam(value = "showHidden") showHidden: Boolean?,
+	fun getTracks(
+			@RequestParam("userId") userId: Long?,
+			@RequestParam("name") name: String?,
+			@RequestParam("artist") artist: String?,
+			@RequestParam("album") album: String?,
+			@RequestParam("searchTerm") searchTerm: String?,
+			@RequestParam("showHidden") showHidden: Boolean?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
 		return trackService.getTracks(
@@ -47,24 +46,26 @@ class TrackController(
 				showHidden = showHidden ?: false,
 				pageable = pageable
 		)
-    }
+	}
 
 	// Used by the Android App
 	@GetMapping("/changes-since-timestamp/userId/{userId}/timestamp/{timestamp}")
-    fun getTracksChangedSinceTimestamp(
-			@PathVariable(value = "userId") userId: Long,
-			@PathVariable(value = "timestamp") unixTimestamp: Long
-	): TrackChangesDTO {
-		return trackService.getTracksUpdatedSinceTimestamp(userId, Timestamp(unixTimestamp))
-    }
+	fun getTracksChangedSinceTimestamp(
+			@PathVariable("userId") userId: Long,
+			@PathVariable("timestamp") unixTimestamp: Long,
+			@RequestParam(value = "page", defaultValue = "0") page: Int,
+			@RequestParam(value = "size", defaultValue = "20") size: Int
+	): TrackChangesResponseDTO {
+		return trackService.getTracksUpdatedSinceTimestamp(userId, Timestamp(unixTimestamp), page, size)
+	}
 
 	// This endpoint is laughably narrow in scope. But I don't know for sure how this is going to evolve later
 	@GetMapping("/all-count-since-timestamp")
-    fun getAllTrackCountSinceTimestamp(
-			@RequestParam(value = "timestamp") unixTimestamp: Long
+	fun getAllTrackCountSinceTimestamp(
+			@RequestParam("timestamp") unixTimestamp: Long
 	): Int {
 		return trackService.getAllTrackCountSinceTimestamp(Timestamp(unixTimestamp))
-    }
+	}
 
 	@PostMapping("/mark-listened")
 	fun markSongAsListenedTo(

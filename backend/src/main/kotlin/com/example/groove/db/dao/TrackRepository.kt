@@ -78,9 +78,11 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			FROM Track t
 			WHERE t.updatedAt > :timestamp
 			AND t.user.id = :userId
-			""")
+			ORDER BY t.id
+			""") // Order by ID so the pagination is predictable
 	fun getTracksUpdatedSinceTimestamp(
 			@Param("userId") userId: Long,
-			@Param("timestamp") timestamp: Timestamp
-	): List<Track>
+			@Param("timestamp") timestamp: Timestamp,
+			pageable: Pageable
+	): Page<Track>
 }
