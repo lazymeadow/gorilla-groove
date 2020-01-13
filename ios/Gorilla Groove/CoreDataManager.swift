@@ -11,7 +11,7 @@ import CoreData
 
 final class CoreDataManager {
     
-    private let modelName: String
+    private let modelName = "Groove"
     
     private(set) lazy var managedObjectContext: NSManagedObjectContext = {
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -21,7 +21,6 @@ final class CoreDataManager {
         return managedObjectContext
     }()
 
-    
     private lazy var managedObjectModel: NSManagedObjectModel = {
         guard let modelURL = Bundle.main.url(forResource: self.modelName, withExtension: "momd") else {
             fatalError("Unable to Find Data Model")
@@ -59,8 +58,4 @@ final class CoreDataManager {
         
         return persistentStoreCoordinator
     }()
-    
-    init(modelName: String) {
-        self.modelName = modelName
-    }
 }

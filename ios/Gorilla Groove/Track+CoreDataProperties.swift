@@ -17,9 +17,9 @@ extension Track {
         return NSFetchRequest<Track>(entityName: "Track")
     }
 
-    @NSManaged public var album: String?
-    @NSManaged public var artist: String?
-    @NSManaged public var created_at: NSDate?
+    @NSManaged public var album: String
+    @NSManaged public var artist: String
+    @NSManaged public var created_at: NSDate
     @NSManaged public var featuring: String?
     @NSManaged public var genre: String?
     @NSManaged public var id: Int64
@@ -27,11 +27,10 @@ extension Track {
     @NSManaged public var is_private: Bool
     @NSManaged public var last_played: NSDate?
     @NSManaged public var length: Int16
-    @NSManaged public var name: String?
+    @NSManaged public var name: String
     @NSManaged public var note: String?
     @NSManaged public var play_count: Int16
     @NSManaged public var release_year: Int16
     @NSManaged public var track_number: Int16
-    @NSManaged public var updated_at: NSDate?
 
 }

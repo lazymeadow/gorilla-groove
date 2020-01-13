@@ -21,13 +21,12 @@ struct LoginRequest: Codable {
 
 struct LoginResponse: Codable {
     let token: String
+    let id: Int
     //    let email: String
     let username: String
 }
 
-class ViewController: UIViewController {
-    var container: NSPersistentContainer!
-    
+class ViewController: UIViewController {    
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
     @IBOutlet weak var appVersion: UILabel!
@@ -37,10 +36,6 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        guard container != nil else {
-            fatalError("This view needs a persistent container.")
-        }
         
         let tap = UITapGestureRecognizer(
             target: self.view,
