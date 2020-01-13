@@ -79,8 +79,11 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			WHERE t.updatedAt > :minimum
 			AND t.updatedAt < :maximum
 			AND t.user.id = :userId
+			AND (t.deleted = FALSE OR t.createdAt < :minimum)
 			ORDER BY t.id
-			""") // Order by ID so the pagination is predictable
+			""")
+	// Filter out things that were created AND deleted in the same time frame
+	// Order by ID so the pagination is predictable
 	fun getTracksUpdatedBetweenTimestamp(
 			@Param("userId") userId: Long,
 			@Param("minimum") minimum: Timestamp,
