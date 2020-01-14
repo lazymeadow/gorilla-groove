@@ -7,7 +7,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.Image
 import java.util.*
-import java.io.IOException
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.io.File
@@ -24,6 +23,20 @@ fun createMapper(): ObjectMapper = ObjectMapper()
 
 fun String.blankAsNull(): String? {
 	return if (this.isBlank()) null else this
+}
+
+fun String.withNewExtension(extension: String): String {
+	val extensionWithoutDot = if (extension.first() == '.') extension.substring(1) else extension
+	return this.split('.')
+			.dropLast(1)
+			.plus(extensionWithoutDot)
+			.joinToString(".")
+}
+
+fun String.withoutExtension(): String {
+	return this.split('.')
+			.dropLast(1)
+			.joinToString(".")
 }
 
 fun Image.writeToFile(destination: File, imageType: String) {

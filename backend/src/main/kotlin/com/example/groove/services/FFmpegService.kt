@@ -2,6 +2,7 @@ package com.example.groove.services
 
 import com.example.groove.properties.FFmpegProperties
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.services.enums.AudioFormat
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
@@ -16,32 +17,35 @@ import java.util.*
 
 @Component
 class FFmpegService(
-        private val ffmpegProperties: FFmpegProperties,
-        private val fileStorageProperties: FileStorageProperties
+		private val ffmpegProperties: FFmpegProperties,
+		private val fileStorageProperties: FileStorageProperties
 ) {
 
-    fun convertTrack(fileName: String): File {
-        val convertedFileName = UUID.randomUUID().toString() + ".ogg"
+	fun convertTrack(fileName: String, audioFormat: AudioFormat): File {
+		val convertedFileName = UUID.randomUUID().toString() + audioFormat.extension
 
-        val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
+		val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
 
-        val ffprobe = FFprobe(ffmpegProperties.ffmpegBinaryLocation + "ffprobe")
+		val ffprobe = FFprobe(ffmpegProperties.ffmpegBinaryLocation + "ffprobe")
 
-        val builder = FFmpegBuilder()
-                .addInput(fileStorageProperties.tmpDir + fileName)
-                .addOutput(fileStorageProperties.tmpDir + convertedFileName)
-                .done()
+		val builder = FFmpegBuilder()
+				.addInput(fileStorageProperties.tmpDir + fileName)
+				.addOutput(fileStorageProperties.tmpDir + convertedFileName)
 
-		// TODO clean up old file
+		// For whatever reason, if we don't set the quality explicitly the mp3 file doubles in length.
+		// And I don't mean file size, I mean audio duration. Very weird. There is supposedly another flag
+		// we could use called "write_xing 0", but it needs to be placed in front of the output in the
+		// command string, and this ffmpeg library has no support to do this, so we'd have to rip out this
+		// library and go straight command line. Might not be a bad idea, but I don't want to right now
+		if (audioFormat == AudioFormat.MP3) {
+			builder.audio_quality = 3.0
+		}
 
-        val executor = FFmpegExecutor(ffmpeg, ffprobe)
-        executor.createJob(builder).run()
-
-		// Delete the non-converted file, as we no longer need it
-		File(fileStorageProperties.tmpDir + fileName).delete()
+		val executor = FFmpegExecutor(ffmpeg, ffprobe)
+		executor.createJob(builder.done()).run()
 
 		return File(fileStorageProperties.tmpDir + convertedFileName)
-    }
+	}
 
 	// Start and End time must be strings like "00:01:02.500"
 	fun trimSong(song: File, startTime: String?, duration: String?): File {

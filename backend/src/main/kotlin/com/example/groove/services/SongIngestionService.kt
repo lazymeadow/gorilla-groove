@@ -1,12 +1,16 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
+import com.example.groove.util.withNewExtension
+import com.example.groove.util.withoutExtension
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,6 +29,7 @@ class SongIngestionService(
 		private val ffmpegService: FFmpegService,
 		private val fileMetadataService: FileMetadataService,
 		private val trackRepository: TrackRepository,
+		private val trackLinkRepository: TrackLinkRepository,
 		private val fileStorageService: FileStorageService,
 		private val imageService: ImageService
 ) {
@@ -120,49 +125,98 @@ class SongIngestionService(
 	fun convertAndSaveTrackForUser(fileName: String, user: User, originalFileName: String): Track {
 		logger.info("Saving file $fileName for user ${user.name}")
 
-		val convertedFile = ffmpegService.convertTrack(fileName)
+		val oggFile = ffmpegService.convertTrack(fileName, AudioFormat.OGG)
+		// iOS does not support OGG playback. So at least for now, we have to store everything in both formats...
+		val mp3File = ffmpegService.convertTrack(fileName, AudioFormat.MP3)
 
 		// add the track to database
-		val track = fileMetadataService.createTrackFromSongFile(convertedFile, user, originalFileName)
+		val track = fileMetadataService.createTrackFromSongFile(oggFile, user, originalFileName)
 		trackRepository.save(track)
+		track.fileName = "${track.id}.ogg"
 
-		val renamedSongFile = renameSongFile(convertedFile, track)
-
-		fileStorageService.storeSong(renamedSongFile, track.id)
+		fileStorageService.storeSong(oggFile, track.id, AudioFormat.OGG)
+		fileStorageService.storeSong(mp3File, track.id, AudioFormat.MP3)
 
 		// We have stored the file in S3, (or copied it to its final home)
 		// We no longer need these files and can clean it up to save space
-		convertedFile.delete()
-		renamedSongFile.delete()
+		oggFile.delete()
+		mp3File.delete()
 
 		return track
 	}
 
-	// Now that the file has been saved and has an ID, rename the file on disk to use the ID in the name
-	// This way there will never be collision problems with names
-	// TODO group the songs in folders of 1000 as with album art
-	private fun renameSongFile(sourceFile: File, track: Track): File {
-		val destinationFile = File(sourceFile.parent + "/${track.id}.ogg")
-		sourceFile.renameTo(destinationFile)
-
-		track.fileName = "${track.id}.ogg"
-		trackRepository.save(track)
-
-		return destinationFile
-	}
-
+	@Transactional
 	fun trimSong(track: Track, startTime: String?, duration: String?): Int {
-		val tmpFile = fileStorageService.loadSong(track)
+		renameSharedTracks(track)
 
-		val trimmedSong = ffmpegService.trimSong(tmpFile, startTime, duration)
+		val oggFile = fileStorageService.loadSong(track, AudioFormat.OGG)
 
-		fileStorageService.storeSong(trimmedSong, track.id)
+		val trimmedSong = ffmpegService.trimSong(oggFile, startTime, duration)
+
+		fileStorageService.storeSong(trimmedSong, track.id, AudioFormat.OGG)
 
 		val newLength = fileMetadataService.getTrackLength(trimmedSong)
+		// The new file we save is always specific to this song, so name it with the song's ID as we do
+		// with any song file names that aren't borrowed / shared
+		val newFileName = "${track.id}.ogg"
+		if (newFileName != track.fileName) {
+			trackLinkRepository.forceExpireLinksByTrackId(track.id)
+			track.fileName = newFileName
+		}
 
+		// It might make more sense to download the mp3 and trim it instead of re-converting the OGG to mp3
+		// Maybe less loss in quality? But hard to say. Would require experimentation. At least this way we
+		// save ourselves a trip to s3 and only download a single file
+		val mp3File = ffmpegService.convertTrack(oggFile.name, AudioFormat.MP3)
+		fileStorageService.storeSong(mp3File, track.id, AudioFormat.MP3)
+
+		oggFile.delete()
+		mp3File.delete()
 		trimmedSong.delete()
 
 		return newLength
+	}
+
+	// Other users could be sharing this track. We don't want to let another user trim the track for all users
+	// Make sure all the tracks sharing the filename of this track are no longer using it
+	private fun renameSharedTracks(track: Track) {
+		// If the track we are trimming has a different ID than its current name, then we don't have to do anything.
+		// We will be giving this track a new file using its ID as its name, and all existing shared tracks can continue
+		// with their life as is
+		if (track.fileName.withoutExtension().toLong() != track.id) {
+			return
+		}
+
+		val otherTracksUsingFile = trackRepository.findAllByFileName(track.fileName)
+				.filter { it.id != track.id }
+		// Nothing is sharing this file name. We don't have to worry
+		if (otherTracksUsingFile.isEmpty()) {
+			return
+		}
+
+		// We have at least one other song sharing the file with this song. Pick the first song of the shared songs,
+		// and use its ID as the basis for the new song shares.
+		val idForNewName = otherTracksUsingFile.first().id
+
+		// For each supported file format, copy it to give it a new name that won't be stomped out with the new trim
+		listOf(AudioFormat.OGG, AudioFormat.MP3).forEach { audioExtension ->
+			val newSharedFileName = idForNewName.toString() + audioExtension.extension
+			fileStorageService.copySong(
+					track.fileName.withNewExtension(audioExtension.extension),
+					newSharedFileName,
+					audioExtension
+			)
+		}
+
+		// Now that we have a new file name, update our DB entities to point to the new one
+		otherTracksUsingFile.forEach {
+			// File name was created at a time when only .ogg existed. Kind of awkward, but just use the OGG name here
+			// MP3 name is always derived by just dropping the extension and replacing it
+			it.fileName = idForNewName.toString() + AudioFormat.OGG.extension
+			trackRepository.save(it)
+			// We are using a new file name, and our track link will still link to the old file name unless we force expire it
+			trackLinkRepository.forceExpireLinksByTrackId(it.id)
+		}
 	}
 
 	fun createTrackFileWithMetadata(trackId: Long): File {
@@ -173,7 +227,7 @@ class SongIngestionService(
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
-		val songFile = fileStorageService.loadSong(track)
+		val songFile = fileStorageService.loadSong(track, AudioFormat.OGG)
 		val songArtist = if (track.artist.isBlank()) "Unknown" else track.artist
 		val songName = if (track.name.isBlank()) "Unknown" else track.name
 		val newName = "$songArtist - $songName.ogg"

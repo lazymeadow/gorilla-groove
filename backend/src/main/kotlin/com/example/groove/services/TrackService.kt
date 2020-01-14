@@ -10,6 +10,7 @@ import com.example.groove.dto.PageResponseDTO
 import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.TrackChangesResponseDTO
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -240,7 +241,7 @@ class TrackService(
 
 	fun getPublicTrackInfo(trackId: Long): Map<String, Any?> {
 		// This will throw an exception if anonymous access is not allowed for this file
-		val trackLink = fileStorageService.getSongLink(trackId, true)
+		val trackLink = fileStorageService.getSongLink(trackId, true, AudioFormat.OGG)
 
 		val albumLink = fileStorageService.getAlbumArtLink(trackId, true)
 

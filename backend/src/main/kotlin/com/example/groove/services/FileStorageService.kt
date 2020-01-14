@@ -6,6 +6,7 @@ import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackLink
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.springframework.transaction.annotation.Propagation
@@ -21,37 +22,45 @@ abstract class FileStorageService(
 		private val trackLinkRepository: TrackLinkRepository,
 		private val fileStorageProperties: FileStorageProperties
 ) {
-	val test = fileStorageProperties.tmpDir
-
-	abstract fun storeSong(song: File, trackId: Long)
-	abstract fun loadSong(track: Track): File
+	abstract fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat)
+	abstract fun loadSong(track: Track, audioFormat: AudioFormat): File
 	abstract fun storeAlbumArt(albumArt: File, trackId: Long)
 	abstract fun loadAlbumArt(trackId: Long): File?
 	abstract fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
-	abstract fun getSongLink(trackId: Long, anonymousAccess: Boolean): String
+	abstract fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String
 	abstract fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String?
 	abstract fun deleteSong(fileName: String)
+	abstract fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat)
 
 	// Do all of this in a synchronized, new transaction to prevent race conditions with link creation / searching
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	protected fun getCachedSongLink(trackId: Long, anonymousAccess: Boolean, newLinkFun: (track: Track) -> String): String {
+	protected fun getCachedSongLink(
+			trackId: Long,
+			anonymousAccess: Boolean,
+			audioFormat: AudioFormat,
+			newLinkFun: (track: Track) -> String
+	): String {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
 		synchronized(this) {
-			val trackLink = trackLinkRepository.findUnexpiredByTrackId(track.id)
+			val trackLink = trackLinkRepository.findUnexpiredByTrackIdAndAudioFormat(track.id, audioFormat)
 
 			return when {
 				trackLink != null -> trackLink.link
-				!anonymousAccess -> cacheSongLink(track, newLinkFun(track))
+				!anonymousAccess -> cacheSongLink(track, audioFormat, newLinkFun(track))
 				else -> throw ResourceNotFoundException("No valid link found")
 			}
 		}
 	}
 
-	private fun cacheSongLink(track: Track, link: String): String {
-		val expiration = Timestamp(expireHoursOut(4).time)
-		val trackLink = TrackLink(track = track, link = link, expiresAt = expiration)
+	private fun cacheSongLink(track: Track, audioFormat: AudioFormat, link: String): String {
+		// Expire the link 1 minute earlier than 4 hours, so someone can't request the link and then
+		// have Amazon revoke it right before they get a chance to stream the data
+		val expirationMillis = expireHoursOut(4).time - 60_000
+
+		val expiration = Timestamp(expirationMillis)
+		val trackLink = TrackLink(track = track, link = link, audioFormat = audioFormat, expiresAt = expiration)
 		trackLinkRepository.save(trackLink)
 
 		return link
@@ -62,7 +71,7 @@ abstract class FileStorageService(
 
 		// If we are doing anonymous access, also make sure that the track is within its temporary access time
 		if (anonymousAccess) {
-			trackLinkRepository.findUnexpiredByTrackId(track.id)
+			trackLinkRepository.findUnexpiredByTrackIdAndAudioFormat(track.id, null)
 					?: throw IllegalArgumentException("Album art for track ID: $trackId not available to anonymous users!")
 		}
 

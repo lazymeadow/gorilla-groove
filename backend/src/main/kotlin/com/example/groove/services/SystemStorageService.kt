@@ -5,6 +5,8 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.MusicProperties
+import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.withNewExtension
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -21,8 +23,12 @@ class SystemStorageService(
 		fileStorageProperties: FileStorageProperties
 ) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
 
-	override fun loadSong(track: Track): File {
-		val sourceFile = File("${musicProperties.musicDirectoryLocation}${track.fileName}")
+	override fun loadSong(track: Track, audioFormat: AudioFormat): File {
+		val fileName = when (audioFormat) {
+			AudioFormat.OGG -> track.fileName
+			AudioFormat.MP3 -> track.fileName.withNewExtension(AudioFormat.MP3.extension)
+		}
+		val sourceFile = File(musicProperties.musicDirectoryLocation + fileName)
 
 		val destinationPath = generateTmpFilePath()
 
@@ -31,8 +37,9 @@ class SystemStorageService(
 		return destinationPath.toFile()
 	}
 
-	override fun storeSong(song: File, trackId: Long) {
-		val destinationFile = File("${musicProperties.musicDirectoryLocation}$trackId.ogg")
+	override fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat) {
+		val fileName = trackId.toString() + audioFormat.extension
+		val destinationFile = File(musicProperties.musicDirectoryLocation + fileName)
 
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
@@ -86,10 +93,15 @@ class SystemStorageService(
 		}
 	}
 
-	override fun getSongLink(trackId: Long, anonymousAccess: Boolean): String {
-		return getCachedSongLink(trackId, anonymousAccess) { track ->
+	override fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String {
+		return getCachedSongLink(trackId, anonymousAccess, audioFormat) { track ->
+			val fileName = when (audioFormat) {
+				AudioFormat.OGG -> track.fileName
+				AudioFormat.MP3 -> track.fileName.withNewExtension(AudioFormat.MP3.extension)
+			}
+
 			// This is pretty jank. But it is only intended for use in local development right now
-			"http://localhost:8080/music/${track.fileName}"
+			"http://localhost:8080/music/$fileName"
 		}
 	}
 
@@ -98,6 +110,13 @@ class SystemStorageService(
 
 		val parentDir = trackId / 1000
 		return "http://localhost:8080/album-art/$parentDir/$trackId.png"
+	}
+
+	override fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat) {
+		val sourceFile = File(musicProperties.musicDirectoryLocation + sourceFileName)
+		val destFile = File(musicProperties.musicDirectoryLocation + destinationFileName)
+
+		sourceFile.copyTo(destFile, true)
 	}
 
 	companion object {

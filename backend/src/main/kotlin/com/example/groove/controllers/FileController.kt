@@ -5,6 +5,7 @@ import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
+import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
@@ -48,7 +49,7 @@ class FileController(
 		return track!!
     }
 
-	@RequestMapping("/download/{trackId}")
+	@GetMapping("/download/{trackId}")
 	fun getFile(@PathVariable trackId: Long, response: HttpServletResponse) {
 		val file = songIngestionService.createTrackFileWithMetadata(trackId)
 		response.contentType = "audio/ogg"
@@ -67,7 +68,7 @@ class FileController(
 		file.delete()
 	}
 
-	@RequestMapping("/download-apk")
+	@GetMapping("/download-apk")
 	fun downloadApk(): ResponseEntity<Resource> {
 		val path = fileStorageProperties.apkDownloadDir
 				?: throw IllegalStateException("No APK location has been configured!")
@@ -93,11 +94,14 @@ class FileController(
 	}
 
 	@GetMapping("/link/{trackId}")
-	fun getLinksForTrack(@PathVariable trackId: Long): TrackLinks {
+	fun getLinksForTrack(
+			@PathVariable trackId: Long,
+			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
+	): TrackLinks {
 		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().email}")
 
 		return TrackLinks(
-				fileStorageService.getSongLink(trackId, false),
+				fileStorageService.getSongLink(trackId, false, audioFormat),
 				fileStorageService.getAlbumArtLink(trackId, false),
 				s3Properties.awsStoreInS3
 		)
@@ -108,7 +112,7 @@ class FileController(
 		logger.info("Anonymous track links were requested for Track ID: $trackId")
 
 		return TrackLinks(
-				fileStorageService.getSongLink(trackId, true),
+				fileStorageService.getSongLink(trackId, true, AudioFormat.OGG),
 				null,
 				s3Properties.awsStoreInS3
 		)

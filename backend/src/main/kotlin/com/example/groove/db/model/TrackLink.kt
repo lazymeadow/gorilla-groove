@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.services.enums.AudioFormat
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -17,6 +18,9 @@ data class TrackLink(
 
 		@Column
 		val link: String = "",
+
+		@Enumerated
+		val audioFormat: AudioFormat,
 
 		@Column(name = "expires_at")
 		val expiresAt: Timestamp

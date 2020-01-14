@@ -10,6 +10,8 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
+import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.withNewExtension
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -40,13 +42,23 @@ class S3StorageService(
 				.build()
 	}
 
-	override fun storeSong(song: File, trackId: Long) {
-		logger.info("Storing song in S3 with ID: $trackId")
-		s3Client.putObject(bucketName, "music/$trackId.ogg", song)
+	override fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat) {
+		val key = when (audioFormat) {
+			AudioFormat.MP3 -> "music-mp3/$trackId${audioFormat.extension}"
+			AudioFormat.OGG -> "music/$trackId${audioFormat.extension}"
+		}
+
+		logger.info("Storing song in S3 as $key")
+		s3Client.putObject(bucketName, key, song)
 	}
 
-	override fun loadSong(track: Track): File {
-		val s3Stream = s3Client.getObject(bucketName, "music/${track.fileName}").objectContent
+	override fun loadSong(track: Track, audioFormat: AudioFormat): File {
+		val key = when (audioFormat) {
+			AudioFormat.MP3 -> "music-mp3/${track.fileName.withNewExtension(audioFormat.extension)}"
+			AudioFormat.OGG -> "music/${track.fileName}"
+		}
+
+		val s3Stream = s3Client.getObject(bucketName, key).objectContent
 		val filePath = generateTmpFilePath()
 		Files.copy(s3Stream, filePath, StandardCopyOption.REPLACE_EXISTING)
 
@@ -82,8 +94,8 @@ class S3StorageService(
 		s3Client.deleteObject(bucketName, "music/$fileName")
 	}
 
-	override fun getSongLink(trackId: Long, anonymousAccess: Boolean): String {
-		return getCachedSongLink(trackId, anonymousAccess) { track ->
+	override fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String {
+		return getCachedSongLink(trackId, anonymousAccess, audioFormat) { track ->
 			s3Client.generatePresignedUrl(bucketName, "music/${track.fileName}", expireHoursOut(4)).toString()
 		}
 	}
@@ -92,6 +104,13 @@ class S3StorageService(
 		val track = getTrackForAlbumArt(trackId, anonymousAccess)
 
 		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
+	}
+
+	override fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat) {
+		val sourceKey = "${audioFormat.s3Bucket}/$sourceFileName"
+		val destKey = "${audioFormat.s3Bucket}/$destinationFileName"
+
+		s3Client.copyObject(bucketName, sourceKey, bucketName, destKey)
 	}
 
 	companion object {
