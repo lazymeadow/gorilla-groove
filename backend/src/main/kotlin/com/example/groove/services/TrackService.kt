@@ -11,6 +11,7 @@ import com.example.groove.dto.TrackChangesDTO
 import com.example.groove.dto.TrackChangesResponseDTO
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.DateUtils
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -223,12 +224,15 @@ class TrackService(
 		}
 
 		return tracksToImport.map { track ->
+			val now = DateUtils.now()
 			val forkedTrack = track!!.copy(
 					id = 0,
 					user = user,
-					createdAt = Timestamp(System.currentTimeMillis()),
+					createdAt = now,
+					updatedAt = now,
 					playCount = 0,
-					lastPlayed = null
+					lastPlayed = null,
+					hidden = false
 			)
 
 			trackRepository.save(forkedTrack)
