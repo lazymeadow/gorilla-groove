@@ -159,8 +159,10 @@ class SongIngestionService(
 		// The new file we save is always specific to this song, so name it with the song's ID as we do
 		// with any song file names that aren't borrowed / shared
 		val newFileName = "${track.id}.ogg"
-		if (newFileName != track.fileName) {
+		if (newFileName == track.fileName) {
+			// Force a new link to be generated to break the browser cache
 			trackLinkRepository.forceExpireLinksByTrackId(track.id)
+		} else {
 			track.fileName = newFileName
 		}
 

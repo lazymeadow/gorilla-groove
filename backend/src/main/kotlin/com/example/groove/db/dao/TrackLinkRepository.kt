@@ -23,7 +23,7 @@ interface TrackLinkRepository : CrudRepository<TrackLink, Long> {
 	@Modifying
 	@Query("""
 			UPDATE TrackLink tl
-			SET tl.expiresAt = now()
+			SET tl.expiresAt = '1970-01-02 00:00:01.0'
 			WHERE tl.track.id = :trackId
 			""")
 	fun forceExpireLinksByTrackId(
