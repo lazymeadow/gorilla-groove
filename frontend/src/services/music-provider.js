@@ -127,14 +127,14 @@ export class MusicProvider extends React.Component {
 			newState.trackView = TrackView.USER;
 			newState.viewedEntityId = userId;
 			if (this.state.trackView !== TrackView.USER) {
-				newState.showHidden = true;
+				this.props.filterContext.setProviderState({ showHidden: true });
 				params.showHidden = true;
 			}
 		} else {
 			newState.trackView = TrackView.LIBRARY;
 			newState.viewedEntityId = null;
 			if (this.state.trackView !== TrackView.LIBRARY) {
-				newState.showHidden = false;
+				this.props.filterContext.setProviderState({ showHidden: false });
 				params.showHidden = false;
 			}
 		}
