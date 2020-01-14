@@ -201,11 +201,20 @@ class SongIngestionService(
 		// For each supported file format, copy it to give it a new name that won't be stomped out with the new trim
 		listOf(AudioFormat.OGG, AudioFormat.MP3).forEach { audioExtension ->
 			val newSharedFileName = idForNewName.toString() + audioExtension.extension
-			fileStorageService.copySong(
-					track.fileName.withNewExtension(audioExtension.extension),
-					newSharedFileName,
-					audioExtension
-			)
+			try {
+				fileStorageService.copySong(
+						track.fileName.withNewExtension(audioExtension.extension),
+						newSharedFileName,
+						audioExtension
+				)
+			} catch (e: Exception) {
+				if (audioExtension == AudioFormat.MP3) {
+					logger.warn("Failed to migrate shared MP3! Maybe it doesn't exist yet?", e)
+				} else {
+					logger.error("Failed to migrate shared OGG!")
+					throw e
+				}
+			}
 		}
 
 		// Now that we have a new file name, update our DB entities to point to the new one
