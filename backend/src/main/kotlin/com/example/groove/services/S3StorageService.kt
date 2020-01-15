@@ -91,12 +91,16 @@ class S3StorageService(
 	}
 
 	override fun deleteSong(fileName: String) {
-		s3Client.deleteObject(bucketName, "music/$fileName")
+		AudioFormat.values().forEach { format ->
+			val key = "${format.s3Directory}/${fileName.withNewExtension(format.extension)}"
+			s3Client.deleteObject(bucketName, key)
+		}
 	}
 
 	override fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String {
 		return getCachedSongLink(trackId, anonymousAccess, audioFormat) { track ->
-			s3Client.generatePresignedUrl(bucketName, "music/${track.fileName}", expireHoursOut(4)).toString()
+			val key = "${audioFormat.s3Directory}/${track.fileName.withNewExtension(audioFormat.extension)}"
+			s3Client.generatePresignedUrl(bucketName, key, expireHoursOut(4)).toString()
 		}
 	}
 
@@ -107,8 +111,8 @@ class S3StorageService(
 	}
 
 	override fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat) {
-		val sourceKey = "${audioFormat.s3Bucket}/$sourceFileName"
-		val destKey = "${audioFormat.s3Bucket}/$destinationFileName"
+		val sourceKey = "${audioFormat.s3Directory}/$sourceFileName"
+		val destKey = "${audioFormat.s3Directory}/$destinationFileName"
 
 		s3Client.copyObject(bucketName, sourceKey, bucketName, destKey)
 	}

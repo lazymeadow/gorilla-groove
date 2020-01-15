@@ -87,9 +87,13 @@ class SystemStorageService(
 	}
 
 	override fun deleteSong(fileName: String) {
-		val success = File(musicProperties.musicDirectoryLocation + fileName).delete()
-		if (!success) {
-			logger.error("The file $fileName should have been deleted, but couldn't be")
+		AudioFormat.values().forEach {
+			val nameWithExtension = fileName.withNewExtension(it.extension)
+
+			val success = File(musicProperties.musicDirectoryLocation + nameWithExtension).delete()
+			if (!success) {
+				logger.error("The file $nameWithExtension should have been deleted, but couldn't be")
+			}
 		}
 	}
 
