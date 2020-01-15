@@ -131,8 +131,12 @@ class SongIngestionService(
 
 		// add the track to database
 		val track = fileMetadataService.createTrackFromSongFile(oggFile, user, originalFileName)
+		// Save once to have its ID generated
 		trackRepository.save(track)
+
+		// Use the ID to derive the file name and save again
 		track.fileName = "${track.id}.ogg"
+		trackRepository.save(track)
 
 		fileStorageService.storeSong(oggFile, track.id, AudioFormat.OGG)
 		fileStorageService.storeSong(mp3File, track.id, AudioFormat.MP3)
