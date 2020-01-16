@@ -12,11 +12,15 @@ import CoreData
 class MyLibraryController: UITableViewController {
 
     let container = GroovePersistence()
+    @IBOutlet weak var songButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("Load new stuff")
+        songButton.addTarget(self, action: #selector(MyLibraryController.showSongs), for: .touchUpInside)
+        TrackState().syncWithServer()
+        
+//     let contactsTableView = UITableView() // view
         
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
@@ -26,6 +30,12 @@ class MyLibraryController: UITableViewController {
         print("Logout")
         LoginState.clear()
         self.performSegue(withIdentifier: "logoutSegue", sender: nil)
+    }
+    
+    @IBAction func showSongs() {
+        print("Show songs")
+        let vc = SongViewController()
+        self.navigationController?.pushViewController(vc, animated: true)
     }
     // MARK: - Table view data source
 
@@ -56,21 +66,6 @@ class MyLibraryController: UITableViewController {
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
     }
     */
 

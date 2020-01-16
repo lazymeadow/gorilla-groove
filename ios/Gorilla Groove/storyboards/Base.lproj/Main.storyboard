@@ -148,9 +148,6 @@
                                                     <rect key="frame" x="16" y="6" width="343" height="30"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <state key="normal" title="Song"/>
-                                                    <connections>
-                                                        <segue destination="uLy-Q0-avh" kind="show" id="EhP-X5-HhD"/>
-                                                    </connections>
                                                 </button>
                                             </subviews>
                                         </tableViewCellContentView>
@@ -216,6 +213,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="songButton" destination="ktN-yI-SvL" id="rK6-Wa-8TS"/>
                         <segue destination="BYZ-38-t0r" kind="presentation" identifier="logoutSegue" id="qcM-lK-2BG"/>
                     </connections>
                 </tableViewController>
@@ -246,31 +244,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hRT-JT-D4a" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="609" y="756"/>
-        </scene>
-        <!--View Controller-->
-        <scene sceneID="14S-2o-FWs">
-            <objects>
-                <viewController id="uLy-Q0-avh" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="bPr-fy-qA3">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Title" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qJ2-8O-jDA">
-                                <rect key="frame" x="166" y="90" width="34" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <viewLayoutGuide key="safeArea" id="m0c-z7-Z5S"/>
-                    </view>
-                    <navigationItem key="navigationItem" id="IPZ-Wq-1G5"/>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="VdQ-0F-kUs" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1361" y="37"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="YOn-ff-fO2">

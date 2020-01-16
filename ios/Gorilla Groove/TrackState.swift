@@ -24,11 +24,11 @@ class TrackState {
         
         let url = "track/changes-between/minimum/\(minimum)/maximum/\(maximum)?size=10&page="
         
-        let pagesToGet = savePageOfChanges(url: url, page: 0)
+        let pagesToGet = savePageOfChanges(url: url, page: 0, userId: ownId)
         
         var currentPage = 1
         while (currentPage < pagesToGet) {
-            savePageOfChanges(url: url, page: currentPage)
+            savePageOfChanges(url: url, page: currentPage, userId: ownId)
             currentPage += 1
         }
 
@@ -39,7 +39,7 @@ class TrackState {
         try! self.context.save()
     }
     
-    private func savePageOfChanges(url: String, page: Int) -> Int {
+    private func savePageOfChanges(url: String, page: Int, userId: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(url + String(page), TrackChangeResponse.self) { trackResponse, status, err in
@@ -51,6 +51,7 @@ class TrackState {
             for newTrackResponse in trackResponse!.content.newTracks {
                 let entity = NSEntityDescription.entity(forEntityName: "Track", in: self.context)
                 let newTrack = NSManagedObject(entity: entity!, insertInto: self.context)
+                newTrack.setValue(userId, forKey: "user_id")
 
                 self.setTrackEntityPropertiesFromResponse(newTrack, newTrackResponse)
                 
@@ -140,6 +141,17 @@ class TrackState {
         try! context.save()
         
         return newUserSync as! UserSync
+    }
+    
+    func getTracks() -> Array<Track> {
+        let ownId = LoginState.read()!.id
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
+        fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        let result = try! context.fetch(fetchRequest)
+        
+        return result as! Array<Track>
     }
     
     init() {

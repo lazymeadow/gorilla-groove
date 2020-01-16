@@ -32,5 +32,6 @@ extension Track {
     @NSManaged public var play_count: Int16
     @NSManaged public var release_year: Int16
     @NSManaged public var track_number: Int16
+    @NSManaged public var user_id: Int16
 
 }
