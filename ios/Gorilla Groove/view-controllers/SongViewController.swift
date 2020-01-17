@@ -1,11 +1,3 @@
-//
-//  SongViewController.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/12/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import UIKit
 import Foundation
 import AVFoundation
@@ -50,6 +42,7 @@ class SongViewController: UIViewController, UITableViewDataSource {
         contactsTableView.register(SongViewCell.self, forCellReuseIdentifier: "songCell")
         
         tracks = trackState.getTracks()
+        print(tracks)
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }

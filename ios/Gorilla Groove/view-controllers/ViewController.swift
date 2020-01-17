@@ -53,7 +53,8 @@ class ViewController: UIViewController {
         
         if (token != nil) {
             print("Perform segue")
-            self.performSegue(withIdentifier: "loginSegue", sender: nil)
+            self.show(PlaybackWrapperViewController(), sender: self)
+//            self.performSegue(withIdentifier: "loginSegue", sender: nil)
             return
         }
     }
@@ -95,7 +96,9 @@ class ViewController: UIViewController {
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
                 self.loginToken.text = decodedData.token
-                self.performSegue(withIdentifier: "loginSegue", sender: sender)
+                
+                self.show(PlaybackWrapperViewController(), sender: self)
+//                self.performSegue(withIdentifier: "loginSegue", sender: sender)
             }
         }
         dataTask.resume()
@@ -107,7 +110,6 @@ class ViewController: UIViewController {
         let url = URL(string: "https://gorillagroove.net/api/version")!
         let task = session.dataTask(with: url, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             let decodedData = try! JSONDecoder().decode(VersionResponse.self, from: data!)
-            print("Got versoin " + decodedData.version)
             self.apiVersion.text = decodedData.version
         })
         task.resume()

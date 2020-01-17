@@ -20,6 +20,8 @@
 		A829AC1D23CAC29B0034AD69 /* Track+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC1923CAC29B0034AD69 /* Track+CoreDataProperties.swift */; };
 		A829AC1F23CBF8270034AD69 /* SongViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC1E23CBF8270034AD69 /* SongViewController.swift */; };
 		A829AC2423CC2C1D0034AD69 /* SongViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */; };
+		A829AC2623D103740034AD69 /* PlaybackWrapperViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */; };
+		A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2723D158E60034AD69 /* AudioPlayer.swift */; };
 		A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100ED23BD339D00D6EA2D /* AppDelegate.swift */; };
 		A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100EF23BD339D00D6EA2D /* ViewController.swift */; };
 		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
@@ -42,6 +44,8 @@
 		A829AC1923CAC29B0034AD69 /* Track+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Track+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		A829AC1E23CBF8270034AD69 /* SongViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongViewController.swift; sourceTree = "<group>"; };
 		A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongViewCell.swift; sourceTree = "<group>"; };
+		A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackWrapperViewController.swift; sourceTree = "<group>"; };
+		A829AC2723D158E60034AD69 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gorilla Groove.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A89100ED23BD339D00D6EA2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A89100EF23BD339D00D6EA2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -90,6 +94,7 @@
 				A815B08723C2EE05003899B8 /* MyLibraryController.swift */,
 				A829AC1E23CBF8270034AD69 /* SongViewController.swift */,
 				A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */,
+				A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -124,6 +129,7 @@
 				A829AC0123C804350034AD69 /* CoreDataManager.swift */,
 				A829AC0923CA57AD0034AD69 /* TrackState.swift */,
 				A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */,
+				A829AC2723D158E60034AD69 /* AudioPlayer.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -209,9 +215,11 @@
 				A829AC1B23CAC29B0034AD69 /* UserSync+CoreDataProperties.swift in Sources */,
 				A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */,
 				A829AC2423CC2C1D0034AD69 /* SongViewCell.swift in Sources */,
+				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
 				A829AC1A23CAC29B0034AD69 /* UserSync+CoreDataClass.swift in Sources */,
 				A829AC0223C804350034AD69 /* CoreDataManager.swift in Sources */,
 				A829AC1C23CAC29B0034AD69 /* Track+CoreDataClass.swift in Sources */,
+				A829AC2623D103740034AD69 /* PlaybackWrapperViewController.swift in Sources */,
 				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
 				A829AC1F23CBF8270034AD69 /* SongViewController.swift in Sources */,
 			);

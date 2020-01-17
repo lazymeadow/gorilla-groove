@@ -11,19 +11,23 @@ import CoreData
 
 class MyLibraryController: UITableViewController {
 
-    let container = GroovePersistence()
     @IBOutlet weak var songButton: UIButton!
+    
+    let options = [
+        ("Song", SongViewController()),
+        ("Artist", nil),
+        ("Album", nil)
+    ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        songButton.addTarget(self, action: #selector(MyLibraryController.showSongs), for: .touchUpInside)
+
         TrackState().syncWithServer()
         
-//     let contactsTableView = UITableView() // view
+//        self.view.heightAnchor.constraint(equalToConstant: 150).isActive = true
+//        self.view.widthAnchor.constraint(equalToConstant: 150).isActive = true
         
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        (self.view as! UITableView).register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
     }
     
     @IBAction func logout(_ sender: Any) {
@@ -31,52 +35,34 @@ class MyLibraryController: UITableViewController {
         LoginState.clear()
         self.performSegue(withIdentifier: "logoutSegue", sender: nil)
     }
-    
-    @IBAction func showSongs() {
-        print("Show songs")
-        let vc = SongViewController()
-        self.navigationController?.pushViewController(vc, animated: true)
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return options.count
     }
-    // MARK: - Table view data source
-
-    /*
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-
-        // Configure the cell...
-
+        let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
+        
+        cell.textLabel!.text = options[indexPath.row].0
+        let tapGesture = UITapGestureRecognizer(
+            target: self,
+            action: #selector(handleTap(sender:))
+        )
+        cell.addGestureRecognizer(tapGesture)
+        
         return cell
     }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+    
+    @objc private func handleTap(sender: UITapGestureRecognizer) {
+        let cell = sender.view as! UITableViewCell
+        
+        let tapLocation = sender.location(in: self.tableView)
+        
+        let optionIndex = self.tableView.indexPathForRow(at: tapLocation)![1]
+        let viewController = options[optionIndex].1
+        
+        if (viewController != nil) {
+            self.navigationController!.pushViewController(options[optionIndex].1!, animated: true)
+        }
     }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
