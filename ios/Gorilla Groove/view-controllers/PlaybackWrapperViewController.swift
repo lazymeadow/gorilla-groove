@@ -26,23 +26,26 @@ class PlaybackWrapperViewController: UIViewController {
         
         stackView.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
         stackView.heightAnchor.constraint(equalTo: self.view.heightAnchor).isActive = true
-//                testNav.didMove(toParent: self)
     }
 }
 
 class MediaControls: UIViewController {
+    let label = UILabel()
+//    let paperPlane = UIImage(systemName: "paperplane.fill")
+    
     override func viewDidLoad() {
-        let av = AVPlayerViewController()
-        av.player = AudioPlayer.shared.player
+        label.text = String(AudioPlayer.player.currentTime().seconds)
+        label.sizeToFit()
         
-        self.view.addSubview(av.view)
-        self.view.backgroundColor = .black
+        self.view.addSubview(label)
+        self.view.backgroundColor = Colors.darkBlue
         self.view.translatesAutoresizingMaskIntoConstraints = false
-        self.view.heightAnchor.constraint(equalToConstant: 120.0).isActive = true
-
-        av.view.translatesAutoresizingMaskIntoConstraints = false
-        av.view.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        av.view.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
-        av.view.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        self.view.heightAnchor.constraint(equalToConstant: 100.0).isActive = true
+        
+        AudioPlayer.addTimeObserver { time in
+            self.label.text = String(time)
+            self.label.sizeToFit()
+        }
     }
 }
+

@@ -54,7 +54,6 @@ class ViewController: UIViewController {
         if (token != nil) {
             print("Perform segue")
             self.show(PlaybackWrapperViewController(), sender: self)
-//            self.performSegue(withIdentifier: "loginSegue", sender: nil)
             return
         }
     }
@@ -98,7 +97,6 @@ class ViewController: UIViewController {
                 self.loginToken.text = decodedData.token
                 
                 self.show(PlaybackWrapperViewController(), sender: self)
-//                self.performSegue(withIdentifier: "loginSegue", sender: sender)
             }
         }
         dataTask.resume()

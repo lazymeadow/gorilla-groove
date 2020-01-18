@@ -24,13 +24,10 @@ class MyLibraryController: UITableViewController {
 
         TrackState().syncWithServer()
         
-//        self.view.heightAnchor.constraint(equalToConstant: 150).isActive = true
-//        self.view.widthAnchor.constraint(equalToConstant: 150).isActive = true
-        
         (self.view as! UITableView).register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
     }
     
-    @IBAction func logout(_ sender: Any) {
+    func logout(_ sender: Any) {
         print("Logout")
         LoginState.clear()
         self.performSegue(withIdentifier: "logoutSegue", sender: nil)
@@ -44,6 +41,7 @@ class MyLibraryController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
         
         cell.textLabel!.text = options[indexPath.row].0
+        cell.textLabel!.textColor = #colorLiteral(red: 0.1764705926, green: 0.4980392158, blue: 0.7568627596, alpha: 1)
         let tapGesture = UITapGestureRecognizer(
             target: self,
             action: #selector(handleTap(sender:))
@@ -55,6 +53,14 @@ class MyLibraryController: UITableViewController {
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! UITableViewCell
+        
+        UIView.animate(withDuration: 0.12, animations: {
+            cell.backgroundColor = SongViewCell.selectionColor
+        }) { (finished) in
+            UIView.animate(withDuration: 0.12, animations: {
+                cell.backgroundColor = SongViewCell.normalColor
+            })
+        }
         
         let tapLocation = sender.location(in: self.tableView)
         

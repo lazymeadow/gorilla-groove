@@ -7,7 +7,6 @@ class SongViewController: UIViewController, UITableViewDataSource {
 
     let trackState = TrackState()
     var tracks: Array<Track> = []
-    var player = AVPlayer(playerItem: nil)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -16,21 +15,11 @@ class SongViewController: UIViewController, UITableViewDataSource {
         try! AVAudioSession.sharedInstance().setActive(true)
         
         print("Loaded song view controller")
-        
-        self.player.automaticallyWaitsToMinimizeStalling = false
-        self.player.volume = 1.0
 
         view.backgroundColor = .red
         
         let contactsTableView = UITableView() // view
         view.addSubview(contactsTableView)
-        
-        let av = AVPlayerViewController()
-        av.player = player
-        av.view.frame = CGRect(x:-2, y:620, width:380, height:50)
-        self.addChild(av)
-        self.view.addSubview(av.view)
-        av.didMove(toParent: self)
         
         contactsTableView.translatesAutoresizingMaskIntoConstraints = false
         contactsTableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
@@ -43,8 +32,6 @@ class SongViewController: UIViewController, UITableViewDataSource {
         
         tracks = trackState.getTracks()
         print(tracks)
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -76,9 +63,8 @@ class SongViewController: UIViewController, UITableViewDataSource {
             
             let playerItem = AVPlayerItem(url: URL(string: links!.songLink)!)
             
-            self.player.replaceCurrentItem(with: playerItem)
-            self.player.playImmediately(atRate: 1.0)
-            print("Playing")
+            AudioPlayer.player.replaceCurrentItem(with: playerItem)
+            AudioPlayer.player.playImmediately(atRate: 1.0)
         }
     }
 }

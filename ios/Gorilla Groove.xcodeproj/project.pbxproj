@@ -22,6 +22,7 @@
 		A829AC2423CC2C1D0034AD69 /* SongViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */; };
 		A829AC2623D103740034AD69 /* PlaybackWrapperViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */; };
 		A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2723D158E60034AD69 /* AudioPlayer.swift */; };
+		A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2923D3B0DE0034AD69 /* Colors.swift */; };
 		A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100ED23BD339D00D6EA2D /* AppDelegate.swift */; };
 		A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100EF23BD339D00D6EA2D /* ViewController.swift */; };
 		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
@@ -46,6 +47,7 @@
 		A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongViewCell.swift; sourceTree = "<group>"; };
 		A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackWrapperViewController.swift; sourceTree = "<group>"; };
 		A829AC2723D158E60034AD69 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
+		A829AC2923D3B0DE0034AD69 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gorilla Groove.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A89100ED23BD339D00D6EA2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A89100EF23BD339D00D6EA2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 				A829AC0923CA57AD0034AD69 /* TrackState.swift */,
 				A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */,
 				A829AC2723D158E60034AD69 /* AudioPlayer.swift */,
+				A829AC2923D3B0DE0034AD69 /* Colors.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -206,6 +209,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
+				A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */,
 				A829ABFA23C6CD950034AD69 /* Groove.xcdatamodeld in Sources */,
 				A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */,
 				A829AC1D23CAC29B0034AD69 /* Track+CoreDataProperties.swift in Sources */,
