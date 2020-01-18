@@ -21,7 +21,7 @@ class FFmpegService(
 		private val fileStorageProperties: FileStorageProperties
 ) {
 
-	fun convertTrack(fileName: String, audioFormat: AudioFormat): File {
+	fun convertTrack(file: File, audioFormat: AudioFormat): File {
 		val convertedFileName = UUID.randomUUID().toString() + audioFormat.extension
 
 		val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
@@ -29,7 +29,7 @@ class FFmpegService(
 		val ffprobe = FFprobe(ffmpegProperties.ffmpegBinaryLocation + "ffprobe")
 
 		val builder = FFmpegBuilder()
-				.addInput(fileStorageProperties.tmpDir + fileName)
+				.addInput(file.absolutePath)
 				.addOutput(fileStorageProperties.tmpDir + convertedFileName)
 
 		// For whatever reason, if we don't set the quality explicitly the mp3 file doubles in length.

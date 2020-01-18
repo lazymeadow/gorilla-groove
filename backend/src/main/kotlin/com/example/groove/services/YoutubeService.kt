@@ -56,7 +56,7 @@ class YoutubeService(
 
 		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
 		// Slightly complicates finding the file after we save it, though
-		val track = songIngestionService.convertAndSaveTrackForUser("$tmpFileName.ogg", loadLoggedInUser(), url)
+		val track = songIngestionService.convertAndSaveTrackForUser(newSong, loadLoggedInUser(), url)
 		// If the uploader provided any metadata, add it to the track and save it again
 		youtubeDownloadDTO.name?.let { track.name = it }
 		youtubeDownloadDTO.artist?.let { track.artist = it }
@@ -76,6 +76,7 @@ class YoutubeService(
 		}
 
 		newAlbumArt.delete()
+		newSong.delete()
 
 		return track
 	}

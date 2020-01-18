@@ -45,7 +45,7 @@ class SongIngestionService(
 		}
 	}
 
-	private fun storeMultipartFile(file: MultipartFile): String {
+	private fun storeMultipartFile(file: MultipartFile): File {
 		// Discard the file's original name; but keep the extension
 		val extension = file.originalFilename!!.split(".").last()
 		val fileName = UUID.randomUUID().toString() + "." + extension
@@ -54,16 +54,16 @@ class SongIngestionService(
 		val targetLocation = fileStorageLocation.resolve(fileName)
 		Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
 
-		return fileName
+		return File(targetLocation.toUri())
 	}
 
 	fun storeSongForUser(songFile: MultipartFile, user: User): Track {
 		logger.info("Storing song ${songFile.originalFilename} for user: ${user.name}")
 
-		val fileName = storeMultipartFile(songFile)
-		val tmpImageFile = ripAndSaveAlbumArt(fileName)
+		val tmpSongFile = storeMultipartFile(songFile)
+		val tmpImageFile = ripAndSaveAlbumArt(tmpSongFile)
 
-		val track = convertAndSaveTrackForUser(fileName, user, songFile.originalFilename!!)
+		val track = convertAndSaveTrackForUser(tmpSongFile, user, songFile.originalFilename!!)
 
 		if (tmpImageFile != null) {
 			fileStorageService.storeAlbumArt(tmpImageFile, track.id)
@@ -71,14 +71,15 @@ class SongIngestionService(
 			tmpImageFile.delete()
 		}
 
+		tmpSongFile.delete()
+
 		return track
 	}
 
 	fun storeAlbumArtForTrack(albumArt: MultipartFile, track: Track, cropImageToSquare: Boolean) {
 		logger.info("Storing album artwork ${albumArt.originalFilename} for track ID: ${track.id}")
-		val fileName = storeMultipartFile(albumArt)
+		val imageFile = storeMultipartFile(albumArt)
 
-		val imageFile = fileStorageLocation.resolve(fileName).toFile()
 		if (!imageFile.exists()) {
 			throw IllegalStateException("Could not store album art for track ID: ${track.id}")
 		}
@@ -108,8 +109,8 @@ class SongIngestionService(
 	// It's important to rip the album art out PRIOR to running the song
 	// through FFmpeg to be converted to an .ogg. If you don't, you will
 	// get the error "Cannot find comment block (no vorbiscomment header)"
-	private fun ripAndSaveAlbumArt(fileName: String): File? {
-		val image = fileMetadataService.removeAlbumArtFromFile(fileName)
+	private fun ripAndSaveAlbumArt(file: File): File? {
+		val image = fileMetadataService.removeAlbumArtFromFile(file)
 		return if (image != null) {
 			val tmpImageName = UUID.randomUUID().toString() + ".png"
 			val outputFile = File(fileStorageLocation.toString() + tmpImageName)
@@ -122,12 +123,12 @@ class SongIngestionService(
 	}
 
 	@Transactional
-	fun convertAndSaveTrackForUser(fileName: String, user: User, originalFileName: String): Track {
-		logger.info("Saving file $fileName for user ${user.name}")
+	fun convertAndSaveTrackForUser(file: File, user: User, originalFileName: String): Track {
+		logger.info("Saving file ${file.name} for user ${user.name}")
 
-		val oggFile = ffmpegService.convertTrack(fileName, AudioFormat.OGG)
+		val oggFile = ffmpegService.convertTrack(file, AudioFormat.OGG)
 		// iOS does not support OGG playback. So at least for now, we have to store everything in both formats...
-		val mp3File = ffmpegService.convertTrack(fileName, AudioFormat.MP3)
+		val mp3File = ffmpegService.convertTrack(file, AudioFormat.MP3)
 
 		// add the track to database
 		val track = fileMetadataService.createTrackFromSongFile(oggFile, user, originalFileName)
@@ -173,7 +174,7 @@ class SongIngestionService(
 		// It might make more sense to download the mp3 and trim it instead of re-converting the OGG to mp3
 		// Maybe less loss in quality? But hard to say. Would require experimentation. At least this way we
 		// save ourselves a trip to s3 and only download a single file
-		val mp3File = ffmpegService.convertTrack(oggFile.name, AudioFormat.MP3)
+		val mp3File = ffmpegService.convertTrack(oggFile, AudioFormat.MP3)
 		fileStorageService.storeSong(mp3File, track.id, AudioFormat.MP3)
 
 		oggFile.delete()
