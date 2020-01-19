@@ -28,6 +28,7 @@
 		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
 		A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A89100F423BD339E00D6EA2D /* Assets.xcassets */; };
 		A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */; };
+		E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +56,7 @@
 		A89100F423BD339E00D6EA2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A89100F723BD339E00D6EA2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaControlsController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +99,7 @@
 				A829AC1E23CBF8270034AD69 /* SongViewController.swift */,
 				A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */,
 				A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */,
+				E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 				A829AC2623D103740034AD69 /* PlaybackWrapperViewController.swift in Sources */,
 				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
 				A829AC1F23CBF8270034AD69 /* SongViewController.swift in Sources */,
+				E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,6 +378,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = DNTLSGD3G5;
 				INFOPLIST_FILE = "Gorilla Groove/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -392,6 +397,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = DNTLSGD3G5;
 				INFOPLIST_FILE = "Gorilla Groove/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

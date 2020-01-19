@@ -52,10 +52,16 @@ class ViewController: UIViewController {
         let token = LoginState.read()?.token
         
         if (token != nil) {
-            print("Perform segue")
-            self.show(PlaybackWrapperViewController(), sender: self)
+            presentLoggedInView()
             return
         }
+    }
+    
+    private func presentLoggedInView() {
+        let playbackWrapper = PlaybackWrapperViewController()
+        playbackWrapper.modalPresentationStyle = .fullScreen
+        playbackWrapper.modalTransitionStyle = .crossDissolve
+        self.present(playbackWrapper, animated: true, completion: nil)
     }
     
     @IBAction func login(_ sender: Any) {
@@ -96,7 +102,7 @@ class ViewController: UIViewController {
                 self.loginSpinner.isHidden = true
                 self.loginToken.text = decodedData.token
                 
-                self.show(PlaybackWrapperViewController(), sender: self)
+                self.presentLoggedInView()
             }
         }
         dataTask.resume()
