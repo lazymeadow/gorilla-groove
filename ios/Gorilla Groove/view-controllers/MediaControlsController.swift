@@ -1,51 +1,91 @@
 import UIKit
 import SwiftUI
 import Foundation
+import CoreMedia
 
 class MediaControlsController: UIViewController {
-    let label = UILabel()
+    var sliderGrabbed = false
     
     var repeatIcon: UIImageView { return createIcon("repeat", weight: .bold) }
     var backIcon: UIImageView { return createIcon("backward.end.fill") }
-    var rewindIcon: UIImageView { return createIcon("backward.fill") }
-    var playIcon: UIImageView { return createIcon("play.fill", scale: .large) }
-    var pauseIcon: UIImageView { return createIcon("pause.fill") }
-    var fastForwardIcon: UIImageView { return createIcon("forward.fill") }
+    
+    lazy var playIcon: UIImageView = {
+        let icon = createIcon("play.fill", scale: .large)
+        icon.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(playMusic(tapGestureRecognizer:))
+        ))
+        return icon
+    }()
+    
+    lazy var pauseIcon: UIImageView = {
+        let icon = createIcon("pause.fill", scale: .large)
+        icon.isHidden = true
+        icon.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(pauseMusic(tapGestureRecognizer:))
+        ))
+        return icon
+    }()
+    
     var forwardIcon: UIImageView { return createIcon("forward.end.fill") }
     var shuffleIcon: UIImageView { return createIcon("shuffle", weight: .bold) }
     
-    var songText: UILabel {
+    var songText: UILabel = {
         let label = UILabel()
         
+        label.text = " " // Empty space just to take up vertical height
         label.textColor = .white
-        label.text = "Song - Artist"
         label.font = label.font.withSize(12)
-        label.sizeToFit()
         
         return label
-    }
+    }()
     
-    var currentTime: UILabel {
+    var currentTime: UILabel = {
         let label = UILabel()
         
         label.textColor = .white
-        label.text = "1:23"
+        label.text = "0:00"
         label.font = label.font.withSize(12)
         label.sizeToFit()
         
         return label
-    }
+    }()
     
-    var totalTime: UILabel {
+    var totalTime: UILabel = {
         let label = UILabel()
         
         label.textColor = .white
-        label.text = "4:24"
+        label.text = "0:00"
         label.font = label.font.withSize(12)
         label.sizeToFit()
         
         return label
-    }
+    }()
+    
+    lazy var slider: UISlider = {
+        let slider = UISlider()
+        slider.maximumValue = 1
+        slider.minimumValue = 0
+        slider.setValue(0, animated: false)
+    
+        slider.minimumTrackTintColor = Colors.lightBlue
+        slider.maximumTrackTintColor = Colors.nearBlack
+        slider.thumbTintColor = Colors.lightBlue
+
+        let config = UIImage.SymbolConfiguration(scale: .small)
+        let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.lightBlue)
+
+        slider.setThumbImage(newImage, for: .normal)
+        slider.setThumbImage(newImage, for: .highlighted)
+
+        slider.addTarget(self, action: #selector(self.handleSliderGrab), for: .touchDown)
+        slider.addTarget(self, action: #selector(self.handleSliderRelease), for: .touchUpInside)
+        slider.addTarget(self, action: #selector(self.handleSliderRelease), for: .touchUpOutside)
+        slider.addTarget(self, action: #selector(self.handleSeek), for: .valueChanged)
+        
+        return slider
+    }()
     
     override func viewDidLoad() {
         let content = UIStackView()
@@ -83,9 +123,41 @@ class MediaControlsController: UIViewController {
         ])
 
         AudioPlayer.addTimeObserver { time in
-            self.label.text = String(time)
-            self.label.sizeToFit()
+            self.currentTime.text = self.formatTimeFromSeconds(Int(time))
+            self.currentTime.sizeToFit()
+            if (!self.sliderGrabbed) {
+                self.slider.setValue(Float(time) / Float(NowPlayingTracks.currentTrack!.length), animated: true)
+            }
         }
+        
+        NowPlayingTracks.addTrackChangeObserver { nillableTrack in
+            DispatchQueue.main.async {
+                guard let track = nillableTrack else {
+                    self.currentTime.text = self.formatTimeFromSeconds(0)
+                    self.totalTime.text = self.formatTimeFromSeconds(0)
+                    self.songText.text = ""
+                    
+                    return
+                }
+                
+                self.currentTime.text = self.formatTimeFromSeconds(0)
+                self.totalTime.text = self.formatTimeFromSeconds(Int(track.length))
+                self.songText.text = track.name + " - " + track.artist
+                self.pauseIcon.isHidden = false
+                self.playIcon.isHidden = true
+                
+                self.slider.setValue(0, animated: true)
+            }
+        }
+    }
+    
+    private func formatTimeFromSeconds(_ totalSeconds: Int) -> String {
+        let seconds = totalSeconds % 60
+        let minutes = totalSeconds / 60
+        
+        let zeroPaddedSeconds = seconds < 10 ? "0" + String(seconds) : String(seconds)
+        
+        return String(minutes) + ":" + zeroPaddedSeconds
     }
     
     private func createTopButtons() -> UIStackView {
@@ -100,16 +172,15 @@ class MediaControlsController: UIViewController {
         topMiddle.distribution  = .equalSpacing
 
         topMiddle.addArrangedSubview(backIcon)
-        topMiddle.addArrangedSubview(rewindIcon)
         topMiddle.addArrangedSubview(playIcon)
-        topMiddle.addArrangedSubview(fastForwardIcon)
+        topMiddle.addArrangedSubview(pauseIcon)
         topMiddle.addArrangedSubview(forwardIcon)
                 
         buttons.addArrangedSubview(repeatIcon)
         buttons.addArrangedSubview(topMiddle)
         buttons.addArrangedSubview(shuffleIcon)
         
-        topMiddle.widthAnchor.constraint(equalTo: buttons.widthAnchor, constant: -130).isActive = true
+        topMiddle.widthAnchor.constraint(equalToConstant: 145).isActive = true
 
         return buttons
     }
@@ -128,30 +199,11 @@ class MediaControlsController: UIViewController {
         elements.axis = .horizontal
         elements.distribution  = .fill
 
-        let slider = UISlider()
-        slider.maximumValue = 100
-        slider.minimumValue = 0
-        slider.setValue(50, animated: false)
-        
-        slider.minimumTrackTintColor = Colors.lightBlue
-        slider.maximumTrackTintColor = Colors.nearBlack
-        slider.thumbTintColor = Colors.lightBlue
-
-        let config = UIImage.SymbolConfiguration(scale: .small)
-        let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.lightBlue)
-
-        slider.setThumbImage(newImage, for: .normal)
-        slider.setThumbImage(newImage, for: .highlighted)
-                
         elements.addArrangedSubview(currentTime)
         elements.addArrangedSubview(slider)
         elements.addArrangedSubview(totalTime)
 
-        // Kind of jank, but I want the slider to grow, and leave space for both sides
-        // For whatever reason, custom spacing after the leading text wasn't being obeyed,
-        // and just using normal left / right constraints threw crytic runtime exceptions.
-        // This seems to work though, and is evenly spaced on both the iPhone 8 and 11 Pro Max
-        slider.widthAnchor.constraint(equalTo: elements.widthAnchor, constant: -80).isActive = true
+        elements.setCustomSpacing(15.0, after: currentTime)
         elements.setCustomSpacing(15.0, after: slider)
 
         return elements
@@ -166,9 +218,45 @@ class MediaControlsController: UIViewController {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.5, weight: weight, scale: scale)
 
         let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
+        icon.isUserInteractionEnabled = true
         icon.tintColor = .white
         
         return icon
+    }
+    
+    @objc func pauseMusic(tapGestureRecognizer: UITapGestureRecognizer) {
+        AudioPlayer.player.pause()
+        self.pauseIcon.isHidden = true
+        self.playIcon.isHidden = false
+    }
+    
+    @objc func playMusic(tapGestureRecognizer: UITapGestureRecognizer) {
+        if (NowPlayingTracks.currentTrack == nil) {
+            return
+        }
+        
+        AudioPlayer.player.play()
+        self.pauseIcon.isHidden = false
+        self.playIcon.isHidden = true
+    }
+    
+    @objc func handleSeek(tapGestureRecognizer: UITapGestureRecognizer) {
+        if (NowPlayingTracks.currentTrack == nil) {
+            return
+        }
+        
+        let seconds = slider.value * Float(NowPlayingTracks.currentTrack!.length)
+        AudioPlayer.player.seek(to: CMTimeMake(value: Int64(Int(seconds)), timescale: 1))
+    }
+    
+    @objc func handleSliderGrab(tapGestureRecognizer: UITapGestureRecognizer) {
+        print("Grabbed")
+        sliderGrabbed = true
+    }
+    
+    @objc func handleSliderRelease(tapGestureRecognizer: UITapGestureRecognizer) {
+        print("Released")
+        sliderGrabbed = false
     }
 }
 

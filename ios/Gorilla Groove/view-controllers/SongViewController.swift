@@ -31,7 +31,6 @@ class SongViewController: UIViewController, UITableViewDataSource {
         contactsTableView.register(SongViewCell.self, forCellReuseIdentifier: "songCell")
         
         tracks = trackState.getTracks()
-        print(tracks)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -63,6 +62,7 @@ class SongViewController: UIViewController, UITableViewDataSource {
             
             let playerItem = AVPlayerItem(url: URL(string: links!.songLink)!)
             
+            NowPlayingTracks.setCurrentTrack(cell.track!)
             AudioPlayer.player.replaceCurrentItem(with: playerItem)
             AudioPlayer.player.playImmediately(atRate: 1.0)
         }
