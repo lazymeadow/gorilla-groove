@@ -22,6 +22,7 @@ class MyLibraryController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        UserSyncManager().postCurrentDevice()
         TrackState().syncWithServer()
         
         (self.view as! UITableView).register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")

@@ -1,22 +1,17 @@
-//
-//  TrackState.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/11/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import Foundation
 import CoreData
 
 class TrackState {
     let coreDataManager: CoreDataManager
     let context: NSManagedObjectContext
+    let userSyncManager = UserSyncManager()
     
     func syncWithServer() {
         let ownId = LoginState.read()!.id
         print("Initiating sync with server...")
-        let lastSync = getLastSentUserSync(ownId)
+        let lastSync = userSyncManager.getLastSentUserSync(ownId)
+        print("Last Sync was")
+        print(lastSync.last_sync)
         
         // API uses millis. Multiply by 1000
         let minimum = Int(lastSync.last_sync.timeIntervalSince1970) * 1000
@@ -34,7 +29,13 @@ class TrackState {
 
         // Divide by 1000 to get back to seconds
         let newDate = NSDate(timeIntervalSince1970: Double(maximum) / 1000.0)
+        print("Setting new sync")
+        print(newDate)
+        
+        // The user sync was pulled out using a different context, so save it using that context
+        // TODO make a context singleton maybe to avoid this tomfoolery
         lastSync.setValue(newDate, forKey: "last_sync")
+        userSyncManager.save()
         
         try! self.context.save()
     }
@@ -67,7 +68,7 @@ class TrackState {
                 
                 self.setTrackEntityPropertiesFromResponse(savedTrack!, modifiedTrackResponse)
                 
-                print("Updating existing track with ID: \((savedTrack as! Track).id)")
+                print("Updating existing track with ID: \((savedTrack!).id)")
             }
             
             for deletedId in trackResponse!.content.removedTrackIds {
@@ -120,27 +121,6 @@ class TrackState {
         track.setValue(trackResponse.lastPlayed, forKey: "last_played")
         track.setValue(trackResponse.length, forKey: "length")
         track.setValue(trackResponse.playCount, forKey: "play_count")
-    }
-    
-    private func getLastSentUserSync(_ ownId: Int) -> UserSync {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "UserSync")
-        fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
-        
-        let result = try! context.fetch(fetchRequest)
-        if (result.count > 0) {
-            return result[0] as! UserSync
-        }
-
-        // Save a new one. This is our first log in
-        
-        let entity = NSEntityDescription.entity(forEntityName: "UserSync", in: context)
-        let newUserSync = NSManagedObject(entity: entity!, insertInto: context)
-        newUserSync.setValue(ownId, forKey: "user_id")
-        newUserSync.setValue(NSDate(timeIntervalSince1970: 0), forKey: "last_sync")
-        
-        try! context.save()
-        
-        return newUserSync as! UserSync
     }
     
     func getTracks() -> Array<Track> {

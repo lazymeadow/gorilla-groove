@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14315.18" systemVersion="17G65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="15702" systemVersion="19C57" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Track" representedClassName="Track" syncable="YES">
-        <attribute name="album" attributeType="String" syncable="YES"/>
-        <attribute name="artist" attributeType="String" syncable="YES"/>
-        <attribute name="created_at" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="featuring" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="genre" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="is_hidden" attributeType="Boolean" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="is_private" attributeType="Boolean" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="last_played" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="length" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="name" attributeType="String" syncable="YES"/>
-        <attribute name="note" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="play_count" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="release_year" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="track_number" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="user_id" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="album" attributeType="String"/>
+        <attribute name="artist" attributeType="String"/>
+        <attribute name="created_at" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="featuring" optional="YES" attributeType="String"/>
+        <attribute name="genre" optional="YES" attributeType="String"/>
+        <attribute name="id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="is_hidden" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="is_private" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="last_played" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="length" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="play_count" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="release_year" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="track_number" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="user_id" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>
@@ -24,8 +24,9 @@
         </uniquenessConstraints>
     </entity>
     <entity name="UserSync" representedClassName="UserSync" syncable="YES">
-        <attribute name="last_sync" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="user_id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="device_id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="last_sync" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="user_id" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="user_id"/>
@@ -34,6 +35,6 @@
     </entity>
     <elements>
         <element name="Track" positionX="-54" positionY="-9" width="128" height="285"/>
-        <element name="UserSync" positionX="-36" positionY="126" width="128" height="75"/>
+        <element name="UserSync" positionX="-36" positionY="126" width="128" height="88"/>
     </elements>
 </model>
