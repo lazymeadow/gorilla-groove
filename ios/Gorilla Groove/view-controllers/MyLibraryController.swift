@@ -14,18 +14,23 @@ class MyLibraryController: UITableViewController {
     @IBOutlet weak var songButton: UIButton!
     
     let options = [
-        ("Song", SongViewController()),
+        ("Title", SongViewController()),
         ("Artist", nil),
         ("Album", nil)
     ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "My Library"
 
         UserSyncManager().postCurrentDevice()
         TrackState().syncWithServer()
+        let view = self.view as! UITableView
         
-        (self.view as! UITableView).register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
+        view.register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
+        
+        // Remove extra table row lines that have no content
+        view.tableFooterView = UIView(frame: .zero)
     }
     
     func logout(_ sender: Any) {

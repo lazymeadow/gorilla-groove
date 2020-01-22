@@ -10,6 +10,7 @@ class SongViewController: UIViewController, UITableViewDataSource {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.title = "Title"
         
         try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try! AVAudioSession.sharedInstance().setActive(true)
@@ -29,6 +30,9 @@ class SongViewController: UIViewController, UITableViewDataSource {
         
         contactsTableView.dataSource = self
         contactsTableView.register(SongViewCell.self, forCellReuseIdentifier: "songCell")
+        
+        // Remove extra table rows when we don't have a full screen of songs
+        contactsTableView.tableFooterView = UIView(frame: .zero)
         
         tracks = trackState.getTracks()
     }
