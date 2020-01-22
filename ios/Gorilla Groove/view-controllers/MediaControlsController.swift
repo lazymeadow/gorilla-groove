@@ -6,6 +6,11 @@ import CoreMedia
 class MediaControlsController: UIViewController {
     var sliderGrabbed = false
     
+    var timeListened = 0.0
+    var lastTimeUpdate = 0.0
+    var targetListenTime = 9999999.0
+    var listenedToCurrentSong = false
+    
     var repeatIcon: UIImageView { return createIcon("repeat", weight: .bold) }
     var backIcon: UIImageView { return createIcon("backward.end.fill") }
     
@@ -47,7 +52,6 @@ class MediaControlsController: UIViewController {
         label.textColor = .white
         label.text = "0:00"
         label.font = label.font.withSize(12)
-        label.sizeToFit()
         
         return label
     }()
@@ -58,7 +62,6 @@ class MediaControlsController: UIViewController {
         label.textColor = .white
         label.text = "0:00"
         label.font = label.font.withSize(12)
-        label.sizeToFit()
         
         return label
     }()
@@ -124,14 +127,32 @@ class MediaControlsController: UIViewController {
 
         AudioPlayer.addTimeObserver { time in
             self.currentTime.text = self.formatTimeFromSeconds(Int(time))
-            self.currentTime.sizeToFit()
             if (!self.sliderGrabbed) {
                 self.slider.setValue(Float(time) / Float(NowPlayingTracks.currentTrack!.length), animated: true)
+            }
+            
+            let timeElapsed = time - self.lastTimeUpdate
+            self.lastTimeUpdate = time
+            // If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
+            // manually altered the song's progress. Do no other checks or updates
+            if (timeElapsed < 0 || timeElapsed > 1) {
+                return;
+            }
+
+            self.timeListened += timeElapsed
+            
+            if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
+                self.listenedToCurrentSong = true
+                TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
             }
         }
         
         NowPlayingTracks.addTrackChangeObserver { nillableTrack in
             DispatchQueue.main.async {
+                self.timeListened = 0.0
+                self.lastTimeUpdate = 0.0
+                self.listenedToCurrentSong = false
+                
                 guard let track = nillableTrack else {
                     self.currentTime.text = self.formatTimeFromSeconds(0)
                     self.totalTime.text = self.formatTimeFromSeconds(0)
@@ -147,6 +168,8 @@ class MediaControlsController: UIViewController {
                 self.playIcon.isHidden = true
                 
                 self.slider.setValue(0, animated: true)
+                
+                self.targetListenTime = Double(Int(track.length)) * 0.60
             }
         }
     }
@@ -205,6 +228,9 @@ class MediaControlsController: UIViewController {
 
         elements.setCustomSpacing(15.0, after: currentTime)
         elements.setCustomSpacing(15.0, after: slider)
+        
+        currentTime.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        totalTime.widthAnchor.constraint(equalToConstant: 30).isActive = true
 
         return elements
     }
@@ -250,12 +276,10 @@ class MediaControlsController: UIViewController {
     }
     
     @objc func handleSliderGrab(tapGestureRecognizer: UITapGestureRecognizer) {
-        print("Grabbed")
         sliderGrabbed = true
     }
     
     @objc func handleSliderRelease(tapGestureRecognizer: UITapGestureRecognizer) {
-        print("Released")
         sliderGrabbed = false
     }
 }

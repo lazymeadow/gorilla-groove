@@ -20,5 +20,9 @@ extension UserSync {
     @NSManaged public var last_sync: NSDate
     @NSManaged public var device_id: UUID
     @NSManaged public var user_id: Int64
-
+    
+    // Don't have to actually lowercase this UUID for any real reason, but the other devices do it lower and I'm OCD
+    func deviceIdAsString() -> String {
+        return device_id.uuidString.lowercased()
+    }
 }

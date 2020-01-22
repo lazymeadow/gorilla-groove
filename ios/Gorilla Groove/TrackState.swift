@@ -7,11 +7,9 @@ class TrackState {
     let userSyncManager = UserSyncManager()
     
     func syncWithServer() {
-        let ownId = LoginState.read()!.id
         print("Initiating sync with server...")
-        let lastSync = userSyncManager.getLastSentUserSync(ownId)
-        print("Last Sync was")
-        print(lastSync.last_sync)
+        
+        let lastSync = userSyncManager.getLastSentUserSync()
         
         // API uses millis. Multiply by 1000
         let minimum = Int(lastSync.last_sync.timeIntervalSince1970) * 1000
@@ -19,6 +17,7 @@ class TrackState {
         
         let url = "track/changes-between/minimum/\(minimum)/maximum/\(maximum)?size=10&page="
         
+        let ownId = LoginState.read()!.id
         let pagesToGet = savePageOfChanges(url: url, page: 0, userId: ownId)
         
         var currentPage = 1
@@ -29,8 +28,6 @@ class TrackState {
 
         // Divide by 1000 to get back to seconds
         let newDate = NSDate(timeIntervalSince1970: Double(maximum) / 1000.0)
-        print("Setting new sync")
-        print(newDate)
         
         // The user sync was pulled out using a different context, so save it using that context
         // TODO make a context singleton maybe to avoid this tomfoolery
@@ -93,7 +90,7 @@ class TrackState {
         return pagesToFetch
     }
     
-    private func findTrackById(_ id: Int) -> Track? {
+    private func findTrackById(_ id: Int64) -> Track? {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
         fetchRequest.predicate = NSPredicate(format: "id == \(id)")
         
@@ -134,45 +131,71 @@ class TrackState {
         return result as! Array<Track>
     }
     
+    func markTrackListenedTo(_ track: Track) {
+        track.play_count += 1 // Update the object reference
+        // Now update the stored DB state
+        
+        // Update the server
+        let userSync = userSyncManager.getLastSentUserSync()
+        let postBody = MarkListenedRequest(trackId: track.id, deviceId: userSync.deviceIdAsString())
+        HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
+            if (statusCode < 200 || statusCode >= 300) {
+                print("Failed to mark track as listened to! For track with ID: " + String(track.id))
+            }
+            
+            let savedTrack = self.findTrackById(track.id)!
+            savedTrack.setValue(savedTrack.play_count + 1, forKey: "play_count")
+            
+            try! self.context.save()
+        }
+    }
+    
     init() {
         coreDataManager = CoreDataManager()
         context = coreDataManager.managedObjectContext
     }
+    
+
+    struct TrackResponse: Codable {
+        let id: Int64
+        let name: String
+        let artist: String
+        let featuring: String
+        let album: String
+        let trackNumber: Int?
+        let length: Int
+        let releaseYear: Int?
+        let genre: String?
+        let playCount: Int
+        let `private`: Bool
+        let hidden: Bool
+        let lastPlayed: Date?
+        let createdAt: Date
+        let note: String?
+    }
+
+    struct TrackChangeResponse: Codable {
+        let content: TrackChangeContent
+        let pageable: TrackChangePagination
+    }
+
+    struct TrackChangeContent: Codable {
+        let newTracks: Array<TrackResponse>
+        let modifiedTracks: Array<TrackResponse>
+        let removedTrackIds: Array<Int64>
+    }
+
+    struct TrackChangePagination: Codable {
+        let offset: Int
+        let pageSize: Int
+        let pageNumber: Int
+        let totalPages: Int
+        let totalElements: Int
+    }
+
+    struct MarkListenedRequest: Codable {
+        let trackId: Int64
+        let deviceId: String
+    }
 }
 
-struct TrackResponse: Codable {
-    let id: Int
-    let name: String
-    let artist: String
-    let featuring: String
-    let album: String
-    let trackNumber: Int?
-    let length: Int
-    let releaseYear: Int?
-    let genre: String?
-    let playCount: Int
-    let `private`: Bool
-    let hidden: Bool
-    let lastPlayed: Date?
-    let createdAt: Date
-    let note: String?
-}
-
-struct TrackChangeResponse: Codable {
-    let content: TrackChangeContent
-    let pageable: TrackChangePagination
-}
-
-struct TrackChangeContent: Codable {
-    let newTracks: Array<TrackResponse>
-    let modifiedTracks: Array<TrackResponse>
-    let removedTrackIds: Array<Int>
-}
-
-struct TrackChangePagination: Codable {
-    let offset: Int
-    let pageSize: Int
-    let pageNumber: Int
-    let totalPages: Int
-    let totalElements: Int
-}
