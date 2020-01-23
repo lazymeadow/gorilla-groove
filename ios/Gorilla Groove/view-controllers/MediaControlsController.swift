@@ -11,8 +11,20 @@ class MediaControlsController: UIViewController {
     var targetListenTime = 9999999.0
     var listenedToCurrentSong = false
     
+    // Kind of hacky. But the events we get when we change songs can be triggered in a weird way that makes
+    // the slider kind of jump around, because the song changes, but the time that we are given by the media
+    // controls hasn't yet changed back to 0. So do a little extra bookkeeping to keep this from happening
+    var playingTrackId: Int64? = nil
+    
     var repeatIcon: UIImageView { return createIcon("repeat", weight: .bold) }
-    var backIcon: UIImageView { return createIcon("backward.end.fill") }
+    var backIcon: UIImageView {
+        let icon = createIcon("backward.end.fill")
+        icon.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(playPrevious(tapGestureRecognizer:))
+        ))
+        return icon
+    }
     
     lazy var playIcon: UIImageView = {
         let icon = createIcon("play.fill", scale: .large)
@@ -33,7 +45,15 @@ class MediaControlsController: UIViewController {
         return icon
     }()
     
-    var forwardIcon: UIImageView { return createIcon("forward.end.fill") }
+    var forwardIcon: UIImageView {
+        let icon = createIcon("forward.end.fill")
+        icon.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(playNext(tapGestureRecognizer:))
+        ))
+        return icon
+    }
+    
     var shuffleIcon: UIImageView { return createIcon("shuffle", weight: .bold) }
     
     var songText: UILabel = {
@@ -126,7 +146,15 @@ class MediaControlsController: UIViewController {
         ])
 
         AudioPlayer.addTimeObserver { time in
+            // If the track IDs aren't the same it means we're about to be changing tracks.
+            // Ignore setting the slider here or else we will end up with the slider jumping around
+            if (self.playingTrackId != NowPlayingTracks.currentTrack!.id) {
+                return
+            }
+            
             self.currentTime.text = self.formatTimeFromSeconds(Int(time))
+            
+            // If we're grabbing the slider avoid updating it visually or it'll skip around while we drag it
             if (!self.sliderGrabbed) {
                 self.slider.setValue(Float(time) / Float(NowPlayingTracks.currentTrack!.length), animated: true)
             }
@@ -170,6 +198,8 @@ class MediaControlsController: UIViewController {
                 self.slider.setValue(0, animated: true)
                 
                 self.targetListenTime = Double(Int(track.length)) * 0.60
+                
+                self.playingTrackId = track.id
             }
         }
     }
@@ -264,6 +294,14 @@ class MediaControlsController: UIViewController {
         AudioPlayer.player.play()
         self.pauseIcon.isHidden = false
         self.playIcon.isHidden = true
+    }
+    
+    @objc func playNext(tapGestureRecognizer: UITapGestureRecognizer) {
+        NowPlayingTracks.playNext()
+    }
+    
+    @objc func playPrevious(tapGestureRecognizer: UITapGestureRecognizer) {
+        NowPlayingTracks.playPrevious()
     }
     
     @objc func handleSeek(tapGestureRecognizer: UITapGestureRecognizer) {

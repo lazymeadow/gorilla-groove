@@ -52,6 +52,8 @@ class SongViewCell: UITableViewCell {
         return label
     }()
     
+    var tableIndex: Int = -1
+    
     func animateSelectionColor() {
         UIView.animate(withDuration: 0.12, animations: {
             self.backgroundColor = SongViewCell.selectionColor

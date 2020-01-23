@@ -45,6 +45,7 @@ class SongViewController: UIViewController, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "songCell", for: indexPath) as! SongViewCell
         let track = tracks[indexPath.row]
         
+        cell.tableIndex = indexPath.row
         cell.track = track
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
@@ -57,19 +58,7 @@ class SongViewController: UIViewController, UITableViewDataSource {
         let cell = sender.view as! SongViewCell
         
         cell.animateSelectionColor()
-
-        HttpRequester.get("file/link/\(cell.track!.id)?audioFormat=MP3", TrackLinkResponse.self) { links, status , err in
-            if (status < 200 || status >= 300 || links == nil) {
-                print("Failed to get track links!")
-                return
-            }
-            
-            let playerItem = AVPlayerItem(url: URL(string: links!.songLink)!)
-            
-            NowPlayingTracks.setCurrentTrack(cell.track!)
-            AudioPlayer.player.replaceCurrentItem(with: playerItem)
-            AudioPlayer.player.playImmediately(atRate: 1.0)
-        }
+        NowPlayingTracks.setNowPlayingTracks(self.tracks, playFromIndex: cell.tableIndex)
     }
 }
 
