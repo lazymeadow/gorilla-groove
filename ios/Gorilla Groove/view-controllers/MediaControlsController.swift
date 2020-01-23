@@ -170,8 +170,9 @@ class MediaControlsController: UIViewController {
             self.currentTime.text = self.formatTimeFromSeconds(Int(time))
             
             // If we're grabbing the slider avoid updating it visually or it'll skip around while we drag it
+            let percentDone = Float(time) / Float(NowPlayingTracks.currentTrack!.length)
             if (!self.sliderGrabbed) {
-                self.slider.setValue(Float(time) / Float(NowPlayingTracks.currentTrack!.length), animated: true)
+                self.slider.setValue(percentDone, animated: true)
             }
             
             let timeElapsed = time - self.lastTimeUpdate
@@ -188,6 +189,10 @@ class MediaControlsController: UIViewController {
                 self.listenedToCurrentSong = true
                 TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
             }
+            
+            if (percentDone >= 1.0) {
+                NowPlayingTracks.playNext()
+            }
         }
         
         NowPlayingTracks.addTrackChangeObserver { nillableTrack in
@@ -202,6 +207,8 @@ class MediaControlsController: UIViewController {
                     self.totalTime.text = self.formatTimeFromSeconds(0)
                     self.songText.text = " "
                     self.slider.setValue(0, animated: true)
+                    self.pauseIcon.isHidden = true
+                    self.playIcon.isHidden = false
                     
                     return
                 }
@@ -215,8 +222,6 @@ class MediaControlsController: UIViewController {
                 self.slider.setValue(0, animated: true)
                 
                 self.targetListenTime = Double(Int(track.length)) * 0.60
-                
-
             }
         }
     }
