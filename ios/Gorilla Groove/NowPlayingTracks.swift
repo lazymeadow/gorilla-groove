@@ -11,7 +11,7 @@ class NowPlayingTracks {
     private static var indexesToShuffle: Array<Int> = []
     
     private static var nowPlayingIndex: Int = -1
-    private static var shuffleOn: Bool = false {
+    static var shuffleOn: Bool = false {
         didSet {
             if (shuffleOn) {
                 doShuffle(preservePrevious: false)
@@ -73,7 +73,11 @@ class NowPlayingTracks {
             playNextNonShuffle()
         }
         
-        playTrack(currentTrack!)
+        if (currentTrack == nil) {
+            notifyListeners()
+        } else {
+            playTrack(currentTrack!)
+        }
     }
     
     private static func playNextShuffle() {
@@ -87,8 +91,9 @@ class NowPlayingTracks {
                 return
             }
         } else {
-            nowPlayingIndex = indexesToShuffle.first!
             playedShuffleIndexes.append(nowPlayingIndex)
+
+            nowPlayingIndex = indexesToShuffle.removeFirst()
 
             currentTrack = nowPlayingTracks[nowPlayingIndex]
         }
@@ -126,10 +131,10 @@ class NowPlayingTracks {
         if (playedShuffleIndexes.isEmpty) {
             // Just do nothing, which will restart the current track
         } else {
-            nowPlayingIndex = playedShuffleIndexes.removeLast()
-            
             indexesToShuffle.append(nowPlayingIndex)
             indexesToShuffle.shuffle()
+            
+            nowPlayingIndex = playedShuffleIndexes.removeLast()
         }
 
         currentTrack = nowPlayingTracks[nowPlayingIndex]
@@ -151,6 +156,10 @@ class NowPlayingTracks {
     private static func doShuffle(preservePrevious: Bool) {
         if (!preservePrevious) {
             playedShuffleIndexes = []
+        }
+        
+        if (nowPlayingTracks.isEmpty) {
+            return
         }
 
         indexesToShuffle = Array(0...nowPlayingTracks.count - 1)

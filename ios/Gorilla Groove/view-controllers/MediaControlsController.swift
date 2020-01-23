@@ -16,7 +16,15 @@ class MediaControlsController: UIViewController {
     // controls hasn't yet changed back to 0. So do a little extra bookkeeping to keep this from happening
     var playingTrackId: Int64? = nil
     
-    var repeatIcon: UIImageView { return createIcon("repeat", weight: .bold) }
+    lazy var repeatIcon: UIImageView = {
+        let icon = createIcon("repeat", weight: .bold)
+        icon.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(toggleRepeat(tapGestureRecognizer:))
+        ))
+        return icon
+    }()
+    
     var backIcon: UIImageView {
         let icon = createIcon("backward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
@@ -54,7 +62,14 @@ class MediaControlsController: UIViewController {
         return icon
     }
     
-    var shuffleIcon: UIImageView { return createIcon("shuffle", weight: .bold) }
+    lazy var shuffleIcon: UIImageView = {
+        let icon = createIcon("shuffle", weight: .bold)
+        icon.addGestureRecognizer(UITapGestureRecognizer(
+            target: self,
+            action: #selector(toggleShuffle(tapGestureRecognizer:))
+        ))
+        return icon
+    }()
     
     var songText: UILabel = {
         let label = UILabel()
@@ -148,7 +163,7 @@ class MediaControlsController: UIViewController {
         AudioPlayer.addTimeObserver { time in
             // If the track IDs aren't the same it means we're about to be changing tracks.
             // Ignore setting the slider here or else we will end up with the slider jumping around
-            if (self.playingTrackId != NowPlayingTracks.currentTrack!.id) {
+            if (self.playingTrackId == nil || self.playingTrackId != NowPlayingTracks.currentTrack?.id) {
                 return
             }
             
@@ -180,11 +195,13 @@ class MediaControlsController: UIViewController {
                 self.timeListened = 0.0
                 self.lastTimeUpdate = 0.0
                 self.listenedToCurrentSong = false
+                self.playingTrackId = nillableTrack?.id
                 
                 guard let track = nillableTrack else {
                     self.currentTime.text = self.formatTimeFromSeconds(0)
                     self.totalTime.text = self.formatTimeFromSeconds(0)
-                    self.songText.text = ""
+                    self.songText.text = " "
+                    self.slider.setValue(0, animated: true)
                     
                     return
                 }
@@ -199,7 +216,7 @@ class MediaControlsController: UIViewController {
                 
                 self.targetListenTime = Double(Int(track.length)) * 0.60
                 
-                self.playingTrackId = track.id
+
             }
         }
     }
@@ -302,6 +319,16 @@ class MediaControlsController: UIViewController {
     
     @objc func playPrevious(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.playPrevious()
+    }
+    
+    @objc func toggleRepeat(tapGestureRecognizer: UITapGestureRecognizer) {
+        NowPlayingTracks.repeatOn = !NowPlayingTracks.repeatOn
+        repeatIcon.tintColor = NowPlayingTracks.repeatOn ? Colors.aqua : .white
+    }
+    
+    @objc func toggleShuffle(tapGestureRecognizer: UITapGestureRecognizer) {
+        NowPlayingTracks.shuffleOn = !NowPlayingTracks.shuffleOn
+        shuffleIcon.tintColor = NowPlayingTracks.shuffleOn ? Colors.aqua : .white
     }
     
     @objc func handleSeek(tapGestureRecognizer: UITapGestureRecognizer) {

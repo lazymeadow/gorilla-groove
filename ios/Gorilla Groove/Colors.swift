@@ -12,6 +12,7 @@ import UIKit
 class Colors {
     static let darkBlue = UIColor("1D87BA")
     static let lightBlue = UIColor("99D5F1")
+    static let aqua = UIColor("91F9E2")
     static let nearBlack = UIColor("333333")
     
     private init() { }
