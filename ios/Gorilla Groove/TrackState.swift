@@ -25,7 +25,7 @@ class TrackState {
             savePageOfChanges(url: url, page: currentPage, userId: ownId)
             currentPage += 1
         }
-
+        
         // Divide by 1000 to get back to seconds
         let newDate = NSDate(timeIntervalSince1970: Double(maximum) / 1000.0)
         
@@ -50,7 +50,7 @@ class TrackState {
                 let entity = NSEntityDescription.entity(forEntityName: "Track", in: self.context)
                 let newTrack = NSManagedObject(entity: entity!, insertInto: self.context)
                 newTrack.setValue(userId, forKey: "user_id")
-
+                
                 self.setTrackEntityPropertiesFromResponse(newTrack, newTrackResponse)
                 
                 print("Adding new track with ID: \((newTrack as! Track).id)")
@@ -79,10 +79,10 @@ class TrackState {
                 
                 print("Deleting track with ID: \(deletedId)")
             }
-
+            
             pagesToFetch = trackResponse!.pageable.totalPages
             semaphore.signal()
-
+            
         }
         
         semaphore.wait()
@@ -125,7 +125,13 @@ class TrackState {
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
         fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(
+                key: "name",
+                ascending: true,
+                selector: #selector(NSString.caseInsensitiveCompare)
+            )
+        ]
         let result = try! context.fetch(fetchRequest)
         
         return result as! Array<Track>
@@ -155,7 +161,7 @@ class TrackState {
         context = coreDataManager.managedObjectContext
     }
     
-
+    
     struct TrackResponse: Codable {
         let id: Int64
         let name: String
@@ -173,18 +179,18 @@ class TrackState {
         let createdAt: Date
         let note: String?
     }
-
+    
     struct TrackChangeResponse: Codable {
         let content: TrackChangeContent
         let pageable: TrackChangePagination
     }
-
+    
     struct TrackChangeContent: Codable {
         let newTracks: Array<TrackResponse>
         let modifiedTracks: Array<TrackResponse>
         let removedTrackIds: Array<Int64>
     }
-
+    
     struct TrackChangePagination: Codable {
         let offset: Int
         let pageSize: Int
@@ -192,7 +198,7 @@ class TrackState {
         let totalPages: Int
         let totalElements: Int
     }
-
+    
     struct MarkListenedRequest: Codable {
         let trackId: Int64
         let deviceId: String
