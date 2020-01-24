@@ -65,6 +65,18 @@ class SongViewCell: UITableViewCell {
         }
     }
     
+    func checkIfPlaying() {
+        if (track != nil && track?.id == NowPlayingTracks.currentTrack?.id) {
+            artistLabel.textColor = Colors.darkBlue
+            nameLabel.textColor = Colors.darkBlue
+            albumLabel.textColor = Colors.darkBlue
+        } else {
+            artistLabel.textColor = Colors.grey3
+            nameLabel.textColor = Colors.grey2
+            albumLabel.textColor = Colors.grey3
+        }
+    }
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         

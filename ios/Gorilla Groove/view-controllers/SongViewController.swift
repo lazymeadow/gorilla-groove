@@ -3,7 +3,7 @@ import Foundation
 import AVFoundation
 import AVKit
 
-class SongViewController: UIViewController, UITableViewDataSource {
+class SongViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     let trackState = TrackState()
     var tracks: Array<Track> = []
@@ -15,7 +15,7 @@ class SongViewController: UIViewController, UITableViewDataSource {
         try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try! AVAudioSession.sharedInstance().setActive(true)
         
-        let contactsTableView = UITableView() // view
+        let contactsTableView = UITableView()
         view.addSubview(contactsTableView)
         
         contactsTableView.translatesAutoresizingMaskIntoConstraints = false
@@ -25,12 +25,23 @@ class SongViewController: UIViewController, UITableViewDataSource {
         contactsTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
         
         contactsTableView.dataSource = self
+        contactsTableView.delegate = self
         contactsTableView.register(SongViewCell.self, forCellReuseIdentifier: "songCell")
         
         // Remove extra table rows when we don't have a full screen of songs
         contactsTableView.tableFooterView = UIView(frame: .zero)
         
         tracks = trackState.getTracks()
+        
+        // viewDidLoad only seems to be called once. But I am wary of more than one of these being registered
+        NowPlayingTracks.addTrackChangeObserver { _ in
+            DispatchQueue.main.async {
+                contactsTableView.visibleCells.forEach { cell in
+                    let songViewCell = cell as! SongViewCell
+                    songViewCell.checkIfPlaying()
+                }
+            }
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -48,6 +59,11 @@ class SongViewController: UIViewController, UITableViewDataSource {
         cell.addGestureRecognizer(tapGesture)
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        let songViewCell = cell as! SongViewCell
+        songViewCell.checkIfPlaying()
     }
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
