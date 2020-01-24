@@ -167,7 +167,7 @@ class MediaControlsController: UIViewController {
                 return
             }
             
-            self.currentTime.text = self.formatTimeFromSeconds(Int(time))
+            self.currentTime.text = Formatters.timeFromSeconds(Int(time))
             
             // If we're grabbing the slider avoid updating it visually or it'll skip around while we drag it
             let percentDone = Float(time) / Float(NowPlayingTracks.currentTrack!.length)
@@ -203,8 +203,8 @@ class MediaControlsController: UIViewController {
                 self.playingTrackId = nillableTrack?.id
                 
                 guard let track = nillableTrack else {
-                    self.currentTime.text = self.formatTimeFromSeconds(0)
-                    self.totalTime.text = self.formatTimeFromSeconds(0)
+                    self.currentTime.text = Formatters.timeFromSeconds(0)
+                    self.totalTime.text = Formatters.timeFromSeconds(0)
                     self.songText.text = " "
                     self.slider.setValue(0, animated: true)
                     self.pauseIcon.isHidden = true
@@ -213,8 +213,8 @@ class MediaControlsController: UIViewController {
                     return
                 }
                 
-                self.currentTime.text = self.formatTimeFromSeconds(0)
-                self.totalTime.text = self.formatTimeFromSeconds(Int(track.length))
+                self.currentTime.text = Formatters.timeFromSeconds(0)
+                self.totalTime.text = Formatters.timeFromSeconds(Int(track.length))
                 self.songText.text = track.name + " - " + track.artist
                 self.pauseIcon.isHidden = false
                 self.playIcon.isHidden = true
@@ -225,15 +225,7 @@ class MediaControlsController: UIViewController {
             }
         }
     }
-    
-    private func formatTimeFromSeconds(_ totalSeconds: Int) -> String {
-        let seconds = totalSeconds % 60
-        let minutes = totalSeconds / 60
-        
-        let zeroPaddedSeconds = seconds < 10 ? "0" + String(seconds) : String(seconds)
-        
-        return String(minutes) + ":" + zeroPaddedSeconds
-    }
+
     
     private func createTopButtons() -> UIStackView {
         let buttons = UIStackView()

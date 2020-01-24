@@ -1,11 +1,3 @@
-//
-//  SongViewCell.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/12/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import UIKit
 import Foundation
 
@@ -13,41 +5,50 @@ class SongViewCell: UITableViewCell {
     static let normalColor = UIColor.white
     static let selectionColor = UIColor(white: 0.85, alpha: 1)
     
-    var track:Track? {
+    var track: Track? {
         didSet {
             guard let track = track else {return}
-            nameLabel.text = track.name
-
-            if (track.artist.isEmpty) {
-                artistLabel.text = ""
-            } else {
-                artistLabel.text = " \(track.artist) "
-            }
+            nameLabel.text = track.name.isEmpty ? " " : track.name
+            artistLabel.text = track.artist.isEmpty ? " " : track.artist.uppercased()
+            albumLabel.text = track.album.isEmpty ? " " : track.album
+            
+            durationLabel.text = Formatters.timeFromSeconds(Int(track.length))
+            
+            nameLabel.sizeToFit()
+            artistLabel.sizeToFit()
+            albumLabel.sizeToFit()
         }
     }
 
-    let containerView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.clipsToBounds = true // this will make sure its children do not go out of the boundary
-        return view
-    }()
-    
     let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 20)
-        label.textColor = .black
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.textColor = Colors.grey2
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
     let artistLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 14)
-        label.textColor =  .white
-        label.backgroundColor = #colorLiteral(red: 0.1764705926, green: 0.4980392158, blue: 0.7568627596, alpha: 1)
-        label.layer.cornerRadius = 5
+        label.font = UIFont.boldSystemFont(ofSize: 10)
+        label.textColor = Colors.grey3
         label.clipsToBounds = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let albumLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 14)
+        label.textColor = Colors.grey3
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let durationLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.boldSystemFont(ofSize: 12)
+        label.textColor = Colors.grey3
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -67,24 +68,39 @@ class SongViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        containerView.addSubview(nameLabel)
-        containerView.addSubview(artistLabel)
+        let containerView = UIStackView()
+        containerView.axis = .vertical
+        containerView.distribution  = .fill
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let topRow = UIStackView()
+        topRow.axis = .horizontal
+        topRow.distribution  = .equalSpacing
+        topRow.alignment = .fill
+        topRow.translatesAutoresizingMaskIntoConstraints = false
+        
+        topRow.addArrangedSubview(artistLabel)
+        topRow.addArrangedSubview(durationLabel)
+        
+        containerView.addArrangedSubview(topRow)
+        containerView.addArrangedSubview(nameLabel)
+        containerView.addArrangedSubview(albumLabel)
+        
+        containerView.setCustomSpacing(6.0, after: topRow)
+        containerView.setCustomSpacing(8.0, after: nameLabel)
+
         self.contentView.addSubview(containerView)
         self.backgroundColor = SongViewCell.normalColor
         
-        containerView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor).isActive = true
-        containerView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 10).isActive = true
-        containerView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -10).isActive = true
-        containerView.heightAnchor.constraint(equalToConstant:40).isActive = true
-        
-        nameLabel.topAnchor.constraint(equalTo: self.containerView.topAnchor).isActive = true
-        nameLabel.leadingAnchor.constraint(equalTo: self.containerView.leadingAnchor).isActive = true
-        nameLabel.trailingAnchor.constraint(equalTo: self.containerView.trailingAnchor).isActive = true
-        
-        artistLabel.topAnchor.constraint(equalTo: self.nameLabel.bottomAnchor).isActive = true
-        artistLabel.leadingAnchor.constraint(equalTo: self.containerView.leadingAnchor).isActive = true
-        artistLabel.topAnchor.constraint(equalTo: self.nameLabel.bottomAnchor).isActive = true
-        artistLabel.leadingAnchor.constraint(equalTo: self.containerView.leadingAnchor).isActive = true
+        NSLayoutConstraint.activate([
+            containerView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            containerView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 16),
+            containerView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16),
+            artistLabel.widthAnchor.constraint(equalTo: topRow.widthAnchor, constant: -40),
+            topRow.widthAnchor.constraint(equalTo: containerView.widthAnchor),
+            
+            self.contentView.heightAnchor.constraint(equalTo: containerView.heightAnchor, constant: 10)
+        ])
     }
     
     required init?(coder aDecoder: NSCoder) {

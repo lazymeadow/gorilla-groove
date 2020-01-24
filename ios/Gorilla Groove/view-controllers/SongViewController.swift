@@ -15,10 +15,6 @@ class SongViewController: UIViewController, UITableViewDataSource {
         try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try! AVAudioSession.sharedInstance().setActive(true)
         
-        print("Loaded song view controller")
-
-        view.backgroundColor = .red
-        
         let contactsTableView = UITableView() // view
         view.addSubview(contactsTableView)
         

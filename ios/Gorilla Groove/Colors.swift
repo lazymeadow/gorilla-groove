@@ -14,6 +14,8 @@ class Colors {
     static let lightBlue = UIColor("99D5F1")
     static let aqua = UIColor("91F9E2")
     static let nearBlack = UIColor("333333")
+    static let grey2 = UIColor("4F4F4F")
+    static let grey3 = UIColor("828282")
     
     private init() { }
 }

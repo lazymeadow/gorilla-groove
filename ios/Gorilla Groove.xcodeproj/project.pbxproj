@@ -31,6 +31,7 @@
 		E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */; };
 		E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */; };
 		E85A4DD523D56D13006BD7EE /* UserSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */; };
+		E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD623DAB859006BD7EE /* Formatters.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,6 +62,7 @@
 		E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaControlsController.swift; sourceTree = "<group>"; };
 		E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingTracks.swift; sourceTree = "<group>"; };
 		E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSyncManager.swift; sourceTree = "<group>"; };
+		E85A4DD623DAB859006BD7EE /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +144,7 @@
 				A829AC2923D3B0DE0034AD69 /* Colors.swift */,
 				E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */,
 				E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */,
+				E85A4DD623DAB859006BD7EE /* Formatters.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -219,6 +222,7 @@
 			files = (
 				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
 				A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */,
+				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,
 				A829ABFA23C6CD950034AD69 /* Groove.xcdatamodeld in Sources */,
 				A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */,
 				A829AC1D23CAC29B0034AD69 /* Track+CoreDataProperties.swift in Sources */,
