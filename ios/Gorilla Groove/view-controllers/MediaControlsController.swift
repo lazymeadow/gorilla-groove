@@ -161,69 +161,19 @@ class MediaControlsController: UIViewController {
         ])
 
         AudioPlayer.addTimeObserver { time in
-            // If the track IDs aren't the same it means we're about to be changing tracks.
-            // Ignore setting the slider here or else we will end up with the slider jumping around
-            if (self.playingTrackId == nil || self.playingTrackId != NowPlayingTracks.currentTrack?.id) {
-                return
-            }
-            
-            self.currentTime.text = Formatters.timeFromSeconds(Int(time))
-            
-            // If we're grabbing the slider avoid updating it visually or it'll skip around while we drag it
-            let percentDone = Float(time) / Float(NowPlayingTracks.currentTrack!.length)
-            if (!self.sliderGrabbed) {
-                self.slider.setValue(percentDone, animated: true)
-            }
-            
-            let timeElapsed = time - self.lastTimeUpdate
-            self.lastTimeUpdate = time
-            // If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
-            // manually altered the song's progress. Do no other checks or updates
-            if (timeElapsed < 0 || timeElapsed > 1) {
-                return;
-            }
-
-            self.timeListened += timeElapsed
-            
-            if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
-                self.listenedToCurrentSong = true
-                TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
-            }
-            
-            if (percentDone >= 1.0) {
-                NowPlayingTracks.playNext()
-            }
+            self.handleTimeChange(time)
         }
         
         NowPlayingTracks.addTrackChangeObserver { nillableTrack in
-            DispatchQueue.main.async {
-                self.timeListened = 0.0
-                self.lastTimeUpdate = 0.0
-                self.listenedToCurrentSong = false
-                self.playingTrackId = nillableTrack?.id
-                
-                guard let track = nillableTrack else {
-                    self.currentTime.text = Formatters.timeFromSeconds(0)
-                    self.totalTime.text = Formatters.timeFromSeconds(0)
-                    self.songText.text = " "
-                    self.slider.setValue(0, animated: true)
-                    self.pauseIcon.isHidden = true
-                    self.playIcon.isHidden = false
-                    
-                    return
-                }
-                
-                self.currentTime.text = Formatters.timeFromSeconds(0)
-                self.totalTime.text = Formatters.timeFromSeconds(Int(track.length))
-                self.songText.text = track.name + " - " + track.artist
-                self.pauseIcon.isHidden = false
-                self.playIcon.isHidden = true
-                
-                self.slider.setValue(0, animated: true)
-                
-                self.targetListenTime = Double(Int(track.length)) * 0.60
-            }
+            DispatchQueue.main.async { self.handleTrackChange(nillableTrack) }
         }
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
     }
 
     
@@ -294,8 +244,73 @@ class MediaControlsController: UIViewController {
         return icon
     }
     
+    private func handleTrackChange(_ nillableTrack: Track?) {
+        self.timeListened = 0.0
+        self.lastTimeUpdate = 0.0
+        self.listenedToCurrentSong = false
+        self.playingTrackId = nillableTrack?.id
+        
+        guard let track = nillableTrack else {
+            self.currentTime.text = Formatters.timeFromSeconds(0)
+            self.totalTime.text = Formatters.timeFromSeconds(0)
+            self.songText.text = " "
+            self.slider.setValue(0, animated: true)
+            self.pauseIcon.isHidden = true
+            self.playIcon.isHidden = false
+            
+            return
+        }
+        
+        self.currentTime.text = Formatters.timeFromSeconds(0)
+        self.totalTime.text = Formatters.timeFromSeconds(Int(track.length))
+        self.songText.text = track.name + " - " + track.artist
+        self.pauseIcon.isHidden = false
+        self.playIcon.isHidden = true
+        
+        self.slider.setValue(0, animated: true)
+        
+        self.targetListenTime = Double(Int(track.length)) * 0.60
+    }
+    
+    private func handleTimeChange(_ time: Double) {
+        // If the track IDs aren't the same it means we're about to be changing tracks.
+        // Ignore setting the slider here or else we will end up with the slider jumping around
+        if (self.playingTrackId == nil || self.playingTrackId != NowPlayingTracks.currentTrack?.id) {
+            return
+        }
+        
+        // Round the time because that seems to be what the notification area does and it's good if they agree on time
+        self.currentTime.text = Formatters.timeFromSeconds(Int(round(time)))
+        
+        // If we're grabbing the slider avoid updating it visually or it'll skip around while we drag it
+        let percentDone = Float(time) / Float(NowPlayingTracks.currentTrack!.length)
+        if (!self.sliderGrabbed) {
+            self.slider.setValue(percentDone, animated: true)
+        }
+        
+        let timeElapsed = time - self.lastTimeUpdate
+        self.lastTimeUpdate = time
+        
+        // If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
+        // manually altered the song's progress. Do no other checks or updates
+        if (timeElapsed < 0 || timeElapsed > 1) {
+            return;
+        }
+
+        self.timeListened += timeElapsed
+        
+        if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
+            self.listenedToCurrentSong = true
+            TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
+        }
+        
+        if (percentDone >= 1.0) {
+            NowPlayingTracks.playNext()
+        }
+    }
+    
     @objc func pauseMusic(tapGestureRecognizer: UITapGestureRecognizer) {
-        AudioPlayer.player.pause()
+        AudioPlayer.pause()
         self.pauseIcon.isHidden = true
         self.playIcon.isHidden = false
     }
@@ -305,7 +320,7 @@ class MediaControlsController: UIViewController {
             return
         }
         
-        AudioPlayer.player.play()
+        AudioPlayer.play()
         self.pauseIcon.isHidden = false
         self.playIcon.isHidden = true
     }
@@ -333,8 +348,9 @@ class MediaControlsController: UIViewController {
             return
         }
         
-        let seconds = slider.value * Float(NowPlayingTracks.currentTrack!.length)
-        AudioPlayer.player.seek(to: CMTimeMake(value: Int64(Int(seconds)), timescale: 1))
+        let seconds = Double(slider.value) * Double(NowPlayingTracks.currentTrack!.length)
+        handleTimeChange(seconds)
+        AudioPlayer.seekTo(seconds)
     }
     
     @objc func handleSliderGrab(tapGestureRecognizer: UITapGestureRecognizer) {
@@ -343,6 +359,16 @@ class MediaControlsController: UIViewController {
     
     @objc func handleSliderRelease(tapGestureRecognizer: UITapGestureRecognizer) {
         sliderGrabbed = false
+    }
+    
+    @objc func willEnterForeground() {
+        if (AudioPlayer.isPaused) {
+            playIcon.isHidden = false
+            pauseIcon.isHidden = true
+        } else {
+            playIcon.isHidden = true
+            pauseIcon.isHidden = false
+        }
     }
 }
 

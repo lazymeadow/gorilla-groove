@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import MediaPlayer
 
 class NowPlayingTracks {
     
@@ -39,21 +40,41 @@ class NowPlayingTracks {
     }
     
     private static func playTrack(_ track: Track) {
-        AudioPlayer.player.pause()
+        AudioPlayer.pause()
         
         HttpRequester.get("file/link/\(track.id)?audioFormat=MP3", TrackLinkResponse.self) { links, status , err in
             if (status < 200 || status >= 300 || links == nil) {
                 print("Failed to get track links!")
                 return
             }
-            
-            let playerItem = AVPlayerItem(url: URL(string: links!.songLink)!)
-            
-            AudioPlayer.player.replaceCurrentItem(with: playerItem)
-            AudioPlayer.player.playImmediately(atRate: 1.0)
+
+            AudioPlayer.playNewLink(links!.songLink)
+
+            updatePlayingTrackInfo(track)
             
             notifyListeners()
         }
+    }
+    
+    private static func updatePlayingTrackInfo(_ track: Track) {
+        var nowPlayingInfo = [String : Any]()
+        
+        nowPlayingInfo[MPMediaItemPropertyTitle] = track.name
+        nowPlayingInfo[MPMediaItemPropertyArtist] = track.artist
+        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = track.album
+
+//        if let image = UIImage(named: "lockscreen") {
+//            nowPlayingInfo[MPMediaItemPropertyArtwork] =
+//                MPMediaItemArtwork(boundsSize: image.size) { size in
+//                    return image
+//            }
+//        }
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = track.length
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = AudioPlayer.rate
+
+        // Set the metadata
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
     
     private static func notifyListeners() {
