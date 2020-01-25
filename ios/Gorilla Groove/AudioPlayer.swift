@@ -68,8 +68,21 @@ class AudioPlayer {
             }
             return .success
         }
+        rcc.nextTrackCommand.addTarget { event in
+            NowPlayingTracks.playNext()
+            return .success
+        }
+        rcc.previousTrackCommand.addTarget { event in
+            NowPlayingTracks.playPrevious()
+            return .success
+        }
+        
         rcc.playCommand.isEnabled = true
         rcc.pauseCommand.isEnabled = true
+        rcc.skipBackwardCommand.isEnabled = false
+        rcc.skipForwardCommand.isEnabled = false
+        rcc.nextTrackCommand.isEnabled = true
+        rcc.previousTrackCommand.isEnabled = true
         rcc.changePlaybackPositionCommand.isEnabled = true
     }
     

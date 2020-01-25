@@ -35,7 +35,7 @@ class NowPlayingTracks {
         if (shuffleOn) {
             doShuffle(preservePrevious: false)
         }
-
+        
         playTrack(currentTrack!)
     }
     
@@ -47,9 +47,10 @@ class NowPlayingTracks {
                 print("Failed to get track links!")
                 return
             }
-
+            
             AudioPlayer.playNewLink(links!.songLink)
-
+            setNowPlayingAlbumArt(links!.albumArtLink)
+            
             updatePlayingTrackInfo(track)
             
             notifyListeners()
@@ -62,19 +63,33 @@ class NowPlayingTracks {
         nowPlayingInfo[MPMediaItemPropertyTitle] = track.name
         nowPlayingInfo[MPMediaItemPropertyArtist] = track.artist
         nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = track.album
-
-//        if let image = UIImage(named: "lockscreen") {
-//            nowPlayingInfo[MPMediaItemPropertyArtwork] =
-//                MPMediaItemArtwork(boundsSize: image.size) { size in
-//                    return image
-//            }
-//        }
+        
+        nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
+        
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = track.length
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = AudioPlayer.rate
-
+        
         // Set the metadata
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+    
+    private static func setNowPlayingAlbumArt(_ artLink: String?) {
+        guard let link = artLink else { return }
+        
+        DispatchQueue.global().async {
+            let url = URL(string: link)!
+            
+            do {
+                let data = try Data.init(contentsOf: url)
+                let image = UIImage(data: data)!
+                let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in return image })
+                
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+            } catch {
+                print(error)
+            }
+        }
     }
     
     private static func notifyListeners() {
@@ -104,7 +119,7 @@ class NowPlayingTracks {
     private static func playNextShuffle() {
         if (indexesToShuffle.isEmpty) {
             currentTrack = nil
-
+            
             if (repeatOn) {
                 doShuffle(preservePrevious: true)
                 playNextShuffle()
@@ -113,9 +128,9 @@ class NowPlayingTracks {
             }
         } else {
             playedShuffleIndexes.append(nowPlayingIndex)
-
+            
             nowPlayingIndex = indexesToShuffle.removeFirst()
-
+            
             currentTrack = nowPlayingTracks[nowPlayingIndex]
         }
     }
@@ -157,7 +172,7 @@ class NowPlayingTracks {
             
             nowPlayingIndex = playedShuffleIndexes.removeLast()
         }
-
+        
         currentTrack = nowPlayingTracks[nowPlayingIndex]
     }
     
@@ -182,7 +197,7 @@ class NowPlayingTracks {
         if (nowPlayingTracks.isEmpty) {
             return
         }
-
+        
         indexesToShuffle = Array(0...nowPlayingTracks.count - 1)
         
         if (currentTrack != nil) {
