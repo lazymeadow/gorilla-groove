@@ -17,7 +17,7 @@ extension UserSync {
         return NSFetchRequest<UserSync>(entityName: "UserSync")
     }
 
-    @NSManaged public var last_sync: NSDate
+    @NSManaged public var last_sync: NSDate?
     @NSManaged public var device_id: UUID
     @NSManaged public var user_id: Int64
     

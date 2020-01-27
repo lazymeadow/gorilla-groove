@@ -21,7 +21,6 @@ class UserSyncManager {
         let entity = NSEntityDescription.entity(forEntityName: "UserSync", in: context)
         let newUserSync = NSManagedObject(entity: entity!, insertInto: context)
         newUserSync.setValue(ownId, forKey: "user_id")
-        newUserSync.setValue(NSDate(timeIntervalSince1970: 0), forKey: "last_sync")
         newUserSync.setValue(UUID(), forKey: "device_id")
         
         do {

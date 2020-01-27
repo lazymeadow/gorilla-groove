@@ -32,7 +32,6 @@ class ViewController: UIViewController {
     @IBOutlet weak var appVersion: UILabel!
     @IBOutlet weak var apiVersion: UILabel!
     @IBOutlet weak var loginSpinner: UIActivityIndicatorView!
-    @IBOutlet weak var loginToken: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,19 +48,22 @@ class ViewController: UIViewController {
         super.viewDidAppear(animated)
         
         getApiVersion()
-        let token = LoginState.read()?.token
-        
-        if (token != nil) {
-            presentLoggedInView()
-            return
-        }
     }
     
     private func presentLoggedInView() {
-        let playbackWrapper = PlaybackWrapperViewController()
-        playbackWrapper.modalPresentationStyle = .fullScreen
-        playbackWrapper.modalTransitionStyle = .crossDissolve
-        self.present(playbackWrapper, animated: true, completion: nil)
+        // If this is the first time this user has logged in, we want to sync in their library
+        let userSync = UserSyncManager().getLastSentUserSync()
+        let newView: UIViewController = {
+            if (userSync.last_sync == nil) {
+                return SyncController()
+            } else {
+                return PlaybackWrapperViewController()
+            }
+        }()
+        
+        newView.modalPresentationStyle = .fullScreen
+        newView.modalTransitionStyle = .crossDissolve
+        self.present(newView, animated: true, completion: nil)
     }
     
     @IBAction func login(_ sender: Any) {
@@ -100,7 +102,6 @@ class ViewController: UIViewController {
             LoginState.save(decodedData)
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
-                self.loginToken.text = decodedData.token
                 
                 self.presentLoggedInView()
             }

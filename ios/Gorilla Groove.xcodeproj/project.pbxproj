@@ -32,6 +32,7 @@
 		E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */; };
 		E85A4DD523D56D13006BD7EE /* UserSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */; };
 		E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD623DAB859006BD7EE /* Formatters.swift */; };
+		E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DDA23DE4F99006BD7EE /* SyncController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +64,7 @@
 		E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingTracks.swift; sourceTree = "<group>"; };
 		E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSyncManager.swift; sourceTree = "<group>"; };
 		E85A4DD623DAB859006BD7EE /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
+		E85A4DDA23DE4F99006BD7EE /* SyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +108,7 @@
 				A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */,
 				A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */,
 				E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */,
+				E85A4DDA23DE4F99006BD7EE /* SyncController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -229,6 +232,7 @@
 				A815B08B23C2FC4C003899B8 /* LoginState.swift in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */,
+				E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */,
 				A829AC1B23CAC29B0034AD69 /* UserSync+CoreDataProperties.swift in Sources */,
 				E85A4DD523D56D13006BD7EE /* UserSyncManager.swift in Sources */,
 				E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */,

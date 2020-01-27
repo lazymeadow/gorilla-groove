@@ -143,7 +143,7 @@ class MediaControlsController: UIViewController {
         content.setCustomSpacing(8.0, after: songTextView)
         
         self.view.addSubview(content)
-        self.view.backgroundColor = Colors.darkBlue
+        self.view.backgroundColor = Colors.primary
         self.view.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([

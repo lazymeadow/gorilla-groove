@@ -6,23 +6,25 @@ class TrackState {
     let context: NSManagedObjectContext
     let userSyncManager = UserSyncManager()
     
-    func syncWithServer() {
+    func syncWithServer(pageCompleteCallback: ((_ completedPage: Int, _ totalPages: Int) -> Void)? = nil) {
         print("Initiating sync with server...")
         
         let lastSync = userSyncManager.getLastSentUserSync()
         
         // API uses millis. Multiply by 1000
-        let minimum = Int(lastSync.last_sync.timeIntervalSince1970) * 1000
+        let minimum = Int(lastSync.last_sync?.timeIntervalSince1970 ?? 0) * 1000
         let maximum = Int(NSDate().timeIntervalSince1970) * 1000
         
-        let url = "track/changes-between/minimum/\(minimum)/maximum/\(maximum)?size=10&page="
+        let url = "track/changes-between/minimum/\(minimum)/maximum/\(maximum)?size=100&page="
         
         let ownId = LoginState.read()!.id
         let pagesToGet = savePageOfChanges(url: url, page: 0, userId: ownId)
+        pageCompleteCallback?(0, pagesToGet)
         
         var currentPage = 1
         while (currentPage < pagesToGet) {
             savePageOfChanges(url: url, page: currentPage, userId: ownId)
+            pageCompleteCallback?(currentPage, pagesToGet)
             currentPage += 1
         }
         

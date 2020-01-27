@@ -1,11 +1,3 @@
-//
-//  AppDelegate.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/1/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import UIKit
 import CoreData
 
@@ -17,9 +9,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         AudioPlayer.initialize()
+        
+        let token = LoginState.read()?.token
+        
+        if (token != nil) {
+            print("User logged in. Skipping login view")
+            let userSync = UserSyncManager().getLastSentUserSync()
+            if (userSync.last_sync == nil) {
+                print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
+                // TODO remove this when done devving this screen
+                window!.rootViewController = SyncController()
+            } else {
+                window!.rootViewController = PlaybackWrapperViewController()
+            }
+        }
+
         return true
     }
-
+    
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.

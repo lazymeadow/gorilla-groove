@@ -119,6 +119,12 @@ class AudioPlayer {
         player.pause()
     }
     
+    static func stop() {
+        player.pause()
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        player.replaceCurrentItem(with: nil)
+    }
+    
     static func playNewLink(_ link: String) {
         let playerItem = AVPlayerItem(url: URL(string: link)!)
         

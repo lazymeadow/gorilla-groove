@@ -1,15 +1,11 @@
-//
-//  CoreDataManager.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/9/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import Foundation
 import CoreData
 
 final class CoreDataManager {
+    
+    // This is really just for debugging, as it's nice to know where the sqlite file is located so we can
+    // open it up in an external database viewer. But I don't want to log it out 10 times as that's annoying
+    static var hasLoggedDb = false
     
     private let modelName = "Groove"
     
@@ -43,7 +39,10 @@ final class CoreDataManager {
         
         let persistentStoreURL = documentsDirectoryURL.appendingPathComponent(storeName)
         
-        print("Persistent store URL: " + persistentStoreURL.absoluteString)
+        if (!CoreDataManager.hasLoggedDb) {
+            print("Persistent store URL: " + persistentStoreURL.absoluteString)
+            CoreDataManager.hasLoggedDb = true
+        }
         
         do {
             try persistentStoreCoordinator.addPersistentStore(

@@ -1,11 +1,3 @@
-//
-//  MyLibraryController.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/5/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import UIKit
 import CoreData
 
@@ -23,20 +15,37 @@ class MyLibraryController: UITableViewController {
         super.viewDidLoad()
         self.title = "My Library"
 
-        UserSyncManager().postCurrentDevice()
-        TrackState().syncWithServer()
         let view = self.view as! UITableView
         
         view.register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
         
         // Remove extra table row lines that have no content
         view.tableFooterView = UIView(frame: .zero)
+        
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: "Logout",
+            style: .plain,
+            target: self,
+            action: #selector(logout)
+        )
     }
     
-    func logout(_ sender: Any) {
-        print("Logout")
+    override func viewDidAppear(_ animated: Bool) {
+        UserSyncManager().postCurrentDevice()
+        TrackState().syncWithServer()
+    }
+    
+    @objc func logout(_ sender: Any) {
+        // TODO actually send the logout command to the API
         LoginState.clear()
-        self.performSegue(withIdentifier: "logoutSegue", sender: nil)
+        AudioPlayer.stop()
+
+        // Until we ditch the storyboard, have to navigate to the login view this way
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "LoginController")
+        vc.modalPresentationStyle = .fullScreen
+        vc.modalTransitionStyle = .crossDissolve
+        self.present(vc, animated: true)
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

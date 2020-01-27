@@ -1,21 +1,14 @@
-//
-//  Colors.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/18/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import Foundation
 import UIKit
 
 class Colors {
-    static let darkBlue = UIColor("1D87BA")
+    static let primary = UIColor("1D87BA")
     static let lightBlue = UIColor("99D5F1")
     static let aqua = UIColor("91F9E2")
     static let nearBlack = UIColor("333333")
     static let grey2 = UIColor("4F4F4F")
     static let grey3 = UIColor("828282")
+    static let grey4 = UIColor("BDBDBD")
     
     private init() { }
 }
