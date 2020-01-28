@@ -7,6 +7,8 @@ import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
 
+const originalTitle = document.title;
+
 // State we don't want to render on
 let loadingTrackId = null;
 let lastSongPlayHeartbeatTime = 0;
@@ -34,6 +36,7 @@ export default function PlaybackControls(props) {
 	const handleSongEnd = () => {
 		const playingNewSong = musicContext.playNext();
 		if (!playingNewSong) {
+			setPageTitle(null);
 			setPlaying(false);
 		}
 	};
@@ -51,16 +54,19 @@ export default function PlaybackControls(props) {
 	const handleSongChange = () => {
 		if (musicContext.playedTrackIndex == null) {
 			setPlaying(false);
+			setPageTitle(null);
 			return;
 		}
 
-		if (musicContext.playedTrack.id === loadingTrackId) {
+		const newTrack = musicContext.playedTrack;
+
+		if (newTrack.id === loadingTrackId) {
 			return;
 		}
 
-		loadingTrackId = musicContext.playedTrack.id;
+		loadingTrackId = newTrack.id;
 
-		Api.get('file/link/' + musicContext.playedTrack.id).then(links => {
+		Api.get('file/link/' + newTrack.id).then(links => {
 			props.setAlbumArt(links.albumArtLink);
 
 			lastTime = 0;
@@ -68,6 +74,7 @@ export default function PlaybackControls(props) {
 			totalTimeListened = 0;
 			setDuration(0);
 			setPlaying(true);
+			setPageTitle(newTrack);
 			setSongUrl(links.songLink);
 
 			previousCurrentSessionPlayCounter = currentSessionPlayCounter;
@@ -115,6 +122,14 @@ export default function PlaybackControls(props) {
 
 		// Don't need to update state, as an event will fire and we will handle it afterwards
 		audio.currentTime = playPercent * audio.duration;
+	};
+
+	const setPageTitle = track => {
+		if (!track) {
+			document.title = originalTitle;
+		} else {
+			document.title = getDisplayedSongName();
+		}
 	};
 
 	const getDisplayedSongName = () => {
