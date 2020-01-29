@@ -604,8 +604,9 @@ export class MusicProvider extends React.Component {
 
 		this.setState({
 			playedTrack: null,
-			playedTrackIndex: null
-		})
+			playedTrackIndex: null,
+			nowPlayingTracks: []
+		});
 	}
 
 	resetShuffleIndexes(withoutIndex) {

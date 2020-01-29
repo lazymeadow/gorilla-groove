@@ -52,7 +52,7 @@ export default function PlaybackControls(props) {
 	};
 
 	const handleSongChange = () => {
-		if (musicContext.playedTrackIndex == null) {
+		if (musicContext.playedTrackIndex === null) {
 			setPlaying(false);
 			setPageTitle(null);
 			return;
@@ -191,6 +191,13 @@ export default function PlaybackControls(props) {
 		setMuted(audio.muted);
 
 		return () => {
+			// The functional component does some weird stuff with logout and using a stale version of the
+			// MusicContext upon re-log in. Do this to prevent auto-play of a "null" track upon re-log
+			if (musicContext.playedTrack === null) {
+				audio.src = '';
+				props.setAlbumArt(null);
+			}
+
 			audio.removeEventListener('timeupdate', handleTimeTick);
 			audio.removeEventListener('durationchange', handleDurationChange);
 			audio.removeEventListener('ended', handleSongEnd);
