@@ -6,15 +6,18 @@ export class PopoutMenu extends React.Component {
 
 		this.state = {
 			expanded: false
-		}
+		};
+
+		// Bind the function once so it is able to be removed in the unmount
+		this.boundCloseMenu = this.closeMenu.bind(this);
 	}
 
 	componentDidMount() {
-		document.body.addEventListener('mousedown', this.closeMenu.bind(this));
+		document.body.addEventListener('mousedown', this.boundCloseMenu);
 	}
 
 	componentWillUnmount() {
-		document.body.removeEventListener('mousedown', this.closeMenu.bind(this));
+		document.body.removeEventListener('mousedown', this.boundCloseMenu);
 	}
 
 	closeMenu() {
