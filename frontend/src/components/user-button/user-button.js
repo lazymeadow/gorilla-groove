@@ -11,11 +11,15 @@ import {UserContext} from "../../services/user-provider";
 import TrackHistory from "../track-history/track-history";
 import DeviceManagement from "../device-management/device-management";
 
+const originalTitle = document.title;
+
 export default function UserButton() {
 	const userContext = useContext(UserContext);
 	const history = useHistory();
 
 	const logout = event => {
+		document.title = originalTitle;
+
 		event.preventDefault();
 		Api.post('authentication/logout', {
 			token: sessionStorage.getItem('token')
