@@ -164,7 +164,13 @@ export default function PlaybackControls(props) {
 		if (playing) {
 			audio.pause();
 		} else {
-			audio.play();
+			// People seem to want clicking play without an active song to start playing the library
+			// A (maybe) good improvement would be to have it respect your selected songs. But hard to do right now
+			if (musicContext.playedTrack === null) {
+				musicContext.playFromTrackIndex(null, true);
+			} else {
+				audio.play();
+			}
 		}
 
 		setPlaying(!playing);
