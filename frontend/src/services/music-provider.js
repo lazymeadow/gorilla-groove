@@ -363,9 +363,10 @@ export class MusicProvider extends React.Component {
 				return true;
 				// If we are out of songs to shuffle through, but ARE repeating, reset the shuffle list and pick a random one
 			} else if (this.state.repeatSongs) {
-				this.resetShuffleIndexes();
-				const shuffleIndex = this.getRandomShuffleIndex(this.state.songIndexesToShuffle, this.state.nowPlayingTracks);
-				this.playIndex(shuffleIndex);
+				this.resetShuffleIndexes(undefined, () => {
+					const shuffleIndex = this.getRandomShuffleIndex(this.state.songIndexesToShuffle, this.state.nowPlayingTracks);
+					this.playIndex(shuffleIndex);
+				});
 
 				return true;
 			}
@@ -620,7 +621,7 @@ export class MusicProvider extends React.Component {
 		});
 	}
 
-	resetShuffleIndexes(withoutIndex) {
+	resetShuffleIndexes(withoutIndex, doneSettingCallback) {
 		if (!this.state.shuffleSongs) {
 			return;
 		}
@@ -633,7 +634,7 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			songIndexesToShuffle: indexes,
 			shuffledSongIndexes: [withoutIndex]
-		})
+		}, doneSettingCallback)
 	}
 
 	// Need to add the new tracks to the shuffle selection or they won't get played until the next run through the playlist
