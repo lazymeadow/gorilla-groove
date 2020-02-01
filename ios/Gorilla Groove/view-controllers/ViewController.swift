@@ -60,10 +60,11 @@ class ViewController: UIViewController {
                 return RootNavigationController()
             }
         }()
-        
-        newView.modalPresentationStyle = .fullScreen
-        newView.modalTransitionStyle = .crossDissolve
-        self.present(newView, animated: true, completion: nil)
+
+        // This isn't ideal because it isn't animated, but trying to present() or show() the view
+        // was resulting in the view either not showing up, or having the incorrect size...
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.window!.rootViewController = newView
     }
     
     @IBAction func login(_ sender: Any) {

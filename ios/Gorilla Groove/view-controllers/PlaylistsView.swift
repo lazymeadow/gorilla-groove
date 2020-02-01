@@ -9,6 +9,7 @@ class PlaylistsView : UITableViewController {
     ]
     
     override func viewDidLoad() {
+        print("Loaded playlists")
         super.viewDidLoad()
         self.title = "Playlists"
 

@@ -35,10 +35,15 @@ class SyncController: UIViewController {
             
             // Wait a moment after we finish so people can enjoy / notice everything at 100%
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                let libraryView = RootNavigationController()
-                libraryView.modalPresentationStyle = .fullScreen
-                libraryView.modalTransitionStyle = .crossDissolve
-                self.present(libraryView, animated: true, completion: nil)
+//                let libraryView = RootNavigationController()
+//                libraryView.modalPresentationStyle = .fullScreen
+//                libraryView.modalTransitionStyle = .crossDissolve
+//                self.present(libraryView, animated: true, completion: nil)
+                
+                // This isn't ideal because it isn't animated, but trying to present() or show() the view
+                // was resulting in the view either not showing up, or having the incorrect size...
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                appDelegate.window!.rootViewController = RootNavigationController()
             }
         }
     }

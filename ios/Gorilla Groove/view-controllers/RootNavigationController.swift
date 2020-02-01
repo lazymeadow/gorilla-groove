@@ -6,7 +6,7 @@ class RootNavigationController : UIViewController {
     let libraryController = MyLibraryController()
     let playlistsController = PlaylistsView()
     
-    lazy var topView = UIView()
+    lazy var topView = UINavigationController()
     lazy var activeButton: NavigationButton? = nil
     
     lazy var myLibraryButton = NavigationButton("My Library", "music.house.fill", libraryController, handleButtonTap)
@@ -19,8 +19,9 @@ class RootNavigationController : UIViewController {
 
     
     override func viewDidLoad() {
+        print("Loaded root navigation")
         super.viewDidLoad()
-        topView.addSubview(libraryController.view)
+        topView.pushViewController(libraryController, animated: false)
         
         activeButton = myLibraryButton
         myLibraryButton.setActive()
@@ -35,7 +36,7 @@ class RootNavigationController : UIViewController {
         let middleBar = createMiddleBar()
         let navigationControls = createNavigationControls()
 
-        stackView.addArrangedSubview(topView)
+        stackView.addArrangedSubview(topView.view)
         stackView.addArrangedSubview(mediaControls.view)
         stackView.addArrangedSubview(middleBar)
         stackView.addArrangedSubview(navigationControls)
@@ -44,12 +45,20 @@ class RootNavigationController : UIViewController {
         self.view.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(stackView)
-//        self.addChild(topView)
+        self.addChild(topView)
         
+        topView.view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             stackView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
             stackView.heightAnchor.constraint(equalTo: self.view.heightAnchor),
         ])
+    }
+     
+    override func viewDidAppear(_ animated: Bool) {
+        UserSyncManager().postCurrentDevice()
+        TrackState().syncWithServer()
+        
+        print(self.view.frame)
     }
     
     private func createNavigationControls() -> UIView {
@@ -88,8 +97,29 @@ class RootNavigationController : UIViewController {
     }
     
     private func handleButtonTap(_ tappedButton: NavigationButton) {
-        topView.willRemoveSubview(activeButton!.controllerToLoad!.view)
-        topView.addSubview(tappedButton.controllerToLoad!.view)
+        // Do some extra tomfoolery here so that the swipe gesture (left or right) matches
+        // where the tapped button was in relation to our currently active button
+        let currentViewIndex = buttons.firstIndex { button in
+            button.controllerToLoad == topView.topViewController
+        }
+        let nextViewIndex = buttons.firstIndex { button in
+            button.controllerToLoad == tappedButton.controllerToLoad
+        }
+        
+        if (currentViewIndex == nextViewIndex) {
+            return // Tapped the same button that was already active. Nothing to do
+        }
+        
+        let newViews: Array<UIViewController> = {
+            if (currentViewIndex != nil && currentViewIndex! > nextViewIndex!) {
+                return [tappedButton.controllerToLoad!, topView.topViewController!]
+            } else {
+                return [tappedButton.controllerToLoad!]
+            }
+        }()
+        
+        topView.setViewControllers(newViews, animated: true)
+        topView.popToRootViewController(animated: true)
         
         activeButton!.setInactive()
         activeButton = tappedButton
