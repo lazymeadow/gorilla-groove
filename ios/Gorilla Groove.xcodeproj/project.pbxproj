@@ -33,6 +33,8 @@
 		E85A4DD523D56D13006BD7EE /* UserSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */; };
 		E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD623DAB859006BD7EE /* Formatters.swift */; };
 		E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DDA23DE4F99006BD7EE /* SyncController.swift */; };
+		E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50E923E2736D00029D7C /* RootNavigationController.swift */; };
+		E85A50EC23E5293600029D7C /* PlaylistsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +67,8 @@
 		E85A4DD423D56D13006BD7EE /* UserSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSyncManager.swift; sourceTree = "<group>"; };
 		E85A4DD623DAB859006BD7EE /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
 		E85A4DDA23DE4F99006BD7EE /* SyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncController.swift; sourceTree = "<group>"; };
+		E85A50E923E2736D00029D7C /* RootNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootNavigationController.swift; sourceTree = "<group>"; };
+		E85A50EB23E5293600029D7C /* PlaylistsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +113,8 @@
 				A829AC2523D103740034AD69 /* PlaybackWrapperViewController.swift */,
 				E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */,
 				E85A4DDA23DE4F99006BD7EE /* SyncController.swift */,
+				E85A50E923E2736D00029D7C /* RootNavigationController.swift */,
+				E85A50EB23E5293600029D7C /* PlaylistsView.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -240,8 +246,10 @@
 				A829AC2423CC2C1D0034AD69 /* SongViewCell.swift in Sources */,
 				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
 				A829AC1A23CAC29B0034AD69 /* UserSync+CoreDataClass.swift in Sources */,
+				E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */,
 				A829AC0223C804350034AD69 /* CoreDataManager.swift in Sources */,
 				A829AC1C23CAC29B0034AD69 /* Track+CoreDataClass.swift in Sources */,
+				E85A50EC23E5293600029D7C /* PlaylistsView.swift in Sources */,
 				A829AC2623D103740034AD69 /* PlaybackWrapperViewController.swift in Sources */,
 				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
 				A829AC1F23CBF8270034AD69 /* SongViewController.swift in Sources */,

@@ -57,7 +57,7 @@ class ViewController: UIViewController {
             if (userSync.last_sync == nil) {
                 return SyncController()
             } else {
-                return PlaybackWrapperViewController()
+                return RootNavigationController()
             }
         }()
         
@@ -131,6 +131,4 @@ class ViewController: UIViewController {
         self.present(alertController, animated: true, completion: nil)
     }
     
-
 }
-

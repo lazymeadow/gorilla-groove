@@ -86,15 +86,18 @@ class AudioPlayer {
         rcc.changePlaybackPositionCommand.isEnabled = true
         
         
-        NotificationCenter.default.addObserver(
-            forName: AVAudioSession.interruptionNotification,
-            object: nil,
-            queue: nil
-        ) { _ in
-            // I noticed that if playback is paused (by say, unplugging your phone from aux), the notification area
-            // would, for some weird reason, say that the time was 0 seconds. This fix doesn't seem ideal, but at least
-            // it's better than it was. The progress bar can still jump around a bit to the correct position though.
-            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
+        // I noticed that if playback is paused (by say, unplugging your phone from aux), the notification area
+        // would, for some weird reason, say that the time was 0 seconds. This fix doesn't seem ideal, but at least
+        // it's better than it was. The progress bar can still jump around a bit to the correct position though.
+        // Both of these events seem to be important to listen for in this regard.
+        [AVAudioSession.interruptionNotification, AVAudioSession.routeChangeNotification].forEach { interrupt in
+            NotificationCenter.default.addObserver(
+                forName: interrupt,
+                object: nil,
+                queue: nil
+            ) { _ in
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
+            }
         }
     }
 

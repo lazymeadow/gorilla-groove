@@ -35,7 +35,7 @@ class SyncController: UIViewController {
             
             // Wait a moment after we finish so people can enjoy / notice everything at 100%
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                let libraryView = PlaybackWrapperViewController()
+                let libraryView = RootNavigationController()
                 libraryView.modalPresentationStyle = .fullScreen
                 libraryView.modalTransitionStyle = .crossDissolve
                 self.present(libraryView, animated: true, completion: nil)

@@ -20,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 // TODO remove this when done devving this screen
                 window!.rootViewController = SyncController()
             } else {
-                window!.rootViewController = PlaybackWrapperViewController()
+                window!.rootViewController = RootNavigationController()
             }
         }
 

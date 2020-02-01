@@ -107,12 +107,11 @@ class MediaControlsController: UIViewController {
         slider.minimumValue = 0
         slider.setValue(0, animated: false)
     
-        slider.minimumTrackTintColor = Colors.lightBlue
+        slider.minimumTrackTintColor = Colors.white
         slider.maximumTrackTintColor = Colors.nearBlack
-        slider.thumbTintColor = Colors.lightBlue
 
         let config = UIImage.SymbolConfiguration(scale: .small)
-        let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.lightBlue)
+        let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.white)
 
         slider.setThumbImage(newImage, for: .normal)
         slider.setThumbImage(newImage, for: .highlighted)
@@ -231,7 +230,6 @@ class MediaControlsController: UIViewController {
     
     private func createIcon(
         _ name: String,
-        pointSize: Double = 1.5,
         weight: UIImage.SymbolWeight = .ultraLight,
         scale: UIImage.SymbolScale = .small
     ) -> UIImageView {
@@ -335,12 +333,12 @@ class MediaControlsController: UIViewController {
     
     @objc func toggleRepeat(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.repeatOn = !NowPlayingTracks.repeatOn
-        repeatIcon.tintColor = NowPlayingTracks.repeatOn ? Colors.aqua : .white
+        repeatIcon.tintColor = NowPlayingTracks.repeatOn ? Colors.secondary : .white
     }
     
     @objc func toggleShuffle(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.shuffleOn = !NowPlayingTracks.shuffleOn
-        shuffleIcon.tintColor = NowPlayingTracks.shuffleOn ? Colors.aqua : .white
+        shuffleIcon.tintColor = NowPlayingTracks.shuffleOn ? Colors.secondary : .white
     }
     
     @objc func handleSeek(tapGestureRecognizer: UITapGestureRecognizer) {
