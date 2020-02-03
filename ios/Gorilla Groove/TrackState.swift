@@ -45,6 +45,8 @@ class TrackState {
         HttpRequester.get(url + String(page), TrackChangeResponse.self) { trackResponse, status, err in
             if (status < 200 || status >= 300 || trackResponse == nil) {
                 print("Failed to sync new data!")
+                semaphore.signal()
+
                 return
             }
             
@@ -84,7 +86,6 @@ class TrackState {
             
             pagesToFetch = trackResponse!.pageable.totalPages
             semaphore.signal()
-            
         }
         
         semaphore.wait()
@@ -139,22 +140,29 @@ class TrackState {
         return result as! Array<Track>
     }
     
-    func markTrackListenedTo(_ track: Track) {
-        track.play_count += 1 // Update the object reference
-        // Now update the stored DB state
+    func markTrackListenedTo(_ track: Track, _ retry: Int = 0) {
+        if (retry > 3) {
+            print("Failed to update track too many times. Giving up")
+            return
+        }
         
         // Update the server
         let userSync = userSyncManager.getLastSentUserSync()
         let postBody = MarkListenedRequest(trackId: track.id, deviceId: userSync.deviceIdAsString())
         HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
             if (statusCode < 200 || statusCode >= 300) {
-                print("Failed to mark track as listened to! For track with ID: " + String(track.id))
+                print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
+                self.markTrackListenedTo(track, retry + 1)
+                return
             }
             
+            track.play_count += 1 // Update the object reference
+
             let savedTrack = self.findTrackById(track.id)!
             savedTrack.setValue(savedTrack.play_count + 1, forKey: "play_count")
             
             try! self.context.save()
+            print("Track \(track.id) marked listened to")
         }
     }
     
