@@ -1,5 +1,5 @@
 //
-//  Track+CoreDataClass.swift
+//  PlaylistTrack+CoreDataClass.swift
 //  Gorilla Groove
 //
 //  Created by Ayrton Stout on 2/2/20.
@@ -10,7 +10,7 @@
 import Foundation
 import CoreData
 
-@objc(Track)
-public class Track: NSManagedObject {
+@objc(PlaylistTrack)
+public class PlaylistTrack: NSManagedObject {
 
 }

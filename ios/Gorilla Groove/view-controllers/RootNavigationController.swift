@@ -56,7 +56,7 @@ class RootNavigationController : UIViewController {
      
     override func viewDidAppear(_ animated: Bool) {
         UserSyncManager().postCurrentDevice()
-        TrackState().syncWithServer()
+        ServerSynchronizer().syncWithServer()
     }
     
     private func createNavigationControls() -> UIView {
