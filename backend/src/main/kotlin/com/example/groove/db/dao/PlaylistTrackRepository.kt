@@ -2,12 +2,12 @@ package com.example.groove.db.dao
 
 import com.example.groove.db.model.Playlist
 import com.example.groove.db.model.PlaylistTrack
-import com.example.groove.db.model.Track
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.sql.Timestamp
 
 interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
 	@Query("SELECT pt " +
@@ -34,4 +34,25 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
 			pageable: Pageable = Pageable.unpaged()
 	): Page<PlaylistTrack>
 
+		@Query("""
+			SELECT pt
+			FROM PlaylistTrack pt
+			WHERE pt.updatedAt > :minimum
+			AND pt.updatedAt < :maximum
+			AND (pt.deleted = FALSE OR pt.createdAt < :minimum)
+			AND pt.playlist.id IN (
+			  SELECT pu.playlist.id
+			  FROM PlaylistUser pu
+			  WHERE pu.user.id = :userId
+			)
+			ORDER BY pt.id
+			""")
+	// Filter out things that were created AND deleted in the same time frame
+	// Order by ID so the pagination is predictable
+	fun getPlaylistTracksUpdatedBetweenTimestamp(
+				@Param("userId") userId: Long,
+				@Param("minimum") minimum: Timestamp,
+				@Param("maximum") maximum: Timestamp,
+				pageable: Pageable
+	): Page<PlaylistTrack>
 }

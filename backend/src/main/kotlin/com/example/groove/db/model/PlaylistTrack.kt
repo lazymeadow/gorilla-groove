@@ -1,6 +1,8 @@
 package com.example.groove.db.model
 
+import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
+import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
@@ -9,7 +11,7 @@ data class PlaylistTrack(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		val id: Long = 0,
+		override val id: Long = 0,
 
 		@JsonIgnore
 		@ManyToOne
@@ -18,5 +20,15 @@ data class PlaylistTrack(
 
 		@ManyToOne
 		@JoinColumn(name = "track_id", nullable = false)
-		val track: Track
-)
+		val track: Track,
+
+		@Column(name = "created_at", nullable = false)
+		override var createdAt: Timestamp = now(),
+
+		@Column(name = "updated_at", nullable = false)
+		override var updatedAt: Timestamp = now(),
+
+		@JsonIgnore
+		@Column(columnDefinition = "BIT")
+		override var deleted: Boolean = false
+) : RemoteSyncable

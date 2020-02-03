@@ -1,5 +1,7 @@
 package com.example.groove.db.model
 
+import com.example.groove.util.DateUtils.now
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.sql.Timestamp
@@ -17,12 +19,24 @@ data class User(
 		@Column
 		val email: String,
 
+		@JsonIgnore
 		@Column(name = "password")
 		var encryptedPassword: String, // Named encryptedPassword to not conflict with the parent method getPassword()
 
 		// Doesn't necessarily require a "log in". If a user opens the site with a valid cookie that counts too
 		@Column(name = "last_login")
-		var lastLogin: Timestamp = Timestamp(System.currentTimeMillis())
+		var lastLogin: Timestamp = now(),
+
+		@Column(name = "created_at")
+		val createdAt: Timestamp = now(),
+
+		@Column(name = "updated_at")
+		var updatedAt: Timestamp = now(),
+
+		@JsonIgnore
+		@Column(columnDefinition = "BIT")
+		var deleted: Boolean = false
+
 ) : UserDetails {
 	override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
 		return mutableListOf()
