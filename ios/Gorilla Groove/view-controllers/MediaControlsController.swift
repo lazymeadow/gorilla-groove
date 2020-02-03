@@ -11,6 +11,8 @@ class MediaControlsController: UIViewController {
     var targetListenTime = 9999999.0
     var listenedToCurrentSong = false
     
+    let trackListenSemaphore = DispatchSemaphore(value: 1)
+    
     // Kind of hacky. But the events we get when we change songs can be triggered in a weird way that makes
     // the slider kind of jump around, because the song changes, but the time that we are given by the media
     // controls hasn't yet changed back to 0. So do a little extra bookkeeping to keep this from happening
@@ -296,14 +298,24 @@ class MediaControlsController: UIViewController {
         }
 
         self.timeListened += timeElapsed
+        handlePotentialSongListen()
+
+        if (percentDone >= 1.0) {
+            NowPlayingTracks.playNext()
+        }
+    }
+    
+    // I have noticed some songs getting double-listens at the same timestamp.
+    // Handle the "listenedToCurrentSong" check in a lock to try to prevent this
+    private func handlePotentialSongListen() {
+        self.trackListenSemaphore.wait()
         
         if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
             self.listenedToCurrentSong = true
+            self.trackListenSemaphore.signal()
             TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
-        }
-        
-        if (percentDone >= 1.0) {
-            NowPlayingTracks.playNext()
+        } else {
+            self.trackListenSemaphore.signal()
         }
     }
     
