@@ -54,7 +54,7 @@ class SyncableEntityService(
 			).map {
 				SyncableUser(
 						id = it.id,
-						username = it.username,
+						name = it.name,
 						lastLogin = it.lastLogin,
 						createdAt = it.createdAt,
 						updatedAt = it.updatedAt,
@@ -117,7 +117,7 @@ class SyncableEntityService(
 	// Create a new DTO to safely strip out all this information
 	data class SyncableUser(
 			override val id: Long,
-			val username: String,
+			val name: String,
 			val lastLogin: Timestamp,
 			override val createdAt: Timestamp,
 			override var updatedAt: Timestamp,
