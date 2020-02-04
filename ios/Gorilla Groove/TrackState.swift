@@ -4,15 +4,20 @@ import CoreData
 class TrackState {
     let coreDataManager: CoreDataManager
     let context: NSManagedObjectContext
-    let userSyncManager = UserSyncManager()
+    let userSyncManager = UserState()
     
- 
     
     func getTracks() -> Array<Track> {
-        let ownId = LoginState.read()!.id
+        let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
-        fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
+        
+        let idPredicate = NSPredicate(format: "user_id == \(ownId)")
+        let hiddenPredicate = NSPredicate(format: "is_hidden == FALSE")
+
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [idPredicate, hiddenPredicate])
+        
+        fetchRequest.predicate = andPredicate
         fetchRequest.sortDescriptors = [
             NSSortDescriptor(
                 key: "name",
@@ -26,8 +31,8 @@ class TrackState {
     }
     
     func getPlaylists() -> Array<Playlist> {
-        let ownId = LoginState.read()!.id
-        
+        let ownId = FileState.read(LoginState.self)!.id
+
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Playlist")
         fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
         fetchRequest.sortDescriptors = [
@@ -42,6 +47,25 @@ class TrackState {
         return result as! Array<Playlist>
     }
     
+    func getTracksForPlaylist(_ playlistId: Int64) -> Array<Track> {
+        let playlistTrackRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "PlaylistTrack")
+        playlistTrackRequest.predicate = NSPredicate(format: "playlist_id == \(playlistId)")
+
+        let playlistTracks = (try! context.fetch(playlistTrackRequest)) as! Array<PlaylistTrack>
+        
+        let trackRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
+        let trackIds = playlistTracks.map { $0.track_id }
+        trackRequest.predicate = NSPredicate(format: "id IN %@", trackIds)
+        
+        let tracks = (try! context.fetch(trackRequest)) as! Array<Track>
+        var trackIdToTrack: [Int64: Track] = [:]
+        tracks.forEach { track in trackIdToTrack[track.id] = track }
+        
+        // We can't return just the tracks. We need to map over the PlaylistTracks and swap them out.
+        // Why? If we don't do this, we will stomp out duplicate tracks on the playlist, which could be intentional
+        return playlistTracks.map { trackIdToTrack[$0.track_id]! }
+    }
+    
     func markTrackListenedTo(_ track: Track, _ retry: Int = 0) {
         if (retry > 3) {
             print("Failed to update track too many times. Giving up")
@@ -49,8 +73,10 @@ class TrackState {
         }
         
         // Update the server
-        let userSync = userSyncManager.getLastSentUserSync()
-        let postBody = MarkListenedRequest(trackId: track.id, deviceId: userSync.deviceIdAsString())
+        let postBody = MarkListenedRequest(
+            trackId: track.id,
+            deviceId: FileState.read(DeviceState.self)!.deviceId
+        )
         HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
             if (statusCode < 200 || statusCode >= 300) {
                 print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")

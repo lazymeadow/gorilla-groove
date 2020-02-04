@@ -4,19 +4,20 @@ import UIKit
 class RootNavigationController : UIViewController {
     
     let libraryController = MyLibraryController()
-    let playlistsController = PlaylistsView()
+    let usersController = UsersController()
+    let playlistsController = PlaylistsController()
     
     lazy var topView = UINavigationController()
     lazy var activeButton: NavigationButton? = nil
     
     lazy var myLibraryButton = NavigationButton("My Library", "music.house.fill", libraryController, handleButtonTap)
     lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, handleButtonTap)
-    lazy var usersButton = NavigationButton("Users", "person.3.fill", nil, handleButtonTap)
+    lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, handleButtonTap)
     lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, handleButtonTap)
     lazy var settingsButton = NavigationButton("Settings", "gear", nil, handleButtonTap)
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
-
+    
     
     override func viewDidLoad() {
         print("Loaded root navigation")
@@ -35,7 +36,7 @@ class RootNavigationController : UIViewController {
         let mediaControls = MediaControlsController()
         let middleBar = createMiddleBar()
         let navigationControls = createNavigationControls()
-
+        
         stackView.addArrangedSubview(topView.view)
         stackView.addArrangedSubview(mediaControls.view)
         stackView.addArrangedSubview(middleBar)
@@ -53,9 +54,9 @@ class RootNavigationController : UIViewController {
             stackView.heightAnchor.constraint(equalTo: self.view.heightAnchor),
         ])
     }
-     
+    
     override func viewDidAppear(_ animated: Bool) {
-        UserSyncManager().postCurrentDevice()
+        UserState().postCurrentDevice()
         ServerSynchronizer().syncWithServer()
     }
     
@@ -70,7 +71,7 @@ class RootNavigationController : UIViewController {
         buttons.forEach { button in
             stackView.addArrangedSubview(button.view)
         }
-
+        
         view.addSubview(stackView)
         view.backgroundColor = Colors.primary
         
@@ -98,7 +99,7 @@ class RootNavigationController : UIViewController {
         // Do some extra tomfoolery here so that the swipe gesture (left or right) matches
         // where the tapped button was in relation to our currently active button
         let currentViewIndex = buttons.firstIndex { button in
-            button.controllerToLoad == topView.topViewController
+            button == activeButton
         }
         let nextViewIndex = buttons.firstIndex { button in
             button.controllerToLoad == tappedButton.controllerToLoad
@@ -154,7 +155,7 @@ class RootNavigationController : UIViewController {
             
             self.view.addSubview(stackView)
             self.view.translatesAutoresizingMaskIntoConstraints = false
-
+            
             NSLayoutConstraint.activate([
                 stackView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
                 stackView.heightAnchor.constraint(equalTo: self.view.heightAnchor)
@@ -177,7 +178,7 @@ class RootNavigationController : UIViewController {
         
         private func createIcon(_ name: String) -> UIImageView {
             let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
-
+            
             let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
             icon.isUserInteractionEnabled = true
             icon.tintColor = Colors.whiteTransparent

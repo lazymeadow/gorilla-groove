@@ -1,15 +1,32 @@
 import Foundation
 import CoreData
 
-class UserSyncManager {
+class UserState {
     private let coreDataManager: CoreDataManager
     private let context: NSManagedObjectContext
     
-    func getLastSentUserSync() -> User {
-        let ownId = LoginState.read()!.id
+    func getOtherUsers() -> Array<User> {
+        let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
-        fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
+        fetchRequest.predicate = NSPredicate(format: "id != \(ownId)")
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(
+                key: "name",
+                ascending: true,
+                selector: #selector(NSString.caseInsensitiveCompare)
+            )
+        ]
+        let result = try! context.fetch(fetchRequest)
+        
+        return result as! Array<User>
+    }
+    
+    func getLastSentUserSync() -> User {
+        let ownId = FileState.read(LoginState.self)!.id
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
+        fetchRequest.predicate = NSPredicate(format: "id == \(ownId)")
         
         let result = try! context.fetch(fetchRequest)
         if (result.count > 0) {
@@ -17,13 +34,9 @@ class UserSyncManager {
         }
 
         // Save a new one. This is our first log in
-        
         let entity = NSEntityDescription.entity(forEntityName: "User", in: context)
         let newUser = NSManagedObject(entity: entity!, insertInto: context)
-        newUser.setValue(ownId, forKey: "user_id")
-        
-        // TOOD move device_id out of the user and onto the, you know, device
-        newUser.setValue(UUID(), forKey: "device_id")
+        newUser.setValue(ownId, forKey: "id")
         
         do {
             try context.save()
@@ -35,14 +48,17 @@ class UserSyncManager {
         return newUser as! User
     }
     
-    func save() {
+    func updateUserSync(_ newSyncDate: NSDate) {
+        context.refreshAllObjects()
+        
+        let user = getLastSentUserSync()
+        user.setValue(newSyncDate, forKey: "last_sync")
+        
         try! context.save()
     }
     
     func postCurrentDevice() {
-        let user = getLastSentUserSync()
-        
-        let requestBody = PostSessionRequest(deviceId: user.deviceIdAsString())
+        let requestBody = PostSessionRequest(deviceId: FileState.read(DeviceState.self)!.deviceId)
         HttpRequester.put("device", EmptyResponse.self, requestBody) { _, responseCode, _ in
             if (responseCode < 200 || responseCode >= 300) {
                 print("Failed to inform the server of our current device!")

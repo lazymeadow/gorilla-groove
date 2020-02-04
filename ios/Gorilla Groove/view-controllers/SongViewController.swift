@@ -5,12 +5,10 @@ import AVKit
 
 class SongViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    let trackState = TrackState()
     var tracks: Array<Track> = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Title"
         
         try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try! AVAudioSession.sharedInstance().setActive(true)
@@ -30,8 +28,6 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         
         // Remove extra table rows when we don't have a full screen of songs
         contactsTableView.tableFooterView = UIView(frame: .zero)
-        
-        tracks = trackState.getTracks()
         
         // viewDidLoad only seems to be called once. But I am wary of more than one of these being registered
         NowPlayingTracks.addTrackChangeObserver { _ in
@@ -71,6 +67,18 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         
         cell.animateSelectionColor()
         NowPlayingTracks.setNowPlayingTracks(self.tracks, playFromIndex: cell.tableIndex)
+    }
+    
+    init(_ title: String, _ tracks: Array<Track>) {
+        self.tracks = tracks
+        
+        super.init(nibName: nil, bundle: nil)
+
+        self.title = title
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
     }
 }
 

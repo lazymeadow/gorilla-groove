@@ -19,7 +19,7 @@ extension Playlist {
 
     @NSManaged public var id: Int64
     @NSManaged public var user_id: Int64
-    @NSManaged public var name: String?
+    @NSManaged public var name: String
     @NSManaged public var created_at: Date?
     @NSManaged public var updated_at: Date?
 

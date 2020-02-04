@@ -152,6 +152,8 @@ class SyncController: UIViewController {
                         return self.librarySection!
                     } else if (classType == Playlist.self) {
                         return self.playlistSection!
+                    } else if (classType == User.self) {
+                        return self.userSection!
                     } else {
                         throw "Unimplemented entity type was synced!"
                     }

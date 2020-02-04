@@ -52,7 +52,7 @@ class HttpRequester {
     }
     
     static private func getBaseRequest(_ method: String, _ url: String, body: Codable? = nil) -> URLRequest {
-        let token = LoginState.read()!.token
+        let token = FileState.read(LoginState.self)!.token
         
         let url = URL(string: self.baseUrl + url)!
         var request : URLRequest = URLRequest(url: url)
