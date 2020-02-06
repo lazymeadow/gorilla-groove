@@ -38,6 +38,8 @@ class CurrentlyListeningController(
 
 	data class NewCurrentlyListening(
 			val song: String?,
+
+			@Deprecated("Should be not null when clients are updated")
 			val deviceId: String?
 	)
 
