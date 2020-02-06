@@ -1,6 +1,7 @@
 import React from "react";
 import {isLoggedIn} from "../util";
 import {Api} from "../api";
+import {getDeviceId} from "./version";
 
 export const SocketContext = React.createContext();
 
@@ -20,7 +21,10 @@ export class SocketProvider extends React.Component {
 
 	componentDidMount() {
 		// Clear the song immediately if someone refreshed their browser
-		Api.post('currently-listening', { song: null });
+		Api.post('currently-listening', {
+			song: null,
+			deviceId: getDeviceId()
+		});
 
 		window.addEventListener("beforeunload", this.disconnectSocket.bind(this));
 	}
@@ -46,15 +50,24 @@ export class SocketProvider extends React.Component {
 	}
 
 	disconnectSocket() {
-		Api.post('currently-listening', { song: null });
+		Api.post('currently-listening', {
+			song: null,
+			deviceId: getDeviceId()
+		});
 	}
 
 	sendPlayEvent(track) {
 		if (!track) {
-			Api.post('currently-listening', { song: null });
+			Api.post('currently-listening', {
+				song: null,
+				deviceId: getDeviceId()
+			});
 		} else {
 			const song = track.private ? 'This track is private' : track.artist + ' - ' + track.name;
-			Api.post('currently-listening', { song });
+			Api.post('currently-listening', {
+				song,
+				deviceId: getDeviceId()
+			});
 		}
 	}
 
