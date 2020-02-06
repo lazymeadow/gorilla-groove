@@ -78,7 +78,7 @@ export default function TrackSourceList(props) {
 		}
 
 		const songName = data.song;
-		const isMobile = data.isPhone === null ? false : data.isMobile;
+		const isMobile = data.isPhone === null ? false : data.isPhone;
 		const deviceText = data.deviceName === null ? '' : 'Device: ' + data.deviceName;
 
 		return <span className="user-listening" title={`${songName}\n${deviceText}`}>
