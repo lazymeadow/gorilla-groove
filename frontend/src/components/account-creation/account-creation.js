@@ -31,7 +31,7 @@ export default function AccountCreation(props) {
 			return;
 		}
 
-		Api.post('user', {
+		Api.post('user/public', {
 			username: username,
 			email: email,
 			password: password1,
