@@ -47,7 +47,7 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
 			AntPathRequestMatcher("/login"), // These are routes used in the frontend. Probably a better way to handle this
 			AntPathRequestMatcher("/track-link/*"),
-			AntPathRequestMatcher("/create-account/**"),
+			AntPathRequestMatcher("/create-account/*"),
 			AntPathRequestMatcher("/dist/bundle.js"),
 			AntPathRequestMatcher("/dist/index.css"),
 			AntPathRequestMatcher("/node_modules/react-toastify/dist/ReactToastify.min.css"), // I hate that I did this, but I didn't want to deal with webpack to combine them

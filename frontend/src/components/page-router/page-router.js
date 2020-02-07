@@ -5,6 +5,9 @@ import SiteLayout from "../site-layout/site-layout";
 import LoginPageWrapper from "../login-page/login-page-wrapper";
 import AccountCreation from "../account-creation/account-creation";
 
+// NOTE - These routes are served up from the backend in a pretty naive way right now.
+// Any additional routes we add need to be whitelisted for unauthenticated users (if applicable)
+// and added to ForwardingController.kt so that the frontend's route manager gets the requests
 export function PageRouter() {
 	return (
 		<BrowserRouter>
