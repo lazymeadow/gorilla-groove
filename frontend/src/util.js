@@ -112,3 +112,33 @@ export function displayKeyToTrackKey(displayKey) {
 export function getAllPossibleDisplayColumns() {
 	return Object.keys(displayKeyToTrackKeyMap)
 }
+
+// Not all browsers support the experimental clipboard API.
+// There is a fallback method here that's hacky, but not all browsers work well with it either.
+// If a user initiates an action, and then too much time passes before we initiate the clipboard
+// copy, then the action can be blocked. Use the better clipboard option if it's available,
+// but still attempt to use the hacky method if it isn't. It's possible neither will work.
+export function copyToClipboard(text) {
+	if (navigator.clipboard && navigator.clipboard.writeText) {
+		return navigator.clipboard.writeText(text);
+	}
+
+	return new Promise((resolve, reject) => {
+		const invisoElement = document.createElement('input');
+		invisoElement.value = text;
+		document.body.appendChild(invisoElement);
+
+		invisoElement.select();
+
+		// Could fail if too much time passed
+		const success = document.execCommand('copy');
+
+		document.body.removeChild(invisoElement);
+
+		if (success) {
+			resolve();
+		} else {
+			reject();
+		}
+	});
+}

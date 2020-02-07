@@ -38,13 +38,16 @@ class SecurityConfiguration(
 
 	private val publicUrls = OrRequestMatcher(
 			AntPathRequestMatcher("/api/authentication/login**"),
+			AntPathRequestMatcher("/api/user-invite-link/public/**"), // Unauthenticated users need to request the full details of their invite link
+			AntPathRequestMatcher("/api/user/public/**"), // Unauthenticated users need to be able to create their own accounts
 			AntPathRequestMatcher("/api/file/track-link/*"),
 			AntPathRequestMatcher("/api/file/download-apk**"),
 			AntPathRequestMatcher("/api/track/public/*"),
 			AntPathRequestMatcher("/api/version**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
-			AntPathRequestMatcher("/login"),
+			AntPathRequestMatcher("/login"), // These are routes used in the frontend. Probably a better way to handle this
 			AntPathRequestMatcher("/track-link/*"),
+			AntPathRequestMatcher("/create-account/**"),
 			AntPathRequestMatcher("/dist/bundle.js"),
 			AntPathRequestMatcher("/dist/index.css"),
 			AntPathRequestMatcher("/node_modules/react-toastify/dist/ReactToastify.min.css"), // I hate that I did this, but I didn't want to deal with webpack to combine them

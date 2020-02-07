@@ -29,7 +29,7 @@ export class DraftRelease extends React.Component {
 		}).then(() => {
 			this.setModalOpen(false);
 			toast.success(`Version history created successfully`);
-		}).catch((error) => {
+		}).catch(error => {
 			console.error(error);
 			toast.error('The creation of a the new version history failed');
 		});

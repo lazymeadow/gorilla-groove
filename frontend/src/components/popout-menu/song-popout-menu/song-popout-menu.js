@@ -7,6 +7,7 @@ import {Api} from "../../../api";
 import {TrimSong} from "../../trim-song/trim-song";
 import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
+import {copyToClipboard} from "../../../util";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -60,12 +61,12 @@ export default function SongPopoutMenu(props) {
 					musicContext.playTracks(props.getSelectedTracks());
 				}
 			}, {
-				text: 'Play Next', clickHandler: (e) => {
+				text: 'Play Next', clickHandler: e => {
 					e.stopPropagation();
 					musicContext.playTracksNext(props.getSelectedTracks());
 				}
 			}, {
-				text: 'Play Last', clickHandler: (e) => {
+				text: 'Play Last', clickHandler: e => {
 					e.stopPropagation();
 					musicContext.playTracksLast(props.getSelectedTracks());
 				}
@@ -75,7 +76,7 @@ export default function SongPopoutMenu(props) {
 
 		if (selectedTracks.length === 1) {
 			baseOptions = baseOptions.concat([{
-				text: 'Get Link', clickHandler: (e) => {
+				text: 'Get Link', clickHandler: e => {
 					e.stopPropagation();
 					const trackId = selectedTracks[0].id;
 
@@ -83,21 +84,12 @@ export default function SongPopoutMenu(props) {
 					// the song's page in the clipboard which will then be able to access the song, because we
 					// forced the link to be generated while we were authenticated
 
-					// We have to do this out of sequence, and ocpy to clipboard before we call the API. Otherwise, FF
+					// We have to do this out of sequence, and copy to clipboard before we call the API. Otherwise, FF
 					// will get mad that the clipboard copy didn't happen quick enough after the click event......
 					const link = Api.getBaseUrl() + '/track-link/' + trackId;
-					const invisoElement = document.createElement('input');
-					invisoElement.value = link;
-					document.body.appendChild(invisoElement);
-
-					invisoElement.select();
-					document.execCommand("copy");
-
-					document.body.removeChild(invisoElement);
+					copyToClipboard(link);
 
 					Api.get('file/link/' + trackId).then(() => {
-						// This would be nice, but requires HTTPS that I do not yet have so instead do hacky bullshit
-						// navigator.clipboard.writeText(link).then(() => toast.success("Link copied to clipboard"));
 						toast.success('Link copied to clipboard');
 					});
 				}
@@ -190,7 +182,7 @@ export default function SongPopoutMenu(props) {
 						} else {
 							toast.success(`${tracks.length} tracks were deleted`);
 						}
-					}).catch((error) => {
+					}).catch(error => {
 						console.error(error);
 						toast.error('Failed to delete the selected tracks');
 					});
@@ -293,7 +285,7 @@ export default function SongPopoutMenu(props) {
 						} else {
 							toast.success(`${tracks.length} tracks were added to '${playlist.name}'`)
 						}
-					}).catch((error) => {
+					}).catch(error => {
 						console.error(error);
 						toast.error(`Failed to add the selected tracks to '${playlist.name}'`)
 					});

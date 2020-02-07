@@ -46,7 +46,7 @@ export class SiteStats extends React.Component {
 					timeListened: `${formattedHours} hrs`,
 					songsListenedTo: result.length
 				});
-			}).catch((error) => {
+			}).catch(error => {
 				console.error(error);
 			});
 	}
@@ -56,7 +56,7 @@ export class SiteStats extends React.Component {
 			.then(result => {
 				this.setState({ songsAdded: result });
 			})
-			.catch((error) => {
+			.catch(error => {
 				console.error(error);
 			});
 	}

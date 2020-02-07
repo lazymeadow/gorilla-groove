@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom";
 import {Api} from "../../api";
 import {PopoutMenu} from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
-import {InviteUser} from "../invite-user/invite-user";
+import InviteUser from "./invite-user/invite-user";
 import {deleteCookie} from "../../cookie";
 import {DraftRelease} from "../draft-release/draft-release";
 import {PermissionType} from "../../enums/permission-type";
@@ -23,7 +23,7 @@ export default function UserButton() {
 		event.preventDefault();
 		Api.post('authentication/logout', {
 			token: sessionStorage.getItem('token')
-		}).catch((error) => {
+		}).catch(error => {
 			console.error(error)
 		}).finally(() => {
 			sessionStorage.removeItem('token');

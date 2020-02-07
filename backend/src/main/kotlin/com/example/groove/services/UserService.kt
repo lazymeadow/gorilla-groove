@@ -1,5 +1,6 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.UserInviteLinkRepository
 import com.example.groove.db.dao.UserPermissionRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.User
@@ -18,7 +19,9 @@ import java.time.temporal.ChronoUnit
 @Service
 class UserService(
 		private val userRepository: UserRepository,
-		private val userPermissionRepository: UserPermissionRepository
+		private val userPermissionRepository: UserPermissionRepository,
+		private val userInviteLinkService: UserInviteLinkService,
+		private val userInviteLinkRepository: UserInviteLinkRepository
 ) {
 
 	@Transactional(readOnly = true)
@@ -27,7 +30,13 @@ class UserService(
 	}
 
 	@Transactional
-	fun saveUser(user: User) {
+	fun saveUser(user: User, inviteLinkIdentifier: String) {
+		val inviteLink = userInviteLinkService.getLink(inviteLinkIdentifier)
+		require(inviteLink.createdUser == null) { "This invite link has already been used!" }
+
+		inviteLink.createdUser = user
+		userInviteLinkRepository.save(inviteLink)
+
 		user.encryptedPassword = BCrypt.hashpw(user.password, BCrypt.gensalt())
 		userRepository.save(user)
 	}

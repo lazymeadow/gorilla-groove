@@ -55,7 +55,7 @@ export class PlaylistProvider extends React.Component {
 
 		this.setState({ playlists: this.state.playlists });
 
-		return Api.put(`playlist/${playlist.id}`, { name: newName }).catch((error) => {
+		return Api.put(`playlist/${playlist.id}`, { name: newName }).catch(error => {
 			console.error(error);
 			toast.error("Failed to updated playlist name")
 		})

@@ -153,7 +153,7 @@ export class MusicProvider extends React.Component {
 
 		return Api.get('track', params).then(result => {
 			this.addTracksToView(result, append);
-		}).catch((error) => {
+		}).catch(error => {
 			console.error(error)
 		}).finally(() => this.setState({
 			loadingTracks: false,
