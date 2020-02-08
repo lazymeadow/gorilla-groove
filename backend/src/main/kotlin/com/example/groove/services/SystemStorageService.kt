@@ -4,7 +4,6 @@ import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
-import com.example.groove.properties.MusicProperties
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.withNewExtension
 import org.slf4j.LoggerFactory
@@ -17,10 +16,9 @@ import java.nio.file.StandardCopyOption
 @Service
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
 class SystemStorageService(
-		private val musicProperties: MusicProperties,
+		private val fileStorageProperties: FileStorageProperties,
 		trackRepository: TrackRepository,
-		trackLinkRepository: TrackLinkRepository,
-		fileStorageProperties: FileStorageProperties
+		trackLinkRepository: TrackLinkRepository
 ) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
 
 	override fun loadSong(track: Track, audioFormat: AudioFormat): File {
@@ -28,7 +26,7 @@ class SystemStorageService(
 			AudioFormat.OGG -> track.fileName
 			AudioFormat.MP3 -> track.fileName.withNewExtension(AudioFormat.MP3.extension)
 		}
-		val sourceFile = File(musicProperties.musicDirectoryLocation + fileName)
+		val sourceFile = File(fileStorageProperties.musicDirectoryLocation + fileName)
 
 		val destinationPath = generateTmpFilePath()
 
@@ -39,7 +37,7 @@ class SystemStorageService(
 
 	override fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat) {
 		val fileName = trackId.toString() + audioFormat.extension
-		val destinationFile = File(musicProperties.musicDirectoryLocation + fileName)
+		val destinationFile = File(fileStorageProperties.musicDirectoryLocation + fileName)
 
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
@@ -49,7 +47,7 @@ class SystemStorageService(
 
 	override fun storeAlbumArt(albumArt: File, trackId: Long) {
 		val parentDirectoryName = trackId / 1000 // Only put 1000 album art in a single directory for speed
-		val destinationFile = File("${musicProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId.png")
+		val destinationFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId.png")
 
 		// The parent directory might not be made. Make it if it doesn't exist
 		destinationFile.parentFile.mkdirs()
@@ -59,7 +57,7 @@ class SystemStorageService(
 
 	override fun loadAlbumArt(trackId: Long): File? {
 		val parentDirectoryName = trackId / 1000 // Only put 1000 album art in a single directory for speed
-		val sourceFile = File("${musicProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId.png")
+		val sourceFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId.png")
 
 		if (!sourceFile.exists()) {
 			return null
@@ -74,14 +72,14 @@ class SystemStorageService(
 
 	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
 		val parentDirectory = trackSourceId / 1000
-		val sourceFile = File("${musicProperties.albumArtDirectoryLocation}$parentDirectory/$trackSourceId.png")
+		val sourceFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectory/$trackSourceId.png")
 
 		if (!sourceFile.exists()) {
 			return
 		}
 
 		val destinationDirectory = trackDestinationId / 1000
-		val destinationFile = File("${musicProperties.albumArtDirectoryLocation}$destinationDirectory/$trackDestinationId.png")
+		val destinationFile = File("${fileStorageProperties.albumArtDirectoryLocation}$destinationDirectory/$trackDestinationId.png")
 
 		sourceFile.copyTo(destinationFile, true)
 	}
@@ -90,7 +88,7 @@ class SystemStorageService(
 		AudioFormat.values().forEach {
 			val nameWithExtension = fileName.withNewExtension(it.extension)
 
-			val success = File(musicProperties.musicDirectoryLocation + nameWithExtension).delete()
+			val success = File(fileStorageProperties.musicDirectoryLocation + nameWithExtension).delete()
 			if (!success) {
 				logger.error("The file $nameWithExtension should have been deleted, but couldn't be")
 			}
@@ -117,8 +115,8 @@ class SystemStorageService(
 	}
 
 	override fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat) {
-		val sourceFile = File(musicProperties.musicDirectoryLocation + sourceFileName)
-		val destFile = File(musicProperties.musicDirectoryLocation + destinationFileName)
+		val sourceFile = File(fileStorageProperties.musicDirectoryLocation + sourceFileName)
+		val destFile = File(fileStorageProperties.musicDirectoryLocation + destinationFileName)
 
 		sourceFile.copyTo(destFile, true)
 	}

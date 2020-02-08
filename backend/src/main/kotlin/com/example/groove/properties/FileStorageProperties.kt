@@ -6,9 +6,22 @@ import org.springframework.stereotype.Component
 
 @Component
 class FileStorageProperties {
-	@Value("\${file.tmpDir}")
-    val tmpDir: String? = null
+	@Value("\${file.storage.location:#{null}}")
+	private val rootStorageLocation: String? = null
 
-	@Value("\${file.apk.download.path}")
+	@Value("\${file.tmpDir:#{null}}")
+    val tmpDir: String? = null
+		get() = field ?: "${rootStorageLocation!!}/tmp/"
+
+	@Value("\${file.apk.download.path:#{null}}")
 	val apkDownloadDir: String? = null
+		get() = field ?: "${rootStorageLocation!!}/"
+
+	@Value("\${spring.data.music.location:#{null}}")
+	val musicDirectoryLocation: String? = null
+		get() = field ?: "${rootStorageLocation!!}/music/"
+
+	@Value("\${spring.data.album.art.location:#{null}}")
+	val albumArtDirectoryLocation: String? = null
+		get() = field ?: "${rootStorageLocation!!}/art/"
 }
