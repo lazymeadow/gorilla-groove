@@ -1,24 +1,31 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.Track
 import com.example.groove.db.model.User
 import com.example.groove.dto.CurrentlyListeningUsersDTO
 import com.example.groove.dto.SongListenResponse
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.unwrap
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
-class CurrentlyListeningService(val deviceService: DeviceService) {
+class CurrentlyListeningService(
+		val deviceService: DeviceService,
+		val trackRepository: TrackRepository
+) {
 	private val currentlyListeningUsers = ConcurrentHashMap<Long, SongListen>()
 	private var updateCount = -1
 
-	fun setListeningUser(user: User, song: String?, deviceId: String?) {
+	fun setListeningUser(user: User, trackId: Long?, song: String?, deviceId: String?) {
 		val device = deviceId?.let { deviceService.getDevice(it) }
+		val track = trackId?.let { trackRepository.findById(trackId) }?.unwrap()
 
 		val newTime = now().time
 		synchronized(this) {
-			if (song == null) {
+			if (song == null && track == null) {
 				currentlyListeningUsers.remove(user.id)
 				incrementUpdate()
 				return
@@ -26,7 +33,7 @@ class CurrentlyListeningService(val deviceService: DeviceService) {
 
 			val currentListen = currentlyListeningUsers[user.id]
 			val newListen = SongListen(
-					song = song,
+					song = track.getDisplayString() ?: song!!,
 					deviceName = device?.deviceName,
 					isPhone = device?.deviceType?.isPhone,
 					lastUpdate = newTime
@@ -37,6 +44,18 @@ class CurrentlyListeningService(val deviceService: DeviceService) {
 			}
 
 			currentlyListeningUsers[user.id] = newListen
+		}
+	}
+
+	private fun Track?.getDisplayString(): String? {
+		if (this == null) {
+			return null
+		}
+
+		return if (private) {
+			"This track is private"
+		} else {
+			"$artist - $name"
 		}
 	}
 

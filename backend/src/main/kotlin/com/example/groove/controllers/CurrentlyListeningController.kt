@@ -33,11 +33,14 @@ class CurrentlyListeningController(
 
 	@PostMapping
 	fun setCurrentlyListening(@RequestBody body: NewCurrentlyListening) {
-		currentlyListeningService.setListeningUser(loadLoggedInUser(), body.song, body.deviceId)
+		currentlyListeningService.setListeningUser(loadLoggedInUser(), body.trackId, body.song, body.deviceId)
 	}
 
 	data class NewCurrentlyListening(
+			@Deprecated("Clients should start sending down the track ID")
 			val song: String?,
+
+			val trackId: Long?, // Null when we stop listening to stuff
 
 			@Deprecated("Should be not null when clients are updated")
 			val deviceId: String?

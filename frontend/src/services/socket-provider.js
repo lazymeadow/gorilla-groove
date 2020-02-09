@@ -57,18 +57,10 @@ export class SocketProvider extends React.Component {
 	}
 
 	sendPlayEvent(track) {
-		if (!track) {
-			Api.post('currently-listening', {
-				song: null,
-				deviceId: getDeviceId()
-			});
-		} else {
-			const song = track.private ? 'This track is private' : track.artist + ' - ' + track.name;
-			Api.post('currently-listening', {
-				song,
-				deviceId: getDeviceId()
-			});
-		}
+		Api.post('currently-listening', {
+			trackId: track ? track.id : null,
+			deviceId: getDeviceId()
+		});
 	}
 
 	render() {
