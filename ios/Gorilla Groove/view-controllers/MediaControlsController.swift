@@ -258,6 +258,8 @@ class MediaControlsController: UIViewController {
             self.pauseIcon.isHidden = true
             self.playIcon.isHidden = false
             
+            AudioPlayer.stop()
+            
             return
         }
         
@@ -318,7 +320,7 @@ class MediaControlsController: UIViewController {
             self.trackListenSemaphore.signal()
         }
     }
-    
+
     @objc func pauseMusic(tapGestureRecognizer: UITapGestureRecognizer) {
         AudioPlayer.pause()
         self.pauseIcon.isHidden = true

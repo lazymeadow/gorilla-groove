@@ -4,10 +4,12 @@ class HttpRequester {
     
     static let baseUrl = "https://gorillagroove.net/api/"
     
+    typealias ResponseHandler<T> = (_ data: T?, _ status: Int, _ err: String?) -> Void
+    
     static func get<T: Codable>(
         _ url: String,
         _ type: T.Type,
-        callback: @escaping (_ data: T?, _ status: Int, _ err: String?) -> Void
+        callback: @escaping ResponseHandler<T>
     ) {
         let session = URLSession(configuration: .default)
         let request = getBaseRequest("GET", url)
@@ -23,12 +25,12 @@ class HttpRequester {
         _ url: String,
         _ type: T.Type,
         _ body: Codable?,
-        callback: @escaping (_ data: T?, _ status: Int, _ err: String?) -> Void
+        callback: ResponseHandler<T>? = nil
     ) {
         let session = URLSession(configuration: .default)
         let request = getBaseRequest("PUT", url, body: body)
         
-        print("Network - POST " + request.url!.absoluteString)
+        print("Network - PUT " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
         }
@@ -39,12 +41,12 @@ class HttpRequester {
         _ url: String,
         _ type: T.Type,
         _ body: Codable?,
-        callback: @escaping (_ data: T?, _ status: Int, _ err: String?) -> Void
+        callback: ResponseHandler<T>? = nil
     ) {
         let session = URLSession(configuration: .default)
         let request = getBaseRequest("POST", url, body: body)
         
-        print("Network - PUT " + request.url!.absoluteString)
+        print("Network - POST " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
         }
@@ -73,8 +75,8 @@ class HttpRequester {
         _ type: T.Type,
         _ response: URLResponse?,
         _ error: Error?,
-        _ callback: @escaping (_ data: T?, _ status: Int, _ err: String?
-    ) -> Void) {
+        _ callback: ResponseHandler<T>?
+    ) {
         guard let httpResponse = response as? HTTPURLResponse
             else {
                 print("error: not a valid http response")
@@ -83,13 +85,14 @@ class HttpRequester {
         
         if (httpResponse.statusCode >= 300) {
             print("Non 2xx received! Code: \(httpResponse.statusCode)")
-            callback(nil, httpResponse.statusCode, error as! String?)
+            callback?(nil, httpResponse.statusCode, error as! String?)
             return
         }
         
         // We aren't expecting the server to give us anything, so don't bother decoding
         if (type == EmptyResponse.self) {
-            return callback(nil, httpResponse.statusCode, error as! String?)
+            callback?(nil, httpResponse.statusCode, error as! String?)
+            return
         }
         
         let decoder = JSONDecoder()
@@ -99,7 +102,7 @@ class HttpRequester {
         
         let decodedData = try! decoder.decode(T.self, from: data!)
         
-        callback(decodedData, httpResponse.statusCode, error as! String?)
+        callback?(decodedData, httpResponse.statusCode, error as! String?)
     }
 }
 

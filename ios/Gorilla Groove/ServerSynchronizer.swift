@@ -7,7 +7,7 @@ class ServerSynchronizer {
     let userSyncManager = UserState()
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ entityType: AnyClass) -> Void
-    let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=100&page="
+    let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
     
     func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
         print("Initiating sync with server...")
