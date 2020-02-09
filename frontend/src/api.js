@@ -1,27 +1,12 @@
 export class Api {
 
-	static getBaseHost() {
-		// For local dev-ing, I usually run react on a different web server. So redirect it to
-		// the one running the backend on 8080
-		if (isLocalEnvironment()) {
-			return window.location.hostname + ":8080";
-		} else {
-			return window.location.host;
-		}
-	}
-
 	static getBaseUrl() {
 		const protocol = isLocalEnvironment() ? 'http' : 'https';
-		return protocol + "://" + this.getBaseHost();
+		return protocol + "://" + window.location.host;
 	}
 
 	static getBaseApiUrl() {
 		return this.getBaseUrl() + '/api/'
-	}
-
-	static getSocketUri() {
-		const protocol = isLocalEnvironment() ? 'ws' : 'wss';
-		return protocol + '://' + Api.getBaseHost() + '/api/socket'
 	}
 
 	static get(url, params) {

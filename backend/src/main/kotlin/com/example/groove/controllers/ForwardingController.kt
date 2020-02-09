@@ -24,4 +24,9 @@ class ForwardingController {
 	fun forwardUserCreationInvite(): String {
 		return "forward:/"
 	}
+
+	@RequestMapping("/")
+	fun forwardSlash(): String {
+		return "forward:/index.html"
+	}
 }
