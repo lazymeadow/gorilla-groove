@@ -37,7 +37,7 @@ The first way is to add it directly to the `user` DB table. The password will ne
 
 However it is recommended to log in with the "dude" user and create any additional users through the UI
 
-(See the README in the UI directory for how to do so)
+(See the README in the UI directory for how to set it up)
 
 ### Logging in and sending requests
 With the user created (or the default user), authenticate by sending a POST to:
