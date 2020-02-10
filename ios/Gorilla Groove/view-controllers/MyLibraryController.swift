@@ -26,9 +26,11 @@ class MyLibraryController: UITableViewController {
     }
     
     @objc func logout(_ sender: Any) {
+        // Call stop() before we actually clear out login state as this updates the server with our device
+        AudioPlayer.stop()
+
         // TODO actually send the logout command to the API
         FileState.clear(LoginState.self)
-        AudioPlayer.stop()
         
         // Until we ditch the storyboard, have to navigate to the login view this way
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
