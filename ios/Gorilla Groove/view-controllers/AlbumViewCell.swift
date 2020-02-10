@@ -6,7 +6,7 @@ class AlbumViewCell: UITableViewCell {
     var album: Album? {
         didSet {
             guard let album = album else {return}
-            nameLabel.text = album.name.isEmpty ? " " : album.name
+            nameLabel.text = album.name.isEmpty ? "(No Album)" : album.name
             artView.image = album.art
         }
     }

@@ -18,7 +18,7 @@ class MediaControlsController: UIViewController {
     // controls hasn't yet changed back to 0. So do a little extra bookkeeping to keep this from happening
     var playingTrackId: Int64? = nil
     
-    lazy var repeatIcon: UIImageView = {
+    lazy var repeatIcon: UIView = {
         let icon = createIcon("repeat", weight: .bold)
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
@@ -27,7 +27,7 @@ class MediaControlsController: UIViewController {
         return icon
     }()
     
-    var backIcon: UIImageView {
+    var backIcon: UIView {
         let icon = createIcon("backward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
@@ -36,7 +36,7 @@ class MediaControlsController: UIViewController {
         return icon
     }
     
-    lazy var playIcon: UIImageView = {
+    lazy var playIcon: UIView = {
         let icon = createIcon("play.fill", scale: .large)
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
@@ -45,7 +45,7 @@ class MediaControlsController: UIViewController {
         return icon
     }()
     
-    lazy var pauseIcon: UIImageView = {
+    lazy var pauseIcon: UIView = {
         let icon = createIcon("pause.fill", scale: .large)
         icon.isHidden = true
         icon.addGestureRecognizer(UITapGestureRecognizer(
@@ -55,7 +55,7 @@ class MediaControlsController: UIViewController {
         return icon
     }()
     
-    var forwardIcon: UIImageView {
+    var forwardIcon: UIView {
         let icon = createIcon("forward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
@@ -64,12 +64,13 @@ class MediaControlsController: UIViewController {
         return icon
     }
     
-    lazy var shuffleIcon: UIImageView = {
+    lazy var shuffleIcon: UIView = {
         let icon = createIcon("shuffle", weight: .bold)
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
             action: #selector(toggleShuffle(tapGestureRecognizer:))
         ))
+        icon.backgroundColor = .blue
         return icon
     }()
     
@@ -150,12 +151,12 @@ class MediaControlsController: UIViewController {
         NSLayoutConstraint.activate([
             self.view.heightAnchor.constraint(equalToConstant: 90.0),
             
-            content.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
+            content.topAnchor.constraint(equalTo: self.view.topAnchor),
             content.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             content.rightAnchor.constraint(equalTo: self.view.rightAnchor),
             
-            topButtons.leftAnchor.constraint(equalTo: content.leftAnchor, constant: 10),
-            topButtons.rightAnchor.constraint(equalTo: content.rightAnchor, constant: -10),
+            topButtons.leftAnchor.constraint(equalTo: content.leftAnchor, constant: 5),
+            topButtons.rightAnchor.constraint(equalTo: content.rightAnchor, constant: -5),
             
             bottomElements.leftAnchor.constraint(equalTo: content.leftAnchor, constant: 10),
             bottomElements.rightAnchor.constraint(equalTo: content.rightAnchor, constant: -10)
@@ -234,14 +235,28 @@ class MediaControlsController: UIViewController {
         _ name: String,
         weight: UIImage.SymbolWeight = .ultraLight,
         scale: UIImage.SymbolScale = .small
-    ) -> UIImageView {
+    ) -> UIView {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.5, weight: weight, scale: scale)
         
-        let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
-        icon.isUserInteractionEnabled = true
-        icon.tintColor = .white
+        let image = UIImage(systemName: name, withConfiguration: config)!
+        let icon = UIImageView(image: image)
         
-        return icon
+        // Add a wrapper element that just hugs the icon with some padding for easier clicking
+        let wrapper = UIStackView()
+        wrapper.axis = .vertical
+        wrapper.alignment = .center
+        wrapper.distribution = .equalCentering
+        wrapper.translatesAutoresizingMaskIntoConstraints = false
+
+        wrapper.addArrangedSubview(icon)
+
+        wrapper.isUserInteractionEnabled = true
+        wrapper.tintColor = .white
+        
+        wrapper.widthAnchor.constraint(equalTo: icon.widthAnchor, constant: 10).isActive = true
+        wrapper.heightAnchor.constraint(equalTo: icon.heightAnchor, constant: 10).isActive = true
+        
+        return wrapper
     }
     
     private func handleTrackChange(_ nillableTrack: Track?) {
