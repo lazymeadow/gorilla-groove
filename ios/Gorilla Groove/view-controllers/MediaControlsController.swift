@@ -108,16 +108,16 @@ class MediaControlsController: UIViewController {
         slider.maximumValue = 1
         slider.minimumValue = 0
         slider.setValue(0, animated: false)
-    
+        
         slider.minimumTrackTintColor = Colors.white
         slider.maximumTrackTintColor = Colors.nearBlack
-
+        
         let config = UIImage.SymbolConfiguration(scale: .small)
         let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.white)
-
+        
         slider.setThumbImage(newImage, for: .normal)
         slider.setThumbImage(newImage, for: .highlighted)
-
+        
         slider.addTarget(self, action: #selector(self.handleSliderGrab), for: .touchDown)
         slider.addTarget(self, action: #selector(self.handleSliderRelease), for: .touchUpInside)
         slider.addTarget(self, action: #selector(self.handleSliderRelease), for: .touchUpOutside)
@@ -135,7 +135,7 @@ class MediaControlsController: UIViewController {
         let topButtons = createTopButtons()
         let songTextView = createSongText()
         let bottomElements = createBottomElements()
-
+        
         content.addArrangedSubview(topButtons)
         content.addArrangedSubview(songTextView)
         content.addArrangedSubview(bottomElements)
@@ -160,7 +160,7 @@ class MediaControlsController: UIViewController {
             bottomElements.leftAnchor.constraint(equalTo: content.leftAnchor, constant: 10),
             bottomElements.rightAnchor.constraint(equalTo: content.rightAnchor, constant: -10)
         ])
-
+        
         AudioPlayer.addTimeObserver { time in
             self.handleTimeChange(time)
         }
@@ -176,7 +176,7 @@ class MediaControlsController: UIViewController {
             object: nil
         )
     }
-
+    
     
     private func createTopButtons() -> UIStackView {
         let buttons = UIStackView()
@@ -188,18 +188,18 @@ class MediaControlsController: UIViewController {
         topMiddle.translatesAutoresizingMaskIntoConstraints = false
         topMiddle.axis = .horizontal
         topMiddle.distribution  = .equalSpacing
-
+        
         topMiddle.addArrangedSubview(backIcon)
         topMiddle.addArrangedSubview(playIcon)
         topMiddle.addArrangedSubview(pauseIcon)
         topMiddle.addArrangedSubview(forwardIcon)
-                
+        
         buttons.addArrangedSubview(repeatIcon)
         buttons.addArrangedSubview(topMiddle)
         buttons.addArrangedSubview(shuffleIcon)
         
         topMiddle.widthAnchor.constraint(equalToConstant: 145).isActive = true
-
+        
         return buttons
     }
     
@@ -216,17 +216,17 @@ class MediaControlsController: UIViewController {
         elements.translatesAutoresizingMaskIntoConstraints = false
         elements.axis = .horizontal
         elements.distribution  = .fill
-
+        
         elements.addArrangedSubview(currentTime)
         elements.addArrangedSubview(slider)
         elements.addArrangedSubview(totalTime)
-
+        
         elements.setCustomSpacing(15.0, after: currentTime)
         elements.setCustomSpacing(15.0, after: slider)
         
         currentTime.widthAnchor.constraint(equalToConstant: 30).isActive = true
         totalTime.widthAnchor.constraint(equalToConstant: 30).isActive = true
-
+        
         return elements
     }
     
@@ -236,7 +236,7 @@ class MediaControlsController: UIViewController {
         scale: UIImage.SymbolScale = .small
     ) -> UIImageView {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.5, weight: weight, scale: scale)
-
+        
         let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
         icon.isUserInteractionEnabled = true
         icon.tintColor = .white
@@ -298,10 +298,10 @@ class MediaControlsController: UIViewController {
         if (timeElapsed < 0 || timeElapsed > 1) {
             return;
         }
-
+        
         self.timeListened += timeElapsed
         handlePotentialSongListen()
-
+        
         if (percentDone >= 1.0) {
             NowPlayingTracks.playNext()
         }
@@ -320,7 +320,7 @@ class MediaControlsController: UIViewController {
             self.trackListenSemaphore.signal()
         }
     }
-
+    
     @objc func pauseMusic(tapGestureRecognizer: UITapGestureRecognizer) {
         AudioPlayer.pause()
         self.pauseIcon.isHidden = true
@@ -389,24 +389,37 @@ extension UIImage {
     // https://coffeeshopped.com/2010/09/iphone-how-to-dynamically-color-a-uiimage
     func tinted(color: UIColor) -> UIImage {
         UIGraphicsBeginImageContext(size)
-
+        
         let context = UIGraphicsGetCurrentContext()!
-
+        
         context.setFillColor(color.cgColor)
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1.0, y: -1.0);
-
+        
         context.setBlendMode(CGBlendMode.normal)
         let rect = CGRect(x: 0, y: 0, width: size.width, height: size.height)
         context.draw(self.cgImage!, in: rect)
-
+        
         context.clip(to: rect, mask: self.cgImage!);
         context.addRect(rect);
         context.drawPath(using: CGPathDrawingMode.fill)
-
+        
         let coloredImg = UIGraphicsGetImageFromCurrentImageContext();
         UIGraphicsEndImageContext();
-
+        
         return coloredImg!
+    }
+    
+    static func fromUrl(_ urlString: String) -> UIImage? {
+        let url = URL(string: urlString)!
+        
+        do {
+            let data = try Data.init(contentsOf: url)
+            return UIImage(data: data)!
+        } catch {
+            print(error)
+        }
+        
+        return nil
     }
 }

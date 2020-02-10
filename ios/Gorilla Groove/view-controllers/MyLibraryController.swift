@@ -84,7 +84,7 @@ class MyLibraryController: UITableViewController {
         case .ARTIST:
             loadTitleView()
         case .ALBUM:
-            loadTitleView()
+            loadAlbumView()
         }
     }
     
@@ -92,6 +92,13 @@ class MyLibraryController: UITableViewController {
         let tracks = trackState.getTracks()
 
         let view = SongViewController("Title", tracks)
+        self.navigationController!.pushViewController(view, animated: true)
+    }
+    
+    @objc private func loadAlbumView() {
+        let albums = trackState.getAlbums()
+
+        let view = AlbumViewController("Album", albums)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

@@ -22,6 +22,8 @@
 		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
 		A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A89100F423BD339E00D6EA2D /* Assets.xcassets */; };
 		A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */; };
+		E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF023F0C6150095450E /* AlbumViewController.swift */; };
+		E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */; };
 		E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */; };
 		E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */; };
 		E85A4DD523D56D13006BD7EE /* UserState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD423D56D13006BD7EE /* UserState.swift */; };
@@ -63,6 +65,8 @@
 		A89100F423BD339E00D6EA2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A89100F723BD339E00D6EA2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E8597AF023F0C6150095450E /* AlbumViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewController.swift; sourceTree = "<group>"; };
+		E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewCell.swift; sourceTree = "<group>"; };
 		E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaControlsController.swift; sourceTree = "<group>"; };
 		E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingTracks.swift; sourceTree = "<group>"; };
 		E85A4DD423D56D13006BD7EE /* UserState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserState.swift; sourceTree = "<group>"; };
@@ -132,6 +136,8 @@
 				E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */,
 				E86AFF1C23E9572A005B84EB /* UsersController.swift */,
 				E86AFF1E23E963A8005B84EB /* TableViewCell.swift */,
+				E8597AF023F0C6150095450E /* AlbumViewController.swift */,
+				E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -257,6 +263,7 @@
 				A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
+				E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */,
 				E86AFF1323E7D63E005B84EB /* User+CoreDataProperties.swift in Sources */,
 				A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */,
 				E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */,
@@ -273,6 +280,7 @@
 				E86AFF1223E7D63E005B84EB /* User+CoreDataClass.swift in Sources */,
 				E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */,
 				E86AFF1723E7D63E005B84EB /* Track+CoreDataProperties.swift in Sources */,
+				E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */,
 				E86AFF1523E7D63E005B84EB /* PlaylistTrack+CoreDataProperties.swift in Sources */,
 				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
 				E86AFF1423E7D63E005B84EB /* PlaylistTrack+CoreDataClass.swift in Sources */,

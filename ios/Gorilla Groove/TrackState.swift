@@ -7,15 +7,21 @@ class TrackState {
     let userSyncManager = UserState()
     
     
-    func getTracks() -> Array<Track> {
+    func getTracks(album: String? = nil) -> Array<Track> {
         let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
         
-        let idPredicate = NSPredicate(format: "user_id == \(ownId)")
-        let hiddenPredicate = NSPredicate(format: "is_hidden == FALSE")
-
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [idPredicate, hiddenPredicate])
+        var predicates = [
+            NSPredicate(format: "user_id == \(ownId)"),
+            NSPredicate(format: "is_hidden == FALSE")
+        ]
+        
+        if (album != nil) {
+            predicates.append(NSPredicate(format: "album == %@", album!))
+        }
+        
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: predicates)
         
         fetchRequest.predicate = andPredicate
         fetchRequest.sortDescriptors = [
@@ -106,6 +112,48 @@ class TrackState {
         return result![0] as? Track
     }
     
+    func getAlbums() -> Array<Album> {
+        let ownId = FileState.read(LoginState.self)!.id
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
+        
+        let idPredicate = NSPredicate(format: "user_id == \(ownId)")
+        let hiddenPredicate = NSPredicate(format: "is_hidden == FALSE")
+
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [idPredicate, hiddenPredicate])
+        
+        fetchRequest.predicate = andPredicate
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(
+                key: "album",
+                ascending: true,
+                selector: #selector(NSString.caseInsensitiveCompare)
+            )
+        ]
+        let tracks = (try! context.fetch(fetchRequest)) as! Array<Track>
+        
+        // What we really want to do is a GROUP BY on album name, and just pull the first track
+        // out from each group. This doesn't seem to be a thing you can easily do in Core Data.
+        // So just pull out all the tracks and do the GROUP BY ourselves in code
+        
+        var albums = Array<Album>()
+        var currentAlbum: String? = nil
+        
+        tracks.forEach { track in
+            // We sorted the tracks by album so all the consecutive albums are in a row. We only need
+            // one from each set, so only add an album when it changes
+            if (track.album != currentAlbum) {
+                albums.append(Album(
+                    name: track.album,
+                    linkRequestLink: "file/link/\(track.id)"
+                ))
+                currentAlbum = track.album
+            }
+        }
+        
+        return albums
+    }
+    
     init() {
         coreDataManager = CoreDataManager()
         context = coreDataManager.managedObjectContext
@@ -116,4 +164,3 @@ class TrackState {
         let deviceId: String
     }
 }
-
