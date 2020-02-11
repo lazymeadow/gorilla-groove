@@ -142,3 +142,9 @@ export function copyToClipboard(text) {
 		}
 	});
 }
+
+export function getScreenHeight() {
+	// I had issues using window.screen.height / availHeight. The number seemed too large...
+	// Because we use 100vh for the body, getting the root height works great for this
+	return document.getElementById('root').offsetHeight;
+}

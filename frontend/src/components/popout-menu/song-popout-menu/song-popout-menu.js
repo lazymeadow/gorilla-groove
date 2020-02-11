@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {MusicContext} from "../../../services/music-provider";
 import {toast} from "react-toastify";
 import {TrackView} from "../../../enums/track-view";
@@ -7,7 +7,7 @@ import {Api} from "../../../api";
 import {TrimSong} from "../../trim-song/trim-song";
 import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
-import {copyToClipboard} from "../../../util";
+import {copyToClipboard, getScreenHeight} from "../../../util";
 import PopoutMenu from "../popout-menu";
 
 let menuOptions = [];
@@ -272,10 +272,9 @@ export default function SongPopoutMenu(props) {
 	};
 
 	const getPlaylistAdditionOptions = () => {
-		// TODO I'd rather have these nested in a 'Playlists' context menu instead of being here at the root level
-		return playlistContext.playlists.map(playlist => {
+		const playlistItems = playlistContext.playlists.map(playlist => {
 			return {
-				text: `Add to Playlist: ${playlist.name}`,
+				text: playlist.name,
 				clickHandler: (e) => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
@@ -293,8 +292,13 @@ export default function SongPopoutMenu(props) {
 				}
 			}
 		});
-	};
 
+		return { component: <PopoutMenu
+				mainItem={{ text: 'Add to Playlist' }}
+				menuItems={playlistItems}
+				expansionOnHover={true}
+			/> }
+	};
 
 	menuOptions = calculateMenuOptions();
 
@@ -310,8 +314,26 @@ export default function SongPopoutMenu(props) {
 
 	const expandedClass = props.expanded ? '' : 'hidden';
 
+	const menuRef = useRef(null);
+
+	// As it turns out, getting an accurate measurement here kind of sucks because the height
+	// isn't known until the child renders, and we don't know when that happens. So just do
+	// a hacky and dumb "guess" at the height based off the number of rows
+	const approximateMenuHeight = menuOptions.length * 17 + 10;
+	const screenHeight = getScreenHeight();
+
+	let adjustedY = props.y;
+	if (props.y + approximateMenuHeight > screenHeight) {
+		adjustedY = screenHeight - approximateMenuHeight;
+	}
+
 	return (
-		<div className={`song-popout-menu ${expandedClass}`} style={{ left: props.x, top: props.y }}>
+		<div
+			className={`song-popout-menu ${expandedClass}`}
+			ref={menuRef}
+			// Tiny x-offset here to keep the right click from opening the context menu on the popped up menu
+			style={{ left: props.x + 1, top: adjustedY }}
+		>
 			<PopoutMenu
 				menuItems={menuOptions}
 				expansionOverride={props.expanded}

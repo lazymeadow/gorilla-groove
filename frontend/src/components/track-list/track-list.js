@@ -370,6 +370,13 @@ export class TrackList extends React.Component {
 	}
 
 	closeContextMenu(event) {
+		// This is probably a stupid way to do this, but if we clicked on a row that was expandable,
+		// then we don't want to actually close the menu as clicking it should really have no effect
+		const classes = event.target.classList;
+		if (classes.contains('expandable-width') || classes.contains('expansion-caret')) {
+			return;
+		}
+
 		if (this.state.contextMenuOptions.expanded && event.button === 0) {
 			this.setState({ contextMenuOptions: { expanded: false }});
 		}
