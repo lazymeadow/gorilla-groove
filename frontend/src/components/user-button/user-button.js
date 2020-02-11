@@ -1,7 +1,7 @@
 import React, {useContext} from 'react';
 import {useHistory} from "react-router-dom";
 import {Api} from "../../api";
-import {PopoutMenu} from "../popout-menu/popout-menu";
+import PopoutMenu from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
 import InviteUser from "./invite-user/invite-user";
 import {deleteCookie} from "../../cookie";

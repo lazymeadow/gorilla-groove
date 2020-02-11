@@ -8,6 +8,7 @@ import {TrimSong} from "../../trim-song/trim-song";
 import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
 import {copyToClipboard} from "../../../util";
+import PopoutMenu from "../popout-menu";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -309,18 +310,12 @@ export default function SongPopoutMenu(props) {
 
 	const expandedClass = props.expanded ? '' : 'hidden';
 
-	// TODO should really figure out a nice way for this to utilize popout-menu.js with the changes I had to make
 	return (
-		<div className={`song-popout-menu popout-menu ${expandedClass}`} style={{ left: props.x, top: props.y }}>
-			<ul>
-				{menuOptions.map((menuItem, index) => {
-					if (menuItem.component) {
-						return <li key={index}>{menuItem.component}</li>
-					} else {
-						return <li key={index} onMouseDown={menuItem.clickHandler}>{menuItem.text}</li>
-					}
-				})}
-			</ul>
+		<div className={`song-popout-menu ${expandedClass}`} style={{ left: props.x, top: props.y }}>
+			<PopoutMenu
+				menuItems={menuOptions}
+				expansionOverride={props.expanded}
+			/>
 		</div>
 	)
 }
