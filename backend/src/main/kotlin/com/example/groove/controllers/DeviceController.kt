@@ -25,7 +25,7 @@ class DeviceController(
 	// Gives the effective device for a given device ID. So if you sent a device that was merged, you'll get the parent
 	@GetMapping("/{deviceId}")
     fun getDevice(@PathVariable("deviceId") deviceId: String): Device {
-		return deviceService.getDevice(deviceId)
+		return deviceService.getCurrentUsersDevice(deviceId)
     }
 
 	@PutMapping("/update/{id}")

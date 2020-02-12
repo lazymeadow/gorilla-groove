@@ -98,7 +98,7 @@ class FileController(
 			@PathVariable trackId: Long,
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
 	): TrackLinks {
-		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().email}")
+		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().name}")
 
 		return TrackLinks(
 				fileStorageService.getSongLink(trackId, false, audioFormat),

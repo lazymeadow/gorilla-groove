@@ -1,11 +1,10 @@
-package com.example.groove.services
+package com.example.groove.services.event
 
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
-import com.example.groove.db.model.User
-import com.example.groove.dto.CurrentlyListeningUsersDTO
-import com.example.groove.dto.SongListenResponse
+import com.example.groove.services.DeviceService
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -15,17 +14,25 @@ import java.util.concurrent.ConcurrentHashMap
 class CurrentlyListeningService(
 		val deviceService: DeviceService,
 		val trackRepository: TrackRepository
-) {
+) : EventService {
 	private val currentlyListeningUsers = ConcurrentHashMap<Long, SongListen>()
 	private var updateCount = -1
 
-	fun setListeningUser(user: User, trackId: Long?, song: String?, deviceId: String?) {
-		val device = deviceId?.let { deviceService.getDevice(it) }
-		val track = trackId?.let { trackRepository.findById(trackId) }?.unwrap()
+	override fun handlesEvent(eventType: EventType): Boolean {
+		return eventType == EventType.NOW_PLAYING
+	}
+
+	override fun sendEvent(event: EventRequest) {
+		event as NowPlayingEventRequest
+
+		val user = loadLoggedInUser()
+
+		val device = deviceService.getCurrentUsersDevice(event.deviceId)
+		val track = event.trackId?.let { trackRepository.findById(it) }?.unwrap()
 
 		val newTime = now().time
 		synchronized(this) {
-			if (song == null && track == null) {
+			if (track == null) {
 				currentlyListeningUsers.remove(user.id)
 				incrementUpdate()
 				return
@@ -33,9 +40,9 @@ class CurrentlyListeningService(
 
 			val currentListen = currentlyListeningUsers[user.id]
 			val newListen = SongListen(
-					song = track.getDisplayString() ?: song!!,
-					deviceName = device?.deviceName,
-					isPhone = device?.deviceType?.isPhone,
+					song = track.getDisplayString(),
+					deviceName = device.deviceName,
+					isPhone = device.deviceType.isPhone,
 					lastUpdate = newTime
 			)
 
@@ -47,11 +54,7 @@ class CurrentlyListeningService(
 		}
 	}
 
-	private fun Track?.getDisplayString(): String? {
-		if (this == null) {
-			return null
-		}
-
+	private fun Track.getDisplayString(): String {
 		return if (private) {
 			"This track is private"
 		} else {
@@ -59,10 +62,12 @@ class CurrentlyListeningService(
 		}
 	}
 
-	fun getListeningUsersIfNew(currentUser: User, lastUpdateCount: Int): CurrentlyListeningUsersDTO? {
-		if (lastUpdateCount == updateCount) {
+	override fun getEvent(deviceId: String?, lastUpdateId: Int): EventResponse? {
+		if (lastUpdateId == updateCount) {
 			return null
 		}
+
+		val user = loadLoggedInUser()
 
 		val listeningUsers = currentlyListeningUsers
 				.mapValues { SongListenResponse(
@@ -70,11 +75,11 @@ class CurrentlyListeningService(
 						deviceName = it.value.deviceName,
 						isPhone = it.value.isPhone
 				) }
-				.filter { (userId, _) -> userId != currentUser.id }
+				.filter { (userId, _) -> userId != user.id }
 
-		return CurrentlyListeningUsersDTO(
+		return NowPlayingEventResponse(
 				currentlyListeningUsers = listeningUsers,
-				lastUpdate = updateCount
+				lastUpdateId = updateCount
 		)
 	}
 
