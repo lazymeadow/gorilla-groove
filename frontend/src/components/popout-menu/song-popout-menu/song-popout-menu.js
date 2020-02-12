@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, {useContext, useEffect, useRef} from 'react';
 import {MusicContext} from "../../../services/music-provider";
 import {toast} from "react-toastify";
 import {TrackView} from "../../../enums/track-view";
@@ -57,7 +57,7 @@ export default function SongPopoutMenu(props) {
 	const getBaseMenuOptions = () => {
 		let baseOptions = [
 			{
-				text: 'Play Now', clickHandler: (e) => {
+				text: 'Play Now', clickHandler: e => {
 					e.stopPropagation();
 					musicContext.playTracks(props.getSelectedTracks());
 				}
@@ -95,7 +95,7 @@ export default function SongPopoutMenu(props) {
 					});
 				}
 			}, {
-				text: 'Download', clickHandler: (e) => {
+				text: 'Download', clickHandler: e => {
 					e.stopPropagation();
 					const track = selectedTracks[0];
 
@@ -111,7 +111,7 @@ export default function SongPopoutMenu(props) {
 	const getOwnLibraryOptions = () => {
 		let ownLibraryOptions = [
 			{
-				text: 'Make Private', clickHandler: (e) => {
+				text: 'Make Private', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					musicContext.setPrivate(tracks, true).then(() => {
@@ -126,7 +126,7 @@ export default function SongPopoutMenu(props) {
 					});
 				}
 			}, {
-				text: 'Make Public', clickHandler: (e) => {
+				text: 'Make Public', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					musicContext.setPrivate(tracks, false).then(() => {
@@ -138,7 +138,7 @@ export default function SongPopoutMenu(props) {
 					});
 				}
 			}, {
-				text: 'Hide in Library', clickHandler: (e) => {
+				text: 'Hide in Library', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const propertyChange = { hidden: true };
@@ -154,7 +154,7 @@ export default function SongPopoutMenu(props) {
 					});
 				}
 			}, {
-				text: 'Show in Library', clickHandler: (e) => {
+				text: 'Show in Library', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const propertyChange = { hidden: false };
@@ -174,7 +174,7 @@ export default function SongPopoutMenu(props) {
 			}, {
 				component: <MetadataRequest getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
-				text: 'Delete', clickHandler: (e) => {
+				text: 'Delete', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					musicContext.deleteTracks(tracks, false).then(() => {
@@ -203,7 +203,7 @@ export default function SongPopoutMenu(props) {
 	const getPlaylistSpecificOptions = () => {
 		return [
 			{
-				text: 'Remove from Playlist', clickHandler: (e) => {
+				text: 'Remove from Playlist', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const playlistTrackIds = tracks.map(track => track.playlistTrackId);
@@ -241,7 +241,7 @@ export default function SongPopoutMenu(props) {
 	const getOtherUserOptions = () => {
 		return [
 			{
-				text: 'Import to Library', clickHandler: (e) => {
+				text: 'Import to Library', clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					musicContext.importTracks(tracks).then(() => {
@@ -262,7 +262,7 @@ export default function SongPopoutMenu(props) {
 	const getNowPlayingOptions = () => {
 		return [
 			{
-				text: 'Remove', clickHandler: (e) => {
+				text: 'Remove', clickHandler: e => {
 					e.stopPropagation();
 					const trackIndexes = props.getSelectedTrackIndexes();
 					musicContext.removeFromNowPlaying(trackIndexes);
@@ -275,7 +275,7 @@ export default function SongPopoutMenu(props) {
 		const playlistItems = playlistContext.playlists.map(playlist => {
 			return {
 				text: playlist.name,
-				clickHandler: (e) => {
+				clickHandler: e => {
 					e.stopPropagation();
 					const tracks = props.getSelectedTracks();
 					const trackIds = tracks.map(track => track.id);
@@ -303,12 +303,16 @@ export default function SongPopoutMenu(props) {
 	menuOptions = calculateMenuOptions();
 
 	useEffect(() => {
+		// Put it in a timeout so other click handlers resolve first.
+		// If we don't, then our menu will close before the click fires on the element
+		const closeFunction = e => {
+			setTimeout(() => props.closeContextMenu(e))
+		};
+
 		if (props.expanded) {
-			setTimeout(() => {
-				document.body.addEventListener('mousedown', props.closeContextMenu);
-			});
+			document.body.addEventListener('click', closeFunction);
 		} else if (!props.expanded) {
-			document.body.removeEventListener('mousedown', props.closeContextMenu);
+			document.body.removeEventListener('click', closeFunction);
 		}
 	}, [props.expanded]);
 
@@ -322,7 +326,8 @@ export default function SongPopoutMenu(props) {
 	const approximateMenuHeight = menuOptions.length * 17 + 10;
 	const screenHeight = getScreenHeight();
 
-	let adjustedY = props.y;
+	let adjustedY = props.y === undefined ? 0 : props.y;
+	let adjustedX = props.x === undefined ? 0 : props.x;
 	if (props.y + approximateMenuHeight > screenHeight) {
 		adjustedY = screenHeight - approximateMenuHeight;
 	}
@@ -332,7 +337,7 @@ export default function SongPopoutMenu(props) {
 			className={`song-popout-menu ${expandedClass}`}
 			ref={menuRef}
 			// Tiny x-offset here to keep the right click from opening the context menu on the popped up menu
-			style={{ left: props.x + 1, top: adjustedY }}
+			style={{ left: adjustedX + 1, top: adjustedY }}
 		>
 			<PopoutMenu
 				menuItems={menuOptions}

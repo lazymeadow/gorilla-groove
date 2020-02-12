@@ -257,7 +257,7 @@ export default function DeviceManagement() {
 	const closeFunction = () => setModalOpen(false);
 
 	return (
-		<div id="device-management" onMouseDown={() => setModalOpen(true)}>
+		<div id="device-management" onClick={() => setModalOpen(true)}>
 			Devices
 			<Modal
 				isOpen={modalOpen}

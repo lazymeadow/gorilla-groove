@@ -23,7 +23,7 @@ export default function InviteUser() {
 
 	return (
 		<div>
-			<div onMouseDown={() => createLink()}>
+			<div onClick={() => createLink()}>
 				Invite a User
 			</div>
 			<Modal

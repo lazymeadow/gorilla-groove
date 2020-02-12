@@ -105,7 +105,7 @@ export default function MetadataRequest(props) {
 	wasOpen = modalOpen;
 
 	return (
-		<div onMouseDown={openModal}>
+		<div onClick={openModal}>
 			<span>Request Metadata</span>
 			<Modal
 				isOpen={modalOpen}

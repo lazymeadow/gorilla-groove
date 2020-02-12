@@ -8,10 +8,8 @@ export default function PopoutMenu(props) {
 	const mainItem = useRef(null);
 	const childrenContainer = useRef(null);
 
-	const closeMenu = event => {
-		if (event.button !== 2) {
-			setExpanded(false);
-		}
+	const closeMenu = () => {
+		setExpanded(false);
 	};
 
 	const toggleExpanded = event => {
@@ -57,12 +55,9 @@ export default function PopoutMenu(props) {
 		}
 
 		if (expanded) {
-			childrenContainer.current.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); });
-			setTimeout(() => {
-				document.body.addEventListener('mousedown', closeMenu);
-			});
+			document.body.addEventListener('click', closeMenu);
 		} else {
-			document.body.removeEventListener('mousedown', closeMenu);
+			document.body.removeEventListener('click', closeMenu);
 		}
 	}, [expanded]);
 
@@ -78,7 +73,7 @@ export default function PopoutMenu(props) {
 				<div
 					ref={mainItem}
 					className={`${mainItemClass} ${props.expansionOnHover ? 'expandable-width' : ''} p-relative`}
-					onMouseDown={toggleExpanded}
+					onClick={toggleExpanded}
 				>
 					{props.mainItem.text}
 					{ props.expansionOnHover ? <div className="expansion-caret">▶</div> : null }
@@ -93,11 +88,7 @@ export default function PopoutMenu(props) {
 							if (menuItem.component) {
 								return <li key={index}>{menuItem.component}</li>
 							} else {
-								return <li key={index} onMouseDown={event => {
-									if (event.button !== 2) {
-										menuItem.clickHandler(event)
-									}
-								}}>
+								return <li key={index} onClick={menuItem.clickHandler}>
 									<span>{menuItem.text}</span>
 								</li>
 							}

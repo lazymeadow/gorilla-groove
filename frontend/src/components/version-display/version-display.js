@@ -69,7 +69,7 @@ export class VersionDisplay extends React.Component {
 	render() {
 		return (
 			<div id="version-display">
-				<span onMouseDown={() => this.setState({ modalOpen: true })} className="version-text">{__VERSION__}</span>
+				<span onClick={() => this.setState({ modalOpen: true })} className="version-text">{__VERSION__}</span>
 				{
 					this.state.outOfDate
 						? <i className="fas fa-exclamation-triangle" title="Your GG is out of date. Refresh your browser. Please?"/>
