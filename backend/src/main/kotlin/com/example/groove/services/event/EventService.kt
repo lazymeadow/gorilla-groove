@@ -1,22 +1,28 @@
 package com.example.groove.services.event
 
+import com.example.groove.db.model.Track
 import com.fasterxml.jackson.annotation.JsonProperty
 
 interface EventRequest {
 	val deviceId: String
 }
 interface EventResponse {
-	var lastUpdateId: Int
+	var lastEventId: Int
+	val eventType: EventType
 }
 
 interface EventService {
 	fun handlesEvent(eventType: EventType): Boolean
-	fun getEvent(deviceId: String?, lastUpdateId: Int): EventResponse?
+	fun getEvent(deviceId: String?, lastEventId: Int): EventResponse?
 	fun sendEvent(event: EventRequest)
 }
 
 enum class EventType {
 	NOW_PLAYING, REMOTE_PLAY
+}
+
+enum class RemotePlayType {
+	PLAY_SET_SONGS, ADD_SONGS_NEXT, ADD_SONGS_LAST, PAUSE, PLAY, SEEK
 }
 
 data class NowPlayingEventRequest(
@@ -26,18 +32,22 @@ data class NowPlayingEventRequest(
 
 data class RemotePlayEventRequest(
 		val targetDeviceId: String,
-		val trackIds: List<Long>,
+		val trackIds: List<Long>?,
+		val remotePlayAction: RemotePlayType,
 		override val deviceId: String
 ) : EventRequest
 
 data class RemotePlayEventResponse(
-		val trackIds: List<Long>,
-		override var lastUpdateId: Int = -1
+		val tracks: List<Track>?,
+		val remotePlayAction: RemotePlayType,
+		override var lastEventId: Int = -1,
+		override val eventType: EventType = EventType.REMOTE_PLAY
 ) : EventResponse
 
 data class NowPlayingEventResponse(
 		val currentlyListeningUsers: Map<Long, SongListenResponse>?,
-		override var lastUpdateId: Int
+		override var lastEventId: Int,
+		override val eventType: EventType = EventType.NOW_PLAYING
 ) : EventResponse
 
 data class SongListenResponse(

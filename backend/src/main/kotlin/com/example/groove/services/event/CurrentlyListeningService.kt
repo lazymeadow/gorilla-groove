@@ -62,8 +62,8 @@ class CurrentlyListeningService(
 		}
 	}
 
-	override fun getEvent(deviceId: String?, lastUpdateId: Int): EventResponse? {
-		if (lastUpdateId == updateCount) {
+	override fun getEvent(deviceId: String?, lastEventId: Int): EventResponse? {
+		if (lastEventId == updateCount) {
 			return null
 		}
 
@@ -79,7 +79,7 @@ class CurrentlyListeningService(
 
 		return NowPlayingEventResponse(
 				currentlyListeningUsers = listeningUsers,
-				lastUpdateId = updateCount
+				lastEventId = updateCount
 		)
 	}
 

@@ -16,7 +16,7 @@ class EventController(
 			@PathVariable("device-id") deviceId: String?,
 			@RequestParam("lastEventId") lastEventId: Int
 	): ResponseEntity<EventResponse?> {
-		eventServiceCoordinator.getEvent(deviceId = deviceId, lastUpdateId = lastEventId)?.let {
+		eventServiceCoordinator.getEvent(deviceId = deviceId, lastEventId = lastEventId)?.let {
 			return ResponseEntity.ok(it)
 		}
 
@@ -52,7 +52,7 @@ class CurrentlyListeningController(
 		nowPlayingEvent?.let {
 			return ResponseEntity.ok(TemporaryNowPlayingEvent(
 					currentlyListeningUsers = nowPlayingEvent.currentlyListeningUsers,
-					lastUpdate = nowPlayingEvent.lastUpdateId
+					lastUpdate = nowPlayingEvent.lastEventId
 			))
 		}
 
