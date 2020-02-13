@@ -32,12 +32,13 @@ export class SocketProvider extends React.Component {
 	fetchLatestData() {
 		Api.get(`event/device-id/${getDeviceId()}`, { lastEventId }).then(result => {
 			lastEventId = result.lastEventId;
-			console.log(result);
-			if (result.eventType === 'NOW_LISTENING') {
+			
+			if (result.eventType === EventType.NOW_PLAYING) {
 				this.handleNowListeningMessage(result);
-			} else if (result.eventType === 'REMOTE_PLAY') {
+			} else if (result.eventType === EventType.REMOTE_PLAY) {
 				this.handleRemotePlayMessage(result);
 			}
+
 			this.fetchLatestData();
 		}).catch(() => {
 			setTimeout(this.fetchLatestData.bind(this), 2000);
@@ -86,3 +87,8 @@ export class SocketProvider extends React.Component {
 		)
 	}
 }
+
+const EventType = Object.freeze({
+	NOW_PLAYING: 'NOW_PLAYING',
+	REMOTE_PLAY: 'REMOTE_PLAY'
+});
