@@ -1,5 +1,6 @@
 package com.example.groove.services.event
 
+import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -13,8 +14,8 @@ interface EventResponse {
 
 interface EventService {
 	fun handlesEvent(eventType: EventType): Boolean
-	fun getEvent(deviceId: String?, lastEventId: Int): EventResponse?
-	fun sendEvent(event: EventRequest)
+	fun getEvent(sourceDevice: Device, lastEventId: Int): EventResponse?
+	fun sendEvent(sourceDevice: Device, event: EventRequest)
 }
 
 enum class EventType {

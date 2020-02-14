@@ -13,7 +13,7 @@ class EventController(
 ) {
 	@GetMapping("/device-id/{device-id}")
 	fun getEvents(
-			@PathVariable("device-id") deviceId: String?,
+			@PathVariable("device-id") deviceId: String,
 			@RequestParam("lastEventId") lastEventId: Int
 	): ResponseEntity<EventResponse?> {
 		eventServiceCoordinator.getEvent(deviceId = deviceId, lastEventId = lastEventId)?.let {
@@ -32,49 +32,4 @@ class EventController(
 	fun createRemotePlayEvent(@RequestBody body: RemotePlayEventRequest) {
 		eventServiceCoordinator.sendEvent(EventType.REMOTE_PLAY, body)
 	}
-}
-
-
-@Deprecated("Use EventController once clients are updated")
-@RestController
-@RequestMapping("api/currently-listening")
-class CurrentlyListeningController(
-		private val eventController: EventController
-) {
-	@GetMapping
-	fun getCurrentlyListening(
-			@RequestParam("lastUpdate") lastUpdate: Int
-	): ResponseEntity<TemporaryNowPlayingEvent?> {
-		val nowPlayingEvent = eventController.getEvents(deviceId = null, lastEventId = lastUpdate).body
-
-		nowPlayingEvent as NowPlayingEventResponse?
-
-		nowPlayingEvent?.let {
-			return ResponseEntity.ok(TemporaryNowPlayingEvent(
-					currentlyListeningUsers = nowPlayingEvent.currentlyListeningUsers,
-					lastUpdate = nowPlayingEvent.lastEventId
-			))
-		}
-
-		return ResponseEntity(HttpStatus.NOT_FOUND)
-	}
-
-	data class TemporaryNowPlayingEvent(
-		val currentlyListeningUsers: Map<Long, SongListenResponse>?,
-		val lastUpdate: Int
-	)
-
-	@PostMapping
-	fun setCurrentlyListening(@RequestBody body: NewCurrentlyListening) {
-		eventController.createNowPlayingEvent(NowPlayingEventRequest(
-				trackId = body.trackId,
-				deviceId = body.deviceId
-		))
-	}
-
-	data class NewCurrentlyListening(
-			val trackId: Long?, // Null when we stop listening to stuff
-
-			val deviceId: String
-	)
 }

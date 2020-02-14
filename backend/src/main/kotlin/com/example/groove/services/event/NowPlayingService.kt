@@ -1,6 +1,7 @@
 package com.example.groove.services.event
 
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
 import com.example.groove.services.DeviceService
 import com.example.groove.util.DateUtils.now
@@ -11,10 +12,11 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
-class CurrentlyListeningService(
+class NowPlayingService(
 		val deviceService: DeviceService,
 		val trackRepository: TrackRepository
 ) : EventService {
+
 	private val currentlyListeningUsers = ConcurrentHashMap<Long, SongListen>()
 	private var updateCount = -1
 
@@ -22,7 +24,7 @@ class CurrentlyListeningService(
 		return eventType == EventType.NOW_PLAYING
 	}
 
-	override fun sendEvent(event: EventRequest) {
+	override fun sendEvent(sourceDevice: Device, event: EventRequest) {
 		event as NowPlayingEventRequest
 
 		val user = loadLoggedInUser()
@@ -62,7 +64,7 @@ class CurrentlyListeningService(
 		}
 	}
 
-	override fun getEvent(deviceId: String?, lastEventId: Int): EventResponse? {
+	override fun getEvent(sourceDevice: Device, lastEventId: Int): EventResponse? {
 		if (lastEventId == updateCount) {
 			return null
 		}

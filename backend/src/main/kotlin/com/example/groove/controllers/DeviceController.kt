@@ -4,6 +4,7 @@ import com.example.groove.db.model.Device
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.services.DeviceService
 import com.example.groove.services.UserService
+import com.example.groove.services.event.EventServiceCoordinator
 import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.web.bind.annotation.*
@@ -13,7 +14,8 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("api/device")
 class DeviceController(
 		private val deviceService: DeviceService,
-		private val userService: UserService
+		private val userService: UserService,
+		private val eventServiceCoordinator: EventServiceCoordinator
 ) {
 
 	@GetMapping
@@ -27,6 +29,11 @@ class DeviceController(
     fun getDevice(@PathVariable("deviceId") deviceId: String): Device {
 		return deviceService.getCurrentUsersDevice(deviceId)
     }
+
+	@GetMapping("/active")
+	fun getActiveDevices(): Set<Device> {
+		return eventServiceCoordinator.getActiveDevices()
+	}
 
 	@PutMapping("/update/{id}")
     fun updateDevice(

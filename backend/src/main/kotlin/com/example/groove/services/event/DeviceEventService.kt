@@ -1,5 +1,6 @@
 package com.example.groove.services.event
 
+import com.example.groove.db.model.Device
 import com.example.groove.services.DeviceService
 import com.example.groove.services.TrackService
 import org.springframework.stereotype.Service
@@ -7,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class DeviceEventService(
-		private val deviceService: DeviceService,
 		private val trackService: TrackService
 ) : EventService {
 
@@ -17,16 +17,10 @@ class DeviceEventService(
 		return eventType == EventType.REMOTE_PLAY
 	}
 
-	override fun getEvent(deviceId: String?, lastEventId: Int): EventResponse? {
-		if (deviceId == null) {
-			return null
-		}
-
-		val device = deviceService.getCurrentUsersDevice(deviceId)
-
+	override fun getEvent(sourceDevice: Device, lastEventId: Int): EventResponse? {
 		// Could easily be a striped lock on the deviceID when we have more concurrent users and need to
 		synchronized(this) {
-			return deviceEvents[device.id]?.removeAtOrNull(0)
+			return deviceEvents[sourceDevice.id]?.removeAtOrNull(0)
 		}
 	}
 
@@ -39,10 +33,8 @@ class DeviceEventService(
 
 	// I started making this delegate try to work for any Device-based event, but right now it only works
 	// with remote play. Will need a bit of another pass to get it to work with more
-	override fun sendEvent(event: EventRequest) {
+	override fun sendEvent(sourceDevice: Device, event: EventRequest) {
 		event as RemotePlayEventRequest
-
-		val device = deviceService.getCurrentUsersDevice(event.targetDeviceId)
 
 		val trackIdToTrack = trackService
 				.getTracksByIds(event.trackIds!!.toSet())
@@ -59,11 +51,12 @@ class DeviceEventService(
 				remotePlayAction = event.remotePlayAction
 		)
 
+		val deviceId = sourceDevice.id
 		synchronized(this) {
-			if (deviceEvents[device.id] == null) {
-				deviceEvents[device.id] = mutableListOf<EventResponse>(eventResponse)
+			if (deviceEvents[deviceId] == null) {
+				deviceEvents[deviceId] = mutableListOf<EventResponse>(eventResponse)
 			} else {
-				deviceEvents.getValue(device.id).add(eventResponse)
+				deviceEvents.getValue(deviceId).add(eventResponse)
 			}
 		}
 	}
