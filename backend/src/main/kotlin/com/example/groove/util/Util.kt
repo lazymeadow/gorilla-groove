@@ -25,6 +25,14 @@ fun String.blankAsNull(): String? {
 	return if (this.isBlank()) null else this
 }
 
+fun String.endWith(ending: String): String {
+	return if (this.endsWith(ending)) {
+		this
+	} else {
+		this + ending
+	}
+}
+
 fun String.withNewExtension(extension: String): String {
 	val extensionWithoutDot = if (extension.first() == '.') extension.substring(1) else extension
 	return this.split('.')

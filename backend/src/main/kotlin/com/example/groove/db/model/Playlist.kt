@@ -1,8 +1,8 @@
 package com.example.groove.db.model
 
+import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
-import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -11,7 +11,7 @@ data class Playlist(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		val id: Long = 0,
+		override val id: Long = 0,
 
 		@JsonIgnore
 		@OneToMany(mappedBy = "playlist", fetch = FetchType.LAZY)
@@ -25,8 +25,12 @@ data class Playlist(
 		var name: String,
 
 		@Column(name = "created_at", nullable = false)
-		var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+		override var createdAt: Timestamp = now(),
 
-		@Column
-		var deleted: Boolean = false
-)
+		@Column(name = "updated_at", nullable = false)
+		override var updatedAt: Timestamp = now(),
+
+		@JsonIgnore
+		@Column(columnDefinition = "BIT")
+		override var deleted: Boolean = false
+) : RemoteSyncable

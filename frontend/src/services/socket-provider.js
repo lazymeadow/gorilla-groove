@@ -1,10 +1,11 @@
 import React from "react";
 import {isLoggedIn} from "../util";
 import {Api} from "../api";
+import {getDeviceId} from "./version";
 
 export const SocketContext = React.createContext();
 
-let lastUpdate = -1;
+let lastEventId = -1;
 
 export class SocketProvider extends React.Component {
 	constructor(props) {
@@ -20,25 +21,44 @@ export class SocketProvider extends React.Component {
 
 	componentDidMount() {
 		// Clear the song immediately if someone refreshed their browser
-		Api.post('currently-listening', { song: null });
+		Api.post('event/NOW_PLAYING', {
+			trackId: null,
+			deviceId: getDeviceId()
+		});
 
-		window.addEventListener("beforeunload", this.disconnectSocket.bind(this));
+		window.addEventListener('beforeunload', this.disconnectSocket.bind(this));
 	}
 
 	fetchLatestData() {
-		Api.get('currently-listening', { lastUpdate }).then(result => {
-			lastUpdate = result.lastUpdate;
-			this.setState({ nowListeningUsers: result.currentlyListeningUsers });
+		Api.get(`event/device-id/${getDeviceId()}`, { lastEventId }).then(result => {
+			lastEventId = result.lastEventId;
+			
+			if (result.eventType === EventType.NOW_PLAYING) {
+				this.handleNowListeningMessage(result);
+			} else if (result.eventType === EventType.REMOTE_PLAY) {
+				this.handleRemotePlayMessage(result);
+			}
+
 			this.fetchLatestData();
 		}).catch(() => {
 			setTimeout(this.fetchLatestData.bind(this), 2000);
 		});
 	}
 
+	handleNowListeningMessage(message) {
+		this.setState({ nowListeningUsers: message.currentlyListeningUsers });
+	}
+
+	handleRemotePlayMessage(message) {
+		if (message.remotePlayAction === 'PLAY_SET_SONGS') {
+			this.props.musicContext.playTracks(message.tracks)
+		}
+	}
+
 	connectToSocket() {
 		// Avoid sending a new connection on logout / login
 		// If our last update was not -1 then it means we're already looking for new data
-		if (!isLoggedIn() || lastUpdate !== -1) {
+		if (!isLoggedIn() || lastEventId !== -1) {
 			return;
 		}
 
@@ -46,16 +66,17 @@ export class SocketProvider extends React.Component {
 	}
 
 	disconnectSocket() {
-		Api.post('currently-listening', { song: null });
+		Api.post('event/NOW_PLAYING', {
+			trackId: null,
+			deviceId: getDeviceId()
+		});
 	}
 
 	sendPlayEvent(track) {
-		if (!track) {
-			Api.post('currently-listening', { song: null });
-		} else {
-			const song = track.private ? 'This track is private' : track.artist + ' - ' + track.name;
-			Api.post('currently-listening', { song });
-		}
+		Api.post('event/NOW_PLAYING', {
+			trackId: track ? track.id : null,
+			deviceId: getDeviceId()
+		});
 	}
 
 	render() {
@@ -66,3 +87,8 @@ export class SocketProvider extends React.Component {
 		)
 	}
 }
+
+const EventType = Object.freeze({
+	NOW_PLAYING: 'NOW_PLAYING',
+	REMOTE_PLAY: 'REMOTE_PLAY'
+});

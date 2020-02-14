@@ -19,4 +19,14 @@ class ForwardingController {
 	fun forwardTrackLink(): String {
 		return "forward:/"
 	}
+
+	@RequestMapping("/create-account/{inviteIdentifier}")
+	fun forwardUserCreationInvite(): String {
+		return "forward:/"
+	}
+
+	@RequestMapping("/")
+	fun forwardSlash(): String {
+		return "forward:/index.html"
+	}
 }

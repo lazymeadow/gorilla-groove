@@ -135,7 +135,7 @@ export class SongProperties extends React.Component {
 	render() {
 		// noinspection HtmlUnknownTarget
 		return (
-			<div onMouseDown={() => this.setModalOpen(true)}>
+			<div onClick={() => this.setModalOpen(true)}>
 				Properties
 				<Modal
 					isOpen={this.state.modalOpen}
@@ -284,7 +284,7 @@ export class SongProperties extends React.Component {
 								<div
 									className="album-art"
 									style={{ backgroundImage: 'url(' + this.state.albumArtUrl + ')' }}
-									onMouseDown={this.openFileDialog.bind(this)}
+									onClick={this.openFileDialog.bind(this)}
 								/>
 								<input
 									type="file"

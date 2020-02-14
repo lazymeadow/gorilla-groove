@@ -10,17 +10,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         AudioPlayer.initialize()
         
-        let token = LoginState.read()?.token
+        // Make sure we have a device ID generated for the app
+        if (FileState.read(DeviceState.self) == nil) {
+            FileState.save(DeviceState(deviceId: UUID().uuidString.lowercased()))
+        }
+        
+        let token = FileState.read(LoginState.self)?.token
         
         if (token != nil) {
-            print("User logged in. Skipping login view")
-            let userSync = UserSyncManager().getLastSentUserSync()
+            print("User logged was previously logged in")
+            
+            if (!CoreDataManager().restoredCleanly) {
+                print("User was logged in but Core Data was not initiated cleanly. Initiating sync to repair")
+                window!.rootViewController = SyncController()
+                
+                return true
+            }
+            
+            let userSync = UserState().getLastSentUserSync()
             if (userSync.last_sync == nil) {
                 print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
                 // TODO remove this when done devving this screen
-                window!.rootViewController = SyncController()
+//                window!.rootViewController = SyncController()
             } else {
-                window!.rootViewController = PlaybackWrapperViewController()
+                window!.rootViewController = RootNavigationController()
             }
         }
 

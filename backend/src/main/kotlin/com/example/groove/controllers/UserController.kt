@@ -17,10 +17,11 @@ class UserController(
 		private val userService: UserService
 ) {
 
-	@PostMapping
+	// NOTE: This is available anonymously, as users now create their own accounts (with a valid invite link)
+	@PostMapping("/public")
 	fun createUser(@Valid @RequestBody userCreateDTO: UserCreateDTO): ResponseEntity<String> {
 		val user = User(0, userCreateDTO.username, userCreateDTO.email, userCreateDTO.password)
-		userService.saveUser(user)
+		userService.saveUser(user, userCreateDTO.inviteLinkIdentifier)
 
 		return ResponseEntity
 				.ok()
@@ -49,7 +50,9 @@ class UserController(
 			val email: String,
 
 			@field:Size(min = 10, max = 255, message = "Password must be between 10 and 255 characters long")
-			val password: String
+			val password: String,
+
+			val inviteLinkIdentifier: String
 	)
 
 	data class UserResponseDTO(

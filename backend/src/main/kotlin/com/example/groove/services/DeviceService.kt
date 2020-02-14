@@ -25,9 +25,10 @@ class DeviceService(
 	}
 
 	@Transactional(readOnly = true)
-	fun getDevice(deviceId: String): Device {
-		return deviceRepository.findByDeviceIdAndUser(deviceId, loadLoggedInUser())
+	fun getCurrentUsersDevice(deviceId: String): Device {
+		val device = deviceRepository.findByDeviceIdAndUser(deviceId, loadLoggedInUser())
 				?: throw ResourceNotFoundException("No device found with id $deviceId")
+		return device.mergedDevice ?: device
 	}
 
 	@Transactional

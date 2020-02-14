@@ -10,7 +10,7 @@ data class Track(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		val id: Long = 0,
+		override val id: Long = 0,
 
 		@JsonIgnore
 		@ManyToOne
@@ -63,16 +63,16 @@ data class Track(
 		var lastPlayed: Timestamp? = null,
 
 		@Column(name = "created_at")
-		var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+		override var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
 		@JsonIgnore // Currently breaks GG app to include this and offers no current benefit to be exposed
 		@Column(name = "updated_at")
-		var updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
+		override var updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
 
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")
-		var deleted: Boolean = false,
+		override var deleted: Boolean = false,
 
 		@Column
 		var note: String? = null
-)
+) : RemoteSyncable

@@ -153,7 +153,7 @@ export class MusicProvider extends React.Component {
 
 		return Api.get('track', params).then(result => {
 			this.addTracksToView(result, append);
-		}).catch((error) => {
+		}).catch(error => {
 			console.error(error)
 		}).finally(() => this.setState({
 			loadingTracks: false,
@@ -257,6 +257,17 @@ export class MusicProvider extends React.Component {
 	}
 
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
+		// If this is null, it means the user just wanted to play music without picking something
+		// Grab the first song if not shuffling, or an appropriate shuffle song otherwise
+		if (trackIndex === null) {
+			if (this.state.shuffleSongs) {
+				const indexes = Util.range(0, this.state.viewedTracks.length);
+				trackIndex = this.getRandomShuffleIndex(indexes, this.state.viewedTracks);
+			} else {
+				trackIndex = 0;
+			}
+		}
+
 		const newState = {
 			playedTrackIndex: trackIndex,
 			sessionPlayCounter: this.state.sessionPlayCounter + 1
@@ -273,7 +284,7 @@ export class MusicProvider extends React.Component {
 	}
 
 	playTracks(tracks) {
-		let startIndex = this.state.shuffleSongs ? Math.floor(Math.random() * tracks.length) : 0;
+		const startIndex = this.state.shuffleSongs ? Math.floor(Math.random() * tracks.length) : 0;
 		this.setState({
 			nowPlayingTracks: tracks,
 			playedTrack: tracks[startIndex],
@@ -346,13 +357,16 @@ export class MusicProvider extends React.Component {
 		if (this.state.shuffleSongs) {
 			// If we're shuffling and have more songs to shuffle through, play a random song
 			if (this.state.songIndexesToShuffle.length > 0) {
-				this.playIndex(this.getRandomShuffleIndex());
+				const shuffleIndex = this.getRandomShuffleIndex(this.state.songIndexesToShuffle, this.state.nowPlayingTracks);
+				this.playIndex(shuffleIndex);
 
 				return true;
 				// If we are out of songs to shuffle through, but ARE repeating, reset the shuffle list and pick a random one
 			} else if (this.state.repeatSongs) {
-				this.resetShuffleIndexes();
-				this.playIndex(this.getRandomShuffleIndex());
+				this.resetShuffleIndexes(undefined, () => {
+					const shuffleIndex = this.getRandomShuffleIndex(this.state.songIndexesToShuffle, this.state.nowPlayingTracks);
+					this.playIndex(shuffleIndex);
+				});
 
 				return true;
 			}
@@ -373,29 +387,27 @@ export class MusicProvider extends React.Component {
 		return false;
 	}
 
-	getRandomShuffleIndex() {
-		let shuffleIndexes = this.state.songIndexesToShuffle;
-
+	getRandomShuffleIndex(shuffleIndexes, nowPlayingTracks) {
 		if (this.state.shuffleChaos > 1) {
 			if (Math.random() + 1 < this.state.shuffleChaos) {
-				const highestPlay = this.state.songIndexesToShuffle.reduce((max, index) => {
-					const track = this.state.nowPlayingTracks[index];
+				const highestPlay = shuffleIndexes.reduce((max, index) => {
+					const track = nowPlayingTracks[index];
 					return track.playCount > max ? track.playCount : max;
 				}, 0);
 
-				shuffleIndexes = this.state.songIndexesToShuffle.filter(index =>
-					this.state.nowPlayingTracks[index].playCount === highestPlay
+				shuffleIndexes = shuffleIndexes.filter(index =>
+					nowPlayingTracks[index].playCount === highestPlay
 				);
 			}
 		} else if (this.state.shuffleChaos < 1) {
 			if (Math.random() > this.state.shuffleChaos) {
-				const lowestPlay = this.state.songIndexesToShuffle.reduce((min, index) => {
-					const track = this.state.nowPlayingTracks[index];
+				const lowestPlay = shuffleIndexes.reduce((min, index) => {
+					const track = nowPlayingTracks[index];
 					return track.playCount < min ? track.playCount : min;
 				}, Number.MAX_VALUE);
 
-				shuffleIndexes = this.state.songIndexesToShuffle.filter(index =>
-					this.state.nowPlayingTracks[index].playCount === lowestPlay
+				shuffleIndexes = shuffleIndexes.filter(index =>
+					nowPlayingTracks[index].playCount === lowestPlay
 				);
 			}
 		}
@@ -604,11 +616,12 @@ export class MusicProvider extends React.Component {
 
 		this.setState({
 			playedTrack: null,
-			playedTrackIndex: null
-		})
+			playedTrackIndex: null,
+			nowPlayingTracks: []
+		});
 	}
 
-	resetShuffleIndexes(withoutIndex) {
+	resetShuffleIndexes(withoutIndex, doneSettingCallback) {
 		if (!this.state.shuffleSongs) {
 			return;
 		}
@@ -621,7 +634,7 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			songIndexesToShuffle: indexes,
 			shuffledSongIndexes: [withoutIndex]
-		})
+		}, doneSettingCallback)
 	}
 
 	// Need to add the new tracks to the shuffle selection or they won't get played until the next run through the playlist

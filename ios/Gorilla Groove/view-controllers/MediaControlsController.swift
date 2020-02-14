@@ -11,6 +11,8 @@ class MediaControlsController: UIViewController {
     var targetListenTime = 9999999.0
     var listenedToCurrentSong = false
     
+    let trackListenSemaphore = DispatchSemaphore(value: 1)
+    
     // Kind of hacky. But the events we get when we change songs can be triggered in a weird way that makes
     // the slider kind of jump around, because the song changes, but the time that we are given by the media
     // controls hasn't yet changed back to 0. So do a little extra bookkeeping to keep this from happening
@@ -106,17 +108,16 @@ class MediaControlsController: UIViewController {
         slider.maximumValue = 1
         slider.minimumValue = 0
         slider.setValue(0, animated: false)
-    
-        slider.minimumTrackTintColor = Colors.lightBlue
+        
+        slider.minimumTrackTintColor = Colors.white
         slider.maximumTrackTintColor = Colors.nearBlack
-        slider.thumbTintColor = Colors.lightBlue
-
+        
         let config = UIImage.SymbolConfiguration(scale: .small)
-        let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.lightBlue)
-
+        let newImage = UIImage(systemName: "circle.fill", withConfiguration: config)?.tinted(color: Colors.white)
+        
         slider.setThumbImage(newImage, for: .normal)
         slider.setThumbImage(newImage, for: .highlighted)
-
+        
         slider.addTarget(self, action: #selector(self.handleSliderGrab), for: .touchDown)
         slider.addTarget(self, action: #selector(self.handleSliderRelease), for: .touchUpInside)
         slider.addTarget(self, action: #selector(self.handleSliderRelease), for: .touchUpOutside)
@@ -134,7 +135,7 @@ class MediaControlsController: UIViewController {
         let topButtons = createTopButtons()
         let songTextView = createSongText()
         let bottomElements = createBottomElements()
-
+        
         content.addArrangedSubview(topButtons)
         content.addArrangedSubview(songTextView)
         content.addArrangedSubview(bottomElements)
@@ -159,7 +160,7 @@ class MediaControlsController: UIViewController {
             bottomElements.leftAnchor.constraint(equalTo: content.leftAnchor, constant: 10),
             bottomElements.rightAnchor.constraint(equalTo: content.rightAnchor, constant: -10)
         ])
-
+        
         AudioPlayer.addTimeObserver { time in
             self.handleTimeChange(time)
         }
@@ -175,7 +176,7 @@ class MediaControlsController: UIViewController {
             object: nil
         )
     }
-
+    
     
     private func createTopButtons() -> UIStackView {
         let buttons = UIStackView()
@@ -187,18 +188,18 @@ class MediaControlsController: UIViewController {
         topMiddle.translatesAutoresizingMaskIntoConstraints = false
         topMiddle.axis = .horizontal
         topMiddle.distribution  = .equalSpacing
-
+        
         topMiddle.addArrangedSubview(backIcon)
         topMiddle.addArrangedSubview(playIcon)
         topMiddle.addArrangedSubview(pauseIcon)
         topMiddle.addArrangedSubview(forwardIcon)
-                
+        
         buttons.addArrangedSubview(repeatIcon)
         buttons.addArrangedSubview(topMiddle)
         buttons.addArrangedSubview(shuffleIcon)
         
         topMiddle.widthAnchor.constraint(equalToConstant: 145).isActive = true
-
+        
         return buttons
     }
     
@@ -215,28 +216,27 @@ class MediaControlsController: UIViewController {
         elements.translatesAutoresizingMaskIntoConstraints = false
         elements.axis = .horizontal
         elements.distribution  = .fill
-
+        
         elements.addArrangedSubview(currentTime)
         elements.addArrangedSubview(slider)
         elements.addArrangedSubview(totalTime)
-
+        
         elements.setCustomSpacing(15.0, after: currentTime)
         elements.setCustomSpacing(15.0, after: slider)
         
         currentTime.widthAnchor.constraint(equalToConstant: 30).isActive = true
         totalTime.widthAnchor.constraint(equalToConstant: 30).isActive = true
-
+        
         return elements
     }
     
     private func createIcon(
         _ name: String,
-        pointSize: Double = 1.5,
         weight: UIImage.SymbolWeight = .ultraLight,
         scale: UIImage.SymbolScale = .small
     ) -> UIImageView {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.5, weight: weight, scale: scale)
-
+        
         let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
         icon.isUserInteractionEnabled = true
         icon.tintColor = .white
@@ -257,6 +257,8 @@ class MediaControlsController: UIViewController {
             self.slider.setValue(0, animated: true)
             self.pauseIcon.isHidden = true
             self.playIcon.isHidden = false
+            
+            AudioPlayer.stop()
             
             return
         }
@@ -296,16 +298,26 @@ class MediaControlsController: UIViewController {
         if (timeElapsed < 0 || timeElapsed > 1) {
             return;
         }
-
-        self.timeListened += timeElapsed
         
-        if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
-            self.listenedToCurrentSong = true
-            TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
-        }
+        self.timeListened += timeElapsed
+        handlePotentialSongListen()
         
         if (percentDone >= 1.0) {
             NowPlayingTracks.playNext()
+        }
+    }
+    
+    // I have noticed some songs getting double-listens at the same timestamp.
+    // Handle the "listenedToCurrentSong" check in a lock to try to prevent this
+    private func handlePotentialSongListen() {
+        self.trackListenSemaphore.wait()
+        
+        if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
+            self.listenedToCurrentSong = true
+            self.trackListenSemaphore.signal()
+            TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
+        } else {
+            self.trackListenSemaphore.signal()
         }
     }
     
@@ -335,12 +347,12 @@ class MediaControlsController: UIViewController {
     
     @objc func toggleRepeat(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.repeatOn = !NowPlayingTracks.repeatOn
-        repeatIcon.tintColor = NowPlayingTracks.repeatOn ? Colors.aqua : .white
+        repeatIcon.tintColor = NowPlayingTracks.repeatOn ? Colors.secondary : .white
     }
     
     @objc func toggleShuffle(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.shuffleOn = !NowPlayingTracks.shuffleOn
-        shuffleIcon.tintColor = NowPlayingTracks.shuffleOn ? Colors.aqua : .white
+        shuffleIcon.tintColor = NowPlayingTracks.shuffleOn ? Colors.secondary : .white
     }
     
     @objc func handleSeek(tapGestureRecognizer: UITapGestureRecognizer) {
@@ -377,24 +389,37 @@ extension UIImage {
     // https://coffeeshopped.com/2010/09/iphone-how-to-dynamically-color-a-uiimage
     func tinted(color: UIColor) -> UIImage {
         UIGraphicsBeginImageContext(size)
-
+        
         let context = UIGraphicsGetCurrentContext()!
-
+        
         context.setFillColor(color.cgColor)
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1.0, y: -1.0);
-
+        
         context.setBlendMode(CGBlendMode.normal)
         let rect = CGRect(x: 0, y: 0, width: size.width, height: size.height)
         context.draw(self.cgImage!, in: rect)
-
+        
         context.clip(to: rect, mask: self.cgImage!);
         context.addRect(rect);
         context.drawPath(using: CGPathDrawingMode.fill)
-
+        
         let coloredImg = UIGraphicsGetImageFromCurrentImageContext();
         UIGraphicsEndImageContext();
-
+        
         return coloredImg!
+    }
+    
+    static func fromUrl(_ urlString: String) -> UIImage? {
+        let url = URL(string: urlString)!
+        
+        do {
+            let data = try Data.init(contentsOf: url)
+            return UIImage(data: data)!
+        } catch {
+            print(error)
+        }
+        
+        return nil
     }
 }

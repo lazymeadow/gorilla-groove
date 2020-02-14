@@ -6,10 +6,8 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
-import com.example.groove.dto.PageResponseDTO
-import com.example.groove.dto.TrackChangesDTO
-import com.example.groove.dto.TrackChangesResponseDTO
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.DateUtils
 import com.example.groove.util.loadLoggedInUser
@@ -17,7 +15,6 @@ import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -61,41 +58,32 @@ class TrackService(
 	}
 
 	@Transactional(readOnly = true)
-	fun getAllTrackCountSinceTimestamp(timestamp: Timestamp): Int {
-		return trackRepository.countAllTracksAddedSinceTimestamp(timestamp)
+	fun getTracksByIds(ids: Set<Long>): List<Track> {
+		val user = loadLoggedInUser()
+
+		val tracks = trackRepository.findAllById(ids).toList()
+
+		// Make sure we found a track for every ID that was requested
+		if (tracks.size != ids.size) {
+			val foundIds = tracks.map { it.id }.toSet()
+			throw ResourceNotFoundException("Could not find tracks with IDs ${ids - foundIds}!")
+		}
+
+		// As always, make sure private tracks are only accessible to the user that owns them
+		val invalidTracks = tracks.filter { track ->
+			track.private && track.user.id != user.id
+		}
+		if (invalidTracks.isNotEmpty()) {
+			val invalidIds = invalidTracks.map { it.id }.toSet()
+			throw ResourceNotFoundException("Could not find tracks with IDs $invalidIds!")
+		}
+
+		return tracks
 	}
 
 	@Transactional(readOnly = true)
-	fun getTracksUpdatedSinceTimestamp(
-			minimum: Timestamp,
-			maximum: Timestamp,
-			page: Int,
-			size: Int
-	): TrackChangesResponseDTO {
-		val tracks = trackRepository.getTracksUpdatedBetweenTimestamp(
-				userId = loadLoggedInUser().id,
-				minimum = minimum,
-				maximum = maximum,
-				pageable = PageRequest.of(page, size)
-		)
-
-		val (deletedTracks, aliveTracks) = tracks.partition { it.deleted }
-		val (newTracks, modifiedTracks) = aliveTracks.partition { it.createdAt > minimum }
-
-		return TrackChangesResponseDTO(
-				content = TrackChangesDTO(
-						newTracks = newTracks,
-						modifiedTracks = modifiedTracks,
-						removedTrackIds = deletedTracks.map { it.id }
-				),
-				pageable = PageResponseDTO(
-						offset = tracks.pageable.offset,
-						pageNumber = tracks.pageable.pageNumber,
-						pageSize = tracks.pageable.pageSize,
-						totalPages = tracks.totalPages,
-						totalElements = tracks.totalElements
-				)
-		)
+	fun getAllTrackCountSinceTimestamp(timestamp: Timestamp): Int {
+		return trackRepository.countAllTracksAddedSinceTimestamp(timestamp)
 	}
 
 	@Transactional

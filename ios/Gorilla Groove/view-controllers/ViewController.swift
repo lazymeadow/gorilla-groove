@@ -1,11 +1,3 @@
-//
-//  ViewController.swift
-//  Gorilla Groove
-//
-//  Created by mobius-mac on 1/1/20.
-//  Copyright © 2020 mobius-mac. All rights reserved.
-//
-
 import UIKit
 import CoreData
 import Foundation
@@ -17,13 +9,6 @@ struct VersionResponse: Codable {
 struct LoginRequest: Codable {
     let email: String
     let password: String
-}
-
-struct LoginResponse: Codable {
-    let token: String
-    let id: Int
-    //    let email: String
-    let username: String
 }
 
 class ViewController: UIViewController {    
@@ -52,18 +37,19 @@ class ViewController: UIViewController {
     
     private func presentLoggedInView() {
         // If this is the first time this user has logged in, we want to sync in their library
-        let userSync = UserSyncManager().getLastSentUserSync()
+        let userSync = UserState().getLastSentUserSync()
         let newView: UIViewController = {
             if (userSync.last_sync == nil) {
                 return SyncController()
             } else {
-                return PlaybackWrapperViewController()
+                return RootNavigationController()
             }
         }()
-        
-        newView.modalPresentationStyle = .fullScreen
-        newView.modalTransitionStyle = .crossDissolve
-        self.present(newView, animated: true, completion: nil)
+
+        // This isn't ideal because it isn't animated, but trying to present() or show() the view
+        // was resulting in the view either not showing up, or having the incorrect size...
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.window!.rootViewController = newView
     }
     
     @IBAction func login(_ sender: Any) {
@@ -98,8 +84,9 @@ class ViewController: UIViewController {
                 return
             }
             
-            let decodedData = try! JSONDecoder().decode(LoginResponse.self, from: data!)
-            LoginState.save(decodedData)
+            let decodedData = try! JSONDecoder().decode(LoginState.self, from: data!)
+            FileState.save(decodedData)
+
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
                 
@@ -131,6 +118,4 @@ class ViewController: UIViewController {
         self.present(alertController, animated: true, completion: nil)
     }
     
-
 }
-

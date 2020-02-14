@@ -6,6 +6,7 @@ import com.example.groove.db.dao.PlaylistUserRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.OwnershipType
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
 import org.slf4j.LoggerFactory
@@ -36,6 +37,7 @@ class PlaylistService(
 
 		if (userCanEditPlaylist(user, playlist)) {
 			playlist.name = name
+			playlist.updatedAt = now()
 		} else {
 			throw IllegalArgumentException("User has insufficient privileges to view playlist with ID: $playlistId")
 		}

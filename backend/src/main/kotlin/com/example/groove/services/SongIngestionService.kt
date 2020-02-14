@@ -164,12 +164,14 @@ class SongIngestionService(
 		// The new file we save is always specific to this song, so name it with the song's ID as we do
 		// with any song file names that aren't borrowed / shared
 		val newFileName = "${track.id}.ogg"
-		if (newFileName == track.fileName) {
-			// Force a new link to be generated to break the browser cache
-			trackLinkRepository.forceExpireLinksByTrackId(track.id)
-		} else {
+		if (newFileName != track.fileName) {
+			logger.info("Track ${track.id} is now using the filename $newFileName instead of ${track.fileName}")
 			track.fileName = newFileName
+			trackRepository.save(track)
 		}
+
+		// Force a new link to be generated to break the browser cache
+		trackLinkRepository.forceExpireLinksByTrackId(track.id)
 
 		// It might make more sense to download the mp3 and trim it instead of re-converting the OGG to mp3
 		// Maybe less loss in quality? But hard to say. Would require experimentation. At least this way we

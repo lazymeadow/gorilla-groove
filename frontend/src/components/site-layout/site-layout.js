@@ -11,7 +11,6 @@ import {notifyVersion} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
 import PlaybackControls from "../playback-controls/playback-controls";
 import {UserContext} from "../../services/user-provider";
-import {deleteCookie} from "../../cookie";
 import {PlaylistContext} from "../../services/playlist-provider";
 
 export default function SiteLayout(props) {
@@ -23,9 +22,6 @@ export default function SiteLayout(props) {
 
 		return <div/>;
 	}
-
-	// TODO remove this in the future when it has been removed from everyone
-	deleteCookie('loggedInUserName');
 
 	// Is it possible to call functions on these contexts without being affected by their re-renders?
 	// All this view does is initialize state. It doesn't need to be re-rendered by the result.

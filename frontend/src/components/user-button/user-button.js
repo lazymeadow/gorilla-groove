@@ -1,9 +1,9 @@
 import React, {useContext} from 'react';
 import {useHistory} from "react-router-dom";
 import {Api} from "../../api";
-import {PopoutMenu} from "../popout-menu/popout-menu";
+import PopoutMenu from "../popout-menu/popout-menu";
 import {Settings} from "../settings/settings";
-import {InviteUser} from "../invite-user/invite-user";
+import InviteUser from "./invite-user/invite-user";
 import {deleteCookie} from "../../cookie";
 import {DraftRelease} from "../draft-release/draft-release";
 import {PermissionType} from "../../enums/permission-type";
@@ -11,15 +11,19 @@ import {UserContext} from "../../services/user-provider";
 import TrackHistory from "../track-history/track-history";
 import DeviceManagement from "../device-management/device-management";
 
+const originalTitle = document.title;
+
 export default function UserButton() {
 	const userContext = useContext(UserContext);
 	const history = useHistory();
 
 	const logout = event => {
+		document.title = originalTitle;
+
 		event.preventDefault();
 		Api.post('authentication/logout', {
 			token: sessionStorage.getItem('token')
-		}).catch((error) => {
+		}).catch(error => {
 			console.error(error)
 		}).finally(() => {
 			sessionStorage.removeItem('token');

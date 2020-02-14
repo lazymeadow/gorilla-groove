@@ -5,9 +5,11 @@ final class CoreDataManager {
     
     // This is really just for debugging, as it's nice to know where the sqlite file is located so we can
     // open it up in an external database viewer. But I don't want to log it out 10 times as that's annoying
-    static var hasLoggedDb = false
+    private static var hasLoggedDb = false
     
     private let modelName = "Groove"
+    
+    var restoredCleanly = true
     
     private(set) lazy var managedObjectContext: NSManagedObjectContext = {
         let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -16,7 +18,7 @@ final class CoreDataManager {
         
         return managedObjectContext
     }()
-
+    
     private lazy var managedObjectModel: NSManagedObjectModel = {
         guard let modelURL = Bundle.main.url(forResource: self.modelName, withExtension: "momd") else {
             fatalError("Unable to Find Data Model")
@@ -44,6 +46,11 @@ final class CoreDataManager {
             CoreDataManager.hasLoggedDb = true
         }
         
+        if (!FileManager.default.fileExists(atPath: persistentStoreURL.path)) {
+            print("Previous file does not exist. Will be creating a new Core Data stack")
+            restoredCleanly = false
+        }
+        
         do {
             try persistentStoreCoordinator.addPersistentStore(
                 ofType: NSSQLiteStoreType,
@@ -52,7 +59,20 @@ final class CoreDataManager {
                 options: nil
             )
         } catch {
-            fatalError("Unable to Load Persistent Store")
+            print("Unable to Load Persistent Store. Dropping and trying to recreate")
+            restoredCleanly = false
+            try! FileManager.default.removeItem(at: persistentStoreURL)
+            
+            do {
+                try persistentStoreCoordinator.addPersistentStore(
+                    ofType: NSSQLiteStoreType,
+                    configurationName: nil,
+                    at: persistentStoreURL,
+                    options: nil
+                )
+            } catch {
+                fatalError("Failed to recreate Core Data")
+            }
         }
         
         return persistentStoreCoordinator

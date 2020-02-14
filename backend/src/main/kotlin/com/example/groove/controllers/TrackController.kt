@@ -48,22 +48,6 @@ class TrackController(
 		)
 	}
 
-	// Used by the apps to keep local data in sync
-	@GetMapping("/changes-between/minimum/{minimum}/maximum/{maximum}")
-	fun getTracksChangedBetweenTimestamp(
-			@PathVariable("minimum") minimum: Long,
-			@PathVariable("maximum") maximum: Long,
-			@RequestParam(value = "page", defaultValue = "0") page: Int,
-			@RequestParam(value = "size", defaultValue = "20") size: Int
-	): TrackChangesResponseDTO {
-		return trackService.getTracksUpdatedSinceTimestamp(
-				minimum = Timestamp(minimum),
-				maximum = Timestamp(maximum),
-				page = page,
-				size = size
-		)
-	}
-
 	// This endpoint is laughably narrow in scope. But I don't know for sure how this is going to evolve later
 	@GetMapping("/all-count-since-timestamp")
 	fun getAllTrackCountSinceTimestamp(

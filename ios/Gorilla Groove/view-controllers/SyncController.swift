@@ -4,6 +4,8 @@ import UIKit
 class SyncController: UIViewController {
     
     private var librarySection: SyncSection? = nil
+    private var playlistSection: SyncSection? = nil
+    private var userSection: SyncSection? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -15,8 +17,8 @@ class SyncController: UIViewController {
         content.distribution = .equalSpacing
         
         librarySection = createSection(content, "music.house.fill", "Library")
-        createSection(content, "music.note.list", "Playlists")
-        createSection(content, "person.3.fill", "Users")
+        playlistSection = createSection(content, "music.note.list", "Playlists")
+        userSection = createSection(content, "person.3.fill", "Users")
         
         self.view.addSubview(content)
         self.view.backgroundColor = .white
@@ -31,14 +33,19 @@ class SyncController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         DispatchQueue.global().async {
-            self.syncLibrary(self.librarySection!)
+            self.sync()
             
             // Wait a moment after we finish so people can enjoy / notice everything at 100%
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                let libraryView = PlaybackWrapperViewController()
-                libraryView.modalPresentationStyle = .fullScreen
-                libraryView.modalTransitionStyle = .crossDissolve
-                self.present(libraryView, animated: true, completion: nil)
+//                let libraryView = RootNavigationController()
+//                libraryView.modalPresentationStyle = .fullScreen
+//                libraryView.modalTransitionStyle = .crossDissolve
+//                self.present(libraryView, animated: true, completion: nil)
+                
+                // This isn't ideal because it isn't animated, but trying to present() or show() the view
+                // was resulting in the view either not showing up, or having the incorrect size...
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                appDelegate.window!.rootViewController = RootNavigationController()
             }
         }
     }
@@ -129,14 +136,26 @@ class SyncController: UIViewController {
         return icon
     }
     
-    private func syncLibrary(_ syncSection: SyncSection) {
-        TrackState().syncWithServer() { completedPage, totalPages in
+    private func sync() {
+        ServerSynchronizer().syncWithServer() { completedPage, totalPages, classType in
             DispatchQueue.main.async {
                 let percentDone: Float = {
                     if (totalPages == 1) {
                         return 1.0 // Avoid division by zero...
                     } else {
                         return Float(completedPage) / Float(totalPages - 1)
+                    }
+                }()
+                                
+                let syncSection: SyncSection = try! {
+                    if (classType == Track.self) {
+                        return self.librarySection!
+                    } else if (classType == Playlist.self) {
+                        return self.playlistSection!
+                    } else if (classType == User.self) {
+                        return self.userSection!
+                    } else {
+                        throw "Unimplemented entity type was synced!"
                     }
                 }()
                 
@@ -168,3 +187,5 @@ extension UIStackView {
         insertSubview(subView, at: 0)
     }
 }
+
+extension String: Error {}

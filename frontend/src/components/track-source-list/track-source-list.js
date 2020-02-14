@@ -72,12 +72,18 @@ export default function TrackSourceList(props) {
 	};
 
 	const getNowPlayingElement = entry => {
-		const song = socketContext.nowListeningUsers[entry.id];
-		if (!song) {
+		const data = socketContext.nowListeningUsers[entry.id];
+		if (!data) {
 			return <span/>
 		}
 
-		return <span className="user-listening" title={song}>♬</span>
+		const songName = data.song;
+		const isMobile = data.isPhone === null ? false : data.isPhone;
+		const deviceText = data.deviceName === null ? '' : 'Device: ' + data.deviceName;
+
+		return <span className="user-listening" title={`${songName}\n${deviceText}`}>
+			{ isMobile ? <i className="fas fa-mobile"/> : <i className="fas fa-music"/> }
+		</span>
 	};
 
 	const librarySelected = musicContext.trackView === TrackView.LIBRARY ? 'selected' : '';

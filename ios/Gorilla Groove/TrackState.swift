@@ -4,92 +4,100 @@ import CoreData
 class TrackState {
     let coreDataManager: CoreDataManager
     let context: NSManagedObjectContext
-    let userSyncManager = UserSyncManager()
+    let userSyncManager = UserState()
     
-    func syncWithServer(pageCompleteCallback: ((_ completedPage: Int, _ totalPages: Int) -> Void)? = nil) {
-        print("Initiating sync with server...")
+    
+    func getTracks(album: String? = nil) -> Array<Track> {
+        let ownId = FileState.read(LoginState.self)!.id
         
-        let lastSync = userSyncManager.getLastSentUserSync()
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
         
-        // API uses millis. Multiply by 1000
-        let minimum = Int(lastSync.last_sync?.timeIntervalSince1970 ?? 0) * 1000
-        let maximum = Int(NSDate().timeIntervalSince1970) * 1000
+        var predicates = [
+            NSPredicate(format: "user_id == \(ownId)"),
+            NSPredicate(format: "is_hidden == FALSE")
+        ]
         
-        let url = "track/changes-between/minimum/\(minimum)/maximum/\(maximum)?size=100&page="
-        
-        let ownId = LoginState.read()!.id
-        let pagesToGet = savePageOfChanges(url: url, page: 0, userId: ownId)
-        pageCompleteCallback?(0, pagesToGet)
-        
-        var currentPage = 1
-        while (currentPage < pagesToGet) {
-            savePageOfChanges(url: url, page: currentPage, userId: ownId)
-            pageCompleteCallback?(currentPage, pagesToGet)
-            currentPage += 1
+        if (album != nil) {
+            predicates.append(NSPredicate(format: "album == %@", album!))
         }
         
-        // Divide by 1000 to get back to seconds
-        let newDate = NSDate(timeIntervalSince1970: Double(maximum) / 1000.0)
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: predicates)
         
-        // The user sync was pulled out using a different context, so save it using that context
-        // TODO make a context singleton maybe to avoid this tomfoolery
-        lastSync.setValue(newDate, forKey: "last_sync")
-        userSyncManager.save()
+        fetchRequest.predicate = andPredicate
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(
+                key: "name",
+                ascending: true,
+                selector: #selector(NSString.caseInsensitiveCompare)
+            )
+        ]
+        let result = try! context.fetch(fetchRequest)
         
-        try! self.context.save()
+        return result as! Array<Track>
     }
     
-    private func savePageOfChanges(url: String, page: Int, userId: Int) -> Int {
-        let semaphore = DispatchSemaphore(value: 0)
-        var pagesToFetch = -1
-        HttpRequester.get(url + String(page), TrackChangeResponse.self) { trackResponse, status, err in
-            if (status < 200 || status >= 300 || trackResponse == nil) {
-                print("Failed to sync new data!")
+    func getPlaylists() -> Array<Playlist> {
+        let ownId = FileState.read(LoginState.self)!.id
+
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Playlist")
+        fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(
+                key: "name",
+                ascending: true,
+                selector: #selector(NSString.caseInsensitiveCompare)
+            )
+        ]
+        let result = try! context.fetch(fetchRequest)
+        
+        return result as! Array<Playlist>
+    }
+    
+    func getTracksForPlaylist(_ playlistId: Int64) -> Array<Track> {
+        let playlistTrackRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "PlaylistTrack")
+        playlistTrackRequest.predicate = NSPredicate(format: "playlist_id == \(playlistId)")
+
+        let playlistTracks = (try! context.fetch(playlistTrackRequest)) as! Array<PlaylistTrack>
+        
+        let trackRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
+        let trackIds = playlistTracks.map { $0.track_id }
+        trackRequest.predicate = NSPredicate(format: "id IN %@", trackIds)
+        
+        let tracks = (try! context.fetch(trackRequest)) as! Array<Track>
+        var trackIdToTrack: [Int64: Track] = [:]
+        tracks.forEach { track in trackIdToTrack[track.id] = track }
+        
+        // We can't return just the tracks. We need to map over the PlaylistTracks and swap them out.
+        // Why? If we don't do this, we will stomp out duplicate tracks on the playlist, which could be intentional
+        return playlistTracks.map { trackIdToTrack[$0.track_id]! }
+    }
+    
+    func markTrackListenedTo(_ track: Track, _ retry: Int = 0) {
+        if (retry > 3) {
+            print("Failed to update track too many times. Giving up")
+            return
+        }
+        
+        // Update the server
+        let postBody = MarkListenedRequest(
+            trackId: track.id,
+            deviceId: FileState.read(DeviceState.self)!.deviceId
+        )
+        HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
+            if (statusCode < 200 || statusCode >= 300) {
+                print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
+                self.markTrackListenedTo(track, retry + 1)
                 return
             }
             
-            for newTrackResponse in trackResponse!.content.newTracks {
-                let entity = NSEntityDescription.entity(forEntityName: "Track", in: self.context)
-                let newTrack = NSManagedObject(entity: entity!, insertInto: self.context)
-                newTrack.setValue(userId, forKey: "user_id")
-                
-                self.setTrackEntityPropertiesFromResponse(newTrack, newTrackResponse)
-                
-                print("Adding new track with ID: \((newTrack as! Track).id)")
-            }
+            track.play_count += 1 // Update the object reference
+
+            let savedTrack = self.findTrackById(track.id)!
+            savedTrack.setValue(savedTrack.play_count + 1, forKey: "play_count")
             
-            for modifiedTrackResponse in trackResponse!.content.modifiedTracks {
-                let savedTrack = self.findTrackById(modifiedTrackResponse.id)
-                if (savedTrack == nil) {
-                    print("Could not find Track to update with ID \(modifiedTrackResponse.id)!")
-                    continue
-                }
-                
-                self.setTrackEntityPropertiesFromResponse(savedTrack!, modifiedTrackResponse)
-                
-                print("Updating existing track with ID: \((savedTrack!).id)")
-            }
-            
-            for deletedId in trackResponse!.content.removedTrackIds {
-                let savedTrack = self.findTrackById(deletedId)
-                if (savedTrack == nil) {
-                    print("Could not find Track to delete with ID \(deletedId)!")
-                    continue
-                }
-                
-                self.context.delete(savedTrack!)
-                
-                print("Deleting track with ID: \(deletedId)")
-            }
-            
-            pagesToFetch = trackResponse!.pageable.totalPages
-            semaphore.signal()
-            
+            try! self.context.save()
+            print("Track \(track.id) marked listened to")
         }
-        
-        semaphore.wait()
-        
-        return pagesToFetch
     }
     
     private func findTrackById(_ id: Int64) -> Track? {
@@ -104,58 +112,46 @@ class TrackState {
         return result![0] as? Track
     }
     
-    private func setTrackEntityPropertiesFromResponse(_ track: NSManagedObject, _ trackResponse: TrackResponse) {
-        track.setValue(trackResponse.id, forKey: "id")
-        track.setValue(trackResponse.name, forKey: "name")
-        track.setValue(trackResponse.album, forKey: "album")
-        track.setValue(trackResponse.artist, forKey: "artist")
-        track.setValue(trackResponse.featuring, forKey: "featuring")
-        track.setValue(trackResponse.genre, forKey: "genre")
-        track.setValue(trackResponse.note, forKey: "note")
-        track.setValue(trackResponse.createdAt, forKey: "created_at")
-        track.setValue(trackResponse.releaseYear, forKey: "release_year")
-        track.setValue(trackResponse.trackNumber, forKey: "track_number")
-        track.setValue(trackResponse.hidden, forKey: "is_hidden")
-        track.setValue(trackResponse.private, forKey: "is_private")
-        track.setValue(trackResponse.lastPlayed, forKey: "last_played")
-        track.setValue(trackResponse.length, forKey: "length")
-        track.setValue(trackResponse.playCount, forKey: "play_count")
-    }
-    
-    func getTracks() -> Array<Track> {
-        let ownId = LoginState.read()!.id
+    func getAlbums() -> Array<Album> {
+        let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
-        fetchRequest.predicate = NSPredicate(format: "user_id == \(ownId)")
+        
+        let idPredicate = NSPredicate(format: "user_id == \(ownId)")
+        let hiddenPredicate = NSPredicate(format: "is_hidden == FALSE")
+
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [idPredicate, hiddenPredicate])
+        
+        fetchRequest.predicate = andPredicate
         fetchRequest.sortDescriptors = [
             NSSortDescriptor(
-                key: "name",
+                key: "album",
                 ascending: true,
                 selector: #selector(NSString.caseInsensitiveCompare)
             )
         ]
-        let result = try! context.fetch(fetchRequest)
+        let tracks = (try! context.fetch(fetchRequest)) as! Array<Track>
         
-        return result as! Array<Track>
-    }
-    
-    func markTrackListenedTo(_ track: Track) {
-        track.play_count += 1 // Update the object reference
-        // Now update the stored DB state
+        // What we really want to do is a GROUP BY on album name, and just pull the first track
+        // out from each group. This doesn't seem to be a thing you can easily do in Core Data.
+        // So just pull out all the tracks and do the GROUP BY ourselves in code
         
-        // Update the server
-        let userSync = userSyncManager.getLastSentUserSync()
-        let postBody = MarkListenedRequest(trackId: track.id, deviceId: userSync.deviceIdAsString())
-        HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
-            if (statusCode < 200 || statusCode >= 300) {
-                print("Failed to mark track as listened to! For track with ID: " + String(track.id))
+        var albums = Array<Album>()
+        var currentAlbum: String? = nil
+        
+        tracks.forEach { track in
+            // We sorted the tracks by album so all the consecutive albums are in a row. We only need
+            // one from each set, so only add an album when it changes
+            if (track.album != currentAlbum) {
+                albums.append(Album(
+                    name: track.album,
+                    linkRequestLink: "file/link/\(track.id)"
+                ))
+                currentAlbum = track.album
             }
-            
-            let savedTrack = self.findTrackById(track.id)!
-            savedTrack.setValue(savedTrack.play_count + 1, forKey: "play_count")
-            
-            try! self.context.save()
         }
+        
+        return albums
     }
     
     init() {
@@ -163,47 +159,8 @@ class TrackState {
         context = coreDataManager.managedObjectContext
     }
     
-    
-    struct TrackResponse: Codable {
-        let id: Int64
-        let name: String
-        let artist: String
-        let featuring: String
-        let album: String
-        let trackNumber: Int?
-        let length: Int
-        let releaseYear: Int?
-        let genre: String?
-        let playCount: Int
-        let `private`: Bool
-        let hidden: Bool
-        let lastPlayed: Date?
-        let createdAt: Date
-        let note: String?
-    }
-    
-    struct TrackChangeResponse: Codable {
-        let content: TrackChangeContent
-        let pageable: TrackChangePagination
-    }
-    
-    struct TrackChangeContent: Codable {
-        let newTracks: Array<TrackResponse>
-        let modifiedTracks: Array<TrackResponse>
-        let removedTrackIds: Array<Int64>
-    }
-    
-    struct TrackChangePagination: Codable {
-        let offset: Int
-        let pageSize: Int
-        let pageNumber: Int
-        let totalPages: Int
-        let totalElements: Int
-    }
-    
     struct MarkListenedRequest: Codable {
         let trackId: Int64
         let deviceId: String
     }
 }
-

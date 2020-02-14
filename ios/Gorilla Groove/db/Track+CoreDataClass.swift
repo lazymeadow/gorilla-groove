@@ -2,7 +2,7 @@
 //  Track+CoreDataClass.swift
 //  Gorilla Groove
 //
-//  Created by mobius-mac on 1/11/20.
+//  Created by Ayrton Stout on 2/2/20.
 //  Copyright © 2020 mobius-mac. All rights reserved.
 //
 //
