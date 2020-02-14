@@ -50,7 +50,7 @@ export default function PopoutMenu(props) {
 
 	useEffect(() => {
 		// If something using this view has its own view on how to handle expansion, don't handle it internally here
-		if (props.expansionOverride !== undefined || props.expansionOnHover) {
+		if (props.expansionOverride !== undefined) {
 			return;
 		}
 
