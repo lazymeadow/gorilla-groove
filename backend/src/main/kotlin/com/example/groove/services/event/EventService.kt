@@ -32,7 +32,7 @@ data class NowPlayingEventRequest(
 ) : EventRequest
 
 data class RemotePlayEventRequest(
-		val targetDeviceId: String,
+		val targetDeviceId: Long,
 		val trackIds: List<Long>?,
 		val remotePlayAction: RemotePlayType,
 		override val deviceId: String

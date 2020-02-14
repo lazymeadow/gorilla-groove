@@ -31,8 +31,10 @@ class DeviceController(
     }
 
 	@GetMapping("/active")
-	fun getActiveDevices(): Set<Device> {
-		return eventServiceCoordinator.getActiveDevices()
+	fun getActiveDevices(
+			@RequestParam("excluding-device") excludingDeviceId: String?
+	): Set<Device> {
+		return eventServiceCoordinator.getActiveDevices(excludingDeviceId)
 	}
 
 	@PutMapping("/update/{id}")

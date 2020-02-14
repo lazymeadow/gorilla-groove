@@ -25,14 +25,12 @@ class EventServiceCoordinator(
 		val device = deviceService.getCurrentUsersDevice(deviceId)
 
 		synchronized(this) {
-			if (!connectedDevices.contains(user.id)) {
+			if (!connectedDevices.containsKey(user.id)) {
 				connectedDevices[user.id] = mutableMapOf()
 			}
 
-			val devices = connectedDevices.getValue(user.id)
-			devices[device.id] = now().time
+			connectedDevices.getValue(user.id)[device.id] = now().time
 		}
-
 
 		// Long poll for updates to events.
 		// The first time we see a new event we will return
@@ -63,15 +61,21 @@ class EventServiceCoordinator(
 		service.sendEvent(mergedDevice, event)
 	}
 
-	fun getActiveDevices(): Set<Device> {
+	fun getActiveDevices(excludingDeviceId: String?): Set<Device> {
 		val user = loadLoggedInUser()
 
 		if (!connectedDevices.containsKey(user.id)) {
 			return emptySet()
 		}
 
+		val excludingDevice = excludingDeviceId?.let { deviceService.getCurrentUsersDevice(it) }
+
 		return connectedDevices.getValue(user.id)
-				.filter { (_, lastSeen) ->
+				.filter { (deviceId, lastSeen) ->
+					if (excludingDevice?.id == deviceId) {
+						return@filter false
+					}
+
 					// A device that's connected should be continually polling for new things.
 					// So the most time that should realistically elapse between two checks (and thus
 					// the next "lastSeen" is the interval * the number of checks.

@@ -1,0 +1,8 @@
+export const RemotePlayType = Object.freeze({
+	PLAY_SET_SONGS: 'PLAY_SET_SONGS',
+	ADD_SONGS_NEXT: 'ADD_SONGS_NEXT',
+	ADD_SONGS_LAST: 'ADD_SONGS_LAST',
+	PAUSE: 'PAUSE',
+	PLAY: 'PLAY',
+	SEEK: 'SEEK'
+});

@@ -1,7 +1,6 @@
 package com.example.groove.services.event
 
 import com.example.groove.db.model.Device
-import com.example.groove.services.DeviceService
 import com.example.groove.services.TrackService
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
@@ -51,12 +50,12 @@ class DeviceEventService(
 				remotePlayAction = event.remotePlayAction
 		)
 
-		val deviceId = sourceDevice.id
+		val targetDeviceId = event.targetDeviceId
 		synchronized(this) {
-			if (deviceEvents[deviceId] == null) {
-				deviceEvents[deviceId] = mutableListOf<EventResponse>(eventResponse)
+			if (deviceEvents[targetDeviceId] == null) {
+				deviceEvents[targetDeviceId] = mutableListOf<EventResponse>(eventResponse)
 			} else {
-				deviceEvents.getValue(deviceId).add(eventResponse)
+				deviceEvents.getValue(targetDeviceId).add(eventResponse)
 			}
 		}
 	}

@@ -2,6 +2,7 @@ import React from "react";
 import {isLoggedIn} from "../util";
 import {Api} from "../api";
 import {getDeviceId} from "./version";
+import {RemotePlayType} from "../components/remote-play/remote-play-type";
 
 export const SocketContext = React.createContext();
 
@@ -50,8 +51,12 @@ export class SocketProvider extends React.Component {
 	}
 
 	handleRemotePlayMessage(message) {
-		if (message.remotePlayAction === 'PLAY_SET_SONGS') {
+		if (message.remotePlayAction === RemotePlayType.PLAY_SET_SONGS) {
 			this.props.musicContext.playTracks(message.tracks)
+		} else if (message.remotePlayAction === RemotePlayType.ADD_SONGS_NEXT) {
+			this.props.musicContext.playTracksNext(message.tracks)
+		} else if (message.remotePlayAction === RemotePlayType.ADD_SONGS_LAST) {
+			this.props.musicContext.playTracksLast(message.tracks)
 		}
 	}
 

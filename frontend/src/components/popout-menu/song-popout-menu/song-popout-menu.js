@@ -9,6 +9,8 @@ import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
 import {copyToClipboard, getScreenHeight} from "../../../util";
 import PopoutMenu from "../popout-menu";
+import RemotePlay from "../../remote-play/remote-play";
+import {RemotePlayType} from "../../remote-play/remote-play-type";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -71,6 +73,28 @@ export default function SongPopoutMenu(props) {
 					e.stopPropagation();
 					musicContext.playTracksLast(props.getSelectedTracks());
 				}
+			}, {
+				component: <PopoutMenu
+					mainItem={{ text: 'Remote Play' }}
+					menuItems={[
+						{ component: <RemotePlay
+								title="Play Now"
+								playType={RemotePlayType.PLAY_SET_SONGS}
+								getSelectedTracks={props.getSelectedTracks}
+							/> },
+						{ component: <RemotePlay
+								title="Play Next"
+								playType={RemotePlayType.ADD_SONGS_NEXT}
+								getSelectedTracks={props.getSelectedTracks}
+							/> },
+						{ component: <RemotePlay
+								title="Play Last"
+								playType={RemotePlayType.ADD_SONGS_LAST}
+								getSelectedTracks={props.getSelectedTracks}
+							/> },
+					]}
+					expansionOnHover={true}
+				/>
 			}];
 
 		let selectedTracks = props.getSelectedTracks();
