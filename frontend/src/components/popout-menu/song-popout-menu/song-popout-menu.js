@@ -11,6 +11,8 @@ import {copyToClipboard, getScreenHeight} from "../../../util";
 import PopoutMenu from "../popout-menu";
 import RemotePlay from "../../remote-play/remote-play";
 import {RemotePlayType} from "../../remote-play/remote-play-type";
+import {UserContext} from "../../../services/user-provider";
+import {PermissionType} from "../../../enums/permission-type";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -20,6 +22,7 @@ let lastY = -1;
 export default function SongPopoutMenu(props) {
 	const musicContext = useContext(MusicContext);
 	const playlistContext = useContext(PlaylistContext);
+	const userContext = useContext(UserContext);
 
 	const calculateMenuOptions = () => {
 		if (!props.expanded) {
@@ -73,7 +76,10 @@ export default function SongPopoutMenu(props) {
 					e.stopPropagation();
 					musicContext.playTracksLast(props.getSelectedTracks());
 				}
-			}, {
+			}];
+
+		const experimentalOptions = [
+			{
 				component: <PopoutMenu
 					mainItem={{ text: 'Remote Play' }}
 					menuItems={[
@@ -95,9 +101,14 @@ export default function SongPopoutMenu(props) {
 					]}
 					expansionOnHover={true}
 				/>
-			}];
+			}
+		];
 
-		let selectedTracks = props.getSelectedTracks();
+		if (userContext.hasPermission(PermissionType.EXPERIMENTAL)) {
+			baseOptions = baseOptions.concat(experimentalOptions);
+		}
+
+		const selectedTracks = props.getSelectedTracks();
 
 		if (selectedTracks.length === 1) {
 			baseOptions = baseOptions.concat([{
