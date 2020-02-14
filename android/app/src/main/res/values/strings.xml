@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Gorilla Groove</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Gorilla Groove</string>
+    <string name="nav_header_username"></string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_logout">Logout</string>
+    <string name="playlists">Playlists</string>
+    <string name="library">Library</string>
+    <string name="login">Login</string>
+    <string name="end">End</string>
+    <string name="shuffle">Shuffle</string>
+</resources>
