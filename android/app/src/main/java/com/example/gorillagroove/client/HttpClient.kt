@@ -11,10 +11,10 @@ import java.io.IOException
 import kotlin.concurrent.thread
 
 private val client = OkHttpClient()
-private const val VERSION = "1.1.51"
+private const val VERSION = "1.1.60"
 
 fun loginRequest(url: String, email: String, password: String): JSONObject {
-    val body = """{ "email": "$email", "password": "$password" }""".trimIndent()
+    val body = """{"email":"$email","password":"$password"}"""
 
     val request = Request.Builder()
         .url(url)
@@ -90,13 +90,14 @@ fun updateDevice(url: String, token: String, deviceId: String) {
     thread { client.newCall(request).execute() }.join()
 }
 
-fun markListenedRequest(url: String, trackId: Long, token: String, deviceId: String) {
-    val body = """{ "trackId": $trackId, "deviceId": "$deviceId" }""".trimIndent()
+fun listenedAndNowPlayingRequests(url: String, trackId: Long?, token: String, deviceId: String) {
+    val body = """{"trackId":$trackId,"deviceId":"$deviceId"}"""
     val request = Request.Builder()
         .url(url)
         .post(RequestBody.create("application/json".toMediaTypeOrNull(), body))
         .header("Authorization", "Bearer $token")
         .build()
+    Log.i("HttpClient", "Sending now playing or track listened request!")
 
     thread { client.newCall(request).execute() }.join()
 }

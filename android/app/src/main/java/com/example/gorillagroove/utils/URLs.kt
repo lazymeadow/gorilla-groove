@@ -12,4 +12,5 @@ object URLs {
     const val TRACK = "$BASE_URL/api/file/link/"
     const val USER = "$BASE_URL/api/user"
     const val DEVICE = "$BASE_URL/api/device"
+    const val NOW_PLAYING = "$BASE_URL/api/event/NOW_PLAYING"
 }

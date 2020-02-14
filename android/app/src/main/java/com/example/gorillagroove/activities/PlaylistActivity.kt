@@ -42,7 +42,6 @@ import com.google.android.material.navigation.NavigationView
 import kotlinx.android.synthetic.main.activity_playlist.drawer_layout
 import kotlinx.android.synthetic.main.activity_playlist.nav_view
 import kotlinx.android.synthetic.main.app_bar_main.toolbar
-import kotlinx.android.synthetic.main.nav_header_main.view.tv_nav_header
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope

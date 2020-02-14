@@ -28,7 +28,7 @@ import com.example.gorillagroove.activities.PlayNextSongEvent
 import com.example.gorillagroove.activities.PlayPreviousSongEvent
 import com.example.gorillagroove.activities.PlaylistActivity
 import com.example.gorillagroove.client.authenticatedGetRequest
-import com.example.gorillagroove.client.markListenedRequest
+import com.example.gorillagroove.client.listenedAndNowPlayingRequests
 import com.example.gorillagroove.db.GroovinDB
 import com.example.gorillagroove.db.repository.UserRepository
 import com.example.gorillagroove.dto.PlaylistSongDTO
@@ -37,11 +37,10 @@ import com.example.gorillagroove.utils.URLs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
-import org.json.JSONObject
+import java.net.URLStreamHandler
 
 @RequiresApi(Build.VERSION_CODES.N)
 private const val IMPORTANCE = NotificationManager.IMPORTANCE_LOW
@@ -81,6 +80,7 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     private var markedListened = false
     private var currentSongPosition = 0
     private var shuffledSongs: List<Int> = emptyList()
+    private var nowPlayingCounter = 0
 
     private lateinit var userRepository: UserRepository
     private lateinit var songs: List<PlaylistSongDTO>
@@ -139,16 +139,32 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         }
     }
 
+
+
     fun getPosition(): Int {
         val currentTime = System.currentTimeMillis().toInt()
         val elapsedPosition = currentTime - lastRecordedTime
         lastRecordedTime = currentTime
         playCountPosition += elapsedPosition // Milliseconds
+
+        if(player.isPlaying) nowPlayingCounter += elapsedPosition
+        if(nowPlayingCounter >= 20000){
+            sendNowPlayingRequest(deviceId, getCurrentTrackId())
+            nowPlayingCounter = 0
+        }
         if (!markedListened && playCountDuration > 0 && playCountPosition >= playCountDuration) {
             markListened(playCountPosition, player.currentPosition, playCountDuration, deviceId)
             markedListened = true
         }
+
         return player.currentPosition
+    }
+
+    private fun getCurrentTrackId(): Long {
+        return when(shuffle){
+            true -> songs[currentSongPosition].track.id
+            false -> songs[songPosition].track.id
+        }
     }
 
     fun getDuration(): Int {
@@ -162,11 +178,13 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
 
     fun pausePlayer() {
         player.pause()
+        sendNowPlayingRequest(deviceId, null)
     }
 
     fun start() {
         player.start()
         lastRecordedTime = System.currentTimeMillis().toInt()
+        sendNowPlayingRequest(deviceId, getCurrentTrackId())
     }
 
     fun requestAudioFocus() {
@@ -418,24 +436,34 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         return TrackResponse(response["songLink"].toString(), response["albumArtLink"].toString())
     }
 
+    private fun sendNowPlayingRequest(deviceId: String, trackId: Long?){
+        Log.d( "MusicPlayerService", "Sending \"Now Playing\" track=$trackId")
+        launch {
+            withContext(Dispatchers.IO) {
+                listenedAndNowPlayingRequests(
+                    URLs.NOW_PLAYING,
+                    trackId,
+                    token,
+                    deviceId
+                )
+            }
+        }
+    }
+
     private fun markListened(
         playCountPosition: Int,
         playerCurrentPosition: Int,
         playCountDuration: Int,
         deviceId: String
     ) {
-        val trackId = if(shuffle){
-            songs[currentSongPosition].track.id
-        } else {
-            songs[songPosition].track.id
-        }
+        val trackId = getCurrentTrackId()
         Log.d(
             "MusicPlayerService",
             "Marking track=$trackId as listened with:\nplayCountPosition=$playCountPosition\nplayerCurrentPosition=$playerCurrentPosition\nplayCountDuration=$playCountDuration"
         )
         launch {
             withContext(Dispatchers.IO) {
-                markListenedRequest(
+                listenedAndNowPlayingRequests(
                     URLs.MARK_LISTENED,
                     trackId,
                     token,
