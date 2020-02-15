@@ -273,7 +273,7 @@ export default function PlaybackControls(props) {
 	previousPlaying = playing;
 
 	return (
-		<div className="playback-controls d-flex">
+		<div id="playback-controls" className="d-flex">
 			<div>
 				<audio id="audio" src={src}>
 					Your browser is ancient. Be less ancient.
@@ -287,7 +287,7 @@ export default function PlaybackControls(props) {
 					<div className="d-flex">
 						<i
 							onMouseDown={musicContext.playPrevious}
-							className="fas fa-fast-backward control"
+							className="fas fa-step-backward control"
 						/>
 						<i
 							onMouseDown={togglePause}
@@ -295,7 +295,7 @@ export default function PlaybackControls(props) {
 						/>
 						<i
 							onMouseDown={musicContext.playNext}
-							className="fas fa-fast-forward control"
+							className="fas fa-step-forward control"
 						/>
 						<i
 							onMouseDown={() => musicContext.setShuffleSongs(!musicContext.shuffleSongs)}
@@ -340,7 +340,7 @@ export default function PlaybackControls(props) {
 				</div>
 			</div>
 
-			<div id="shuffle-wrapper">
+			<div className="shuffle-wrapper">
 				{ musicContext.shuffleSongs ? <ShuffleChaos/> : <div/> }
 			</div>
 		</div>
