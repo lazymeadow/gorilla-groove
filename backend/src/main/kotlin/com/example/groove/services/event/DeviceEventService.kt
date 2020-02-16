@@ -36,14 +36,14 @@ class DeviceEventService(
 		event as RemotePlayEventRequest
 
 		val trackIdToTrack = trackService
-				.getTracksByIds(event.trackIds!!.toSet())
+				.getTracksByIds(event.trackIds?.toSet() ?: emptySet())
 				.map { it.id to it }
 				.toMap()
 
 		// A user could, theoretically, tell us to play a single track ID more than once.
 		// So load all the unique tracks belonging to the IDs from the DB, and then iterate
 		// over the IDs we are given so we preserve any duplicate IDs that we were given
-		val tracksToPlay = event.trackIds.map { trackIdToTrack.getValue(it) }
+		val tracksToPlay = event.trackIds?.map { trackIdToTrack.getValue(it) }
 
 		val eventResponse = RemotePlayEventResponse(
 				tracks = tracksToPlay,

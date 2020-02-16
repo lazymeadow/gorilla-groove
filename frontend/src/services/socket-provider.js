@@ -14,9 +14,11 @@ export class SocketProvider extends React.Component {
 
 		this.state = {
 			nowListeningUsers: {},
+			pendingRebroadcast: false,
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
-			sendPlayEvent: (...args) => this.sendPlayEvent(...args)
+			sendPlayEvent: (...args) => this.sendPlayEvent(...args),
+			sendRemotePlayEvent: (...args) => this.sendRemotePlayEvent(...args)
 		}
 	}
 
@@ -27,7 +29,7 @@ export class SocketProvider extends React.Component {
 	fetchLatestData() {
 		Api.get(`event/device-id/${getDeviceId()}`, { lastEventId }).then(result => {
 			lastEventId = result.lastEventId;
-			
+
 			if (result.eventType === EventType.NOW_PLAYING) {
 				this.handleNowListeningMessage(result);
 			} else if (result.eventType === EventType.REMOTE_PLAY) {
@@ -45,12 +47,28 @@ export class SocketProvider extends React.Component {
 	}
 
 	handleRemotePlayMessage(message) {
-		if (message.remotePlayAction === RemotePlayType.PLAY_SET_SONGS) {
-			this.props.musicContext.playTracks(message.tracks)
-		} else if (message.remotePlayAction === RemotePlayType.ADD_SONGS_NEXT) {
-			this.props.musicContext.playTracksNext(message.tracks)
-		} else if (message.remotePlayAction === RemotePlayType.ADD_SONGS_LAST) {
-			this.props.musicContext.playTracksLast(message.tracks)
+		// Put it in a timeout so the context finishes its state set first and we have accurate state
+		setTimeout(() => this.setState({ pendingRebroadcast: true }));
+
+		switch (message.remotePlayAction) {
+			case RemotePlayType.PLAY_SET_SONGS:
+				return this.props.musicContext.playTracks(message.tracks);
+			case RemotePlayType.ADD_SONGS_NEXT:
+				return this.props.musicContext.playTracksNext(message.tracks);
+			case RemotePlayType.ADD_SONGS_LAST:
+				return this.props.musicContext.playTracksLast(message.tracks);
+			case RemotePlayType.PLAY:
+				return this.props.musicContext.setProviderState({ isPlaying: true });
+			case RemotePlayType.PAUSE:
+				return this.props.musicContext.setProviderState({ isPlaying: false });
+			case RemotePlayType.SHUFFLE_ENABLE:
+				return this.props.musicContext.setShuffleSongs(true);
+			case RemotePlayType.SHUFFLE_DISABLE:
+				return this.props.musicContext.setShuffleSongs(false);
+			case RemotePlayType.REPEAT_ENABLE:
+				return this.props.musicContext.setRepeatSongs(true);
+			case RemotePlayType.REPEAT_DISABLE:
+				return this.props.musicContext.setRepeatSongs(false);
 		}
 	}
 
@@ -68,14 +86,18 @@ export class SocketProvider extends React.Component {
 		this.sendPlayEvent({ disconnected: true });
 	}
 
-	sendPlayEvent(data) {
+	sendPlayEvent(data, clearRebroadcast) {
 		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume', 'removeTrack', 'disconnected'];
 		const payload = {
 			deviceId: getDeviceId()
 		};
 
 		if (data.track !== undefined) {
-			payload.trackId = data.track.id;
+			if (data.track === null) {
+				payload.trackId = null;
+			} else {
+				payload.trackId = data.track.id;
+			}
 		}
 
 		optionalKeys.forEach(key => {
@@ -85,6 +107,19 @@ export class SocketProvider extends React.Component {
 		});
 
 		Api.post('event/NOW_PLAYING', payload);
+
+		if (clearRebroadcast) {
+			this.setState({ pendingRebroadcast: false });
+		}
+	}
+
+	sendRemotePlayEvent(eventType, targetDeviceId, trackIds) {
+		return Api.post('event/REMOTE_PLAY', {
+			remotePlayAction: eventType,
+			deviceId: getDeviceId(),
+			targetDeviceId,
+			trackIds
+		});
 	}
 
 	render() {

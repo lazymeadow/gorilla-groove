@@ -29,6 +29,7 @@ export class MusicProvider extends React.Component {
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
+			isPlaying: false,
 			songIndexesToShuffle: [],
 			shuffledSongIndexes: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
@@ -599,6 +600,9 @@ export class MusicProvider extends React.Component {
 	}
 
 	setProviderState(state, callback) {
+		if ('isPlaying' in state) {
+			state.renderCounter = this.state.renderCounter + 1;
+		}
 		this.setState(state, callback);
 	}
 

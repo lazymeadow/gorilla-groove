@@ -76,13 +76,20 @@ export default function TrackSourceList(props) {
 	const getNowPlayingElement = entry => {
 		const listeningDevices = socketContext.nowListeningUsers[entry.id];
 		if (!listeningDevices) {
-			return <span/>
+			return null;
 		}
 
-		const isMobile = listeningDevices.every(device => device.isMobile);
+		const playingDevices = listeningDevices.filter(device => device.playing && device.trackData);
 
-		const displayText = listeningDevices.map(device =>
-			device.song + '\nDevice: ' + device.deviceName
+		if (playingDevices.length === 0) {
+			return null;
+		}
+
+		const isMobile = playingDevices.every(device => device.isMobile);
+
+		console.log(playingDevices);
+		const displayText = playingDevices.map(device =>
+			`${device.trackData.title} - ${device.trackData.artist}\nDevice${device.deviceName}`
 		).join('\n\n');
 
 		return <span className="user-listening" title={displayText}>

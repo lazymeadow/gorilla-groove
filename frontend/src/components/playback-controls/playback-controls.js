@@ -29,7 +29,6 @@ export default function PlaybackControls(props) {
 	const [songUrl, setSongUrl] = useState(null);
 	const [volume, setVolume] = useState(1);
 	const [muted, setMuted] = useState(false);
-	const [playing, setPlaying] = useState(false);
 
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
@@ -38,7 +37,7 @@ export default function PlaybackControls(props) {
 		const playingNewSong = musicContext.playNext();
 		if (!playingNewSong) {
 			setPageTitle(null);
-			setPlaying(false);
+			musicContext.setProviderState({ isPlaying: false });
 		}
 	};
 
@@ -54,7 +53,7 @@ export default function PlaybackControls(props) {
 
 	const handleSongChange = () => {
 		if (musicContext.playedTrackIndex === null) {
-			setPlaying(false);
+			musicContext.setProviderState({ isPlaying: false });
 			setPageTitle(null);
 			return;
 		}
@@ -74,7 +73,7 @@ export default function PlaybackControls(props) {
 			listenedTo = false;
 			totalTimeListened = 0;
 			setDuration(0);
-			setPlaying(true);
+			musicContext.setProviderState({ isPlaying: true });
 			setPageTitle(newTrack);
 			setSongUrl(links.songLink);
 
@@ -101,7 +100,7 @@ export default function PlaybackControls(props) {
 	// Pass these values in as params so they aren't captured from the useEffect() and unchanging
 	const broadcastListenHeartbeatIfNeeded = currentTimePercent => {
 		const currentTimeMillis = Date.now();
-		const heartbeatInterval = 15000; // Don't need to spam everyone. Only check every 15 seconds
+		const heartbeatInterval = 20000; // Don't need to spam everyone. Only check every 20 seconds
 
 		if (lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
 			lastSongPlayHeartbeatTime = currentTimeMillis;
@@ -120,7 +119,6 @@ export default function PlaybackControls(props) {
 		setVolume(volume);
 		LocalStorage.setNumber('volume', volume);
 
-		console.log(currentTimePercent);
 		socketContext.sendPlayEvent({
 			timePlayed: currentTimePercent * duration,
 			volume
@@ -174,7 +172,7 @@ export default function PlaybackControls(props) {
 
 	const togglePause = () => {
 		const audio = document.getElementById('audio');
-		if (playing) {
+		if (musicContext.isPlaying) {
 			audio.pause();
 		} else {
 			// People seem to want clicking play without an active song to start playing the library
@@ -186,7 +184,7 @@ export default function PlaybackControls(props) {
 			}
 		}
 
-		setPlaying(!playing);
+		musicContext.setProviderState({ isPlaying: !musicContext.isPlaying });
 	};
 
 	const toggleMute = () => {
@@ -197,6 +195,19 @@ export default function PlaybackControls(props) {
 		LocalStorage.setBoolean('muted', newMute);
 		setMuted(newMute);
 	};
+
+	// I hate this, but so much state is running around keeping it all in sync remotely is such a chore.
+	// This is a cop out of my bad design to keep things in sync
+	if (socketContext.pendingRebroadcast) {
+		const audio = document.getElementById('audio');
+		socketContext.sendPlayEvent({
+			volume: audio.volume,
+			muted: audio.muted,
+			timePlayed: currentTimePercent * duration,
+			isShuffling: musicContext.shuffleSongs,
+			isRepeating: musicContext.repeatSongs
+		}, true);
+	}
 
 	useEffect(() => {
 		const audio = document.getElementById('audio');
@@ -218,7 +229,7 @@ export default function PlaybackControls(props) {
 				timePlayed: 0,
 				isShuffling: musicContext.shuffleSongs,
 				isRepeating: musicContext.repeatSongs
-			})
+			});
 		}
 
 		return () => {
@@ -233,23 +244,26 @@ export default function PlaybackControls(props) {
 			audio.removeEventListener('durationchange', handleDurationChange);
 			audio.removeEventListener('ended', handleSongEnd);
 		}
-	}, [duration, musicContext.playedTrack ? musicContext.playedTrack.id : 0]);
+	}, [duration, musicContext.isPlaying, musicContext.playedTrack ? musicContext.playedTrack.id : 0]);
 
+	const audio = document.getElementById('audio');
 	if (
-		(!previousPlaying && playing) // Started playing something when we weren't playing anything
+		(!previousPlaying && musicContext.isPlaying) // Started playing something when we weren't playing anything
 		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
 	) {
 		lastSongPlayHeartbeatTime = Date.now();
-		console.log(musicContext.playedTrack);
+
+		audio.play();
 		socketContext.sendPlayEvent({
 			track: musicContext.playedTrack,
 			timePlayed: currentTimePercent * duration,
-			isPlaying: playing
+			isPlaying: musicContext.isPlaying
 		});
-	} else if (previousPlaying && !playing) {
+	} else if (previousPlaying && !musicContext.isPlaying) {
+		audio.pause();
 		socketContext.sendPlayEvent({
 			timePlayed: currentTimePercent * duration,
-			isPlaying: playing
+			isPlaying: musicContext.isPlaying
 		});
 	}
 
@@ -304,7 +318,7 @@ export default function PlaybackControls(props) {
 	const src = playedTrack ? songUrl : '';
 
 	previousCurrentSessionPlayCounter = currentSessionPlayCounter;
-	previousPlaying = playing;
+	previousPlaying = musicContext.isPlaying;
 
 	return (
 		<div id="playback-controls" className="d-flex song-player">
@@ -325,7 +339,7 @@ export default function PlaybackControls(props) {
 						/>
 						<i
 							onMouseDown={togglePause}
-							className={`fas fa-${playing ? 'pause' : 'play'} control`}
+							className={`fas fa-${musicContext.isPlaying ? 'pause' : 'play'} control`}
 						/>
 						<i
 							onMouseDown={musicContext.playNext}

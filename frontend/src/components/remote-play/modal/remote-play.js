@@ -1,14 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Modal} from "../../modal/modal";
 import {Api} from "../../../api";
 import {toast} from "react-toastify";
 import {getDeviceId} from "../../../services/version";
 import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {RemotePlayType} from "./remote-play-type";
+import {SocketContext} from "../../../services/socket-provider";
 
 function RemotePlayModal(props) {
 	const [devices, setDevices] = useState([]);
 	const [loading, setLoading] = useState(true);
+
+	const socket = useContext(SocketContext);
 
 	useEffect(() => {
 		Api.get(`device/active?excluding-device=${getDeviceId()}`).then(devices => {
@@ -32,15 +35,14 @@ function RemotePlayModal(props) {
 		const selectEl = document.getElementById('remote-play-selection');
 		const targetId = selectEl.options[selectEl.selectedIndex].value;
 
-		Api.post('event/REMOTE_PLAY', {
-			targetDeviceId: targetId,
-			remotePlayAction: props.playType,
-			deviceId: getDeviceId(),
-			trackIds: props.getSelectedTracks().map(track => track.id)
-		}).then(() => {
+		socket.sendRemotePlayEvent(
+			props.playType,
+			targetId,
+			props.getSelectedTracks().map(track => track.id)
+		).then(() => {
 			toast.success('Remote play action sent');
 			props.closeFunction();
-		})
+		});
 	};
 
 	return (

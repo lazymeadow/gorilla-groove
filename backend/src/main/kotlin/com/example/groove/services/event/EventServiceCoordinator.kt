@@ -88,7 +88,7 @@ class EventServiceCoordinator(
 	}
 
 	companion object {
-		private const val CHECK_INTERVAL = 1500L
-		private const val NUM_CHECKS = 34
+		private const val CHECK_INTERVAL = 1000L
+		private const val NUM_CHECKS = 55
 	}
 }

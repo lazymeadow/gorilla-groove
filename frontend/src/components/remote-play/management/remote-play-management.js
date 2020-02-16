@@ -3,13 +3,15 @@ import {Api} from "../../../api";
 import MiniPlayer from "../../playback-controls/mini-player/mini-player";
 import {getDeviceId} from "../../../services/version";
 import {SocketContext} from "../../../services/socket-provider";
+import {toast} from "react-toastify";
+import {RemotePlayType} from "../modal/remote-play-type";
 
 export default function RemotePlayManagement() {
 	const [devices, setDevices] = useState([]);
 	const [forceRerender, setForceRerender] = useState(0);
 	const [loading, setLoading] = useState(true);
 
-	const socketContext = useContext(SocketContext);
+	const socket = useContext(SocketContext);
 
 	useEffect(() => {
 		Api.get(`device/active?excluding-device=${getDeviceId()}`).then(devices => {
@@ -32,7 +34,7 @@ export default function RemotePlayManagement() {
 	}, []);
 
 	const deviceIdToListeningState = {};
-	Object.values(socketContext.nowListeningUsers).flat().forEach(listeningData => {
+	Object.values(socket.nowListeningUsers).flat().forEach(listeningData => {
 		deviceIdToListeningState[listeningData.deviceId] = listeningData;
 	});
 
@@ -58,6 +60,24 @@ export default function RemotePlayManagement() {
 				shuffling={listeningState.shuffling}
 				repeating={listeningState.repeating}
 				timePlayed={estimatedTimePlayed}
+				onPauseChange={() => {
+					socket.sendRemotePlayEvent(
+						listeningState.playing ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
+						device.id
+					);
+				}}
+				onShuffleChange={() => {
+					socket.sendRemotePlayEvent(
+						listeningState.shuffling ? RemotePlayType.SHUFFLE_DISABLE : RemotePlayType.SHUFFLE_ENABLE,
+						device.id
+					);
+				}}
+				onRepeatChange={() => {
+					socket.sendRemotePlayEvent(
+						listeningState.repeating ? RemotePlayType.REPEAT_DISABLE : RemotePlayType.REPEAT_ENABLE,
+						device.id
+					);
+				}}
 			/>
 		})}
 	</div>

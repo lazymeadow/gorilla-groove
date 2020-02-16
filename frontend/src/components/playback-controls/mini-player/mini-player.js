@@ -49,7 +49,7 @@ export default function MiniPlayer(props) {
 						className="fas fa-step-backward"
 					/>
 					<i
-						// onMouseDown={togglePause}
+						onMouseDown={props.onPauseChange}
 						className={`fas fa-${props.playing ? 'pause' : 'play'}`}
 					/>
 					<i
@@ -74,11 +74,11 @@ export default function MiniPlayer(props) {
 					</div>
 					<div className="bottom-controls">
 						<i
-							// onMouseDown={() => musicContext.setShuffleSongs(!musicContext.shuffleSongs)}
+							onMouseDown={props.onShuffleChange}
 							className={`fas fa-random control ${props.shuffling ? 'enabled' : ''}`}
 						/>
 						<i
-							// onMouseDown={() => musicContext.setRepeatSongs(!musicContext.repeatSongs)}
+							onMouseDown={props.onRepeatChange}
 							className={`fas fa-sync-alt control ${props.repeating ? 'enabled' : ''}`}
 						/>
 
