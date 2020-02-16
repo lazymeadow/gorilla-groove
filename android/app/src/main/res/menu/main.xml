@@ -4,20 +4,12 @@
 
     <item android:id="@+id/action_settings_logout"
           android:title="@string/action_logout"
-          android:orderInCategory="3"
+          android:orderInCategory="1"
           app:showAsAction="never"/>
 
     <item android:id="@+id/action_end"
-            android:title="@string/end"
-            android:icon="@drawable/end"
+            android:title="@string/kill_service"
             android:orderInCategory="2"
-            app:showAsAction="ifRoom"
-            />
-
-    <item android:id="@+id/action_shuffle"
-            android:title="@string/shuffle"
-            android:icon="@drawable/shuffle"
-            android:orderInCategory="1"
-            app:showAsAction="ifRoom"
+            app:showAsAction="never"
             />
 </menu>

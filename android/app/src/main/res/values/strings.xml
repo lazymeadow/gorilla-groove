@@ -9,6 +9,7 @@
     <string name="playlists">Playlists</string>
     <string name="library">Library</string>
     <string name="login">Login</string>
-    <string name="end">End</string>
+    <string name="kill_service">Kill Service</string>
     <string name="shuffle">Shuffle</string>
+    <string name="library_title">My Library</string>
 </resources>

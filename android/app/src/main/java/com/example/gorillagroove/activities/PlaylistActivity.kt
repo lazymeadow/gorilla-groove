@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import android.widget.MediaController.MediaPlayerControl
 import android.widget.TextView
 import android.widget.Toast
@@ -60,6 +61,7 @@ class PlaylistActivity : AppCompatActivity(),
         ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     private var musicBound = false
+    private var repeatEnabled = false
     private var token: String = ""
     private var email: String = ""
     private var userName: String = ""
@@ -73,7 +75,6 @@ class PlaylistActivity : AppCompatActivity(),
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var repository: UserRepository
-    private lateinit var controller: MusicController
     private var songCurrentPosition = 0
     private var songCurrentDuration = 0
 
@@ -108,20 +109,55 @@ class PlaylistActivity : AppCompatActivity(),
         val navHeaderText = header.findViewById(R.id.tv_nav_header) as TextView
         navHeaderText.text = userName
 
+        // Set up Media Controls
+        val shuffleButton: Button = findViewById(R.id.button_expanded_nav_shuffle)
+        shuffleButton.setOnClickListener {
+            when(musicPlayerService!!.setShuffle()) {
+                true -> it.setBackgroundResource(R.drawable.shuffle_active)
+                false -> it.setBackgroundResource(R.drawable.shuffle_inactive)
+            }
+        }
+
+
+        val repeatButton: Button = findViewById(R.id.button_expanded_nav_repeat)
+        repeatButton.setOnClickListener {
+            repeatEnabled = when(repeatEnabled) {
+                true -> {
+                    it.setBackgroundResource(R.drawable.repeat_inactive)
+                    false
+                }
+                false -> {
+                    it.setBackgroundResource(R.drawable.repeat_active)
+                    true
+                }
+            }
+        }
+
+        val playButton: Button = findViewById(R.id.button_expanded_nav_play)
+        playButton.setOnClickListener {
+            when (playbackPaused) {
+                true -> {
+                    it.setBackgroundResource(android.R.drawable.ic_media_pause)
+                    play()
+                }
+                false -> {
+                    it.setBackgroundResource(android.R.drawable.ic_media_play)
+                    pause()
+                }
+            }
+        }
+
+        val nextButton: Button = findViewById(R.id.button_expanded_nav_next)
+        nextButton.setOnClickListener { playNext() }
+
+        val previousButton: Button = findViewById(R.id.button_expanded_nav_previous)
+        previousButton.setOnClickListener { playPrevious() }
+
         loadLibrarySongs()
         requestUsers()
         requestPlaylists()
-        setController()
 
         nav_view.setNavigationItemSelectedListener(this@PlaylistActivity)
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (controller.height > 0) {
-            nav_view.setPadding(0, 0, 0, controller.height)
-            recyclerView.setPadding(0, toolbar.height, 0, controller.height)
-        }
     }
 
     private fun loadLibrarySongs() {
@@ -225,10 +261,10 @@ class PlaylistActivity : AppCompatActivity(),
     override fun onClick(view: View, position: Int) {
         Log.i("PlaylistActivity", "onClick called!")
         musicPlayerService!!.setSong(position)
-        setController()
+//        setController()
         playbackPaused = false
         musicPlayerService!!.playSong()
-        controller.show(0) // Passing 0 so controller always shows
+//        controller.show(0) // Passing 0 so controller always shows
     }
 
     override fun onBackPressed() {
@@ -247,10 +283,6 @@ class PlaylistActivity : AppCompatActivity(),
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.action_shuffle -> {
-                val message = if (musicPlayerService!!.setShuffle()) "Shuffle On" else "Shuffle Off"
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-            }
             R.id.action_end -> {
                 stopService(playIntent)
                 musicPlayerService = null
@@ -284,21 +316,21 @@ class PlaylistActivity : AppCompatActivity(),
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onMediaPlayerLoadedEvent(event: MediaPlayerLoadedEvent) {
         Log.i("EventBus", "Message received ${event.message}")
-        controller.show(0)
+//        controller.show(0)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLosses(event: MediaPlayerTransientAudioLossEvent) {
         Log.i("EventBus", "MessageReceived ${event.message}")
         pause()
-        controller.show(0)
+//        controller.show(0)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onPauseEvent(event: MediaPlayerPauseEvent) {
         Log.i("EventBus", "MessageReceived ${event.message}")
         pause()
-        controller.show(0)
+//        controller.show(0)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
@@ -319,31 +351,31 @@ class PlaylistActivity : AppCompatActivity(),
         playPrevious()
     }
 
-    private fun setController() {
-        controller = MusicController(this@PlaylistActivity)
-        controller.setPrevNextListeners({ playNext() }, { playPrevious() })
-        controller.setMediaPlayer(this)
-        controller.setAnchorView(findViewById(R.id.frame_layout))
-        controller.isEnabled = true
-        playbackPaused = false
-    }
+//    private fun setController() {
+//        controller = MusicController(this@PlaylistActivity)
+//        controller.setPrevNextListeners({ playNext() }, { playPrevious() })
+//        controller.setMediaPlayer(this)
+//        controller.setAnchorView(findViewById(R.id.frame_layout))
+//        controller.isEnabled = true
+//        playbackPaused = false
+//    }
 
     private fun playNext() {
         musicPlayerService!!.playNext()
         if (playbackPaused) {
-            setController()
+//            setController()
             playbackPaused = false
         }
-        controller.show(0)
+//        controller.show(0)
     }
 
     private fun playPrevious() {
         musicPlayerService!!.playPrevious()
         if (playbackPaused) {
-            setController()
+//            setController()
             playbackPaused = false
         }
-        controller.show(0)
+//        controller.show(0)
     }
 
     override fun isPlaying(): Boolean {
@@ -384,6 +416,11 @@ class PlaylistActivity : AppCompatActivity(),
         musicPlayerService!!.requestAudioFocus()
     }
 
+    fun play() {
+        playbackPaused = false
+        start()
+    }
+
     override fun canPause(): Boolean {
         return true
     }
@@ -396,7 +433,7 @@ class PlaylistActivity : AppCompatActivity(),
     override fun onResume() {
         super.onResume()
         if (playbackPaused) {
-            setController()
+//            setController()
             playbackPaused = false
         }
     }
