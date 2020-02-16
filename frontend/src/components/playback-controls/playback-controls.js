@@ -18,6 +18,7 @@ let totalTimeListened = 0;
 let listenedTo = false;
 
 // In a functional component we need to keep around some previous state to do things when changes occur
+let initialStateSent = false;
 let previousPlaying = false;
 let previousCurrentSessionPlayCounter = 0;
 
@@ -96,14 +97,18 @@ export default function PlaybackControls(props) {
 		});
 	};
 
-	// Send an event that says we are listening to a particular song so other people can see it
-	const broadcastListenHeartbeatIfNeeded = () => {
+	// Send an event that says we are listening to a particular song so other people can see it.
+	// Pass these values in as params so they aren't captured from the useEffect() and unchanging
+	const broadcastListenHeartbeatIfNeeded = currentTimePercent => {
 		const currentTimeMillis = Date.now();
 		const heartbeatInterval = 15000; // Don't need to spam everyone. Only check every 15 seconds
 
 		if (lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
 			lastSongPlayHeartbeatTime = currentTimeMillis;
-			socketContext.sendPlayEvent(musicContext.playedTrack);
+
+			socketContext.sendPlayEvent({
+				timePlayed: currentTimePercent * duration
+			});
 		}
 	};
 
@@ -114,6 +119,12 @@ export default function PlaybackControls(props) {
 		audio.volume = volume;
 		setVolume(volume);
 		LocalStorage.setNumber('volume', volume);
+
+		console.log(currentTimePercent);
+		socketContext.sendPlayEvent({
+			timePlayed: currentTimePercent * duration,
+			volume
+		});
 	};
 
 	const changePlayTime = event => {
@@ -122,6 +133,8 @@ export default function PlaybackControls(props) {
 
 		// Don't need to update state, as an event will fire and we will handle it afterwards
 		audio.currentTime = playPercent * audio.duration;
+
+		socketContext.sendPlayEvent({ timePlayed: playPercent * duration });
 	};
 
 	const setPageTitle = track => {
@@ -196,6 +209,18 @@ export default function PlaybackControls(props) {
 		setVolume(audio.volume);
 		setMuted(audio.muted);
 
+		if (!initialStateSent) {
+			initialStateSent = true;
+			socketContext.sendPlayEvent({
+				removeTrack: true,
+				volume: audio.volume,
+				muted: audio.muted,
+				timePlayed: 0,
+				isShuffling: musicContext.shuffleSongs,
+				isRepeating: musicContext.repeatSongs
+			})
+		}
+
 		return () => {
 			// The functional component does some weird stuff with logout and using a stale version of the
 			// MusicContext upon re-log in. Do this to prevent auto-play of a "null" track upon re-log
@@ -214,10 +239,18 @@ export default function PlaybackControls(props) {
 		(!previousPlaying && playing) // Started playing something when we weren't playing anything
 		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
 	) {
-		socketContext.sendPlayEvent(musicContext.playedTrack);
 		lastSongPlayHeartbeatTime = Date.now();
+		console.log(musicContext.playedTrack);
+		socketContext.sendPlayEvent({
+			track: musicContext.playedTrack,
+			timePlayed: currentTimePercent * duration,
+			isPlaying: playing
+		});
 	} else if (previousPlaying && !playing) {
-		socketContext.sendPlayEvent(null);
+		socketContext.sendPlayEvent({
+			timePlayed: currentTimePercent * duration,
+			isPlaying: playing
+		});
 	}
 
 	if (musicContext.playedTrack && musicContext.sessionPlayCounter !== currentSessionPlayCounter) {
@@ -226,11 +259,12 @@ export default function PlaybackControls(props) {
 
 	const handleTimeTick = event => {
 		const currentTime = event.target.currentTime;
+		const currentTimePercent = currentTime / duration;
 
 		if (duration > 0) {
 			// Truncate the percentage to 2 decimal places, since our progress bar only updates in 1/100 increments.
 			// Doing this allows us to skip many re-renders that do nothing.
-			setCurrentTimePercent(currentTime / duration);
+			setCurrentTimePercent(currentTimePercent);
 		}
 
 		const timeElapsed = currentTime - lastTime;
@@ -263,7 +297,7 @@ export default function PlaybackControls(props) {
 				});
 		}
 
-		broadcastListenHeartbeatIfNeeded();
+		broadcastListenHeartbeatIfNeeded(currentTimePercent, volume);
 	};
 
 	const playedTrack = musicContext.playedTrack;
@@ -273,7 +307,7 @@ export default function PlaybackControls(props) {
 	previousPlaying = playing;
 
 	return (
-		<div id="playback-controls" className="d-flex">
+		<div id="playback-controls" className="d-flex song-player">
 			<div>
 				<audio id="audio" src={src}>
 					Your browser is ancient. Be less ancient.
@@ -298,11 +332,23 @@ export default function PlaybackControls(props) {
 							className="fas fa-step-forward control"
 						/>
 						<i
-							onMouseDown={() => musicContext.setShuffleSongs(!musicContext.shuffleSongs)}
+							onMouseDown={() => {
+								musicContext.setShuffleSongs(!musicContext.shuffleSongs);
+								socketContext.sendPlayEvent({
+									timePlayed: currentTimePercent * duration,
+									isShuffling: !musicContext.shuffleSongs
+								});
+							}}
 							className={`fas fa-random control ${musicContext.shuffleSongs ? 'enabled' : ''}`}
 						/>
 						<i
-							onMouseDown={() => musicContext.setRepeatSongs(!musicContext.repeatSongs)}
+							onMouseDown={() => {
+								musicContext.setRepeatSongs(!musicContext.repeatSongs);
+								socketContext.sendPlayEvent({
+									timePlayed: currentTimePercent * duration,
+									isRepeating: !musicContext.repeatSongs
+								});
+							}}
 							className={`fas fa-sync-alt control ${musicContext.repeatSongs ? 'enabled' : ''}`}
 						/>
 					</div>

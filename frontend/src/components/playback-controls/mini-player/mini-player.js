@@ -1,4 +1,5 @@
 import React from "react";
+import {formatTimeFromSeconds} from "../../../formatters";
 
 export default function MiniPlayer(props) {
 
@@ -15,20 +16,28 @@ export default function MiniPlayer(props) {
 		}
 	};
 
+	const playPercentage = !isNaN(props.timePlayed / props.trackData.duration)
+		? props.timePlayed / props.trackData.duration
+		: 0;
+
 	return (
 		<div className="song-player mini-player">
+			{ props.title !== undefined
+				? <div className="title-box text-center">{props.title}</div>
+				: null
+			}
 			<div className="flex-between">
 				{/* Use a background image here because it behaves better at staying within boundaries */}
 				<div
 					className="album-art"
-					style={{ backgroundImage: `url(${props.albumLink})` }}
+					style={{ backgroundImage: `url(${props.trackData.albumArtLink})` }}
 				/>
 				<div className="song-information">
 					<ul>
-						<li>Leviathan</li>
-						<li>Alestorm</li>
-						<li>Black Sails At Midnight</li>
-						<li>2009</li>
+						<li>{props.trackData.title}</li>
+						<li>{props.trackData.artist}</li>
+						<li>{props.trackData.album}</li>
+						<li>{props.trackData.releaseYear}</li>
 					</ul>
 				</div>
 			</div>
@@ -50,25 +59,27 @@ export default function MiniPlayer(props) {
 				</div>
 				<div className="slider-section">
 					<div className="time-slider-wrapper">
-						<div className="time-indicators">0:00 / 5:01</div>
+						<div className="time-indicators">
+							{formatTimeFromSeconds(props.timePlayed)} / {formatTimeFromSeconds(props.trackData.duration)}
+						</div>
 						<input
 							type="range"
 							className="time-slider"
-							// onChange={changePlayTime}
+							onChange={() => {}}
 							min="0"
 							max="1"
 							step="0.01"
-							value={props.currentTime}
+							value={playPercentage || 0}
 						/>
 					</div>
 					<div className="bottom-controls">
 						<i
 							// onMouseDown={() => musicContext.setShuffleSongs(!musicContext.shuffleSongs)}
-							className={`fas fa-random control ${props.shuffleSongs ? 'enabled' : ''}`}
+							className={`fas fa-random control ${props.shuffling ? 'enabled' : ''}`}
 						/>
 						<i
 							// onMouseDown={() => musicContext.setRepeatSongs(!musicContext.repeatSongs)}
-							className={`fas fa-sync-alt control ${props.repeatSongs ? 'enabled' : ''}`}
+							className={`fas fa-sync-alt control ${props.repeating ? 'enabled' : ''}`}
 						/>
 
 						<i
@@ -78,11 +89,11 @@ export default function MiniPlayer(props) {
 						<input
 							type="range"
 							className="volume-slider"
-							// onChange={changeVolume}
+							onChange={() => {}}
 							min="0"
 							max="1"
 							step="0.01"
-							// value={volume}
+							value={props.volume || 1}
 						/>
 					</div>
 				</div>

@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import {Modal} from "../modal/modal";
-import {Api} from "../../api";
+import {Modal} from "../../modal/modal";
+import {Api} from "../../../api";
 import {toast} from "react-toastify";
-import {getDeviceId} from "../../services/version";
-import {LoadingSpinner} from "../loading-spinner/loading-spinner";
+import {getDeviceId} from "../../../services/version";
+import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {RemotePlayType} from "./remote-play-type";
 
 function RemotePlayModal(props) {

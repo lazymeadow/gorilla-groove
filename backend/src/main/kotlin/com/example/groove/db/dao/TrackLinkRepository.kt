@@ -12,12 +12,24 @@ interface TrackLinkRepository : CrudRepository<TrackLink, Long> {
 			SELECT tl
 			FROM TrackLink tl
 			WHERE tl.track.id = :trackId
+			AND isArt = FALSE
 			AND (:audioFormat IS NULL OR tl.audioFormat = :audioFormat)
 			AND now() < tl.expiresAt
 			""")
-	fun findUnexpiredByTrackIdAndAudioFormat(
+	fun findUnexpiredSongByTrackIdAndAudioFormat(
 			@Param("trackId") trackId: Long,
 			@Param("audioFormat") audioFormat: AudioFormat?
+	): TrackLink?
+
+	@Query("""
+			SELECT tl
+			FROM TrackLink tl
+			WHERE tl.track.id = :trackId
+			AND isArt = TRUE
+			AND now() < tl.expiresAt
+			""")
+	fun findUnexpiredArtByTrackId(
+			@Param("trackId") trackId: Long
 	): TrackLink?
 
 	@Modifying

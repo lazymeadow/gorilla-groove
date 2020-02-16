@@ -27,7 +27,15 @@ enum class RemotePlayType {
 }
 
 data class NowPlayingEventRequest(
-		val trackId: Long?,
+		val trackId: Long?, // Jackson doesn't differentiate between a null key and a null value,
+		val removeTrack: Boolean = false, // so have a separate property to explicitly remove the played track
+		val disconnected: Boolean = false,
+		val isShuffling: Boolean?,
+		val isRepeating: Boolean?,
+		val isPlaying: Boolean?,
+		val timePlayed: Double?,
+		val volume: Double?,
+		val muted: Boolean?,
 		override val deviceId: String
 ) : EventRequest
 
@@ -46,16 +54,38 @@ data class RemotePlayEventResponse(
 ) : EventResponse
 
 data class NowPlayingEventResponse(
-		val currentlyListeningUsers: Map<Long, SongListenResponse>?,
+		val currentlyListeningUsers: Map<Long, List<SongListenResponse>>?,
 		override var lastEventId: Int,
 		override val eventType: EventType = EventType.NOW_PLAYING
 ) : EventResponse
 
 data class SongListenResponse(
-		val song: String,
+		val trackData: SongListenTrack?,
 		val deviceName: String?,
 
 		// Damn Jackson stripping out the "is". No, I want it there
 		@get:JsonProperty("isPhone")
-		val isPhone: Boolean?
+		val isPhone: Boolean?,
+
+		val deviceId: Long,
+		val volume: Double,
+		val muted: Boolean,
+		val timePlayed: Double, // In seconds
+		val isShuffling: Boolean,
+		val isRepeating: Boolean,
+		var isPlaying: Boolean,
+		val lastUpdate: Long // millis
+)
+
+data class SongListenTrack(
+		val trackId: Int? = null,
+		val title: String? = null,
+		val artist: String? = null,
+		val album: String? = null,
+		val releaseYear: Int? = null,
+		val albumArtLink: String? = null,
+		val duration: Int? = null,
+
+		@get:JsonProperty("isPrivate")
+		val isPrivate: Boolean = false
 )

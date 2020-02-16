@@ -12,9 +12,12 @@ import {SocketContext} from "../../services/socket-provider";
 import PlaybackControls from "../playback-controls/playback-controls";
 import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
+import {CenterView} from "../../enums/site-views";
+import RemotePlayManagement from "../remote-play/management/remote-play-management";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
+	const [centerView, setCenterView] = useState(CenterView.TRACKS);
 
 	if (!isLoggedIn()) {
 		console.info('Not logged in. Awaiting redirect');
@@ -56,15 +59,23 @@ export default function SiteLayout(props) {
 			<div className="border-layout-west">
 				<TrackSourceList
 					playlists={playlistContext.playlists}
+					centerView={centerView}
+					setCenterView={setCenterView}
 				/>
 			</div>
-			<div id="library-view" className="border-layout-center track-list-container p-relative">
-				<TrackList
-					columns={displayedColumns}
-					userTracks={musicContext.viewedTracks}
-					trackView={true}
-				/>
+
+			<div id="center-view" className="border-layout-center track-list-container p-relative">
+				{
+					centerView === CenterView.TRACKS
+						? <TrackList
+							columns={displayedColumns}
+							userTracks={musicContext.viewedTracks}
+							trackView={true}
+						/>
+						: <RemotePlayManagement/>
+				}
 			</div>
+
 			<div className="border-layout-east track-list-container">
 				<NowPlayingList
 					columns={["#", "Name"]}

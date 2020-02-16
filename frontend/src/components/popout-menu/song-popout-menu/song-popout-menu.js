@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useRef} from 'react';
 import {MusicContext} from "../../../services/music-provider";
 import {toast} from "react-toastify";
-import {TrackView} from "../../../enums/track-view";
+import {TrackView} from "../../../enums/site-views";
 import {SongProperties} from "../../song-properties/song-properties";
 import {Api} from "../../../api";
 import {TrimSong} from "../../trim-song/trim-song";
@@ -9,8 +9,8 @@ import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
 import {copyToClipboard, getScreenHeight} from "../../../util";
 import PopoutMenu from "../popout-menu";
-import RemotePlay from "../../remote-play/remote-play";
-import {RemotePlayType} from "../../remote-play/remote-play-type";
+import RemotePlay from "../../remote-play/modal/remote-play";
+import {RemotePlayType} from "../../remote-play/modal/remote-play-type";
 import {UserContext} from "../../../services/user-provider";
 import {PermissionType} from "../../../enums/permission-type";
 

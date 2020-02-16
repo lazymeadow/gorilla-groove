@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
 import SongPopoutMenu from "../popout-menu/song-popout-menu/song-popout-menu";
-import {TrackView} from "../../enums/track-view";
+import {TrackView} from "../../enums/site-views";
 import * as LocalStorage from "../../local-storage";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {displayKeyToTrackKey} from "../../util";
@@ -171,7 +171,7 @@ export class TrackList extends React.Component {
 			selected[newIndex] = true;
 			this.setState({ selected: selected, lastSelectedIndex: newIndex });
 
-			const trackList = document.getElementById('library-view');
+			const trackList = document.getElementById('center-view');
 			const selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
 
 			if (event.key === 'ArrowDown') {

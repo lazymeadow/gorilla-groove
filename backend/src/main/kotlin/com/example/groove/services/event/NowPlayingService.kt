@@ -1,5 +1,6 @@
 package com.example.groove.services.event
 
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
@@ -14,10 +15,12 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class NowPlayingService(
 		val deviceService: DeviceService,
-		val trackRepository: TrackRepository
+		val trackRepository: TrackRepository,
+		val trackLinkRepository: TrackLinkRepository
 ) : EventService {
 
-	private val currentlyListeningUsers = ConcurrentHashMap<Long, SongListen>()
+	// User ID -> all devices that user is listening to songs on
+	private val currentlyListeningUsers = ConcurrentHashMap<Long, MutableList<SongListenResponse>>()
 	private var updateCount = -1
 
 	override fun handlesEvent(eventType: EventType): Boolean {
@@ -33,34 +36,70 @@ class NowPlayingService(
 		val track = event.trackId?.let { trackRepository.findById(it) }?.unwrap()
 
 		val newTime = now().time
+
+		// This makes a DB call, so it's important to do it outside the lock to minimize time spent locked
+		val trackData = track?.asListenTrack()
+
 		synchronized(this) {
-			if (track == null) {
-				currentlyListeningUsers.remove(user.id)
+			if (currentlyListeningUsers[user.id] == null) {
+				currentlyListeningUsers[user.id] = mutableListOf()
+			}
+
+			// User specifically disconnected this device. Remove all information
+			if (event.disconnected) {
+				val nowPlayingData = currentlyListeningUsers.getValue(user.id).find { it.deviceId == device.id }
+				currentlyListeningUsers.getValue(user.id).remove(nowPlayingData)
+
 				incrementUpdate()
 				return
 			}
 
-			val currentListen = currentlyListeningUsers[user.id]
-			val newListen = SongListen(
-					song = track.getDisplayString(),
+			val currentListen = currentlyListeningUsers[user.id]?.find { it.deviceId == device.id }
+			currentlyListeningUsers[user.id]?.remove(currentListen)
+
+			val newListen = currentListen?.copy(
+					trackData = if (event.removeTrack) { null } else { trackData ?: currentListen.trackData },
+					deviceName = device.deviceName,
+					lastUpdate = newTime,
+					volume = event.volume ?: currentListen.volume,
+					muted = event.muted ?: currentListen.muted,
+					timePlayed = if (event.removeTrack) { 0.0 } else { event.timePlayed ?: currentListen.timePlayed },
+					isShuffling = event.isShuffling ?: currentListen.isShuffling,
+					isRepeating = event.isRepeating ?: currentListen.isRepeating,
+					isPlaying = if (event.removeTrack) { false } else { event.isPlaying ?: currentListen.isPlaying }
+			) ?: SongListenResponse(
+					trackData = trackData,
+					deviceId = device.id,
 					deviceName = device.deviceName,
 					isPhone = device.deviceType.isPhone,
-					lastUpdate = newTime
+					lastUpdate = newTime,
+					volume = event.volume ?: 0.0,
+					muted = event.muted ?: false,
+					timePlayed = event.timePlayed ?: 0.0,
+					isShuffling = event.isShuffling ?: false,
+					isRepeating = event.isRepeating ?: false,
+					isPlaying = event.isPlaying ?: false
 			)
 
-			if (newListen.song != currentListen?.song) {
-				incrementUpdate()
-			}
+			incrementUpdate()
 
-			currentlyListeningUsers[user.id] = newListen
+			currentlyListeningUsers.getValue(user.id).add(newListen)
 		}
 	}
 
-	private fun Track.getDisplayString(): String {
-		return if (private) {
-			"This track is private"
-		} else {
-			"$artist - $name"
+	// Get a trimmed down version (that also includes an art link)
+	private fun Track.asListenTrack(): SongListenTrack? {
+		return when {
+			private -> SongListenTrack(isPrivate = true)
+			else -> SongListenTrack(
+					title = name,
+					artist = artist,
+					album = album,
+					releaseYear = releaseYear,
+					duration = length,
+					isPrivate = false,
+					albumArtLink = trackLinkRepository.findUnexpiredArtByTrackId(id)?.link
+			)
 		}
 	}
 
@@ -69,15 +108,13 @@ class NowPlayingService(
 			return null
 		}
 
-		val user = loadLoggedInUser()
-
-		val listeningUsers = currentlyListeningUsers
-				.mapValues { SongListenResponse(
-						song = it.value.song,
-						deviceName = it.value.deviceName,
-						isPhone = it.value.isPhone
-				) }
-				.filter { (userId, _) -> userId != user.id }
+		val listeningUsers = synchronized(this) {
+			// Remove our own device as there's no reason to send it
+			currentlyListeningUsers
+					.map { (userId, devicesForUser) ->
+						userId to devicesForUser.filter { it.deviceId != sourceDevice.id }
+					}.toMap()
+		}
 
 		return NowPlayingEventResponse(
 				currentlyListeningUsers = listeningUsers,
@@ -87,13 +124,16 @@ class NowPlayingService(
 
 	@Scheduled(fixedRate = 10000, initialDelay = 30000)
 	fun cleanupOldListens() {
-		val deleteOlderThan = now().time - 35 * 1000 // We should be updating every 15 seconds, but build in a buffer
+		val deleteOlderThan = now().time - 45 * 1000 // We should be updating every 20 seconds, but build in a buffer
 		synchronized(this) {
-			val listens = currentlyListeningUsers.toList()
-			listens.forEach { (userId, songListen) ->
-				if (songListen.lastUpdate < deleteOlderThan) {
-					currentlyListeningUsers.remove(userId)
-					incrementUpdate()
+			val userDevices = currentlyListeningUsers.toList()
+			userDevices.forEach { (_, songResponses) ->
+				songResponses.forEach { songResponse ->
+					if (songResponse.lastUpdate < deleteOlderThan) {
+						// If we haven't seen an update in a while, it's probably safe to assume it stopped playing
+						songResponse.isPlaying = false
+						incrementUpdate()
+					}
 				}
 			}
 		}
@@ -104,10 +144,4 @@ class NowPlayingService(
 		updateCount %= Int.MAX_VALUE
 	}
 
-	data class SongListen(
-			val song: String,
-			val deviceName: String?,
-			val isPhone: Boolean?,
-			val lastUpdate: Long // millis
-	)
 }

@@ -2,7 +2,7 @@ import React from "react";
 import {isLoggedIn} from "../util";
 import {Api} from "../api";
 import {getDeviceId} from "./version";
-import {RemotePlayType} from "../components/remote-play/remote-play-type";
+import {RemotePlayType} from "../components/remote-play/modal/remote-play-type";
 
 export const SocketContext = React.createContext();
 
@@ -21,12 +21,6 @@ export class SocketProvider extends React.Component {
 	}
 
 	componentDidMount() {
-		// Clear the song immediately if someone refreshed their browser
-		Api.post('event/NOW_PLAYING', {
-			trackId: null,
-			deviceId: getDeviceId()
-		});
-
 		window.addEventListener('beforeunload', this.disconnectSocket.bind(this));
 	}
 
@@ -71,17 +65,26 @@ export class SocketProvider extends React.Component {
 	}
 
 	disconnectSocket() {
-		Api.post('event/NOW_PLAYING', {
-			trackId: null,
-			deviceId: getDeviceId()
-		});
+		this.sendPlayEvent({ disconnected: true });
 	}
 
-	sendPlayEvent(track) {
-		Api.post('event/NOW_PLAYING', {
-			trackId: track ? track.id : null,
+	sendPlayEvent(data) {
+		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume', 'removeTrack', 'disconnected'];
+		const payload = {
 			deviceId: getDeviceId()
+		};
+
+		if (data.track !== undefined) {
+			payload.trackId = data.track.id;
+		}
+
+		optionalKeys.forEach(key => {
+			if (data[key] !== undefined) {
+				payload[key] = data[key];
+			}
 		});
+
+		Api.post('event/NOW_PLAYING', payload);
 	}
 
 	render() {

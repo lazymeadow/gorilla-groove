@@ -1,13 +1,14 @@
 import React, {useContext, useEffect, useState} from 'react';
 import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
-import {TrackView} from "../../enums/track-view";
+import {CenterView, TrackView} from "../../enums/site-views";
 import {EditableDiv} from "../editable-div/editable-div";
 import AddPlaylistButton from "../add-playlist/add-playlist";
 import {Modal} from "../modal/modal";
 import {SocketContext} from "../../services/socket-provider";
 import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
+import {PermissionType} from "../../enums/permission-type";
 
 let pendingDeletePlaylist = {};
 
@@ -64,6 +65,7 @@ export default function TrackSourceList(props) {
 		}
 		setEditedId(null);
 
+		props.setCenterView(CenterView.TRACKS);
 		if (section === TrackView.USER) {
 			musicContext.loadSongsForUser(entry.id, {}, false);
 		} else {
@@ -72,30 +74,51 @@ export default function TrackSourceList(props) {
 	};
 
 	const getNowPlayingElement = entry => {
-		const data = socketContext.nowListeningUsers[entry.id];
-		if (!data) {
+		const listeningDevices = socketContext.nowListeningUsers[entry.id];
+		if (!listeningDevices) {
 			return <span/>
 		}
 
-		const songName = data.song;
-		const isMobile = data.isPhone === null ? false : data.isPhone;
-		const deviceText = data.deviceName === null ? '' : 'Device: ' + data.deviceName;
+		const isMobile = listeningDevices.every(device => device.isMobile);
 
-		return <span className="user-listening" title={`${songName}\n${deviceText}`}>
+		const displayText = listeningDevices.map(device =>
+			device.song + '\nDevice: ' + device.deviceName
+		).join('\n\n');
+
+		return <span className="user-listening" title={displayText}>
 			{ isMobile ? <i className="fas fa-mobile"/> : <i className="fas fa-music"/> }
 		</span>
 	};
 
-	const librarySelected = musicContext.trackView === TrackView.LIBRARY ? 'selected' : '';
+	const librarySelected = musicContext.trackView === TrackView.LIBRARY && props.centerView === CenterView.TRACKS
+		? 'selected' : '';
+	const deviceManagementSelected = props.centerView === CenterView.REMOTE_DEVICES
+		? 'selected' : '';
 
 	return (
 		<div id="view-source-list">
 			<div
-				className={`library-option ${librarySelected}`}
-				onMouseDown={() => musicContext.loadSongsForUser()}
+				className={`large-option ${librarySelected}`}
+				onMouseDown={() => {
+					props.setCenterView(CenterView.TRACKS);
+					musicContext.loadSongsForUser();
+				}}
 			>
 				<span className="my-library">My Library</span>
 			</div>
+
+			{ userContext.hasPermission(PermissionType.EXPERIMENTAL) ?
+				<div
+					className={`large-option ${deviceManagementSelected}`}
+					onMouseDown={() => {
+						props.setCenterView(CenterView.REMOTE_DEVICES);
+					}}
+				>
+					<span className="remote-play">Remote Play</span>
+				</div>
+				: null
+			}
+
 			{dataSource.map((node, i) => {
 				const label =
 					<div className="tree-node" onMouseDown={() => handleParentNodeClick(i)}>
