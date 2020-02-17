@@ -4,7 +4,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#99D5F1"
+        android:background="@color/white"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".activities.MainActivity"
         tools:showIn="@layout/activity_main">
@@ -111,7 +111,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:background="@drawable/button_login"
-            android:text="LOG IN"
+            android:text="LET'S GROOVE"
             android:textColor="#FFFFFF"
             android:layout_marginTop="90dp"
             app:layout_constraintLeft_toLeftOf="parent"
