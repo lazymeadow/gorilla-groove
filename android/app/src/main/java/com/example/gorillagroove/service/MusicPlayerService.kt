@@ -140,6 +140,9 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
             markedListened = true
         }
 
+        EventBus.getDefault()
+            .post(UpdateSeekBarEvent("Sending Updated SeekBar Position", player.currentPosition))
+
         return player.currentPosition
     }
 

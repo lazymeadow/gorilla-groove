@@ -331,66 +331,57 @@ class PlaylistActivity : AppCompatActivity(),
         songDuration.text = event.songDuration.toLong().getSongTimeFromMilliseconds()
         songPosition.text = getString(R.string.zeroPosition)
         songPlaying.text = currentSong
-//        controller.show(0)
+        seekBar.max = event.songDuration
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLosses(event: MediaPlayerTransientAudioLossEvent) {
-        Log.i("EventBus", "MessageReceived ${event.message}")
+        Log.i("EventBus", "Message Received ${event.message}")
         pause()
-//        controller.show(0)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onPauseEvent(event: MediaPlayerPauseEvent) {
-        Log.i("EventBus", "MessageReceived ${event.message}")
+        Log.i("EventBus", "Message Received ${event.message}")
         pause()
-//        controller.show(0)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLoss(event: MediaPlayerAudioLossEvent) {
-        Log.i("EventBus", "MessageReceived ${event.message}")
+        Log.i("EventBus", "Message Received ${event.message}")
         stopService(playIntent)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onStartSongEvent(event: MediaPlayerStartSongEvent) {
-        Log.i("EventBus", "MessageReceived ${event.message}")
+        Log.i("EventBus", "Message Received ${event.message}")
         start()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onPlayPreviousSongEvent(event: PlayPreviousSongEvent) {
-        Log.i("EventBus", "MessageReceived ${event.message}")
+        Log.i("EventBus", "Message Received ${event.message}")
         playPrevious()
     }
 
-//    private fun setController() {
-//        controller = MusicController(this@PlaylistActivity)
-//        controller.setPrevNextListeners({ playNext() }, { playPrevious() })
-//        controller.setMediaPlayer(this)
-//        controller.setAnchorView(findViewById(R.id.frame_layout))
-//        controller.isEnabled = true
-//        playbackPaused = false
-//    }
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun onUpdateSeekBarEvent(event: UpdateSeekBarEvent) {
+        Log.i("EventBus", "Message Received ${event.message}")
+        seekBar.progress = event.position
+    }
 
     private fun playNext() {
         musicPlayerService!!.playNext()
         if (playbackPaused) {
-//            setController()
             playbackPaused = false
         }
-//        controller.show(0)
     }
 
     private fun playPrevious() {
         musicPlayerService!!.playPrevious()
         if (playbackPaused) {
-//            setController()
             playbackPaused = false
         }
-//        controller.show(0)
     }
 
     override fun isPlaying(): Boolean {
@@ -450,7 +441,6 @@ class PlaylistActivity : AppCompatActivity(),
     override fun onResume() {
         super.onResume()
         if (playbackPaused) {
-//            setController()
             playbackPaused = false
         }
     }
@@ -542,4 +532,9 @@ class MediaPlayerStartSongEvent(message: String) {
 
 class PlayPreviousSongEvent(message: String) {
     val message = message
+}
+
+class UpdateSeekBarEvent(message: String, position: Int){
+    val message = message
+    val position = position
 }
