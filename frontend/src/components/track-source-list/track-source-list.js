@@ -89,7 +89,7 @@ export default function TrackSourceList(props) {
 
 		console.log(playingDevices);
 		const displayText = playingDevices.map(device =>
-			`${device.trackData.title} - ${device.trackData.artist}\nDevice${device.deviceName}`
+			`${device.trackData.title} - ${device.trackData.artist}\nDevice: ${device.deviceName}`
 		).join('\n\n');
 
 		return <span className="user-listening" title={displayText}>
