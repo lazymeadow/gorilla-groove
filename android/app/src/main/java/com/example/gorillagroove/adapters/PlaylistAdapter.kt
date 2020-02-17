@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gorillagroove.R
-import com.example.gorillagroove.activities.getSongTime
+import com.example.gorillagroove.activities.getSongTimeFromSeconds
 import com.example.gorillagroove.dto.PlaylistSongDTO
 
 class PlaylistAdapter(private val values: List<PlaylistSongDTO>) :
@@ -26,7 +26,7 @@ class PlaylistAdapter(private val values: List<PlaylistSongDTO>) :
         holder.songTitle.text = values[position].track.name
         holder.artist.text = values[position].track.artist
         holder.album.text = values[position].track.album
-        holder.duration.text = values[position].track.length.getSongTime()
+        holder.duration.text = values[position].track.length.getSongTimeFromSeconds()
         holder.itemView.tag = position
     }
 
