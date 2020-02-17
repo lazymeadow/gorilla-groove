@@ -15,8 +15,8 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.MediaController.MediaPlayerControl
+import android.widget.SeekBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -27,7 +27,6 @@ import com.example.gorillagroove.adapters.OnItemClickListener
 import com.example.gorillagroove.adapters.PlaylistAdapter
 import com.example.gorillagroove.client.authenticatedGetRequest
 import com.example.gorillagroove.client.playlistGetRequest
-import com.example.gorillagroove.controller.MusicController
 import com.example.gorillagroove.db.GroovinDB
 import com.example.gorillagroove.db.repository.UserRepository
 import com.example.gorillagroove.dto.PlaylistDTO
@@ -40,25 +39,20 @@ import com.example.gorillagroove.utils.URLs
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.android.material.navigation.NavigationView
-import kotlinx.android.synthetic.main.activity_playlist.drawer_layout
-import kotlinx.android.synthetic.main.activity_playlist.nav_view
-import kotlinx.android.synthetic.main.app_bar_main.toolbar
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.android.synthetic.main.activity_playlist.*
+import kotlinx.android.synthetic.main.app_bar_main.*
+import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import kotlin.system.exitProcess
 
 class PlaylistActivity : AppCompatActivity(),
-    CoroutineScope by MainScope(), MediaPlayerControl, OnItemClickListener,
-    NavigationView.OnNavigationItemSelectedListener {
+        CoroutineScope by MainScope(), MediaPlayerControl, OnItemClickListener,
+        NavigationView.OnNavigationItemSelectedListener {
 
     private val om =
-        ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     private var musicBound = false
     private var repeatEnabled = false
@@ -66,13 +60,15 @@ class PlaylistActivity : AppCompatActivity(),
     private var email: String = ""
     private var userName: String = ""
     private var deviceId: String = ""
-    private var playbackPaused = false
+    private var playbackPaused = true
     private var playIntent: Intent? = null
     private var users: List<Users> = emptyList()
     private var playlists: List<PlaylistDTO> = emptyList()
     private var musicPlayerService: MusicPlayerService? = null
     private var activeSongsList: List<PlaylistSongDTO> = emptyList()
 
+    private lateinit var playButton: Button
+    private lateinit var seekBar: SeekBar
     private lateinit var recyclerView: RecyclerView
     private lateinit var repository: UserRepository
     private var songCurrentPosition = 0
@@ -91,11 +87,11 @@ class PlaylistActivity : AppCompatActivity(),
         }
 
         val toggle = ActionBarDrawerToggle(
-            this@PlaylistActivity,
-            drawer_layout,
-            toolbar,
-            R.string.navigation_drawer_open,
-            R.string.navigation_drawer_close
+                this@PlaylistActivity,
+                drawer_layout,
+                toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
         )
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
@@ -109,19 +105,21 @@ class PlaylistActivity : AppCompatActivity(),
         val navHeaderText = header.findViewById(R.id.tv_nav_header) as TextView
         navHeaderText.text = userName
 
+        seekBar = findViewById(R.id.seekBar_expanded_nav)
+        seekBar.progress = 0
+
         // Set up Media Controls
         val shuffleButton: Button = findViewById(R.id.button_expanded_nav_shuffle)
         shuffleButton.setOnClickListener {
-            when(musicPlayerService!!.setShuffle()) {
+            when (musicPlayerService!!.setShuffle()) {
                 true -> it.setBackgroundResource(R.drawable.shuffle_active)
                 false -> it.setBackgroundResource(R.drawable.shuffle_inactive)
             }
         }
 
-
         val repeatButton: Button = findViewById(R.id.button_expanded_nav_repeat)
         repeatButton.setOnClickListener {
-            repeatEnabled = when(repeatEnabled) {
+            repeatEnabled = when (repeatEnabled) {
                 true -> {
                     it.setBackgroundResource(R.drawable.repeat_inactive)
                     false
@@ -133,7 +131,7 @@ class PlaylistActivity : AppCompatActivity(),
             }
         }
 
-        val playButton: Button = findViewById(R.id.button_expanded_nav_play)
+        playButton = findViewById(R.id.button_expanded_nav_play)
         playButton.setOnClickListener {
             when (playbackPaused) {
                 true -> {
@@ -166,8 +164,8 @@ class PlaylistActivity : AppCompatActivity(),
         val content: String = response.get("content").toString()
 
         activeSongsList =
-            om.readValue(content, arrayOf(Track())::class.java).map { PlaylistSongDTO(0, it) }
-                .toList()
+                om.readValue(content, arrayOf(Track())::class.java).map { PlaylistSongDTO(0, it) }
+                        .toList()
 
         attachSongsListToAdapter()
         if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
@@ -175,7 +173,7 @@ class PlaylistActivity : AppCompatActivity(),
 
     private fun loadPlaylistSongs(playlistId: Long) {
         val response =
-            authenticatedGetRequest("${URLs.PLAYLIST_BASE}playlistId=$playlistId&size=200", token)
+                authenticatedGetRequest("${URLs.PLAYLIST_BASE}playlistId=$playlistId&size=200", token)
 
         val content: String = response.get("content").toString()
         activeSongsList = om.readValue(content, arrayOf(PlaylistSongDTO())::class.java).toList()
@@ -185,11 +183,11 @@ class PlaylistActivity : AppCompatActivity(),
 
     private fun loadUserLibraries(userId: Long) {
         val response =
-            authenticatedGetRequest("${URLs.LIBRARY}&userId=$userId", token)
+                authenticatedGetRequest("${URLs.LIBRARY}&userId=$userId", token)
         val content: String = response.get("content").toString()
         activeSongsList =
-            om.readValue(content, arrayOf(Track())::class.java).map { PlaylistSongDTO(0, it) }
-                .toList()
+                om.readValue(content, arrayOf(Track())::class.java).map { PlaylistSongDTO(0, it) }
+                        .toList()
         attachSongsListToAdapter()
         if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
     }
@@ -217,7 +215,7 @@ class PlaylistActivity : AppCompatActivity(),
         val response = playlistGetRequest(URLs.PLAYLISTS, token)
         if (response.length() > 0) {
             playlists =
-                om.readValue(response.toString(), arrayOf(PlaylistDTO())::class.java).toList()
+                    om.readValue(response.toString(), arrayOf(PlaylistDTO())::class.java).toList()
             val menu = nav_view.menu
             val subMenu = menu.addSubMenu("Playlists")
             playlists.forEach { subMenu.add(1, it.id.toInt(), 1, it.name) }
@@ -246,9 +244,9 @@ class PlaylistActivity : AppCompatActivity(),
         super.onStart()
         if (playIntent == null) {
             playIntent = Intent(this@PlaylistActivity, MusicPlayerService::class.java)
-                .putExtra("email", email)
-                .putExtra("token", token)
-                .putExtra("deviceId", deviceId)
+                    .putExtra("email", email)
+                    .putExtra("token", token)
+                    .putExtra("deviceId", deviceId)
 
             bindService(playIntent, musicConnection, Context.BIND_IMPORTANT)
             startService(playIntent)
@@ -259,10 +257,13 @@ class PlaylistActivity : AppCompatActivity(),
     }
 
     override fun onClick(view: View, position: Int) {
-        Log.i("PlaylistActivity", "onClick called!")
+        Log.i("PlaylistActivity", "onClick called! and playbackPaused = $playbackPaused")
         musicPlayerService!!.setSong(position)
 //        setController()
-        playbackPaused = false
+        if(playbackPaused){
+            playButton.setBackgroundResource(android.R.drawable.ic_media_pause)
+            playbackPaused = false
+        }
         musicPlayerService!!.playSong()
 //        controller.show(0) // Passing 0 so controller always shows
     }
@@ -290,7 +291,7 @@ class PlaylistActivity : AppCompatActivity(),
             }
             R.id.action_settings_logout -> {
                 val user =
-                    runBlocking { withContext(Dispatchers.IO) { repository.findUser(email) } }
+                        runBlocking { withContext(Dispatchers.IO) { repository.findUser(email) } }
                 logout(user!!.id)
                 exitProcess(0)
             }
@@ -388,8 +389,9 @@ class PlaylistActivity : AppCompatActivity(),
     }
 
     override fun getDuration(): Int {
-        if (musicPlayerService != null && musicBound && musicPlayerService!!.isPlaying()) songCurrentDuration =
-            musicPlayerService!!.getDuration()
+        if (musicPlayerService != null && musicBound && musicPlayerService!!.isPlaying()) {
+            songCurrentDuration = musicPlayerService!!.getDuration()
+        }
         return songCurrentDuration
     }
 
@@ -403,8 +405,9 @@ class PlaylistActivity : AppCompatActivity(),
     }
 
     override fun getCurrentPosition(): Int {
-        if (musicPlayerService != null && musicBound && musicPlayerService!!.isPlaying()) songCurrentPosition =
-            musicPlayerService!!.getPosition()
+        if (musicPlayerService != null && musicBound && musicPlayerService!!.isPlaying()) {
+            songCurrentPosition = musicPlayerService!!.getPosition()
+        }
         return songCurrentPosition
     }
 
@@ -473,6 +476,12 @@ class PlaylistActivity : AppCompatActivity(),
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
     }
+}
+
+fun Long.getSongTime(): String {
+    val minutes = this / 60
+    val seconds = this % 60
+    return "$minutes:${String.format("%02d", seconds)}"
 }
 
 class PlayNextSongEvent(message: String) {
