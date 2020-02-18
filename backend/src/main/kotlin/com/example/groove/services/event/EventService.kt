@@ -22,9 +22,11 @@ enum class EventType {
 	NOW_PLAYING, REMOTE_PLAY
 }
 
+@Suppress("unused")
 enum class RemotePlayType {
 	PLAY_SET_SONGS, ADD_SONGS_NEXT, ADD_SONGS_LAST, PAUSE, PLAY, SEEK,
-	SHUFFLE_ENABLE, SHUFFLE_DISABLE, REPEAT_ENABLE, REPEAT_DISABLE
+	SHUFFLE_ENABLE, SHUFFLE_DISABLE, REPEAT_ENABLE, REPEAT_DISABLE,
+	SET_VOLUME, MUTE, UNMUTE
 }
 
 data class NowPlayingEventRequest(
@@ -43,12 +45,14 @@ data class NowPlayingEventRequest(
 data class RemotePlayEventRequest(
 		val targetDeviceId: Long,
 		val trackIds: List<Long>?,
+		val newFloatValue: Double?,
 		val remotePlayAction: RemotePlayType,
 		override val deviceId: String
 ) : EventRequest
 
 data class RemotePlayEventResponse(
 		val tracks: List<Track>?,
+		val newFloatValue: Double?,
 		val remotePlayAction: RemotePlayType,
 		override var lastEventId: Int = -1,
 		override val eventType: EventType = EventType.REMOTE_PLAY

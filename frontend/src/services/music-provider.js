@@ -30,6 +30,8 @@ export class MusicProvider extends React.Component {
 			playedTrack: null,
 			playedTrackIndex: null,
 			isPlaying: false,
+			isMuted: LocalStorage.getBoolean('muted', 1.0),
+			volume: LocalStorage.getNumber('volume', 1.0),
 			songIndexesToShuffle: [],
 			shuffledSongIndexes: [],
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
@@ -61,6 +63,8 @@ export class MusicProvider extends React.Component {
 			setRepeatSongs: (...args) => this.setRepeatSongs(...args),
 			setShuffleSongs: (...args) => this.setShuffleSongs(...args),
 			setShuffleChaos: (...args) => this.setShuffleChaos(...args),
+			setVolume: (...args) => this.setVolume(...args),
+			setMuted: (...args) => this.setMuted(...args),
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
 			setProviderState: (...args) => this.setProviderState(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
@@ -566,7 +570,7 @@ export class MusicProvider extends React.Component {
 	setShuffleSongs(shuffleSongs) {
 		this.setState({
 			shuffleSongs: shuffleSongs,
-			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+			renderCounter: this.state.renderCounter + 1
 		}, () => {
 			if (shuffleSongs) {
 				this.resetShuffleIndexes(this.state.playedTrackIndex);
@@ -578,15 +582,32 @@ export class MusicProvider extends React.Component {
 	setShuffleChaos(shuffleChaos) {
 		this.setState({
 			shuffleChaos,
-			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+			renderCounter: this.state.renderCounter + 1
 		});
 		LocalStorage.setNumber('shuffleChaos', shuffleChaos);
+	}
+
+	setVolume(volume) {
+		const floatVolume = parseFloat(volume);
+		this.setState({
+			volume: floatVolume,
+			renderCounter: this.state.renderCounter + 1
+		});
+		LocalStorage.setNumber('volume', floatVolume);
+	}
+
+	setMuted(isMuted) {
+		this.setState({
+			isMuted,
+			renderCounter: this.state.renderCounter + 1
+		});
+		LocalStorage.setBoolean('muted', isMuted);
 	}
 
 	setRepeatSongs(repeatSongs) {
 		this.setState({
 			repeatSongs: repeatSongs,
-			renderCounter: this.state.renderCounter + 1 // TODO move this out of this context and into the filter one
+			renderCounter: this.state.renderCounter + 1
 		});
 		LocalStorage.setBoolean('repeatSongs', repeatSongs);
 	}

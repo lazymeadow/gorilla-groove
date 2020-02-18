@@ -69,6 +69,12 @@ export class SocketProvider extends React.Component {
 				return this.props.musicContext.setRepeatSongs(true);
 			case RemotePlayType.REPEAT_DISABLE:
 				return this.props.musicContext.setRepeatSongs(false);
+			case RemotePlayType.SET_VOLUME:
+				return this.props.musicContext.setVolume(message.newFloatValue);
+			case RemotePlayType.MUTE:
+				return this.props.musicContext.setMuted(true);
+			case RemotePlayType.UNMUTE:
+				return this.props.musicContext.setMuted(false);
 		}
 	}
 
@@ -87,7 +93,8 @@ export class SocketProvider extends React.Component {
 	}
 
 	sendPlayEvent(data, clearRebroadcast) {
-		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume', 'removeTrack', 'disconnected'];
+		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume',
+			'removeTrack', 'disconnected', 'muted'];
 		const payload = {
 			deviceId: getDeviceId()
 		};
@@ -113,13 +120,23 @@ export class SocketProvider extends React.Component {
 		}
 	}
 
-	sendRemotePlayEvent(eventType, targetDeviceId, trackIds) {
-		return Api.post('event/REMOTE_PLAY', {
+	sendRemotePlayEvent(eventType, targetDeviceId, optionalParams) {
+		const data = optionalParams || {};
+
+		const payload = {
 			remotePlayAction: eventType,
 			deviceId: getDeviceId(),
-			targetDeviceId,
-			trackIds
-		});
+			targetDeviceId
+		};
+
+		if (data.trackIds !== undefined) {
+			payload.trackIds = data.trackIds
+		}
+		if (data.newFloatValue !== undefined) {
+			payload.newFloatValue = data.newFloatValue;
+		}
+
+		return Api.post('event/REMOTE_PLAY', payload);
 	}
 
 	render() {

@@ -6,6 +6,7 @@ import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
+import {getVolumeIcon} from "../../util";
 
 const originalTitle = document.title;
 
@@ -27,8 +28,6 @@ export default function PlaybackControls(props) {
 	const [currentTimePercent, setCurrentTimePercent] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [songUrl, setSongUrl] = useState(null);
-	const [volume, setVolume] = useState(1);
-	const [muted, setMuted] = useState(false);
 
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
@@ -116,8 +115,7 @@ export default function PlaybackControls(props) {
 		const volume = event.target.value;
 
 		audio.volume = volume;
-		setVolume(volume);
-		LocalStorage.setNumber('volume', volume);
+		musicContext.setVolume(volume);
 
 		socketContext.sendPlayEvent({
 			timePlayed: currentTimePercent * duration,
@@ -158,18 +156,6 @@ export default function PlaybackControls(props) {
 		}
 	};
 
-	const getVolumeIcon = () => {
-		if (muted) {
-			return 'fa-volume-mute'
-		} else if (volume > 0.5) {
-			return 'fa-volume-up';
-		} else if (volume > 0) {
-			return 'fa-volume-down'
-		} else {
-			return 'fa-volume-off'
-		}
-	};
-
 	const togglePause = () => {
 		const audio = document.getElementById('audio');
 		if (musicContext.isPlaying) {
@@ -189,11 +175,15 @@ export default function PlaybackControls(props) {
 
 	const toggleMute = () => {
 		const audio = document.getElementById('audio');
-		const newMute = !muted;
+		const newMute = !musicContext.isMuted;
 		audio.muted = newMute;
 
-		LocalStorage.setBoolean('muted', newMute);
-		setMuted(newMute);
+		musicContext.setMuted(newMute);
+
+		socketContext.sendPlayEvent({
+			timePlayed: currentTimePercent * duration,
+			muted: newMute
+		});
 	};
 
 	// I hate this, but so much state is running around keeping it all in sync remotely is such a chore.
@@ -215,10 +205,8 @@ export default function PlaybackControls(props) {
 		audio.addEventListener('durationchange', handleDurationChange);
 		audio.addEventListener('ended', handleSongEnd);
 
-		audio.volume = LocalStorage.getNumber('volume', 1);
-		audio.muted = LocalStorage.getBoolean('muted', false);
-		setVolume(audio.volume);
-		setMuted(audio.muted);
+		audio.volume = musicContext.volume;
+		audio.muted = musicContext.isMuted;
 
 		if (!initialStateSent) {
 			initialStateSent = true;
@@ -311,8 +299,13 @@ export default function PlaybackControls(props) {
 				});
 		}
 
-		broadcastListenHeartbeatIfNeeded(currentTimePercent, volume);
+		broadcastListenHeartbeatIfNeeded(currentTimePercent, musicContext.volume);
 	};
+
+	if (audio !== null && musicContext.volume !== audio.volume) {
+		console.log('Adjusting volume', audio.volume, musicContext.volume);
+		audio.volume = musicContext.volume;
+	}
 
 	const playedTrack = musicContext.playedTrack;
 	const src = playedTrack ? songUrl : '';
@@ -384,7 +377,7 @@ export default function PlaybackControls(props) {
 
 					<div className="volume-wrapper">
 						<i
-							className={`fas ${getVolumeIcon()}`}
+							className={`fas ${getVolumeIcon(musicContext.volume, musicContext.isMuted)}`}
 							onMouseDown={toggleMute}
 						/>
 						<input
@@ -394,14 +387,14 @@ export default function PlaybackControls(props) {
 							min="0"
 							max="1"
 							step="0.01"
-							value={volume}
+							value={musicContext.volume}
 						/>
 					</div>
 				</div>
 			</div>
 
 			<div className="shuffle-wrapper">
-				{ musicContext.shuffleSongs ? <ShuffleChaos/> : <div/> }
+				{ musicContext.shuffleSongs ? <ShuffleChaos/> : null }
 			</div>
 		</div>
 	)

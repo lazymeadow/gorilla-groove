@@ -38,7 +38,7 @@ function RemotePlayModal(props) {
 		socket.sendRemotePlayEvent(
 			props.playType,
 			targetId,
-			props.getSelectedTracks().map(track => track.id)
+			{ trackIds: props.getSelectedTracks().map(track => track.id) }
 		).then(() => {
 			toast.success('Remote play action sent');
 			props.closeFunction();

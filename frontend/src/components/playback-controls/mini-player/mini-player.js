@@ -1,24 +1,20 @@
-import React from "react";
+import React, {useRef, useState} from "react";
 import {formatTimeFromSeconds} from "../../../formatters";
+import {getVolumeIcon} from "../../../util";
 
 export default function MiniPlayer(props) {
+	const timeSliderRef = useRef(null);
+	const volumeSliderRef = useRef(null);
+
+	if (timeSliderRef.current !== null) {
+		timeSliderRef.current.value = props.timePlayed / props.trackData.duration;
+	}
+
+	if (volumeSliderRef.current !== null) {
+		volumeSliderRef.current.value = props.volume;
+	}
 
 	// TODO reuse
-	const getVolumeIcon = (muted, volume) => {
-		if (muted) {
-			return 'fa-volume-mute'
-		} else if (volume > 0.5) {
-			return 'fa-volume-up';
-		} else if (volume > 0) {
-			return 'fa-volume-down'
-		} else {
-			return 'fa-volume-off'
-		}
-	};
-
-	const playPercentage = !isNaN(props.timePlayed / props.trackData.duration)
-		? props.timePlayed / props.trackData.duration
-		: 0;
 
 	return (
 		<div className="song-player mini-player">
@@ -63,13 +59,14 @@ export default function MiniPlayer(props) {
 							{formatTimeFromSeconds(props.timePlayed)} / {formatTimeFromSeconds(props.trackData.duration)}
 						</div>
 						<input
+							ref={timeSliderRef}
 							type="range"
 							className="time-slider"
-							onChange={() => {}}
+							onMouseUp={e => props.onTimeChange(e.target.value, false)}
+							onChange={e => props.onTimeChange(e.target.value, true)}
 							min="0"
 							max="1"
 							step="0.01"
-							value={playPercentage || 0}
 						/>
 					</div>
 					<div className="bottom-controls">
@@ -83,17 +80,18 @@ export default function MiniPlayer(props) {
 						/>
 
 						<i
-							className={`fas ${getVolumeIcon()} volume-icon`}
-							// onMouseDown={toggleMute}
+							className={`fas ${getVolumeIcon(props.volume, props.muted)} volume-icon`}
+							onMouseDown={props.onMuteChange}
 						/>
 						<input
+							ref={volumeSliderRef}
 							type="range"
 							className="volume-slider"
-							onChange={() => {}}
+							onMouseUp={e => props.onVolumeChange(e.target.value, false)}
+							onChange={e => props.onVolumeChange(e.target.value, true)}
 							min="0"
 							max="1"
 							step="0.01"
-							value={props.volume || 1}
 						/>
 					</div>
 				</div>

@@ -47,6 +47,7 @@ class DeviceEventService(
 
 		val eventResponse = RemotePlayEventResponse(
 				tracks = tracksToPlay,
+				newFloatValue = event.newFloatValue,
 				remotePlayAction = event.remotePlayAction
 		)
 

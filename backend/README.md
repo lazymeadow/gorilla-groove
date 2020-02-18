@@ -7,7 +7,7 @@ Copy `/config/application.properties.cfg` to `/config/application.properties`.
 Environment specific setup will go in here. Some of the items in that file will need to be configured for the server to run successfully.
 
 ### Database
-Gorilla Groove uses MySQL. Right now there isn't a hard version requirement. Likely any modern MySQL will work.
+Gorilla Groove uses MySQL, and is always intended to run on the latest version. Right now that is MySQL 8.
 
 Create a database called "groovatron"
 
@@ -19,7 +19,6 @@ If your MySQL is running on localhost with port 3306, then you are done. If it i
 
 FFmpeg is used to convert files to OGG format. It will need to be installed from https://www.ffmpeg.org/download.html
 Once installed, edit `/config/application.properties` and setup `spring.data.ffmpeg.binary.location` to be the location to the FFmpeg binaries.
-Setup `spring.data.ffmpeg.output.location` to be some value for music to be exported to when converted
 
 ## Running
 
