@@ -23,12 +23,10 @@ export default function SongDelete(props) {
 	};
 	const getDeletionText = () => {
 		const tracks = props.getSelectedTracks();
-		if (tracks[0] !== undefined) {
-			if (tracks.length === 1) {
-				return `Are you sure you want to delete ${tracks[0].name} - ${tracks[0].artist}?`;
-			} else {
-				return `Are you sure you want to delete these ${tracks.length} tracks?`;
-			}
+		if (tracks.length === 1) {
+			return `Are you sure you want to delete ${tracks[0].name} - ${tracks[0].artist}?`;
+		} else {
+			return `Are you sure you want to delete these ${tracks.length} tracks?`;
 		}
 	};
 

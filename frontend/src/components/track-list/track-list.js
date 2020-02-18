@@ -315,6 +315,11 @@ export class TrackList extends React.Component {
 	}
 
 	getSelectedTracks() {
+		// This can happen if we are attempting to get the selected tracks during a reload (like after deleting)
+		if (this.props.userTracks.length === 0) {
+			return [];
+		}
+
 		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
 	}
 
