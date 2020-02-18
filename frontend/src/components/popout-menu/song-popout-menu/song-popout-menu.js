@@ -13,6 +13,7 @@ import RemotePlay from "../../remote-play/modal/remote-play";
 import {RemotePlayType} from "../../remote-play/modal/remote-play-type";
 import {UserContext} from "../../../services/user-provider";
 import {PermissionType} from "../../../enums/permission-type";
+import SongDelete from "./song-delete/song-delete";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -83,21 +84,27 @@ export default function SongPopoutMenu(props) {
 				component: <PopoutMenu
 					mainItem={{ text: 'Remote Play' }}
 					menuItems={[
-						{ component: <RemotePlay
+						{
+							component: <RemotePlay
 								title="Play Now"
 								playType={RemotePlayType.PLAY_SET_SONGS}
 								getSelectedTracks={props.getSelectedTracks}
-							/> },
-						{ component: <RemotePlay
+							/>
+						},
+						{
+							component: <RemotePlay
 								title="Play Next"
 								playType={RemotePlayType.ADD_SONGS_NEXT}
 								getSelectedTracks={props.getSelectedTracks}
-							/> },
-						{ component: <RemotePlay
+							/>
+						},
+						{
+							component: <RemotePlay
 								title="Play Last"
 								playType={RemotePlayType.ADD_SONGS_LAST}
 								getSelectedTracks={props.getSelectedTracks}
-							/> },
+							/>
+						},
 					]}
 					expansionOnHover={true}
 				/>
@@ -209,20 +216,7 @@ export default function SongPopoutMenu(props) {
 			}, {
 				component: <MetadataRequest getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
-				text: 'Delete', clickHandler: e => {
-					e.stopPropagation();
-					const tracks = props.getSelectedTracks();
-					musicContext.deleteTracks(tracks, false).then(() => {
-						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was deleted`);
-						} else {
-							toast.success(`${tracks.length} tracks were deleted`);
-						}
-					}).catch(error => {
-						console.error(error);
-						toast.error('Failed to delete the selected tracks');
-					});
-				}
+				component: <SongDelete getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}
 		];
 
@@ -328,11 +322,13 @@ export default function SongPopoutMenu(props) {
 			}
 		});
 
-		return { component: <PopoutMenu
+		return {
+			component: <PopoutMenu
 				mainItem={{ text: 'Add to Playlist' }}
 				menuItems={playlistItems}
 				expansionOnHover={true}
-			/> }
+			/>
+		}
 	};
 
 	menuOptions = calculateMenuOptions();
