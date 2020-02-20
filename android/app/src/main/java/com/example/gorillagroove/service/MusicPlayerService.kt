@@ -17,7 +17,7 @@ import androidx.core.app.NotificationCompat
 import com.example.gorillagroove.R
 import com.example.gorillagroove.activities.*
 import com.example.gorillagroove.client.authenticatedGetRequest
-import com.example.gorillagroove.client.listenedAndNowPlayingRequests
+import com.example.gorillagroove.client.markListenedRequest
 import com.example.gorillagroove.db.GroovinDB
 import com.example.gorillagroove.db.repository.UserRepository
 import com.example.gorillagroove.dto.PlaylistSongDTO
@@ -130,11 +130,12 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         lastRecordedTime = currentTime
         playCountPosition += elapsedPosition // Milliseconds
 
-        if (player.isPlaying) nowPlayingCounter += elapsedPosition
-        if (nowPlayingCounter >= 20000) {
-            sendNowPlayingRequest(deviceId, getCurrentTrackId())
-            nowPlayingCounter = 0
-        }
+        // Will come back to this once now playing is fixed
+//        if (player.isPlaying) nowPlayingCounter += elapsedPosition
+//        if (nowPlayingCounter >= 20000) {
+//            sendNowPlayingRequest(deviceId, getCurrentTrackId())
+//            nowPlayingCounter = 0
+//        }
         if (!markedListened && playCountDuration > 0 && playCountPosition >= playCountDuration) {
             markListened(playCountPosition, player.currentPosition, playCountDuration, deviceId)
             markedListened = true
@@ -164,13 +165,13 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
 
     fun pausePlayer() {
         player.pause()
-        sendNowPlayingRequest(deviceId, null)
+//        sendNowPlayingRequest(deviceId, null)
     }
 
     fun start() {
         player.start()
         lastRecordedTime = System.currentTimeMillis().toInt()
-        sendNowPlayingRequest(deviceId, getCurrentTrackId())
+//        sendNowPlayingRequest(deviceId, getCurrentTrackId())
     }
 
     fun requestAudioFocus() {
@@ -440,19 +441,20 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         return TrackResponse(response["songLink"].toString(), response["albumArtLink"].toString())
     }
 
-    private fun sendNowPlayingRequest(deviceId: String, trackId: Long?) {
-        Log.d("MusicPlayerService", "Sending \"Now Playing\" track=$trackId")
-        launch {
-            withContext(Dispatchers.IO) {
-                listenedAndNowPlayingRequests(
-                    URLs.NOW_PLAYING,
-                    trackId,
-                    token,
-                    deviceId
-                )
-            }
-        }
-    }
+    // Will come back to this in a future update
+//    private fun sendNowPlayingRequest(deviceId: String, trackId: Long?) {
+//        Log.d("MusicPlayerService", "Sending \"Now Playing\" track=$trackId")
+//        launch {
+//            withContext(Dispatchers.IO) {
+//                markListenedRequest(
+//                    URLs.NOW_PLAYING,
+//                    trackId,
+//                    token,
+//                    deviceId
+//                )
+//            }
+//        }
+//    }
 
     private fun markListened(
         playCountPosition: Int,
@@ -467,7 +469,7 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         )
         launch {
             withContext(Dispatchers.IO) {
-                listenedAndNowPlayingRequests(
+                markListenedRequest(
                     URLs.MARK_LISTENED,
                     trackId,
                     token,
