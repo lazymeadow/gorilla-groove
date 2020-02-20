@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.MediaController.MediaPlayerControl
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -137,9 +138,11 @@ class PlaylistActivity : AppCompatActivity(),
             repeatEnabled = when (repeatEnabled) {
                 true -> {
                     it.setBackgroundResource(R.drawable.repeat_inactive)
+                    Toast.makeText(this, "The cake is a lie", Toast.LENGTH_SHORT).show()
                     false
                 }
                 false -> {
+                    Toast.makeText(this, "Ha! Repeat is ALWAYS enabled!", Toast.LENGTH_SHORT).show()
                     it.setBackgroundResource(R.drawable.repeat_active)
                     true
                 }
