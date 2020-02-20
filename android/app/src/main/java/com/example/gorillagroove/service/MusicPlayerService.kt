@@ -1,10 +1,6 @@
 package com.example.gorillagroove.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
@@ -19,28 +15,16 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.gorillagroove.R
-import com.example.gorillagroove.activities.MediaPlayerAudioLossEvent
-import com.example.gorillagroove.activities.MediaPlayerLoadedEvent
-import com.example.gorillagroove.activities.MediaPlayerPauseEvent
-import com.example.gorillagroove.activities.MediaPlayerStartSongEvent
-import com.example.gorillagroove.activities.MediaPlayerTransientAudioLossEvent
-import com.example.gorillagroove.activities.PlayNextSongEvent
-import com.example.gorillagroove.activities.PlayPreviousSongEvent
-import com.example.gorillagroove.activities.PlaylistActivity
+import com.example.gorillagroove.activities.*
 import com.example.gorillagroove.client.authenticatedGetRequest
-import com.example.gorillagroove.client.listenedAndNowPlayingRequests
+import com.example.gorillagroove.client.markListenedRequest
 import com.example.gorillagroove.db.GroovinDB
 import com.example.gorillagroove.db.repository.UserRepository
 import com.example.gorillagroove.dto.PlaylistSongDTO
 import com.example.gorillagroove.dto.TrackResponse
 import com.example.gorillagroove.utils.URLs
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
-import java.net.URLStreamHandler
 
 @RequiresApi(Build.VERSION_CODES.N)
 private const val IMPORTANCE = NotificationManager.IMPORTANCE_LOW
@@ -140,28 +124,31 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     }
 
 
-
     fun getPosition(): Int {
         val currentTime = System.currentTimeMillis().toInt()
         val elapsedPosition = currentTime - lastRecordedTime
         lastRecordedTime = currentTime
         playCountPosition += elapsedPosition // Milliseconds
 
-        if(player.isPlaying) nowPlayingCounter += elapsedPosition
-        if(nowPlayingCounter >= 20000){
-            sendNowPlayingRequest(deviceId, getCurrentTrackId())
-            nowPlayingCounter = 0
-        }
+        // Will come back to this once now playing is fixed
+//        if (player.isPlaying) nowPlayingCounter += elapsedPosition
+//        if (nowPlayingCounter >= 20000) {
+//            sendNowPlayingRequest(deviceId, getCurrentTrackId())
+//            nowPlayingCounter = 0
+//        }
         if (!markedListened && playCountDuration > 0 && playCountPosition >= playCountDuration) {
             markListened(playCountPosition, player.currentPosition, playCountDuration, deviceId)
             markedListened = true
         }
 
+        EventBus.getDefault()
+            .post(UpdateSeekBarEvent("Sending Updated SeekBar Position", player.currentPosition))
+
         return player.currentPosition
     }
 
     private fun getCurrentTrackId(): Long {
-        return when(shuffle){
+        return when (shuffle) {
             true -> songs[currentSongPosition].track.id
             false -> songs[songPosition].track.id
         }
@@ -178,13 +165,13 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
 
     fun pausePlayer() {
         player.pause()
-        sendNowPlayingRequest(deviceId, null)
+//        sendNowPlayingRequest(deviceId, null)
     }
 
     fun start() {
         player.start()
         lastRecordedTime = System.currentTimeMillis().toInt()
-        sendNowPlayingRequest(deviceId, getCurrentTrackId())
+//        sendNowPlayingRequest(deviceId, getCurrentTrackId())
     }
 
     fun requestAudioFocus() {
@@ -213,7 +200,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
                     playbackDelayed = false
                     start()
                     EventBus.getDefault()
-                        .post(MediaPlayerLoadedEvent("Media Player Loaded, now Showing"))
+                        .post(
+                            MediaPlayerLoadedEvent(
+                                "Media Player Loaded, now Showing",
+                                songTitle,
+                                artist,
+                                getDuration()
+                            )
+                        )
                 }
                 AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
                     playbackDelayed = true
@@ -328,10 +322,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
 
             val notificationCompat = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.pause_song_small, "pause", pendingPauseSongIntent)
-                .addAction(R.drawable.play_song_small, "play", pendingPlaySongIntent)
-                .addAction(R.drawable.next_song_small, "next", pendingNextSongIntent)
-                .addAction(R.drawable.previous_song_small, "previous", pendingPreviousSongIntent)
+                .addAction(android.R.drawable.ic_media_pause, "pause", pendingPauseSongIntent)
+                .addAction(android.R.drawable.ic_media_play, "play", pendingPlaySongIntent)
+                .addAction(android.R.drawable.ic_media_next, "next", pendingNextSongIntent)
+                .addAction(
+                    android.R.drawable.ic_media_previous,
+                    "previous",
+                    pendingPreviousSongIntent
+                )
                 .setContentTitle("Gorilla Groove")
                 .setContentText("$songTitle - $artist")
                 .setSmallIcon(R.drawable.logo)
@@ -342,9 +340,9 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         } else {
             val notificationCompat = Notification.Builder(applicationContext)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.pause_song_small, "pause", pendingPauseSongIntent)
-                .addAction(R.drawable.play_song_small, "play", pendingPlaySongIntent)
-                .addAction(R.drawable.next_song_small, "next", pendingNextSongIntent)
+                .addAction(android.R.drawable.ic_media_pause, "pause", pendingPauseSongIntent)
+                .addAction(android.R.drawable.ic_media_play, "play", pendingPlaySongIntent)
+                .addAction(android.R.drawable.ic_media_next, "next", pendingNextSongIntent)
                 .setContentTitle("Gorilla Groove")
                 .setContentText("$songTitle - $artist")
                 .setSmallIcon(R.drawable.logo)
@@ -353,7 +351,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
 
             startForeground(NOTIFY_ID, notificationCompat.build())
         }
-        EventBus.getDefault().post(MediaPlayerLoadedEvent("Media Player Loaded, now Showing"))
+        EventBus.getDefault().post(
+            MediaPlayerLoadedEvent(
+                "Media Player Loaded, now Showing",
+                songTitle,
+                artist,
+                getDuration()
+            )
+        )
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
@@ -436,19 +441,20 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         return TrackResponse(response["songLink"].toString(), response["albumArtLink"].toString())
     }
 
-    private fun sendNowPlayingRequest(deviceId: String, trackId: Long?){
-        Log.d( "MusicPlayerService", "Sending \"Now Playing\" track=$trackId")
-        launch {
-            withContext(Dispatchers.IO) {
-                listenedAndNowPlayingRequests(
-                    URLs.NOW_PLAYING,
-                    trackId,
-                    token,
-                    deviceId
-                )
-            }
-        }
-    }
+    // Will come back to this in a future update
+//    private fun sendNowPlayingRequest(deviceId: String, trackId: Long?) {
+//        Log.d("MusicPlayerService", "Sending \"Now Playing\" track=$trackId")
+//        launch {
+//            withContext(Dispatchers.IO) {
+//                markListenedRequest(
+//                    URLs.NOW_PLAYING,
+//                    trackId,
+//                    token,
+//                    deviceId
+//                )
+//            }
+//        }
+//    }
 
     private fun markListened(
         playCountPosition: Int,
@@ -463,7 +469,7 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         )
         launch {
             withContext(Dispatchers.IO) {
-                listenedAndNowPlayingRequests(
+                markListenedRequest(
                     URLs.MARK_LISTENED,
                     trackId,
                     token,
@@ -481,7 +487,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
                 if (!paused) {
                     player.start()
                     EventBus.getDefault()
-                        .post(MediaPlayerLoadedEvent("Media Player Loaded, now Showing"))
+                        .post(
+                            MediaPlayerLoadedEvent(
+                                "Media Player Loaded, now Showing",
+                                songTitle,
+                                artist,
+                                getDuration()
+                            )
+                        )
                 }
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {

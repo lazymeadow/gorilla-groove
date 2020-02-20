@@ -11,8 +11,17 @@
             android:id="@+id/rv_playlist"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginBottom="100dp"
             android:paddingTop="?attr/actionBarSize" >
 
     </androidx.recyclerview.widget.RecyclerView>
+
+    <include
+        android:id="@+id/media_controls"
+        android:layout_gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        layout="@layout/media_controls_expanded"
+        />
 
 </FrameLayout>
