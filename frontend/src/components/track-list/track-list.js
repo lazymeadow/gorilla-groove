@@ -320,7 +320,12 @@ export class TrackList extends React.Component {
 			return [];
 		}
 
-		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
+		return Object.keys(this.state.selected)
+			.map(index => this.props.userTracks[index])
+			// Selection indexes may no longer be valid if we filtered since selecting stuff. This is pretty hacky
+			// and really, removing the invalid selections as soon as they become invalid would absolutely be smarter.
+			// But the selection code is scary atm and I am kicking an overhaul down the road
+			.filter(track => track !== undefined);
 	}
 
 	getSelectedTrackIndexes() {
