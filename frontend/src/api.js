@@ -22,7 +22,7 @@ export class Api {
 			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
 			// I don't like this behavior, since there was an issue. Throw an error so they fall into catch()
 			if (!res.ok) {
-				throw Error(res.statusText)
+				throw Error('Http error with status: ' + res.status);
 			}
 
 			return res.json()
@@ -53,7 +53,7 @@ export class Api {
 			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
 			// I don't like this behavior, since there was an issue. Throw an error so they fall into catch()
 			if (!res.ok) {
-				throw Error(res.statusText)
+				throw Error('Http error with status: ' + res.status);
 			}
 
 			// There isn't always a response body for POSTs, and calling res.json() will create a parse error

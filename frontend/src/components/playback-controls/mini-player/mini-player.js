@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useRef} from "react";
 import {formatTimeFromSeconds} from "../../../formatters";
 import {getVolumeIcon} from "../../../util";
 
@@ -13,8 +13,6 @@ export default function MiniPlayer(props) {
 	if (volumeSliderRef.current !== null) {
 		volumeSliderRef.current.value = props.volume;
 	}
-
-	// TODO reuse
 
 	return (
 		<div className="song-player mini-player">
@@ -41,7 +39,7 @@ export default function MiniPlayer(props) {
 			<div className="flex-between bottom-section">
 				<div className="playback-controls">
 					<i
-						// onMouseDown={musicContext.playPrevious}
+						onMouseDown={props.onPlayPrevious}
 						className="fas fa-step-backward"
 					/>
 					<i
@@ -49,7 +47,7 @@ export default function MiniPlayer(props) {
 						className={`fas fa-${props.playing ? 'pause' : 'play'}`}
 					/>
 					<i
-						// onMouseDown={musicContext.playNext}
+						onMouseDown={props.onPlayNext}
 						className="fas fa-step-forward"
 					/>
 				</div>

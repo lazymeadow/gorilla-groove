@@ -49,6 +49,10 @@ export class SocketProvider extends React.Component {
 		switch (message.remotePlayAction) {
 			case RemotePlayType.PLAY_SET_SONGS:
 				return this.props.musicContext.playTracks(message.tracks);
+			case RemotePlayType.PLAY_NEXT:
+				return this.props.musicContext.playNext();
+			case RemotePlayType.PLAY_PREVIOUS:
+				return this.props.musicContext.playPrevious();
 			case RemotePlayType.ADD_SONGS_NEXT:
 				return this.props.musicContext.playTracksNext(message.tracks);
 			case RemotePlayType.ADD_SONGS_LAST:

@@ -147,6 +147,12 @@ export default function RemotePlayManagement() {
 						)
 					}
 				}}
+				onPlayNext={() => {
+					socket.sendRemotePlayEvent(RemotePlayType.PLAY_NEXT, device.id)
+				}}
+				onPlayPrevious={() => {
+					socket.sendRemotePlayEvent(RemotePlayType.PLAY_PREVIOUS, device.id)
+				}}
 			/>
 		})}
 	</div>
