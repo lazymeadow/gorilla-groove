@@ -119,10 +119,7 @@ export default function PlaybackControls(props) {
 		audio.volume = volume;
 		playbackContext.setVolume(volume);
 
-		socketContext.sendPlayEvent({
-			timePlayed: currentTimePercent * duration,
-			volume
-		});
+		socketContext.sendPlayEvent({ volume });
 	};
 
 	const changePlayTime = event => {
@@ -182,24 +179,8 @@ export default function PlaybackControls(props) {
 
 		playbackContext.setMuted(newMute);
 
-		socketContext.sendPlayEvent({
-			timePlayed: currentTimePercent * duration,
-			muted: newMute
-		});
+		socketContext.sendPlayEvent({ muted: newMute });
 	};
-
-	// I hate this, but so much state is running around keeping it all in sync remotely is such a chore.
-	// This is a cop out of my bad design to keep things in sync
-	if (socketContext.pendingRebroadcast) {
-		const audio = document.getElementById('audio');
-		socketContext.sendPlayEvent({
-			volume: audio.volume,
-			muted: audio.muted,
-			timePlayed: currentTimePercent * duration,
-			isShuffling: musicContext.shuffleSongs,
-			isRepeating: musicContext.repeatSongs
-		}, true);
-	}
 
 	useEffect(() => {
 		const audio = document.getElementById('audio');
@@ -242,6 +223,7 @@ export default function PlaybackControls(props) {
 	]);
 
 	const audio = document.getElementById('audio');
+
 	if (
 		(!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
 		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
@@ -322,8 +304,13 @@ export default function PlaybackControls(props) {
 		broadcastListenHeartbeatIfNeeded(currentTimePercent);
 	};
 
-	if (audio !== null && playbackContext.volume !== audio.volume) {
-		audio.volume = playbackContext.volume;
+	if (audio !== null) {
+		if (playbackContext.volume !== audio.volume) {
+			audio.volume = playbackContext.volume;
+		}
+		if (audio.muted !== playbackContext.isMuted) {
+			audio.muted = playbackContext.isMuted;
+		}
 	}
 
 	const playedTrack = musicContext.playedTrack;
@@ -360,20 +347,14 @@ export default function PlaybackControls(props) {
 						<i
 							onMouseDown={() => {
 								musicContext.setShuffleSongs(!musicContext.shuffleSongs);
-								socketContext.sendPlayEvent({
-									timePlayed: currentTimePercent * duration,
-									isShuffling: !musicContext.shuffleSongs
-								});
+								socketContext.sendPlayEvent({ isShuffling: !musicContext.shuffleSongs });
 							}}
 							className={`fas fa-random control ${musicContext.shuffleSongs ? 'enabled' : ''}`}
 						/>
 						<i
 							onMouseDown={() => {
 								musicContext.setRepeatSongs(!musicContext.repeatSongs);
-								socketContext.sendPlayEvent({
-									timePlayed: currentTimePercent * duration,
-									isRepeating: !musicContext.repeatSongs
-								});
+								socketContext.sendPlayEvent({ isRepeating: !musicContext.repeatSongs });
 							}}
 							className={`fas fa-sync-alt control ${musicContext.repeatSongs ? 'enabled' : ''}`}
 						/>

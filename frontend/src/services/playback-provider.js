@@ -16,7 +16,6 @@ export class PlaybackProvider extends React.Component {
 
 			setVolume: (...args) => this.setVolume(...args),
 			setMuted: (...args) => this.setMuted(...args),
-			clearTimePlayedOverride: (...args) => this.clearTimePlayedOverride(...args),
 			setProviderState: (...args) => this.setProviderState(...args)
 		}
 	}
@@ -26,24 +25,14 @@ export class PlaybackProvider extends React.Component {
 	}
 
 	setMuted(isMuted) {
-		this.setState({
-			isMuted,
-			renderCounter: this.state.renderCounter + 1
-		});
+		this.setState({ isMuted });
 		LocalStorage.setBoolean('muted', isMuted);
 	}
 
 	setVolume(volume) {
 		const floatVolume = parseFloat(volume);
-		this.setState({
-			volume: floatVolume,
-			renderCounter: this.state.renderCounter + 1
-		});
+		this.setState({ volume: floatVolume });
 		LocalStorage.setNumber('volume', floatVolume);
-	}
-
-	clearTimePlayedOverride() {
-		this.setState({ timePlayedOverride: 0 });
 	}
 
 	render() {

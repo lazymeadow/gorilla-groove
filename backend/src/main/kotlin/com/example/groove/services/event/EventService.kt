@@ -2,6 +2,7 @@ package com.example.groove.services.event
 
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 interface EventRequest {
@@ -79,6 +80,9 @@ data class SongListenResponse(
 		val isShuffling: Boolean,
 		val isRepeating: Boolean,
 		var isPlaying: Boolean,
+		val lastTimeUpdate: Long, // millis
+
+		@JsonIgnore
 		val lastUpdate: Long // millis
 )
 

@@ -75,7 +75,7 @@ export default function RemotePlayManagement() {
 	return <div id="remote-play-management">
 		{devices.map(device => {
 			const listeningState = deviceIdToListeningState[device.id] || {};
-			const elapsedTime = currentTime - getDeviceValue(device.id, listeningState, 'lastUpdate');
+			const elapsedTime = currentTime - getDeviceValue(device.id, listeningState, 'lastTimeUpdate');
 
 			// We might only get updates every ~20 seconds or so. Estimate the play time
 			// if the song is playing so the bar doesn't update so infrequently.
@@ -102,30 +102,33 @@ export default function RemotePlayManagement() {
 					);
 				}}
 				onShuffleChange={() => {
-					setOverride(device.id, 'shuffling', !getDeviceValue(device.id, listeningState, 'shuffling'));
+					const currentState = getDeviceValue(device.id, listeningState, 'shuffling');
+					setOverride(device.id, 'shuffling', !currentState);
 					socket.sendRemotePlayEvent(
-						listeningState.shuffling ? RemotePlayType.SHUFFLE_DISABLE : RemotePlayType.SHUFFLE_ENABLE,
+						currentState ? RemotePlayType.SHUFFLE_DISABLE : RemotePlayType.SHUFFLE_ENABLE,
 						device.id
 					);
 				}}
 				onRepeatChange={() => {
-					setOverride(device.id, 'repeating', !getDeviceValue(device.id, listeningState, 'repeating'));
+					const currentState = getDeviceValue(device.id, listeningState, 'repeating');
+					setOverride(device.id, 'repeating', !currentState);
 					socket.sendRemotePlayEvent(
-						listeningState.repeating ? RemotePlayType.REPEAT_DISABLE : RemotePlayType.REPEAT_ENABLE,
+						currentState ? RemotePlayType.REPEAT_DISABLE : RemotePlayType.REPEAT_ENABLE,
 						device.id
 					);
 				}}
 				onMuteChange={() => {
-					setOverride(device.id, 'muted', !getDeviceValue(device.id, listeningState, 'muted'));
+					const currentState = getDeviceValue(device.id, listeningState, 'muted');
+					setOverride(device.id, 'muted', !currentState);
 					socket.sendRemotePlayEvent(
-						listeningState.muted ? RemotePlayType.UNMUTE : RemotePlayType.MUTE,
+						currentState ? RemotePlayType.UNMUTE : RemotePlayType.MUTE,
 						device.id
 					);
 				}}
 				onTimeChange={(newTimePercent, isHeld) => {
 					const newTime = newTimePercent * listeningState.trackData.duration;
 					setOverride(device.id, 'timePlayed', newTime);
-					setOverride(device.id, 'lastUpdate', Date.now());
+					setOverride(device.id, 'lastTimeUpdate', Date.now());
 					if (!isHeld) {
 						socket.sendRemotePlayEvent(
 							RemotePlayType.SEEK,

@@ -14,7 +14,6 @@ export class SocketProvider extends React.Component {
 
 		this.state = {
 			nowListeningUsers: {},
-			pendingRebroadcast: false,
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args),
@@ -47,9 +46,6 @@ export class SocketProvider extends React.Component {
 	}
 
 	handleRemotePlayMessage(message) {
-		// Put it in a timeout so the context finishes its state set first and we have accurate state
-		setTimeout(() => this.setState({ pendingRebroadcast: true }));
-
 		switch (message.remotePlayAction) {
 			case RemotePlayType.PLAY_SET_SONGS:
 				return this.props.musicContext.playTracks(message.tracks);
@@ -62,18 +58,25 @@ export class SocketProvider extends React.Component {
 			case RemotePlayType.PAUSE:
 				return this.props.playbackContext.setProviderState({ isPlaying: false });
 			case RemotePlayType.SHUFFLE_ENABLE:
+				this.sendPlayEvent({ isShuffling: true });
 				return this.props.musicContext.setShuffleSongs(true);
 			case RemotePlayType.SHUFFLE_DISABLE:
+				this.sendPlayEvent({ isShuffling: false });
 				return this.props.musicContext.setShuffleSongs(false);
 			case RemotePlayType.REPEAT_ENABLE:
+				this.sendPlayEvent({ isRepeating: true });
 				return this.props.musicContext.setRepeatSongs(true);
 			case RemotePlayType.REPEAT_DISABLE:
+				this.sendPlayEvent({ isRepeating: false });
 				return this.props.musicContext.setRepeatSongs(false);
 			case RemotePlayType.SET_VOLUME:
+				this.sendPlayEvent({ volume: message.newFloatValue });
 				return this.props.playbackContext.setVolume(message.newFloatValue);
 			case RemotePlayType.MUTE:
+				this.sendPlayEvent({ muted: true });
 				return this.props.playbackContext.setMuted(true);
 			case RemotePlayType.UNMUTE:
+				this.sendPlayEvent({ muted: false });
 				return this.props.playbackContext.setMuted(false);
 			case RemotePlayType.SEEK:
 				return this.props.playbackContext.setProviderState({ timePlayedOverride: message.newFloatValue });
@@ -94,7 +97,7 @@ export class SocketProvider extends React.Component {
 		this.sendPlayEvent({ disconnected: true });
 	}
 
-	sendPlayEvent(data, clearRebroadcast) {
+	sendPlayEvent(data) {
 		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume',
 			'removeTrack', 'disconnected', 'muted'];
 		const payload = {
@@ -116,10 +119,6 @@ export class SocketProvider extends React.Component {
 		});
 
 		Api.post('event/NOW_PLAYING', payload);
-
-		if (clearRebroadcast) {
-			this.setState({ pendingRebroadcast: false });
-		}
 	}
 
 	sendRemotePlayEvent(eventType, targetDeviceId, optionalParams) {
