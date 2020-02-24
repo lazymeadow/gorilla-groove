@@ -58,9 +58,9 @@ export class SocketProvider extends React.Component {
 			case RemotePlayType.ADD_SONGS_LAST:
 				return this.props.musicContext.playTracksLast(message.tracks);
 			case RemotePlayType.PLAY:
-				return this.props.musicContext.setProviderState({ isPlaying: true });
+				return this.props.playbackContext.setProviderState({ isPlaying: true });
 			case RemotePlayType.PAUSE:
-				return this.props.musicContext.setProviderState({ isPlaying: false });
+				return this.props.playbackContext.setProviderState({ isPlaying: false });
 			case RemotePlayType.SHUFFLE_ENABLE:
 				return this.props.musicContext.setShuffleSongs(true);
 			case RemotePlayType.SHUFFLE_DISABLE:
@@ -70,11 +70,13 @@ export class SocketProvider extends React.Component {
 			case RemotePlayType.REPEAT_DISABLE:
 				return this.props.musicContext.setRepeatSongs(false);
 			case RemotePlayType.SET_VOLUME:
-				return this.props.musicContext.setVolume(message.newFloatValue);
+				return this.props.playbackContext.setVolume(message.newFloatValue);
 			case RemotePlayType.MUTE:
-				return this.props.musicContext.setMuted(true);
+				return this.props.playbackContext.setMuted(true);
 			case RemotePlayType.UNMUTE:
-				return this.props.musicContext.setMuted(false);
+				return this.props.playbackContext.setMuted(false);
+			case RemotePlayType.SEEK:
+				return this.props.playbackContext.setProviderState({ timePlayedOverride: message.newFloatValue });
 		}
 	}
 

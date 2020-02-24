@@ -2,11 +2,11 @@ import React, {useContext, useEffect, useState} from 'react';
 import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
-import * as LocalStorage from "../../local-storage";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceId} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
 import {getVolumeIcon} from "../../util";
+import {PlaybackContext} from "../../services/playback-provider";
 
 const originalTitle = document.title;
 
@@ -14,6 +14,7 @@ const originalTitle = document.title;
 let loadingTrackId = null;
 let lastSongPlayHeartbeatTime = 0;
 let lastTime = 0;
+let lastTimePlayedOverride = -1;
 let timeTarget = null;
 let totalTimeListened = 0;
 let listenedTo = false;
@@ -30,13 +31,14 @@ export default function PlaybackControls(props) {
 	const [songUrl, setSongUrl] = useState(null);
 
 	const musicContext = useContext(MusicContext);
+	const playbackContext = useContext(PlaybackContext);
 	const socketContext = useContext(SocketContext);
 
 	const handleSongEnd = () => {
 		const playingNewSong = musicContext.playNext();
 		if (!playingNewSong) {
 			setPageTitle(null);
-			musicContext.setProviderState({ isPlaying: false });
+			playbackContext.setProviderState({ isPlaying: false });
 		}
 	};
 
@@ -52,7 +54,7 @@ export default function PlaybackControls(props) {
 
 	const handleSongChange = () => {
 		if (musicContext.playedTrackIndex === null) {
-			musicContext.setProviderState({ isPlaying: false });
+			playbackContext.setProviderState({ isPlaying: false });
 			setPageTitle(null);
 			return;
 		}
@@ -72,7 +74,7 @@ export default function PlaybackControls(props) {
 			listenedTo = false;
 			totalTimeListened = 0;
 			setDuration(0);
-			musicContext.setProviderState({ isPlaying: true });
+			playbackContext.setProviderState({ isPlaying: true });
 			setPageTitle(newTrack);
 			setSongUrl(links.songLink);
 
@@ -97,11 +99,11 @@ export default function PlaybackControls(props) {
 
 	// Send an event that says we are listening to a particular song so other people can see it.
 	// Pass these values in as params so they aren't captured from the useEffect() and unchanging
-	const broadcastListenHeartbeatIfNeeded = currentTimePercent => {
+	const broadcastListenHeartbeatIfNeeded = (currentTimePercent, forceBroadcast) => {
 		const currentTimeMillis = Date.now();
 		const heartbeatInterval = 20000; // Don't need to spam everyone. Only check every 20 seconds
 
-		if (lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
+		if (forceBroadcast || lastSongPlayHeartbeatTime < currentTimeMillis - heartbeatInterval) {
 			lastSongPlayHeartbeatTime = currentTimeMillis;
 
 			socketContext.sendPlayEvent({
@@ -115,7 +117,7 @@ export default function PlaybackControls(props) {
 		const volume = event.target.value;
 
 		audio.volume = volume;
-		musicContext.setVolume(volume);
+		playbackContext.setVolume(volume);
 
 		socketContext.sendPlayEvent({
 			timePlayed: currentTimePercent * duration,
@@ -158,7 +160,7 @@ export default function PlaybackControls(props) {
 
 	const togglePause = () => {
 		const audio = document.getElementById('audio');
-		if (musicContext.isPlaying) {
+		if (playbackContext.isPlaying) {
 			audio.pause();
 		} else {
 			// People seem to want clicking play without an active song to start playing the library
@@ -170,15 +172,15 @@ export default function PlaybackControls(props) {
 			}
 		}
 
-		musicContext.setProviderState({ isPlaying: !musicContext.isPlaying });
+		playbackContext.setProviderState({ isPlaying: !playbackContext.isPlaying });
 	};
 
 	const toggleMute = () => {
 		const audio = document.getElementById('audio');
-		const newMute = !musicContext.isMuted;
+		const newMute = !playbackContext.isMuted;
 		audio.muted = newMute;
 
-		musicContext.setMuted(newMute);
+		playbackContext.setMuted(newMute);
 
 		socketContext.sendPlayEvent({
 			timePlayed: currentTimePercent * duration,
@@ -205,8 +207,8 @@ export default function PlaybackControls(props) {
 		audio.addEventListener('durationchange', handleDurationChange);
 		audio.addEventListener('ended', handleSongEnd);
 
-		audio.volume = musicContext.volume;
-		audio.muted = musicContext.isMuted;
+		audio.volume = playbackContext.volume;
+		audio.muted = playbackContext.isMuted;
 
 		if (!initialStateSent) {
 			initialStateSent = true;
@@ -232,11 +234,16 @@ export default function PlaybackControls(props) {
 			audio.removeEventListener('durationchange', handleDurationChange);
 			audio.removeEventListener('ended', handleSongEnd);
 		}
-	}, [duration, musicContext.isPlaying, musicContext.playedTrack ? musicContext.playedTrack.id : 0]);
+	}, [
+		duration,
+		playbackContext.isPlaying,
+		playbackContext.timePlayedOverride,
+		musicContext.playedTrack ? musicContext.playedTrack.id : 0
+	]);
 
 	const audio = document.getElementById('audio');
 	if (
-		(!previousPlaying && musicContext.isPlaying) // Started playing something when we weren't playing anything
+		(!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
 		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
 	) {
 		lastSongPlayHeartbeatTime = Date.now();
@@ -245,13 +252,13 @@ export default function PlaybackControls(props) {
 		socketContext.sendPlayEvent({
 			track: musicContext.playedTrack,
 			timePlayed: currentTimePercent * duration,
-			isPlaying: musicContext.isPlaying
+			isPlaying: playbackContext.isPlaying
 		});
-	} else if (previousPlaying && !musicContext.isPlaying) {
+	} else if (previousPlaying && !playbackContext.isPlaying) {
 		audio.pause();
 		socketContext.sendPlayEvent({
 			timePlayed: currentTimePercent * duration,
-			isPlaying: musicContext.isPlaying
+			isPlaying: playbackContext.isPlaying
 		});
 	}
 
@@ -260,20 +267,33 @@ export default function PlaybackControls(props) {
 	}
 
 	const handleTimeTick = event => {
-		const currentTime = event.target.currentTime;
+		// If the timePlayed on the context doesn't match, it means we were given instructions via Remote Play
+		// and we need to respond to it
+		// const remotePlayAdjustment = playbackContext.timePlayed !== lastTime;
+		const remotePlayAdjustment = playbackContext.timePlayedOverride !== lastTimePlayedOverride;
+		const currentTime = remotePlayAdjustment ? playbackContext.timePlayedOverride : event.target.currentTime;
+
 		const currentTimePercent = currentTime / duration;
 
 		if (duration > 0) {
-			// Truncate the percentage to 2 decimal places, since our progress bar only updates in 1/100 increments.
-			// Doing this allows us to skip many re-renders that do nothing.
 			setCurrentTimePercent(currentTimePercent);
 		}
 
 		const timeElapsed = currentTime - lastTime;
 		lastTime = currentTime;
+
+		if (remotePlayAdjustment) {
+			audio.currentTime = currentTime;
+			lastTimePlayedOverride = playbackContext.timePlayedOverride;
+		}
+
 		// If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
 		// manually altered the song's progress. Do no other checks or updates
 		if (timeElapsed < 0 || timeElapsed > 1) {
+			if (remotePlayAdjustment) {
+				broadcastListenHeartbeatIfNeeded(currentTimePercent, true);
+			}
+
 			return;
 		}
 
@@ -299,19 +319,18 @@ export default function PlaybackControls(props) {
 				});
 		}
 
-		broadcastListenHeartbeatIfNeeded(currentTimePercent, musicContext.volume);
+		broadcastListenHeartbeatIfNeeded(currentTimePercent);
 	};
 
-	if (audio !== null && musicContext.volume !== audio.volume) {
-		console.log('Adjusting volume', audio.volume, musicContext.volume);
-		audio.volume = musicContext.volume;
+	if (audio !== null && playbackContext.volume !== audio.volume) {
+		audio.volume = playbackContext.volume;
 	}
 
 	const playedTrack = musicContext.playedTrack;
 	const src = playedTrack ? songUrl : '';
 
 	previousCurrentSessionPlayCounter = currentSessionPlayCounter;
-	previousPlaying = musicContext.isPlaying;
+	previousPlaying = playbackContext.isPlaying;
 
 	return (
 		<div id="playback-controls" className="d-flex song-player">
@@ -332,7 +351,7 @@ export default function PlaybackControls(props) {
 						/>
 						<i
 							onMouseDown={togglePause}
-							className={`fas fa-${musicContext.isPlaying ? 'pause' : 'play'} control`}
+							className={`fas fa-${playbackContext.isPlaying ? 'pause' : 'play'} control`}
 						/>
 						<i
 							onMouseDown={musicContext.playNext}
@@ -377,7 +396,7 @@ export default function PlaybackControls(props) {
 
 					<div className="volume-wrapper">
 						<i
-							className={`fas ${getVolumeIcon(musicContext.volume, musicContext.isMuted)}`}
+							className={`fas ${getVolumeIcon(playbackContext.volume, playbackContext.isMuted)}`}
 							onMouseDown={toggleMute}
 						/>
 						<input
@@ -387,7 +406,7 @@ export default function PlaybackControls(props) {
 							min="0"
 							max="1"
 							step="0.01"
-							value={musicContext.volume}
+							value={playbackContext.volume}
 						/>
 					</div>
 				</div>
