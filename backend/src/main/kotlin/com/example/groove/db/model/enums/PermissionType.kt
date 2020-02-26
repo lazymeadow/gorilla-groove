@@ -4,5 +4,6 @@ package com.example.groove.db.model.enums
 // Use caution when editing the order, and only add new ones to the end
 enum class PermissionType {
 	WRITE_VERSION_HISTORY,
-	EXPERIMENTAL
+	EXPERIMENTAL,
+	HIDE_YOUTUBE
 }

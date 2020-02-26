@@ -13,6 +13,7 @@ export class UserProvider extends React.Component {
 			ownUser: {},
 			otherUsers: [],
 			ownPermissions: new Set(),
+			initialized: false,
 
 			initialize: (...args) => this.initialize(...args),
 			hasPermission: (...args) => this.hasPermission(...args)
@@ -38,7 +39,7 @@ export class UserProvider extends React.Component {
 
 		return Promise.all([permissionPromise, userPromise])
 			.then(([ownPermissions, {ownUser, otherUsers}]) => {
-				this.setState({ ownPermissions, ownUser, otherUsers });
+				this.setState({ ownPermissions, ownUser, otherUsers, initialized: true });
 			})
 	}
 

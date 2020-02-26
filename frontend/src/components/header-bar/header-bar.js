@@ -4,6 +4,7 @@ import SearchBar from "../search-bar/search-bar";
 import {UserContext} from "../../services/user-provider";
 import UserButton from "../user-button/user-button";
 import {SongUpload} from "..";
+import {PermissionType} from "../../enums/permission-type";
 
 export default function HeaderBar() {
 	const userContext = useContext(UserContext);
@@ -18,7 +19,7 @@ export default function HeaderBar() {
 				</div>
 				<div className="song-acquisition-icons">
 					<SongUpload/>
-					<YoutubeDlButton/>
+					{ !userContext.initialized || userContext.hasPermission(PermissionType.HIDE_YOUTUBE) ? null : <YoutubeDlButton/> }
 				</div>
 			</div>
 
