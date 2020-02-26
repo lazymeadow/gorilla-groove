@@ -9,7 +9,7 @@ export class PlaybackProvider extends React.Component {
 
 		this.state = {
 			isPlaying: false,
-			isMuted: LocalStorage.getBoolean('muted', 1.0),
+			isMuted: LocalStorage.getBoolean('muted', false),
 			volume: LocalStorage.getNumber('volume', 1.0),
 
 			timePlayedOverride: -1,
