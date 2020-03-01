@@ -47,6 +47,7 @@ class UserService(
 
 		return userRepository.findAll()
 				.toList()
+				.filterNot { it.deleted }
 				.filter {
 					showAll || it.id == self.id || it.lastLogin.isNewerThan(ChronoUnit.DAYS, 60)
 				}
