@@ -32,7 +32,7 @@ class NowPlayingService(
 
 		val user = loadLoggedInUser()
 
-		val device = deviceService.getCurrentUsersDevice(event.deviceId)
+		val device = deviceService.getDeviceById(event.deviceId)
 		val track = event.trackId?.let { trackRepository.findById(it) }?.unwrap()
 
 		val newTime = now().time

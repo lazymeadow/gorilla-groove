@@ -16,6 +16,7 @@ import java.sql.Timestamp
 @Service
 class DeviceService(
 		private val deviceRepository: DeviceRepository,
+		private val userRepository: UserRepository,
 		private val trackHistoryRepository: TrackHistoryRepository
 ) {
 
@@ -25,9 +26,17 @@ class DeviceService(
 	}
 
 	@Transactional(readOnly = true)
-	fun getCurrentUsersDevice(deviceId: String): Device {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceId, loadLoggedInUser())
+	fun getDeviceById(deviceIdentifier: String): Device {
+		val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, loadLoggedInUser())
+				?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier")
+		return device.mergedDevice ?: device
+	}
+
+	@Transactional(readOnly = true)
+	fun getDeviceById(deviceId: Long): Device {
+		val device = deviceRepository.findById(deviceId).unwrap()
 				?: throw ResourceNotFoundException("No device found with id $deviceId")
+
 		return device.mergedDevice ?: device
 	}
 
@@ -123,6 +132,40 @@ class DeviceService(
 				deviceRepository.save(it)
 			}
 		}
+	}
+
+	@Transactional
+	fun enableParty(deviceIdentifier: String, partyUntil: Timestamp, partyUserIds: Set<Long>): Device {
+		val currentDevice = getDeviceById(deviceIdentifier)
+
+		currentDevice.partyEnabledUntil = partyUntil
+		currentDevice.partyUsers.removeAll { true }
+		partyUserIds.forEach { userId ->
+			val user = userRepository.findById(userId).unwrap()
+					?: throw ResourceNotFoundException("No user found with ID $userId!")
+
+			require(currentDevice.user.id != userId) {
+				"Cannot add own user as a party user!"
+			}
+
+			currentDevice.partyUsers.add(user)
+		}
+
+		deviceRepository.save(currentDevice)
+
+		return currentDevice
+	}
+
+	@Transactional
+	fun disableParty(deviceIdentifier: String): Device {
+		val currentDevice = getDeviceById(deviceIdentifier)
+
+		currentDevice.partyEnabledUntil = null
+		currentDevice.partyUsers.removeAll { true }
+
+		deviceRepository.save(currentDevice)
+
+		return currentDevice
 	}
 
 	companion object {

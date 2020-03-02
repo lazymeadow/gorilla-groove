@@ -12,6 +12,20 @@
   animation-timing-function: linear;
 }
 
+.animation-rainbow {
+  animation-name: rainbow;
+  animation-duration: 3000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.animation-rainbow-border {
+  animation-name: rainbow-border;
+  animation-duration: 3000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
 @keyframes spin {
   from {
     transform:rotate(0deg);
@@ -27,5 +41,35 @@
   }
   50% {
     transform: scale(2);
+  }
+}
+
+@keyframes rainbow {
+  0%, 100% {
+    color: blue;
+  }
+  25% {
+    color: green;
+  }
+  50% {
+    color: yellow;
+  }
+  75% {
+    color: red;
+  }
+}
+
+@keyframes rainbow-border {
+  0%, 100% {
+    border-color: blue;
+  }
+  25% {
+    border-color: green;
+  }
+  50% {
+    border-color: yellow;
+  }
+  75% {
+    border-color: red;
   }
 }

@@ -2,6 +2,7 @@ import React from "react";
 import {Api} from "../api";
 import {getCookieValue} from "../cookie";
 import {PermissionType} from "../enums/permission-type";
+import {getDeviceIdentifier} from "./version";
 
 export const UserContext = React.createContext();
 
@@ -12,10 +13,14 @@ export class UserProvider extends React.Component {
 		this.state = {
 			ownUser: {},
 			otherUsers: [],
+			ownDevice: {},
 			ownPermissions: new Set(),
 
 			initialize: (...args) => this.initialize(...args),
-			hasPermission: (...args) => this.hasPermission(...args)
+			hasPermission: (...args) => this.hasPermission(...args),
+			loadOwnDevice: (...args) => this.loadOwnDevice(...args),
+			isInPartyMode: (...args) => this.isInPartyMode(...args),
+			setPartyMode: (...args) => this.setPartyMode(...args),
 		}
 	}
 
@@ -44,6 +49,32 @@ export class UserProvider extends React.Component {
 
 	hasPermission(permissionType) {
 		return this.state.ownPermissions.has(permissionType)
+	}
+
+	loadOwnDevice() {
+		const deviceIdentifier = getDeviceIdentifier();
+		if (deviceIdentifier === undefined) {
+			throw Error('Device identifier not set before loading device!')
+		}
+		Api.get(`device/${getDeviceIdentifier()}`).then(ownDevice => {
+			this.setState({ ownDevice });
+		});
+	}
+
+	isInPartyMode() {
+		const partyEnabledUntil = this.state.ownDevice.partyEnabledUntil;
+		return !(partyEnabledUntil === undefined || partyEnabledUntil === null);
+	}
+
+	setPartyMode(enabled, controllingUserIds, timeLimit) {
+		return Api.post('device/party', {
+			deviceIdentifier: getDeviceIdentifier(),
+			enabled,
+			controllingUserIds,
+			partyUntil: timeLimit
+		}).then(updatedDevice => {
+			this.setState({ ownDevice: updatedDevice });
+		});
 	}
 
 	render() {

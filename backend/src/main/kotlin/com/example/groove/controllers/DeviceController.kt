@@ -8,6 +8,7 @@ import com.example.groove.services.event.EventServiceCoordinator
 import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.web.bind.annotation.*
+import java.sql.Timestamp
 import javax.servlet.http.HttpServletRequest
 
 @RestController
@@ -27,14 +28,33 @@ class DeviceController(
 	// Gives the effective device for a given device ID. So if you sent a device that was merged, you'll get the parent
 	@GetMapping("/{deviceId}")
     fun getDevice(@PathVariable("deviceId") deviceId: String): Device {
-		return deviceService.getCurrentUsersDevice(deviceId)
+		return deviceService.getDeviceById(deviceId)
     }
 
 	@GetMapping("/active")
 	fun getActiveDevices(
 			@RequestParam("excluding-device") excludingDeviceId: String?
-	): Set<Device> {
+	): List<Device> {
 		return eventServiceCoordinator.getActiveDevices(excludingDeviceId)
+	}
+
+	@PostMapping("/party")
+	fun changePartyMode(@RequestBody body: PartyModeDTO): Device {
+		return if (body.enabled) {
+			val maxTime = Int.MAX_VALUE.toLong() * 1000 // January 2038 (Max MySQL supports for Timestamp column)
+
+			require(body.controllingUserIds.isNotEmpty()) {
+				"A party isn't a party without at least one other person!"
+			}
+
+			deviceService.enableParty(
+					deviceIdentifier = body.deviceIdentifier,
+					partyUntil = Timestamp(body.partyUntil ?: maxTime),
+					partyUserIds = body.controllingUserIds
+			)
+		} else {
+			deviceService.disableParty(body.deviceIdentifier)
+		}
 	}
 
 	@PutMapping("/update/{id}")
@@ -102,5 +122,12 @@ class DeviceController(
 			val deviceType: DeviceType,
 			val version: String,
 			val additionalData: String?
+	)
+
+	data class PartyModeDTO(
+			val deviceIdentifier: String,
+			val enabled: Boolean,
+			val partyUntil: Long?,
+			val controllingUserIds: Set<Long> = emptySet()
 	)
 }

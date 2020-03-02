@@ -3,7 +3,7 @@ import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
-import {getDeviceId} from "../../services/version";
+import {getDeviceIdentifier} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
 import {getVolumeIcon} from "../../util";
 import {PlaybackContext} from "../../services/playback-provider";
@@ -285,7 +285,7 @@ export default function PlaybackControls(props) {
 			listenedTo = true;
 
 			const playedTrack = musicContext.playedTrack;
-			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceId: getDeviceId() })
+			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceId: getDeviceIdentifier() })
 				.then(() => {
 					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
 					playedTrack.playCount++;

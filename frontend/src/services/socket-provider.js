@@ -1,7 +1,7 @@
 import React from "react";
 import {isLoggedIn} from "../util";
 import {Api} from "../api";
-import {getDeviceId} from "./version";
+import {getDeviceIdentifier} from "./version";
 import {RemotePlayType} from "../components/remote-play/modal/remote-play-type";
 
 export const SocketContext = React.createContext();
@@ -26,7 +26,7 @@ export class SocketProvider extends React.Component {
 	}
 
 	fetchLatestData() {
-		Api.get(`event/device-id/${getDeviceId()}`, { lastEventId }).then(result => {
+		Api.get(`event/device-id/${getDeviceIdentifier()}`, { lastEventId }).then(result => {
 			lastEventId = result.lastEventId;
 
 			if (result.eventType === EventType.NOW_PLAYING) {
@@ -105,7 +105,7 @@ export class SocketProvider extends React.Component {
 		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume',
 			'removeTrack', 'disconnected', 'muted'];
 		const payload = {
-			deviceId: getDeviceId()
+			deviceId: getDeviceIdentifier()
 		};
 
 		if (data.track !== undefined) {
@@ -130,7 +130,7 @@ export class SocketProvider extends React.Component {
 
 		const payload = {
 			remotePlayAction: eventType,
-			deviceId: getDeviceId(),
+			deviceId: getDeviceIdentifier(),
 			targetDeviceId
 		};
 

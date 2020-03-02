@@ -7,14 +7,14 @@ export function notifyVersion() {
 	// noinspection JSUnresolvedVariable
 	const version = __VERSION__; // Defined in webpack at build time
 
-	Api.put('device', {
-		deviceId: getDeviceId(),
+	return Api.put('device', {
+		deviceId: getDeviceIdentifier(),
 		version,
 		deviceType: 'WEB'
 	})
 }
 
-export function getDeviceId() {
+export function getDeviceIdentifier() {
 	const deviceId = LocalStorage.getString('deviceId');
 	if (deviceId) {
 		return deviceId;

@@ -1,13 +1,18 @@
 package com.example.groove.services.event
 
 import com.example.groove.db.model.Device
+import com.example.groove.exception.PermissionDeniedException
+import com.example.groove.services.DeviceService
 import com.example.groove.services.TrackService
+import com.example.groove.util.DateUtils.now
+import com.example.groove.util.loadLoggedInUser
 import org.springframework.stereotype.Service
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class DeviceEventService(
-		private val trackService: TrackService
+		private val trackService: TrackService,
+		private val deviceService: DeviceService
 ) : EventService {
 
 	private val deviceEvents = ConcurrentHashMap<Long, MutableList<EventResponse>>()
@@ -35,6 +40,14 @@ class DeviceEventService(
 	override fun sendEvent(sourceDevice: Device, event: EventRequest) {
 		event as RemotePlayEventRequest
 
+		val targetDeviceId = event.targetDeviceId
+
+		val targetDevice = deviceService.getDeviceById(targetDeviceId)
+
+		if (!targetDevice.canBePlayedBy(loadLoggedInUser().id)) {
+			throw PermissionDeniedException("Not authorized to access device")
+		}
+
 		val trackIdToTrack = trackService
 				.getTracksByIds(event.trackIds?.toSet() ?: emptySet())
 				.map { it.id to it }
@@ -51,7 +64,6 @@ class DeviceEventService(
 				remotePlayAction = event.remotePlayAction
 		)
 
-		val targetDeviceId = event.targetDeviceId
 		synchronized(this) {
 			if (deviceEvents[targetDeviceId] == null) {
 				deviceEvents[targetDeviceId] = mutableListOf<EventResponse>(eventResponse)
@@ -59,5 +71,20 @@ class DeviceEventService(
 				deviceEvents.getValue(targetDeviceId).add(eventResponse)
 			}
 		}
+	}
+
+	private fun Device.canBePlayedBy(userId: Long): Boolean {
+		// If we are the user, then we're always good
+		if (userId == user.id) {
+			return true
+		}
+
+		// Check if we're in a valid party mode. If we aren't, then this isn't playable by other people
+		if (partyEnabledUntil == null || partyEnabledUntil!! < now()) {
+			return false
+		}
+
+		// We're in a valid party mode. Make sure the user who is controlling us is present in the list
+		return partyUsers.any { it.id == userId }
 	}
 }

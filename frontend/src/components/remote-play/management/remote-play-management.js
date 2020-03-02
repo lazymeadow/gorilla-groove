@@ -1,29 +1,36 @@
 import React, {useContext, useEffect, useState} from "react";
 import {Api} from "../../../api";
 import MiniPlayer from "../../playback-controls/mini-player/mini-player";
-import {getDeviceId} from "../../../services/version";
+import {getDeviceIdentifier} from "../../../services/version";
 import {SocketContext} from "../../../services/socket-provider";
 import {RemotePlayType} from "../modal/remote-play-type";
+import {UserContext} from "../../../services/user-provider";
+import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
+import {Modal} from "../../modal/modal";
+import {toast} from "react-toastify";
 
 const OVERRIDE_DURATION_MS = 5000;
+
+// We have an interesting problem to solve, in that we want this page to be an accurate reflection of what
+// the remote device is reporting, but we also want to have immediate feedback when we want the device to
+// change its state to something new. The compromise that is chosen here is that whenever we change the
+// state, keep an explicit override around for display purposes only, and delete it after a few seconds.
+// This offers immediate feedback, but won't hide a state change being unsuccessful, or another user
+// changing the state to something different after we did our own change.
+const nowListeningOverrides = {};
 
 export default function RemotePlayManagement() {
 	const [devices, setDevices] = useState([]);
 	const [forceRerender, setForceRerender] = useState(0);
 	const [loading, setLoading] = useState(true);
-
-	// We have an interesting problem to solve, in that we want this page to be an accurate reflection of what
-	// the remote device is reporting, but we also want to have immediate feedback when we want the device to
-	// change its state to something new. The compromise that is chosen here is that whenever we change the
-	// state, keep an explicit override around for display purposes only, and delete it after a few seconds.
-	// This offers immediate feedback, but won't hide a state change being unsuccessful, or another user
-	// changing the state to something different after we did our own change.
-	const [nowListeningOverrides, setNowListeningOverrides] = useState({});
+	const [partyOptionsModalOpen, setPartyOptionsModalOpen] = useState(false);
+	const [modifyingParty, setModifyingParty] = useState(false);
 
 	const socket = useContext(SocketContext);
+	const userContext = useContext(UserContext);
 
 	useEffect(() => {
-		Api.get(`device/active?excluding-device=${getDeviceId()}`).then(devices => {
+		Api.get(`device/active?excluding-device=${getDeviceIdentifier()}`).then(devices => {
 			setDevices(devices);
 			setLoading(false);
 		});
@@ -70,90 +77,196 @@ export default function RemotePlayManagement() {
 		deviceIdToListeningState[listeningData.deviceId] = listeningData;
 	});
 
+	const setPartyMode = isSet => {
+		let expirationTime = null;
+		let userIds = [];
+
+		if (isSet) {
+			const durationSelectEl = document.getElementById('party-duration-select');
+			const durationMinutes = durationSelectEl.options[durationSelectEl.selectedIndex].value;
+
+			if (durationMinutes > 0) {
+				expirationTime = Date.now() + (durationMinutes * 60 * 1000)
+			}
+
+			const userSelectEl = document.getElementById('party-user-select');
+			userIds = [...userSelectEl.options]
+				.filter(it => it.selected)
+				.map(it => it.value);
+
+			if (userIds.length === 0) {
+				toast.info("Select at least one other user for your party, or it isn't much of a party");
+				return;
+			}
+		}
+
+		setModifyingParty(true);
+		userContext.setPartyMode(isSet, userIds, expirationTime).then(() => {
+			setModifyingParty(false);
+			setPartyOptionsModalOpen(false);
+		});
+	};
+
 	const currentTime = Date.now();
 
 	return <div id="remote-play-management">
-		{devices.map(device => {
-			const listeningState = deviceIdToListeningState[device.id] || {};
-			const elapsedTime = currentTime - getDeviceValue(device.id, listeningState, 'lastTimeUpdate');
+		<div>
+			<div id="party-mode-button" className="auto-margin text-center">
+				{ userContext.isInPartyMode()
+					? <div className="inner-text full-dimensions" onClick={() => setPartyMode(false)}>
+						End the Party
+						<div className="small-text">
+							({ formatTimeLeft(userContext.ownDevice.partyEnabledUntil) } left)
+						</div>
+					</div>
+					: <div className="inner-text animation-rainbow full-dimensions" onClick={() => setPartyOptionsModalOpen(true)}>
+						Start A Party
+					</div>
+				}
+				<LoadingSpinner visible={modifyingParty}/>
+				<Modal
+					isOpen={partyOptionsModalOpen}
+					closeFunction={() => setPartyOptionsModalOpen(false)}
+				>
+					<div id="party-option-modal">
+						<h2 className="text-center">Let's Party</h2>
+						<hr/>
 
-			// We might only get updates every ~20 seconds or so. Estimate the play time
-			// if the song is playing so the bar doesn't update so infrequently.
-			const timePlayed = getDeviceValue(device.id, listeningState, 'timePlayed');
-			const estimatedTimePlayed = listeningState.playing
-				? timePlayed + (elapsedTime / 1000)
-				: timePlayed;
+						<form onSubmit={e => { e.preventDefault(); setPartyMode(true); }}>
+							<div>
+								How long will you be Partying?
+								<select id="party-duration-select">
+									<option value="30">30 minutes</option>
+									<option value="60">1 hour</option>
+									<option value="120">2 hours</option>
+									<option value="240">4 hours</option>
+									<option value="480">8 hours</option>
+									<option value="-1">The party never ends</option>
+								</select>
+							</div>
 
-			return <MiniPlayer
-				key={device.id}
-				title={device.deviceName}
-				trackData={listeningState.trackData || {}}
-				playing={getDeviceValue(device.id, listeningState, 'playing')}
-				volume={getDeviceValue(device.id, listeningState, 'volume')}
-				muted={getDeviceValue(device.id, listeningState, 'muted')}
-				shuffling={getDeviceValue(device.id, listeningState, 'shuffling')}
-				repeating={getDeviceValue(device.id, listeningState, 'repeating')}
-				timePlayed={estimatedTimePlayed}
-				onPauseChange={() => {
-					setOverride(device.id, 'playing', !getDeviceValue(device.id, listeningState, 'playing'));
-					socket.sendRemotePlayEvent(
-						listeningState.playing ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
-						device.id
-					);
-				}}
-				onShuffleChange={() => {
-					const currentState = getDeviceValue(device.id, listeningState, 'shuffling');
-					setOverride(device.id, 'shuffling', !currentState);
-					socket.sendRemotePlayEvent(
-						currentState ? RemotePlayType.SHUFFLE_DISABLE : RemotePlayType.SHUFFLE_ENABLE,
-						device.id
-					);
-				}}
-				onRepeatChange={() => {
-					const currentState = getDeviceValue(device.id, listeningState, 'repeating');
-					setOverride(device.id, 'repeating', !currentState);
-					socket.sendRemotePlayEvent(
-						currentState ? RemotePlayType.REPEAT_DISABLE : RemotePlayType.REPEAT_ENABLE,
-						device.id
-					);
-				}}
-				onMuteChange={() => {
-					const currentState = getDeviceValue(device.id, listeningState, 'muted');
-					setOverride(device.id, 'muted', !currentState);
-					socket.sendRemotePlayEvent(
-						currentState ? RemotePlayType.UNMUTE : RemotePlayType.MUTE,
-						device.id
-					);
-				}}
-				onTimeChange={(newTimePercent, isHeld) => {
-					const newTime = newTimePercent * listeningState.trackData.duration;
-					setOverride(device.id, 'timePlayed', newTime);
-					setOverride(device.id, 'lastTimeUpdate', Date.now());
-					if (!isHeld) {
+							<div>
+								Who is joining your Party?
+								<select id="party-user-select" multiple>
+									{ userContext.otherUsers.map(user =>
+										<option key={user.id} value={user.id}>{user.username}</option>
+									)}
+								</select>
+							</div>
+
+							<div className="text-center">
+								<button type="submit">Uhn Tiss Uhn Tiss</button>
+							</div>
+						</form>
+					</div>
+				</Modal>
+			</div>
+		</div>
+
+		<hr/>
+
+		<div className="device-list">
+			{ devices.length === 0 ? <div>No other active devices found</div> : null }
+
+			{ devices.map(device => {
+				const listeningState = deviceIdToListeningState[device.id] || {};
+				const elapsedTime = currentTime - getDeviceValue(device.id, listeningState, 'lastTimeUpdate');
+
+				// We might only get updates every ~20 seconds or so. Estimate the play time
+				// if the song is playing so the bar doesn't update so infrequently.
+				const timePlayed = getDeviceValue(device.id, listeningState, 'timePlayed');
+				const estimatedTimePlayed = listeningState.playing
+					? timePlayed + (elapsedTime / 1000)
+					: timePlayed;
+
+				return <MiniPlayer
+					key={device.id}
+					title={device.deviceName}
+					trackData={listeningState.trackData || {}}
+					playing={getDeviceValue(device.id, listeningState, 'playing')}
+					volume={getDeviceValue(device.id, listeningState, 'volume')}
+					muted={getDeviceValue(device.id, listeningState, 'muted')}
+					shuffling={getDeviceValue(device.id, listeningState, 'shuffling')}
+					repeating={getDeviceValue(device.id, listeningState, 'repeating')}
+					timePlayed={estimatedTimePlayed}
+					onPauseChange={() => {
+						setOverride(device.id, 'playing', !getDeviceValue(device.id, listeningState, 'playing'));
 						socket.sendRemotePlayEvent(
-							RemotePlayType.SEEK,
-							device.id,
-							{ newFloatValue: newTime }
-						)
-					}
-				}}
-				onVolumeChange={(newVolume, isHeld) => {
-					setOverride(device.id, 'volume', newVolume);
-					if (!isHeld) {
+							listeningState.playing ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
+							device.id
+						);
+					}}
+					onShuffleChange={() => {
+						const currentState = getDeviceValue(device.id, listeningState, 'shuffling');
+						setOverride(device.id, 'shuffling', !currentState);
 						socket.sendRemotePlayEvent(
-							RemotePlayType.SET_VOLUME,
-							device.id,
-							{ newFloatValue: newVolume }
-						)
-					}
-				}}
-				onPlayNext={() => {
-					socket.sendRemotePlayEvent(RemotePlayType.PLAY_NEXT, device.id)
-				}}
-				onPlayPrevious={() => {
-					socket.sendRemotePlayEvent(RemotePlayType.PLAY_PREVIOUS, device.id)
-				}}
-			/>
-		})}
+							currentState ? RemotePlayType.SHUFFLE_DISABLE : RemotePlayType.SHUFFLE_ENABLE,
+							device.id
+						);
+					}}
+					onRepeatChange={() => {
+						const currentState = getDeviceValue(device.id, listeningState, 'repeating');
+						setOverride(device.id, 'repeating', !currentState);
+						socket.sendRemotePlayEvent(
+							currentState ? RemotePlayType.REPEAT_DISABLE : RemotePlayType.REPEAT_ENABLE,
+							device.id
+						);
+					}}
+					onMuteChange={() => {
+						const currentState = getDeviceValue(device.id, listeningState, 'muted');
+						setOverride(device.id, 'muted', !currentState);
+						socket.sendRemotePlayEvent(
+							currentState ? RemotePlayType.UNMUTE : RemotePlayType.MUTE,
+							device.id
+						);
+					}}
+					onTimeChange={(newTimePercent, isHeld) => {
+						const newTime = newTimePercent * listeningState.trackData.duration;
+						setOverride(device.id, 'timePlayed', newTime);
+						setOverride(device.id, 'lastTimeUpdate', Date.now());
+						if (!isHeld) {
+							socket.sendRemotePlayEvent(
+								RemotePlayType.SEEK,
+								device.id,
+								{ newFloatValue: newTime }
+							)
+						}
+					}}
+					onVolumeChange={(newVolume, isHeld) => {
+						setOverride(device.id, 'volume', newVolume);
+						if (!isHeld) {
+							socket.sendRemotePlayEvent(
+								RemotePlayType.SET_VOLUME,
+								device.id,
+								{ newFloatValue: newVolume }
+							)
+						}
+					}}
+					onPlayNext={() => {
+						socket.sendRemotePlayEvent(RemotePlayType.PLAY_NEXT, device.id)
+					}}
+					onPlayPrevious={() => {
+						socket.sendRemotePlayEvent(RemotePlayType.PLAY_PREVIOUS, device.id)
+					}}
+				/>
+			})}
+		</div>
 	</div>
+}
+
+function formatTimeLeft(timeTarget) {
+	const msLeft = new Date(timeTarget) - new Date();
+	const secondsLeft = Math.round(msLeft / 1000);
+	const minutesLeft = Math.round(secondsLeft / 60);
+	const hoursLeft = Math.round(minutesLeft / 60);
+
+	if (minutesLeft <= 90) {
+		return minutesLeft + (minutesLeft > 1 ? ' minutes' : ' minute');
+	}
+
+	if (hoursLeft > 10000) {
+		return '∞ hours'
+	}
+
+	return hoursLeft + (hoursLeft > 1 ? ' hours' : 'hours');
 }

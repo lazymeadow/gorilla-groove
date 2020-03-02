@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import {Modal} from "../../modal/modal";
 import {Api} from "../../../api";
 import {toast} from "react-toastify";
-import {getDeviceId} from "../../../services/version";
+import {getDeviceIdentifier} from "../../../services/version";
 import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {RemotePlayType} from "./remote-play-type";
 import {SocketContext} from "../../../services/socket-provider";
@@ -14,7 +14,7 @@ function RemotePlayModal(props) {
 	const socket = useContext(SocketContext);
 
 	useEffect(() => {
-		Api.get(`device/active?excluding-device=${getDeviceId()}`).then(devices => {
+		Api.get(`device/active?excluding-device=${getDeviceIdentifier()}`).then(devices => {
 			setDevices(devices);
 			setLoading(false);
 		});

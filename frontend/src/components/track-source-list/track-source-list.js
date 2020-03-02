@@ -115,12 +115,12 @@ export default function TrackSourceList(props) {
 
 			{ userContext.hasPermission(PermissionType.EXPERIMENTAL) ?
 				<div
-					className={`large-option ${deviceManagementSelected}`}
+					className={`remote-play ${deviceManagementSelected}`}
 					onMouseDown={() => {
 						props.setCenterView(CenterView.REMOTE_DEVICES);
 					}}
 				>
-					<span className="remote-play">Remote Play</span>
+					<span>Remote Play</span>
 				</div>
 				: null
 			}

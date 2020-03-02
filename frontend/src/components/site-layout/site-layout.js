@@ -40,11 +40,14 @@ export default function SiteLayout(props) {
 			// If we had an error here it PROBABLY means we had a failure to login
 			props.history.push('/login');
 		});
-		socketContext.connectToSocket();
 		musicContext.loadSongsForUser();
 		playlistContext.loadPlaylists();
 
-		notifyVersion();
+		// Let other things finish loading before we start hogging available network connections with long polling
+		setTimeout(socketContext.connectToSocket, 1000);
+
+		// After we tell the server about our device load server side information about it
+		notifyVersion().then(userContext.loadOwnDevice);
 	}, []);
 
 	const displayedColumns = musicContext.columnPreferences
@@ -53,6 +56,8 @@ export default function SiteLayout(props) {
 
 	return (
 		<div className="full-screen border-layout">
+			{ userContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
+
 			<div className="border-layout-north">
 				<HeaderBar/>
 			</div>

@@ -1,14 +1,13 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Modal} from "../modal/modal";
 import {Api} from "../../api";
 import {toast} from "react-toastify";
 import {toTitleCaseFromSnakeCase} from "../../formatters";
-import {getDeviceId} from "../../services/version";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
+import {UserContext} from "../../services/user-provider";
 
 function DeviceManagementModal() {
 	const [devices, setDevices] = useState([]);
-	const [currentDevice, setCurrentDevice] = useState(null);
 
 	const [clickedDevice, setClickedDevice] = useState(null);
 
@@ -17,18 +16,18 @@ function DeviceManagementModal() {
 	const [mergeOpen, setMergeOpen] = useState(false);
 	const [deleteOpen, setDeleteOpen] = useState(false);
 
+	const userContext = useContext(UserContext);
+
 	useEffect(() => {
 		Api.get('device').then(setDevices);
-		Api.get(`device/${getDeviceId()}`).then(setCurrentDevice);
 	}, []);
 
 	const changeDeviceName = newName => {
 		return Api.put(`device/update/${clickedDevice.id}`, { deviceName: newName }).then(() => {
 			clickedDevice.deviceName = newName;
 
-			if (clickedDevice.id === currentDevice.id) {
-				currentDevice.deviceName = newName;
-				setCurrentDevice(currentDevice);
+			if (clickedDevice.id === userContext.ownDevice.id) {
+				userContext.ownDevice.deviceName = newName;
 			}
 
 			setDevices(devices); // Force re-render
@@ -41,9 +40,8 @@ function DeviceManagementModal() {
 
 	const archiveDevice = () => {
 		return Api.put(`device/archive/${clickedDevice.id}`, { archived: true }).then(() => {
-			if (clickedDevice.id === currentDevice.id) {
-				currentDevice.archived = true;
-				setCurrentDevice(currentDevice);
+			if (clickedDevice.id === userContext.ownDevice.id) {
+				userContext.ownDevice.archived = true;
 			}
 
 			setDevices(devices.filter(device => device.id !== clickedDevice.id));
@@ -59,9 +57,8 @@ function DeviceManagementModal() {
 			id: clickedDevice.id,
 			targetId
 		}).then(() => {
-			if (clickedDevice.id === currentDevice.id) {
-				const targetDevice = devices.find(device => device.id === targetId);
-				setCurrentDevice(targetDevice);
+			if (clickedDevice.id === userContext.ownDevice.id) {
+				userContext.loadOwnDevice();
 			}
 
 			setDevices(devices.filter(device => device.id !== clickedDevice.id));
@@ -73,7 +70,7 @@ function DeviceManagementModal() {
 	};
 
 	const deleteDevice = () => {
-		if (clickedDevice.id === currentDevice.id) {
+		if (clickedDevice.id === userContext.ownDevice.id) {
 			toast.info("You mustn't delete your active device! The world would surely break.");
 			return Promise.resolve();
 		}
@@ -87,15 +84,15 @@ function DeviceManagementModal() {
 		});
 	};
 
-	const currentId = currentDevice === null ? -1 : currentDevice.id;
-	const currentDeviceName = currentDevice === null ? '' : currentDevice.deviceName;
+	const currentId = userContext.ownDevice === null ? -1 : userContext.ownDevice.id;
+	const currentDeviceName = userContext.ownDevice === null ? '' : userContext.ownDevice.deviceName;
 
 	return (
 		<div onKeyDown={e => e.nativeEvent.propagationStopped = true}>
 			<div id="device-management-modal" className="p-relative">
 				<h2 className="text-center">Device Management</h2>
 
-				<LoadingSpinner visible={devices.length === 0 || currentDevice === null}/>
+				<LoadingSpinner visible={devices.length === 0 || userContext.ownDevice === null}/>
 
 				<section id="current-device">
 					You are currently using: <strong>{currentDeviceName}</strong>

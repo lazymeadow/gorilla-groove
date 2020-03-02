@@ -1,6 +1,37 @@
 #remote-play-management {
   padding: 5px;
 
-  display: flex;
-  justify-content: space-around;
+  #party-mode-button {
+    border: 2px solid black;
+    cursor: pointer;
+    position: relative;
+    width: 217px;
+    height: 131px;
+    background: url("/images/party-mode.png");
+
+    .inner-text {
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      color: gold;
+      position: absolute;
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+  }
+
+  .device-list {
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .small-text {
+    font-size: 0.85em;
+  }
+}
+
+#party-option-modal {
+  select {
+    display: block;
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
 }
