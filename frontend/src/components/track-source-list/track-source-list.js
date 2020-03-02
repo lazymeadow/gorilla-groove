@@ -138,7 +138,9 @@ export default function TrackSourceList(props) {
 						onClick={() => handleParentNodeClick(i)}
 					>
 						{node.data.map(entry => {
-							const entrySelected = musicContext.trackView === node.section & entry.id === musicContext.viewedEntityId;
+							const entrySelected = musicContext.trackView === node.section &&
+								entry.id === musicContext.viewedEntityId &&
+								props.centerView === CenterView.TRACKS;
 							const entryClass = entrySelected ? 'selected' : '';
 							const cellId = i + '-' + entry.id;
 							return (

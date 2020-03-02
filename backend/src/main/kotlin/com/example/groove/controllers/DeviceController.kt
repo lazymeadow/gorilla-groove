@@ -20,27 +20,29 @@ class DeviceController(
 ) {
 
 	@GetMapping
-    fun getDevices(@RequestParam showAll: Boolean = false): List<Device> {
+	fun getDevices(@RequestParam showAll: Boolean = false): List<DeviceResponseDTO> {
 		return deviceService.getDevices(loadLoggedInUser())
 				.filter { showAll || (!it.archived && it.mergedDevice == null )}
-    }
+				.map { it.toResponseDTO() }
+	}
 
 	// Gives the effective device for a given device ID. So if you sent a device that was merged, you'll get the parent
 	@GetMapping("/{deviceId}")
-    fun getDevice(@PathVariable("deviceId") deviceId: String): Device {
-		return deviceService.getDeviceById(deviceId)
-    }
+	fun getDevice(@PathVariable("deviceId") deviceId: String): DeviceResponseDTO {
+		return deviceService.getDeviceById(deviceId).toResponseDTO()
+	}
 
 	@GetMapping("/active")
 	fun getActiveDevices(
 			@RequestParam("excluding-device") excludingDeviceId: String?
-	): List<Device> {
+	): List<DeviceResponseDTO> {
 		return eventServiceCoordinator.getActiveDevices(excludingDeviceId)
+				.map { it.toResponseDTO() }
 	}
 
 	@PostMapping("/party")
-	fun changePartyMode(@RequestBody body: PartyModeDTO): Device {
-		return if (body.enabled) {
+	fun changePartyMode(@RequestBody body: PartyModeDTO): DeviceResponseDTO {
+		val device = if (body.enabled) {
 			val maxTime = Int.MAX_VALUE.toLong() * 1000 // January 2038 (Max MySQL supports for Timestamp column)
 
 			require(body.controllingUserIds.isNotEmpty()) {
@@ -55,41 +57,43 @@ class DeviceController(
 		} else {
 			deviceService.disableParty(body.deviceIdentifier)
 		}
+
+		return device.toResponseDTO()
 	}
 
 	@PutMapping("/update/{id}")
-    fun updateDevice(
+	fun updateDevice(
 			@PathVariable("id") id: Long,
 			@RequestBody body: UpdateDeviceDTO
 	) {
 		deviceService.updateDevice(id = id, deviceName = body.deviceName)
-    }
+	}
 
 	@PutMapping("/merge")
-    fun mergeDevice(@RequestBody body: MergeDevicesDTO) {
+	fun mergeDevice(@RequestBody body: MergeDevicesDTO) {
 		if (body.id == body.targetId) {
 			throw IllegalArgumentException("IDs must be different!")
 		}
 
 		deviceService.mergeDevices(id = body.id, targetId = body.targetId)
-    }
+	}
 
 	@PutMapping("/archive/{id}")
-    fun archiveDevice(
+	fun archiveDevice(
 			@PathVariable("id") id: Long,
 			@RequestBody body: ArchiveDeviceDTO
 	) {
 		deviceService.archiveDevice(id, body.archived)
-    }
+	}
 
 	@DeleteMapping("/{id}")
-    fun deleteDevice(@PathVariable("id") id: Long) {
+	fun deleteDevice(@PathVariable("id") id: Long) {
 		deviceService.deleteDevice(id)
-    }
+	}
 
 	// Hmm. Probably should have made this not use the base URL... since it's really only for the version
 	@PutMapping
-    fun updateDeviceVersion(
+	fun updateDeviceVersion(
 			@RequestBody body: UpdateDeviceVersionDTO,
 			request: HttpServletRequest
 	) {
@@ -106,7 +110,7 @@ class DeviceController(
 
 		// This basically is a "log in". Update our last login time here
 		userService.updateOwnLastLogin()
-    }
+	}
 
 	data class UpdateDeviceDTO(val deviceName: String)
 
@@ -129,5 +133,35 @@ class DeviceController(
 			val enabled: Boolean,
 			val partyUntil: Long?,
 			val controllingUserIds: Set<Long> = emptySet()
+	)
+
+	data class DeviceResponseDTO(
+			val id: Long,
+			val userId: Long,
+			val userName: String,
+			val deviceType: DeviceType,
+			val deviceId: String,
+			val deviceName: String,
+			val applicationVersion: String,
+			val lastIp: String,
+			val additionalData: String? = null,
+			val partyEnabledUntil: Timestamp? = null,
+			val createdAt: Timestamp,
+			val updatedAt: Timestamp
+	)
+
+	fun Device.toResponseDTO() = DeviceResponseDTO(
+			id = id,
+			userId = user.id,
+			userName = user.name,
+			deviceType = deviceType,
+			deviceId = deviceId,
+			deviceName = deviceName,
+			applicationVersion = applicationVersion,
+			lastIp = lastIp,
+			additionalData = additionalData,
+			partyEnabledUntil = partyEnabledUntil,
+			createdAt = createdAt,
+			updatedAt = updatedAt
 	)
 }

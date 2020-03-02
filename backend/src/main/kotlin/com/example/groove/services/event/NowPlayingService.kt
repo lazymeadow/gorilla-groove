@@ -145,5 +145,4 @@ class NowPlayingService(
 		updateCount++
 		updateCount %= Int.MAX_VALUE
 	}
-
 }

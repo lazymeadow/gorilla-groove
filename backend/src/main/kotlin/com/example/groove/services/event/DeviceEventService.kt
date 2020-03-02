@@ -40,6 +40,7 @@ class DeviceEventService(
 	override fun sendEvent(sourceDevice: Device, event: EventRequest) {
 		event as RemotePlayEventRequest
 
+		val user = loadLoggedInUser()
 		val targetDeviceId = event.targetDeviceId
 
 		val targetDevice = deviceService.getDeviceById(targetDeviceId)
@@ -50,12 +51,14 @@ class DeviceEventService(
 
 		val trackIdToTrack = trackService
 				.getTracksByIds(event.trackIds?.toSet() ?: emptySet())
+				// Don't allow playing your own private songs to someone who isn't you. It won't load for them anyway
+				.filter { !it.private || targetDevice.user.id == user.id }
 				.map { it.id to it }
 				.toMap()
 
 		// A user could, theoretically, tell us to play a single track ID more than once.
 		// So load all the unique tracks belonging to the IDs from the DB, and then iterate
-		// over the IDs we are given so we preserve any duplicate IDs that we were given
+		// over the IDs we are given so we preserve any duplicate IDs
 		val tracksToPlay = event.trackIds?.map { trackIdToTrack.getValue(it) }
 
 		val eventResponse = RemotePlayEventResponse(

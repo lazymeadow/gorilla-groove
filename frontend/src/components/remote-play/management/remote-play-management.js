@@ -179,9 +179,13 @@ export default function RemotePlayManagement() {
 					? timePlayed + (elapsedTime / 1000)
 					: timePlayed;
 
+				const title = device.userId === userContext.ownUser.id
+					? device.deviceName
+					: `${device.deviceName} (${device.userName}'s device)`;
+
 				return <MiniPlayer
 					key={device.id}
-					title={device.deviceName}
+					title={title}
 					trackData={listeningState.trackData || {}}
 					playing={getDeviceValue(device.id, listeningState, 'playing')}
 					volume={getDeviceValue(device.id, listeningState, 'volume')}
