@@ -65,13 +65,18 @@ export class UserProvider extends React.Component {
 				clearTimeout(partyModeTimeout);
 			}
 
-			if (ownDevice.partyEnabledUntil) {
-				const msUntilNoParty = new Date(ownDevice.partyEnabledUntil) - new Date();
-
-				partyModeTimeout = setTimeout(() => {
-					this.loadOwnDevice()
-				}, msUntilNoParty + 1000)
+			if (!ownDevice.partyEnabledUntil) {
+				return;
 			}
+
+			const msUntilNoParty = new Date(ownDevice.partyEnabledUntil) - new Date();
+			if (msUntilNoParty < 0) {
+				return;
+			}
+
+			partyModeTimeout = setTimeout(() => {
+				this.loadOwnDevice()
+			}, msUntilNoParty + 1000)
 		});
 	}
 
