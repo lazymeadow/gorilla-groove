@@ -104,6 +104,9 @@ export default function RemotePlayManagement() {
 		userContext.setPartyMode(isSet, userIds, msUntilExpiration).then(() => {
 			setModifyingParty(false);
 			setPartyOptionsModalOpen(false);
+		}).catch(res => {
+			console.error(res);
+			toast.error('Failed to issue remote play command')
 		});
 	};
 

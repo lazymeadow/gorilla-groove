@@ -52,9 +52,12 @@ class DeviceEventService(
 		val trackIdToTrack = trackService
 				.getTracksByIds(event.trackIds?.toSet() ?: emptySet())
 				// Don't allow playing your own private songs to someone who isn't you. It won't load for them anyway
-				.filter { !it.private || targetDevice.user.id == user.id }
 				.map { it.id to it }
 				.toMap()
+
+		require(trackIdToTrack.values.all { !it.private || targetDevice.user.id == user.id }) {
+			"Private tracks may not be played remotely to another user"
+		}
 
 		// A user could, theoretically, tell us to play a single track ID more than once.
 		// So load all the unique tracks belonging to the IDs from the DB, and then iterate
