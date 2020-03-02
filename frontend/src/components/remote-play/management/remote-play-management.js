@@ -78,7 +78,7 @@ export default function RemotePlayManagement() {
 	});
 
 	const setPartyMode = isSet => {
-		let expirationTime = null;
+		let msUntilExpiration = null;
 		let userIds = [];
 
 		if (isSet) {
@@ -86,7 +86,7 @@ export default function RemotePlayManagement() {
 			const durationMinutes = durationSelectEl.options[durationSelectEl.selectedIndex].value;
 
 			if (durationMinutes > 0) {
-				expirationTime = Date.now() + (durationMinutes * 60 * 1000)
+				msUntilExpiration = durationMinutes * 60 * 1000
 			}
 
 			const userSelectEl = document.getElementById('party-user-select');
@@ -101,7 +101,7 @@ export default function RemotePlayManagement() {
 		}
 
 		setModifyingParty(true);
-		userContext.setPartyMode(isSet, userIds, expirationTime).then(() => {
+		userContext.setPartyMode(isSet, userIds, msUntilExpiration).then(() => {
 			setModifyingParty(false);
 			setPartyOptionsModalOpen(false);
 		});

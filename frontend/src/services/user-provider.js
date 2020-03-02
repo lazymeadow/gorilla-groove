@@ -6,6 +6,8 @@ import {getDeviceIdentifier} from "./version";
 
 export const UserContext = React.createContext();
 
+let partyModeTimeout = null;
+
 export class UserProvider extends React.Component {
 	constructor(props) {
 		super(props);
@@ -58,22 +60,48 @@ export class UserProvider extends React.Component {
 		}
 		Api.get(`device/${getDeviceIdentifier()}`).then(ownDevice => {
 			this.setState({ ownDevice });
+
+			if (partyModeTimeout !== null) {
+				clearTimeout(partyModeTimeout);
+			}
+
+			if (ownDevice.partyEnabledUntil) {
+				const msUntilNoParty = new Date(ownDevice.partyEnabledUntil) - new Date();
+
+				partyModeTimeout = setTimeout(() => {
+					this.loadOwnDevice()
+				}, msUntilNoParty + 1000)
+			}
 		});
 	}
 
 	isInPartyMode() {
 		const partyEnabledUntil = this.state.ownDevice.partyEnabledUntil;
-		return !(partyEnabledUntil === undefined || partyEnabledUntil === null);
+		if (partyEnabledUntil === undefined || partyEnabledUntil === null) {
+			return false;
+		}
+
+		return (new Date(partyEnabledUntil) - new Date() > 0);
 	}
 
-	setPartyMode(enabled, controllingUserIds, timeLimit) {
+	setPartyMode(enabled, controllingUserIds, msUntilExpiration) {
 		return Api.post('device/party', {
 			deviceIdentifier: getDeviceIdentifier(),
 			enabled,
 			controllingUserIds,
-			partyUntil: timeLimit
+			partyUntil: msUntilExpiration !== null ? Date.now() + msUntilExpiration : null
 		}).then(updatedDevice => {
 			this.setState({ ownDevice: updatedDevice });
+
+			// We want to remove party mode after it expires on our own. So just do a refresh from the server
+			// after we set it
+			if (partyModeTimeout !== null) {
+				clearTimeout(partyModeTimeout);
+			}
+
+			partyModeTimeout = setTimeout(() => {
+				this.loadOwnDevice()
+			}, msUntilExpiration + 1000)
 		});
 	}
 
