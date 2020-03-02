@@ -14,6 +14,8 @@ let doubleClickTimeout = null;
 let withinDoubleClick = false;
 let pendingEditableCell = null;
 
+let lastScroll = Date.now();
+
 export class TrackList extends React.Component {
 	constructor(props) {
 		super(props);
@@ -190,11 +192,18 @@ export class TrackList extends React.Component {
 	handleScroll() {
 		const scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
 
+		// Dumb hack to prevent too many scroll events from firing. Can't reliably use the context's loading
+		// to stop this because setState isn't instant
+		if (Date.now() - lastScroll < 500) {
+			return
+		}
+
 		const container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.context.loadingTracks
 			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
 			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
 
+			lastScroll = Date.now();
 			this.context.loadMoreTracks();
 		}
 	}
