@@ -140,7 +140,7 @@ class PlaylistService(
 			return false
 		}
 
-		return tracks == null || tracks.all { it.user == user }
+		return tracks == null || tracks.all { it.user.id == user.id }
 	}
 
 	companion object {
