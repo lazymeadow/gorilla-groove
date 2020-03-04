@@ -113,17 +113,14 @@ export default function TrackSourceList(props) {
 				<span className="my-library">My Library</span>
 			</div>
 
-			{ userContext.hasPermission(PermissionType.EXPERIMENTAL) ?
-				<div
-					className={`remote-play ${deviceManagementSelected}`}
-					onMouseDown={() => {
-						props.setCenterView(CenterView.REMOTE_DEVICES);
-					}}
-				>
-					<span>Remote Play</span>
-				</div>
-				: null
-			}
+			<div
+				className={`remote-play ${deviceManagementSelected}`}
+				onMouseDown={() => {
+					props.setCenterView(CenterView.REMOTE_DEVICES);
+				}}
+			>
+				<span>Remote Play</span>
+			</div>
 
 			{dataSource.map((node, i) => {
 				const label =
