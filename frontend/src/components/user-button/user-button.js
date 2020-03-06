@@ -45,7 +45,7 @@ export default function UserButton() {
 					{ component: <Settings/> },
 					{ component: <DeviceManagement/> },
 					{ component: <TrackHistory/> },
-					{ component: <InviteUser/> },
+					{ component: <InviteUser/>, shouldRender: userContext.hasPermission(PermissionType.INVITE_USER)  },
 					{ component: <DraftRelease/>, shouldRender: userContext.hasPermission(PermissionType.WRITE_VERSION_HISTORY) },
 					{ text: "Logout", clickHandler: logout }
 				]}
