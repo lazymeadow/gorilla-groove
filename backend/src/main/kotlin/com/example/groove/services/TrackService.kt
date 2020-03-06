@@ -241,10 +241,12 @@ class TrackService(
 
 		return mapOf(
 				"trackLink" to trackLink,
-				"albumLink" to albumLink,
+				"albumArtLink" to albumLink,
 				"name" to track.name,
 				"artist" to track.artist,
-				"album" to track.album
+				"album" to track.album,
+				"releaseYear" to track.releaseYear,
+				"length" to track.length
 		)
 	}
 

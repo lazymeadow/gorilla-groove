@@ -95,10 +95,12 @@ class NowPlayingService(
 			private -> SongListenTrack(isPrivate = true)
 			else -> SongListenTrack(
 					title = name,
+					name = name,
 					artist = artist,
 					album = album,
 					releaseYear = releaseYear,
 					duration = length,
+					length = length,
 					isPrivate = false,
 					albumArtLink = trackLinkRepository.findUnexpiredArtByTrackId(id)?.link
 			)

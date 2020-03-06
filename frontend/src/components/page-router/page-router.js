@@ -1,6 +1,6 @@
 import React from 'react';
 import {BrowserRouter, Route, Switch} from 'react-router-dom'
-import {SongLinkPlayer} from "../song-link-player/song-link-player";
+import SongLinkPlayer from "../song-link-player/song-link-player";
 import SiteLayout from "../site-layout/site-layout";
 import LoginPageWrapper from "../login-page/login-page-wrapper";
 import AccountCreation from "../account-creation/account-creation";

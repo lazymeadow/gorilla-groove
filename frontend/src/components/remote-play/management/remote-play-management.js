@@ -228,7 +228,7 @@ export default function RemotePlayManagement() {
 						);
 					}}
 					onTimeChange={(newTimePercent, isHeld) => {
-						const newTime = newTimePercent * listeningState.trackData.duration;
+						const newTime = newTimePercent * listeningState.trackData.length;
 						setOverride(device.id, 'timePlayed', newTime);
 						setOverride(device.id, 'lastTimeUpdate', Date.now());
 						if (!isHeld) {

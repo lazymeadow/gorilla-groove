@@ -1,5 +1,6 @@
 package com.example.groove.security
 
+import com.example.groove.properties.S3Properties
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -33,7 +34,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @EnableWebSecurity
 class SecurityConfiguration(
 		private val tokenAuthenticationProvider: TokenAuthenticationProvider,
-		private val dataSource: DataSource
+		private val dataSource: DataSource,
+		private val s3Properties: S3Properties
 ) : WebSecurityConfigurerAdapter() {
 
 	private val publicUrls = OrRequestMatcher(
@@ -57,7 +59,18 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/favicon-32x32.png"),
 			AntPathRequestMatcher("/**", HttpMethod.OPTIONS.toString(), false) // allow CORS option calls
 	)
-	private val protectedUrls = NegatedRequestMatcher(publicUrls)
+
+	// Used when not running stuff on S3
+	private val localDiskUrls = OrRequestMatcher(
+			AntPathRequestMatcher("/music/**"),
+			AntPathRequestMatcher("/album-art/**")
+	)
+
+	private val protectedUrls = if (s3Properties.awsStoreInS3) {
+		NegatedRequestMatcher(publicUrls)
+	} else {
+		NegatedRequestMatcher(OrRequestMatcher(publicUrls, localDiskUrls))
+	}
 
 	@Throws(Exception::class)
 	override fun configure(auth: AuthenticationManagerBuilder) {

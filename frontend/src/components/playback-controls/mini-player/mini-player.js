@@ -7,12 +7,16 @@ export default function MiniPlayer(props) {
 	const volumeSliderRef = useRef(null);
 
 	if (timeSliderRef.current !== null) {
-		timeSliderRef.current.value = props.timePlayed / props.trackData.duration;
+		timeSliderRef.current.value = props.timePlayed / props.trackData.length;
 	}
 
 	if (volumeSliderRef.current !== null) {
 		volumeSliderRef.current.value = props.volume;
 	}
+
+	const shuffleClass = props.shuffling === undefined ? 'hidden' : '';
+	const repeatClass = props.shuffling === undefined ? 'hidden' : '';
+	const songChangeClass = props.onPlayNext === undefined ? 'hidden' : '';
 
 	return (
 		<div className="song-player mini-player">
@@ -28,7 +32,7 @@ export default function MiniPlayer(props) {
 				/>
 				<div className="song-information">
 					<ul>
-						<li>{props.trackData.title}</li>
+						<li>{props.trackData.name}</li>
 						<li>{props.trackData.artist}</li>
 						<li>{props.trackData.album}</li>
 						<li>{props.trackData.releaseYear}</li>
@@ -40,7 +44,7 @@ export default function MiniPlayer(props) {
 				<div className="playback-controls">
 					<i
 						onMouseDown={props.onPlayPrevious}
-						className="fas fa-step-backward"
+						className={`fas fa-step-backward ${songChangeClass}`}
 					/>
 					<i
 						onMouseDown={props.onPauseChange}
@@ -48,13 +52,13 @@ export default function MiniPlayer(props) {
 					/>
 					<i
 						onMouseDown={props.onPlayNext}
-						className="fas fa-step-forward"
+						className={`fas fa-step-forward ${songChangeClass}`}
 					/>
 				</div>
 				<div className="slider-section">
 					<div className="time-slider-wrapper">
 						<div className="time-indicators">
-							{formatTimeFromSeconds(props.timePlayed)} / {formatTimeFromSeconds(props.trackData.duration)}
+							{ formatTimeFromSeconds(props.timePlayed)} / {formatTimeFromSeconds(props.trackData.length) }
 						</div>
 						<input
 							ref={timeSliderRef}
@@ -70,11 +74,11 @@ export default function MiniPlayer(props) {
 					<div className="bottom-controls">
 						<i
 							onMouseDown={props.onShuffleChange}
-							className={`fas fa-random control ${props.shuffling ? 'enabled' : ''}`}
+							className={`fas fa-random control ${shuffleClass} ${props.shuffling ? 'enabled' : ''}`}
 						/>
 						<i
 							onMouseDown={props.onRepeatChange}
-							className={`fas fa-sync-alt control ${props.repeating ? 'enabled' : ''}`}
+							className={`fas fa-sync-alt control ${repeatClass} ${props.repeating ? 'enabled' : ''}`}
 						/>
 
 						<i

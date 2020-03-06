@@ -88,12 +88,18 @@ data class SongListenResponse(
 
 data class SongListenTrack(
 		val trackId: Int? = null,
+
+		@Deprecated("Should have called this 'name' like I do everywhere else. Leaving for temporary backwards compatibility")
 		val title: String? = null,
+		val name: String? = null,
 		val artist: String? = null,
 		val album: String? = null,
 		val releaseYear: Int? = null,
 		val albumArtLink: String? = null,
+
+		@Deprecated("Should have called this 'length' like I do everywhere else. Leaving for temporary backwards compatibility")
 		val duration: Int? = null,
+		val length: Int? = null,
 
 		@get:JsonProperty("isPrivate")
 		val isPrivate: Boolean = false
