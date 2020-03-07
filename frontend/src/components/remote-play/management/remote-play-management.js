@@ -1,13 +1,12 @@
 import React, {useContext, useEffect, useState} from "react";
-import {Api} from "../../../api";
 import MiniPlayer from "../../playback-controls/mini-player/mini-player";
-import {getDeviceIdentifier} from "../../../services/version";
 import {SocketContext} from "../../../services/socket-provider";
 import {RemotePlayType} from "../modal/remote-play-type";
 import {UserContext} from "../../../services/user-provider";
 import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {Modal} from "../../modal/modal";
 import {toast} from "react-toastify";
+import {DeviceContext} from "../../../services/device-provider";
 
 const OVERRIDE_DURATION_MS = 5000;
 
@@ -20,7 +19,6 @@ const OVERRIDE_DURATION_MS = 5000;
 const nowListeningOverrides = {};
 
 export default function RemotePlayManagement() {
-	const [devices, setDevices] = useState([]);
 	const [forceRerender, setForceRerender] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [partyOptionsModalOpen, setPartyOptionsModalOpen] = useState(false);
@@ -28,10 +26,10 @@ export default function RemotePlayManagement() {
 
 	const socket = useContext(SocketContext);
 	const userContext = useContext(UserContext);
+	const deviceContext = useContext(DeviceContext);
 
 	useEffect(() => {
-		Api.get(`device/active?excluding-device=${getDeviceIdentifier()}`).then(devices => {
-			setDevices(devices);
+		deviceContext.loadOtherDevices().then(() => {
 			setLoading(false);
 		});
 
@@ -101,7 +99,7 @@ export default function RemotePlayManagement() {
 		}
 
 		setModifyingParty(true);
-		userContext.setPartyMode(isSet, userIds, msUntilExpiration).then(() => {
+		deviceContext.setPartyMode(isSet, userIds, msUntilExpiration).then(() => {
 			setModifyingParty(false);
 			setPartyOptionsModalOpen(false);
 		}).catch(res => {
@@ -115,11 +113,11 @@ export default function RemotePlayManagement() {
 	return <div id="remote-play-management">
 		<div>
 			<div id="party-mode-button" className="auto-margin text-center">
-				{ userContext.isInPartyMode()
+				{ deviceContext.isInPartyMode()
 					? <div className="inner-text full-dimensions" onClick={() => setPartyMode(false)}>
 						End the Party
 						<div className="small-text">
-							({ formatTimeLeft(userContext.ownDevice.partyEnabledUntil) } left)
+							({ formatTimeLeft(deviceContext.ownDevice.partyEnabledUntil) } left)
 						</div>
 					</div>
 					: <div className="inner-text animation-rainbow full-dimensions" onClick={() => setPartyOptionsModalOpen(true)}>
@@ -169,9 +167,9 @@ export default function RemotePlayManagement() {
 		<hr/>
 
 		<div className="device-list">
-			{ devices.length === 0 ? <div>No other active devices found</div> : null }
+			{ deviceContext.otherDevices.length === 0 ? <div>No other active devices found</div> : null }
 
-			{ devices.map(device => {
+			{ deviceContext.otherDevices.map(device => {
 				const listeningState = deviceIdToListeningState[device.id] || {};
 				const elapsedTime = currentTime - getDeviceValue(device.id, listeningState, 'lastTimeUpdate');
 

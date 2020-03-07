@@ -2,7 +2,6 @@ import React from "react";
 import {Api} from "../api";
 import {getCookieValue} from "../cookie";
 import {PermissionType} from "../enums/permission-type";
-import {getDeviceIdentifier} from "./version";
 
 export const UserContext = React.createContext();
 
@@ -19,10 +18,7 @@ export class UserProvider extends React.Component {
 			ownPermissions: new Set(),
 
 			initialize: (...args) => this.initialize(...args),
-			hasPermission: (...args) => this.hasPermission(...args),
-			loadOwnDevice: (...args) => this.loadOwnDevice(...args),
-			isInPartyMode: (...args) => this.isInPartyMode(...args),
-			setPartyMode: (...args) => this.setPartyMode(...args),
+			hasPermission: (...args) => this.hasPermission(...args)
 		}
 	}
 
@@ -51,63 +47,6 @@ export class UserProvider extends React.Component {
 
 	hasPermission(permissionType) {
 		return this.state.ownPermissions.has(permissionType)
-	}
-
-	loadOwnDevice() {
-		const deviceIdentifier = getDeviceIdentifier();
-		if (deviceIdentifier === undefined) {
-			throw Error('Device identifier not set before loading device!')
-		}
-		Api.get(`device/${getDeviceIdentifier()}`).then(ownDevice => {
-			this.setState({ ownDevice });
-
-			if (partyModeTimeout !== null) {
-				clearTimeout(partyModeTimeout);
-			}
-
-			if (!ownDevice.partyEnabledUntil) {
-				return;
-			}
-
-			const msUntilNoParty = new Date(ownDevice.partyEnabledUntil) - new Date();
-			if (msUntilNoParty < 0) {
-				return;
-			}
-
-			partyModeTimeout = setTimeout(() => {
-				this.loadOwnDevice()
-			}, msUntilNoParty + 1000)
-		});
-	}
-
-	isInPartyMode() {
-		const partyEnabledUntil = this.state.ownDevice.partyEnabledUntil;
-		if (partyEnabledUntil === undefined || partyEnabledUntil === null) {
-			return false;
-		}
-
-		return (new Date(partyEnabledUntil) - new Date() > 0);
-	}
-
-	setPartyMode(enabled, controllingUserIds, msUntilExpiration) {
-		return Api.post('device/party', {
-			deviceIdentifier: getDeviceIdentifier(),
-			enabled,
-			controllingUserIds,
-			partyUntil: msUntilExpiration !== null ? Date.now() + msUntilExpiration : null
-		}).then(updatedDevice => {
-			this.setState({ ownDevice: updatedDevice });
-
-			// We want to remove party mode after it expires on our own. So just do a refresh from the server
-			// after we set it
-			if (partyModeTimeout !== null) {
-				clearTimeout(partyModeTimeout);
-			}
-
-			partyModeTimeout = setTimeout(() => {
-				this.loadOwnDevice()
-			}, msUntilExpiration + 1000)
-		});
 	}
 
 	render() {

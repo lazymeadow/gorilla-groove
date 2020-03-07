@@ -14,6 +14,7 @@ import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
 import {CenterView} from "../../enums/site-views";
 import RemotePlayManagement from "../remote-play/management/remote-play-management";
+import {DeviceContext} from "../../services/device-provider";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
@@ -32,6 +33,7 @@ export default function SiteLayout(props) {
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
 	const userContext = useContext(UserContext);
+	const deviceContext = useContext(DeviceContext);
 	const playlistContext = useContext(PlaylistContext);
 
 	useEffect(() => {
@@ -47,7 +49,7 @@ export default function SiteLayout(props) {
 		setTimeout(socketContext.connectToSocket, 1000);
 
 		// After we tell the server about our device load server side information about it
-		notifyVersion().then(userContext.loadOwnDevice);
+		notifyVersion().then(deviceContext.loadOwnDevice);
 	}, []);
 
 	const displayedColumns = musicContext.columnPreferences
@@ -56,7 +58,7 @@ export default function SiteLayout(props) {
 
 	return (
 		<div className="full-screen border-layout">
-			{ userContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
+			{ deviceContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
 
 			<div className="border-layout-north">
 				<HeaderBar/>
