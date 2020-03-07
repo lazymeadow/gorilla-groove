@@ -7,17 +7,17 @@ import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {RemotePlayType} from "./remote-play-type";
 import {SocketContext} from "../../../services/socket-provider";
 import {UserContext} from "../../../services/user-provider";
+import {DeviceContext} from "../../../services/device-provider";
 
 function RemotePlayModal(props) {
-	const [devices, setDevices] = useState([]);
 	const [loading, setLoading] = useState(true);
 
 	const socket = useContext(SocketContext);
 	const userContext = useContext(UserContext);
+	const deviceContext = useContext(DeviceContext);
 
 	useEffect(() => {
-		Api.get(`device/active?excluding-device=${getDeviceIdentifier()}`).then(devices => {
-			setDevices(devices);
+		deviceContext.loadOtherDevices().then(() => {
 			setLoading(false);
 		});
 	}, []);
@@ -59,7 +59,7 @@ function RemotePlayModal(props) {
 				</div>
 				<div>
 					<select id="remote-play-selection">
-						{ devices.map(device =>
+						{ deviceContext.otherDevices.map(device =>
 							<option key={device.id} value={device.id}>
 								{ userContext.ownUser.id === device.userId
 									? device.deviceName

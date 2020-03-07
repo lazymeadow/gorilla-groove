@@ -1,12 +1,11 @@
 import React from "react";
 import {Api} from "../api";
-import {getCookieValue} from "../cookie";
-import {PermissionType} from "../enums/permission-type";
 import {getDeviceIdentifier} from "./version";
 
 export const DeviceContext = React.createContext();
 
 let partyModeTimeout = null;
+let updateIntervalId = null;
 
 export class DeviceProvider extends React.Component {
 	constructor(props) {
@@ -20,6 +19,18 @@ export class DeviceProvider extends React.Component {
 			loadOwnDevice: (...args) => this.loadOwnDevice(...args),
 			isInPartyMode: (...args) => this.isInPartyMode(...args),
 			setPartyMode: (...args) => this.setPartyMode(...args),
+		}
+	}
+
+	componentDidMount() {
+		const oneMinute = 60 * 1000;
+		updateIntervalId = setInterval(this.loadOtherDevices.bind(this), oneMinute);
+		this.loadOtherDevices();
+	}
+
+	componentWillUnmount() {
+		if (updateIntervalId !== null) {
+			clearInterval(updateIntervalId);
 		}
 	}
 

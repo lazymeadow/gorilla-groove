@@ -4,6 +4,8 @@ import {Modal} from "../modal/modal";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 
+let updateIntervalId = null;
+
 export class VersionDisplay extends React.Component {
 	constructor(props) {
 		super(props);
@@ -12,20 +14,19 @@ export class VersionDisplay extends React.Component {
 			modalOpen: false,
 			loadingHistory: false,
 			historyRecords: [],
-			updateIntervalId: undefined,
 			outOfDate: false
 		}
 	}
 
 	componentDidMount() {
 		const thirtyMinutes = 30 * 60 * 1000;
-		const interval = setInterval(this.checkForNewerVersion.bind(this), thirtyMinutes);
-		this.setState({ updateIntervalId: interval }, this.checkForNewerVersion.bind(this));
+		updateIntervalId = setInterval(this.checkForNewerVersion.bind(this), thirtyMinutes);
+		this.checkForNewerVersion();
 	}
 
 	componentWillUnmount() {
-		if (this.state.updateIntervalId !== undefined) {
-			clearInterval(this.state.updateIntervalId);
+		if (updateIntervalId !== null) {
+			clearInterval(updateIntervalId);
 		}
 	}
 
@@ -33,11 +34,11 @@ export class VersionDisplay extends React.Component {
 		Api.get('version').then(serverVersion => {
 			if (serverVersion.version !== __VERSION__) {
 				// Once we've marked it as out of date, there is no reason to continue checking
-				clearInterval(this.state.updateIntervalId);
+				clearInterval(updateIntervalId);
+				updateIntervalId = null;
 
 				this.setState({
-					outOfDate: true ,
-					updateIntervalId: undefined
+					outOfDate: true
 				});
 			}
 		});

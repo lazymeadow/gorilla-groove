@@ -8,7 +8,7 @@ import {Modal} from "../modal/modal";
 import {SocketContext} from "../../services/socket-provider";
 import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
-import {PermissionType} from "../../enums/permission-type";
+import {DeviceContext} from "../../services/device-provider";
 
 let pendingDeletePlaylist = {};
 
@@ -19,6 +19,7 @@ export default function TrackSourceList(props) {
 
 	const userContext = useContext(UserContext);
 	const musicContext = useContext(MusicContext);
+	const deviceContext = useContext(DeviceContext);
 	const socketContext = useContext(SocketContext);
 	const playlistContext = useContext(PlaylistContext);
 
@@ -96,6 +97,12 @@ export default function TrackSourceList(props) {
 		</span>
 	};
 
+	const isUserPartying = entry => {
+		// If we can see any of the user's devices as active, we know we've been invited to a party
+		const devicesForUser = deviceContext.otherDevices.filter(it => it.userId === entry.id);
+		return devicesForUser.length > 0;
+	};
+
 	const librarySelected = musicContext.trackView === TrackView.LIBRARY && props.centerView === CenterView.TRACKS
 		? 'selected' : '';
 	const deviceManagementSelected = props.centerView === CenterView.REMOTE_DEVICES
@@ -139,11 +146,17 @@ export default function TrackSourceList(props) {
 								entry.id === musicContext.viewedEntityId &&
 								props.centerView === CenterView.TRACKS;
 							const entryClass = entrySelected ? 'selected' : '';
+							const partyClass = node.section === TrackView.USER && isUserPartying(entry) ? 'animation-rainbow' : '';
+
+							const tooltip = partyClass ? 'This user invited you to party' : '';
+
 							const cellId = i + '-' + entry.id;
+
 							return (
 								<div
 									id={cellId}
-									className={`tree-child ${entryClass}`}
+									title={tooltip}
+									className={`tree-child ${entryClass} ${partyClass}`}
 									key={entry.id}
 									onMouseDown={() => selectEntry(node.section, entry, cellId)}
 								>
