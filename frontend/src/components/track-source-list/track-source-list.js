@@ -60,7 +60,11 @@ export default function TrackSourceList(props) {
 	};
 
 	const selectEntry = (section, entry, elementId) => {
-		if (section === musicContext.trackView && entry.id === musicContext.viewedEntityId) {
+		if (
+			props.centerView === CenterView.TRACKS &&
+			section === musicContext.trackView &&
+			entry.id === musicContext.viewedEntityId
+		) {
 			setEditedId(elementId);
 			return; // User selected the same thing as before
 		}
