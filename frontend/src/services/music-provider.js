@@ -254,6 +254,7 @@ export class MusicProvider extends React.Component {
 			return;
 		}
 
+		track.selectionKey = track.id;
 		const newTrackIndex = findSpotInSortedArray(track, this.state.viewedTracks, this.state.currentSort);
 		this.state.viewedTracks.splice(newTrackIndex, 0, track);
 
