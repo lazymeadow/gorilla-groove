@@ -3,9 +3,9 @@ import {Api} from "../api";
 import {TrackView} from "../enums/site-views";
 import * as LocalStorage from "../local-storage";
 import * as Util from "../util";
+import {findSpotInSortedArray, getAllPossibleDisplayColumns, uuidv4} from "../util";
 import {toast} from "react-toastify";
-import {findSpotInSortedArray} from "../util";
-import {getAllPossibleDisplayColumns} from "../util";
+import {omit} from "../util";
 
 export const MusicContext = React.createContext();
 
@@ -152,6 +152,11 @@ export class MusicProvider extends React.Component {
 		this.setState(newState);
 
 		return Api.get('track', params).then(result => {
+			result.content = result.content.map(track => {
+				track.selectionKey = 't' + track.id;
+				return track;
+			});
+
 			this.addTracksToView(result, append);
 		}).catch(error => {
 			console.error(error)
@@ -185,10 +190,12 @@ export class MusicProvider extends React.Component {
 			// Add this as extra data to the track data, to make sharing the track-list view easy between playlist
 			// views, and library / user views
 			result.content = result.content.map(playlistTrack => {
-				let trackData = playlistTrack.track;
+				const trackData = playlistTrack.track;
 				trackData.playlistTrackId = playlistTrack.id;
+				trackData.selectionKey = 'p' + playlistTrack.id;
 				return trackData
 			});
+
 			this.addTracksToView(result, append);
 		}).finally(() => this.setState({
 			loadingTracks: false,
@@ -256,6 +263,15 @@ export class MusicProvider extends React.Component {
 		});
 	}
 
+	applyNowPlayingSelectionKey(track, forceNewKey) {
+		const newTrack = Object.assign({}, track);
+		if (!('selectionKey' in newTrack) || forceNewKey) {
+			newTrack.selectionKey = uuidv4();
+		}
+
+		return newTrack;
+	}
+
 	playFromTrackIndex(trackIndex, updateNowPlaying) {
 		// If this is null, it means the user just wanted to play music without picking something
 		// Grab the first song if not shuffling, or an appropriate shuffle song otherwise
@@ -274,7 +290,9 @@ export class MusicProvider extends React.Component {
 		};
 
 		if (updateNowPlaying) {
-			newState.nowPlayingTracks = this.state.viewedTracks.slice(0);
+			newState.nowPlayingTracks = this.state.viewedTracks.map(track =>
+				this.applyNowPlayingSelectionKey(track, false)
+			);
 			newState.playedTrack = this.state.viewedTracks[trackIndex];
 		} else {
 			newState.playedTrack = this.state.nowPlayingTracks[trackIndex];
@@ -286,7 +304,7 @@ export class MusicProvider extends React.Component {
 	playTracks(tracks) {
 		const startIndex = this.state.shuffleSongs ? Math.floor(Math.random() * tracks.length) : 0;
 		this.setState({
-			nowPlayingTracks: tracks,
+			nowPlayingTracks: tracks.map(track => this.applyNowPlayingSelectionKey(track, false)),
 			playedTrack: tracks[startIndex],
 			playedTrackIndex: startIndex,
 			sessionPlayCounter: this.state.sessionPlayCounter + 1
@@ -294,8 +312,9 @@ export class MusicProvider extends React.Component {
 	}
 
 	playTracksNext(tracks) {
-		let newTracks = this.state.nowPlayingTracks.slice(0);
-		newTracks.splice(this.state.playedTrackIndex + 1, 0, ...tracks);
+		const newTracks = this.state.nowPlayingTracks.slice(0);
+		const addedTracks = tracks.map(track => this.applyNowPlayingSelectionKey(track, true));
+		newTracks.splice(this.state.playedTrackIndex + 1, 0, ...addedTracks);
 
 		this.setState({
 			nowPlayingTracks: newTracks,
@@ -306,8 +325,9 @@ export class MusicProvider extends React.Component {
 	}
 
 	playTracksLast(tracks) {
-		let newTracks = this.state.nowPlayingTracks.slice(0);
-		newTracks.splice(this.state.nowPlayingTracks.length, 0, ...tracks);
+		const newTracks = this.state.nowPlayingTracks.slice(0);
+		const addedTracks = tracks.map(track => this.applyNowPlayingSelectionKey(track, true));
+		newTracks.splice(this.state.nowPlayingTracks.length, 0, ...addedTracks);
 
 		this.setState({
 			nowPlayingTracks: newTracks,
@@ -330,13 +350,13 @@ export class MusicProvider extends React.Component {
 		// If we're shuffling, we need to remove this song from the shuffle pool after we play it
 		if (this.state.shuffleSongs) {
 			// Couldn't resist this horrible variable name
-			let indexIndex = this.state.songIndexesToShuffle.findIndex(index => index === newTrackIndex);
+			const indexIndex = this.state.songIndexesToShuffle.findIndex(index => index === newTrackIndex);
 
 			// Now that we know where the song index is, in our array of indexes we can still pick, remove the indexIndex
-			let newShuffleIndexes = this.state.songIndexesToShuffle.slice(0);
+			const newShuffleIndexes = this.state.songIndexesToShuffle.slice(0);
 			newShuffleIndexes.splice(indexIndex, 1);
 
-			let newShuffleHistory = this.state.shuffledSongIndexes.slice(0);
+			const newShuffleHistory = this.state.shuffledSongIndexes.slice(0);
 			newShuffleHistory.push(newTrackIndex);
 
 			this.setState({
@@ -480,12 +500,12 @@ export class MusicProvider extends React.Component {
 			// Assuming we have 75 as our page size, we could have loaded in 1 page, giving us 75 tracks
 			// We could have then uploaded a track, that was automatically added to our library if it was
 			// sorted into those first 75 tracks. This would give us 76 tracks. We now fetch the 2nd page
-			// of tracks, giving us 75 more. However, the 1st track in this request, will actually be the
+			// of tracks, giving us 75 more. However, the 1st track in this request will actually be the
 			// 75th track from before, as it got bumped up with the newly added track. Thus, we mod our
 			// total tracks by the page size here, and drop the appropriate number from the beginning of
 			// the result. This will give us 2 pages, 150 tracks, with no duplication
 
-			let tracksToDrop = this.state.viewedTracks.length % this.pageSize;
+			const tracksToDrop = this.state.viewedTracks.length % this.pageSize;
 			result.content.splice(0, tracksToDrop);
 
 			this.setState({ viewedTracks: this.state.viewedTracks.concat(result.content) })
@@ -494,12 +514,11 @@ export class MusicProvider extends React.Component {
 		}
 	}
 
-	removeFromNowPlaying(trackIndexes) {
-		let trackIdSet = new Set(trackIndexes);
-		let newNowPlaying = this.state.nowPlayingTracks.filter((track, index) => !trackIdSet.has(index));
+	removeFromNowPlaying(selectionKeys) {
+		const newNowPlaying = this.state.nowPlayingTracks.filter(track => !selectionKeys.has(track.selectionKey));
 
 		// Handle changing the currently playing song, if we need to
-		if (trackIdSet.has(this.state.playedTrackIndex)) {
+		if (this.state.playedTrack !== null && selectionKeys.has(this.state.playedTrack.selectionKey)) {
 			// If a song we removed was playing, just stop playing altogether. Might try to do more stuff later
 			this.setState({
 				playedTrackIndex: null,
@@ -510,7 +529,7 @@ export class MusicProvider extends React.Component {
 			// we removed the 5th song) then we need to shift the now playing track index up by the number of
 			// tracks we removed less than the currently played track index
 			let indexesToRemove = 0;
-			trackIdSet.forEach( indexRemoved => {
+			selectionKeys.forEach(indexRemoved => {
 				if (indexRemoved < this.state.playedTrackIndex) {
 					indexesToRemove++;
 				}
@@ -534,15 +553,28 @@ export class MusicProvider extends React.Component {
 			});
 		});
 
+		// The now playing tracks are not the same object references as the viewed tracks,
+		// so we need to manually keep these in sync
+		const trackIds = new Set(tracks.map(it => it.id));
+		this.state.nowPlayingTracks.forEach(nowPlayingTrack => {
+			// Do the "exists" check with a set to keep things performant
+			if (trackIds.has(nowPlayingTrack.id)) {
+				const newTrack = tracks.find(it => it.id === nowPlayingTrack.id);
+				Object.assign(nowPlayingTrack, omit('selectionKey', newTrack));
+			}
+		});
+
 		const params = { updateTrackJson: JSON.stringify(trackData) };
 		if (albumArt) {
 			params.albumArt = albumArt;
 		}
 
+		this.setState({ renderCounter: this.state.renderCounter + 1 });
+
 		// Use Api.upload here because we might have image data
 		return Api.upload('PUT', 'track', params).catch(error => {
 			console.error(error);
-			toast.error("Failed to updated song data")
+			toast.error('Failed to updated song data')
 		})
 	}
 

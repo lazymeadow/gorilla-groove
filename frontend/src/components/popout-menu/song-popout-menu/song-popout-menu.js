@@ -283,8 +283,7 @@ export default function SongPopoutMenu(props) {
 			{
 				text: 'Remove', clickHandler: e => {
 					e.stopPropagation();
-					const trackIndexes = props.getSelectedTrackIndexes();
-					musicContext.removeFromNowPlaying(trackIndexes);
+					musicContext.removeFromNowPlaying(props.selectionKeys);
 				}
 			}
 		];

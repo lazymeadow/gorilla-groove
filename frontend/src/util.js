@@ -161,3 +161,8 @@ export function getVolumeIcon(volume, muted) {
 	}
 }
 
+export function omit(key, obj) {
+	// noinspection JSUnusedLocalSymbols
+	const { [key]: _, ...rest } = obj;
+	return rest;
+}
