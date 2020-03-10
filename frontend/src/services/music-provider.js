@@ -254,6 +254,22 @@ export class MusicProvider extends React.Component {
 			return;
 		}
 
+		// If we have a search term in use, make sure the track matches it. Kind of a hack, as we are
+		// replicating backend filter logic on the frontend that may not have 100% parity
+		const searchableProperties = ['name', 'artist', 'featuring', 'album', 'genre', 'note'];
+		const searchTerm = this.props.filterContext.searchTerm.trim().toLowerCase();
+		const trackVisible = searchTerm.length === 0 || searchableProperties.some(property => {
+			if (track[property] === null || track[property] === undefined) {
+				return false;
+			}
+
+			const trackValue = track[property].toLowerCase();
+			return trackValue.includes(searchTerm)
+		});
+		if (!trackVisible) {
+			return;
+		}
+
 		track.selectionKey = track.id;
 		const newTrackIndex = findSpotInSortedArray(track, this.state.viewedTracks, this.state.currentSort);
 		this.state.viewedTracks.splice(newTrackIndex, 0, track);
