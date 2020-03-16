@@ -10,7 +10,7 @@ data class User(
     @PrimaryKey(autoGenerate = true) val id: Long,
     @ColumnInfo val userName: String,
     @ColumnInfo val email: String,
-    @Nullable @ColumnInfo val token: String?,
-    @ColumnInfo val loggedIn: Int,
+    @Nullable @ColumnInfo var token: String?,
+    @ColumnInfo var loggedIn: Int,
     @ColumnInfo val deviceId: String?
 )

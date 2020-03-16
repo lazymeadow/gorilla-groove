@@ -15,9 +15,12 @@ class UserRepository(private val userDao: UserDao) {
         return user
     }
 
-    fun updateToken(userId: Long, token: String) {
-        Log.i(userRepositoryTag, "Updating token for userId: $userId")
-        userDao.updateToken(userId, token)
+    fun updateToken(user: User, token: String) {
+        Log.i(userRepositoryTag, "Updating token for userId: ${user.id}")
+        userDao.updateToken(user.id, token)
+
+        user.token = token
+        user.loggedIn = 1
     }
 
     fun updateDeviceId(userId: Long, deviceId: String) {
@@ -25,7 +28,7 @@ class UserRepository(private val userDao: UserDao) {
         userDao.updateDeviceId(userId, deviceId)
     }
 
-    fun createUser(userName: String, email: String, token: String?, deviceId: String?) {
+    fun createUser(userName: String, email: String, token: String?, deviceId: String?): User {
         Log.i(userRepositoryTag, "Creating user with username: $userName and email: $email")
         val user = User(
             id = 0,
@@ -36,6 +39,8 @@ class UserRepository(private val userDao: UserDao) {
             deviceId = deviceId
         )
         userDao.createUser(user)
+
+        return user
     }
 
     fun lastLoggedInUser(): User? {
