@@ -293,7 +293,7 @@ class PlaylistActivity : AppCompatActivity(),
     }
 
     override fun onClick(view: View, position: Int) {
-        Log.i("PlaylistActivity", "onClick called! and playbackPaused = $playbackPaused")
+        logger.info("onClick called! and playbackPaused = $playbackPaused")
         musicPlayerService!!.setSong(position)
         if (!musicPlayerService!!.isPlaying()) {
             playButton.setBackgroundResource(android.R.drawable.ic_media_pause)
@@ -492,14 +492,14 @@ class PlaylistActivity : AppCompatActivity(),
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun playNextEvent(event: PlayNextSongEvent) {
-        Log.d("EventBus", "Message received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         playNext()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onMediaPlayerLoadedEvent(event: MediaPlayerLoadedEvent) {
-        Log.d("EventBus", "Message received ${event.message}")
-        Log.i("EventBus", "Duration is ${event.songDuration}")
+        logger.debug("EventBus", "Message received ${event.message}")
+        logger.debug("EventBus", "Duration is ${event.songDuration}")
         val currentSong = "${event.songTitle} - ${event.songArtist}"
         songDurationTextView.text = event.songDuration.toLong().getSongTimeFromMilliseconds()
         songPositionTextView.text = getString(R.string.zeroPosition)
@@ -509,37 +509,37 @@ class PlaylistActivity : AppCompatActivity(),
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLosses(event: MediaPlayerTransientAudioLossEvent) {
-        Log.d("EventBus", "Message Received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         pause()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onPauseEvent(event: MediaPlayerPauseEvent) {
-        Log.i("EventBus", "Message Received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         pause()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLoss(event: MediaPlayerAudioLossEvent) {
-        Log.d("EventBus", "Message Received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         stopService(playIntent)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onStartSongEvent(event: MediaPlayerStartSongEvent) {
-        Log.d("EventBus", "Message Received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         start()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onPlayPreviousSongEvent(event: PlayPreviousSongEvent) {
-        Log.d("EventBus", "Message Received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         playPrevious()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onUpdateSeekBarEvent(event: UpdateSeekBarEvent) {
-        Log.d("EventBus", "Message Received ${event.message}")
+        logger.debug("EventBus", "Message received ${event.message}")
         seekBar.progress = event.position
         songPositionTextView.text = event.position.toLong().getSongTimeFromMilliseconds()
     }

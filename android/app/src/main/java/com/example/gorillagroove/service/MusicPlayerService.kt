@@ -44,7 +44,11 @@ private const val REQUEST_CODE_PREVIOUS = 930
 class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
     MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener,
     CoroutineScope by MainScope() {
+
+    // MediaPlayer is not thread safe, and because we are using it with asynchronous actions,
+    // calls made to it need to be done in a synchronized block
     private val player = MediaPlayer()
+
     private val musicBind: IBinder = MusicBinder()
     private val httpClient = HttpClient()
     private val logger = logger()
@@ -117,26 +121,28 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
 
 
     fun getPosition(): Int {
-        val currentTime = System.currentTimeMillis().toInt()
-        val elapsedPosition = currentTime - lastRecordedTime
-        lastRecordedTime = currentTime
-        playCountPosition += elapsedPosition // Milliseconds
+        synchronized(this) {
+            val currentTime = System.currentTimeMillis().toInt()
+            val elapsedPosition = currentTime - lastRecordedTime
+            lastRecordedTime = currentTime
+            playCountPosition += elapsedPosition // Milliseconds
 
-        // Will come back to this once now playing is fixed
+            // Will come back to this once now playing is fixed
 //        if (player.isPlaying) nowPlayingCounter += elapsedPosition
 //        if (nowPlayingCounter >= 20000) {
 //            sendNowPlayingRequest(deviceId, getCurrentTrackId())
 //            nowPlayingCounter = 0
 //        }
-        if (!markedListened && playCountDuration > 0 && playCountPosition >= playCountDuration) {
-            markListened(playCountPosition, player.currentPosition, playCountDuration, deviceId)
-            markedListened = true
+            if (!markedListened && playCountDuration > 0 && playCountPosition >= playCountDuration) {
+                markListened(playCountPosition, player.currentPosition, playCountDuration, deviceId)
+                markedListened = true
+            }
+
+            EventBus.getDefault()
+                .post(UpdateSeekBarEvent("Sending Updated SeekBar Position", player.currentPosition))
+
+            return player.currentPosition
         }
-
-        EventBus.getDefault()
-            .post(UpdateSeekBarEvent("Sending Updated SeekBar Position", player.currentPosition))
-
-        return player.currentPosition
     }
 
     private fun getCurrentTrackId(): Long {
@@ -147,22 +153,30 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     }
 
     fun getDuration(): Int {
-        if (playCountDuration == 0) playCountDuration = (player.duration * 0.6).toInt()
-        return player.duration
+        synchronized(this) {
+            if (playCountDuration == 0) playCountDuration = (player.duration * 0.6).toInt()
+            return player.duration
+        }
     }
 
     fun isPlaying(): Boolean {
-        return player.isPlaying
+        synchronized(this) {
+            return player.isPlaying
+        }
     }
 
     fun pausePlayer() {
-        player.pause()
+        synchronized(this) {
+            player.pause()
+        }
 //        sendNowPlayingRequest(deviceId, null)
     }
 
-    fun start() {
-        player.start()
-        lastRecordedTime = System.currentTimeMillis().toInt()
+    private fun start() {
+        synchronized(this) {
+            player.start()
+            lastRecordedTime = System.currentTimeMillis().toInt()
+        }
 //        sendNowPlayingRequest(deviceId, getCurrentTrackId())
     }
 
@@ -209,16 +223,22 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     }
 
     fun seek(position: Int) {
-        player.seekTo(position)
-        lastRecordedTime = System.currentTimeMillis().toInt()
+        synchronized(this) {
+            player.seekTo(position)
+            lastRecordedTime = System.currentTimeMillis().toInt()
+        }
     }
 
     fun getBufferPercentage(): Int {
-        return (player.currentPosition * 100) / player.duration
+        synchronized(this) {
+            return (player.currentPosition * 100) / player.duration
+        }
     }
 
     fun getAudioSessionId(): Int {
-        return player.audioSessionId
+        synchronized(this) {
+            return player.audioSessionId
+        }
     }
 
     fun playPrevious() {
@@ -397,7 +417,12 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     }
 
     fun playSong() {
-        player.reset()
+        synchronized(this) {
+            if (player.isPlaying) {
+                player.pause()
+            }
+        }
+
         clearPlayCountInfo()
         val song = if (shuffle) {
             currentSongPosition = shuffledSongs[songPosition]
@@ -408,13 +433,15 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         songTitle = song.track.name.toString()
         artist = song.track.artist.toString()
 
-        logger.debug("Getting song info for track: ${song.track.id}")
+        logger.debug("Getting track links for track: ${song.track.id}")
 
         httpClient.get(URLs.TRACK + song.track.id, TrackLinkResponse::class) { response ->
             if (response.success) {
-                player.reset()
-                player.setDataSource(response.data.songLink)
-                player.prepareAsync()
+                synchronized(this) {
+                    player.reset()
+                    player.setDataSource(response.data.songLink)
+                    player.prepareAsync()
+                }
             }
         }
     }
@@ -466,7 +493,9 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
                 logger.debug("Audio Focus Gained")
                 hasAudioFocus = true
                 if (!paused) {
-                    player.start()
+                    synchronized(this) {
+                        player.start()
+                    }
                     EventBus.getDefault()
                         .post(
                             MediaPlayerLoadedEvent(
