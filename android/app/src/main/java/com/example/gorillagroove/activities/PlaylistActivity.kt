@@ -27,19 +27,17 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gorillagroove.R
 import com.example.gorillagroove.adapters.OnItemClickListener
 import com.example.gorillagroove.adapters.PlaylistAdapter
-import com.example.gorillagroove.client.authenticatedGetRequest
-import com.example.gorillagroove.client.playlistGetRequest
+import com.example.gorillagroove.client.HttpClient
 import com.example.gorillagroove.db.GroovinDB
 import com.example.gorillagroove.db.repository.UserRepository
 import com.example.gorillagroove.dto.PlaylistDTO
 import com.example.gorillagroove.dto.PlaylistSongDTO
 import com.example.gorillagroove.dto.Track
-import com.example.gorillagroove.dto.Users
+import com.example.gorillagroove.dto.User
 import com.example.gorillagroove.service.MusicPlayerService
 import com.example.gorillagroove.service.MusicPlayerService.MusicBinder
 import com.example.gorillagroove.utils.URLs
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.example.gorillagroove.utils.logger
 import com.google.android.material.navigation.NavigationView
 import kotlinx.android.synthetic.main.activity_playlist.*
 import kotlinx.android.synthetic.main.app_bar_main.*
@@ -57,8 +55,8 @@ class PlaylistActivity : AppCompatActivity(),
         CoroutineScope by MainScope(), MediaPlayerControl, OnItemClickListener,
         NavigationView.OnNavigationItemSelectedListener, SeekBar.OnSeekBarChangeListener {
 
-    private val om =
-            ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    private val httpClient = HttpClient()
+    private val logger = logger()
     private val mHandler = Handler()
 
     private var musicBound = false
@@ -69,8 +67,6 @@ class PlaylistActivity : AppCompatActivity(),
     private var deviceId: String = ""
     private var playbackPaused = true
     private var playIntent: Intent? = null
-    private var users: List<Users> = emptyList()
-    private var playlists: List<PlaylistDTO> = emptyList()
     private var musicPlayerService: MusicPlayerService? = null
     private var activeSongsList: List<PlaylistSongDTO> = emptyList()
 
@@ -90,7 +86,7 @@ class PlaylistActivity : AppCompatActivity(),
         setSupportActionBar(toolbar)
         volumeControlStream = AudioManager.STREAM_MUSIC
 
-        repository = UserRepository(GroovinDB.getDatabase(this@PlaylistActivity).userRepository())
+        repository = UserRepository(GroovinDB.getDatabase().userRepository())
 
         // Start listening for events on the EventBus.
         // This is how we communicate between the MusicPlayerService and the PlaylistActivity.
@@ -182,39 +178,40 @@ class PlaylistActivity : AppCompatActivity(),
 
     // Load My Library and attach it to the adapter and music player
     private fun loadLibrarySongs() {
-        val response = authenticatedGetRequest(URLs.LIBRARY, token)
+        httpClient.get(URLs.LIBRARY, LibraryResponse::class) { response ->
+            activeSongsList = response.data.content.map { PlaylistSongDTO(0, it) }
 
-        val content: String = response.get("content").toString()
-
-        activeSongsList =
-                om.readValue(content, arrayOf(Track())::class.java).map { PlaylistSongDTO(0, it) }
-                        .toList()
-
-        attachActiveSongsListToAdapter()
-        if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
+            runOnUiThread {
+                attachActiveSongsListToAdapter()
+                if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
+            }
+        }
     }
+
 
     // When a playlist is selected, load it and attach it to the adapter and music player
     private fun loadPlaylistSongs(playlistId: Long) {
-        val response =
-                authenticatedGetRequest("${URLs.PLAYLIST_BASE}playlistId=$playlistId&size=200", token)
+        val url = "${URLs.PLAYLIST_BASE}playlistId=$playlistId&size=200"
+        httpClient.get(url, PlaylistResponse::class) { response ->
+            activeSongsList = response.data.content
 
-        val content: String = response.get("content").toString()
-        activeSongsList = om.readValue(content, arrayOf(PlaylistSongDTO())::class.java).toList()
-        attachActiveSongsListToAdapter()
-        if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
+            runOnUiThread {
+                attachActiveSongsListToAdapter()
+                if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
+            }
+        }
     }
 
     // When a user library is selected, load it and attach it to the adapter and music player
     private fun loadUserLibraries(userId: Long) {
-        val response =
-                authenticatedGetRequest("${URLs.LIBRARY}&userId=$userId", token)
-        val content: String = response.get("content").toString()
-        activeSongsList =
-                om.readValue(content, arrayOf(Track())::class.java).map { PlaylistSongDTO(0, it) }
-                        .toList()
-        attachActiveSongsListToAdapter()
-        if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
+        httpClient.get("${URLs.LIBRARY}&userId=$userId", LibraryResponse::class) { response ->
+            activeSongsList = response.data.content.map { PlaylistSongDTO(0, it) }
+
+            runOnUiThread {
+                attachActiveSongsListToAdapter()
+                if (musicBound) musicPlayerService!!.setSongList(activeSongsList)
+            }
+        }
     }
 
     // Add the active songs list to the adapter
@@ -229,24 +226,35 @@ class PlaylistActivity : AppCompatActivity(),
 
     // Load in the other GG users library information and add it to the menu
     private fun requestUsers() {
-        val response = playlistGetRequest(URLs.USER, token)
-        if (response.length() > 0) {
-            users = om.readValue(response.toString(), arrayOf(Users())::class.java).toList()
-            val menu = nav_view.menu
-            val subMenu = menu.addSubMenu("User Libraries")
-            users.forEach { subMenu.add(USER_LIBRARIES_GROUP_ID, it.id.toInt(), 0, it.username) }
+        val menu = nav_view.menu
+        val subMenu = menu.addSubMenu("User Libraries")
+
+        httpClient.get(URLs.USER, Array<User>::class) { response ->
+            if (!response.success) {
+                logger.error("Failed to fetch users!")
+                return@get
+            }
+
+            runOnUiThread {
+                response.data.forEach { subMenu.add(USER_LIBRARIES_GROUP_ID, it.id.toInt(), 0, it.username) }
+            }
         }
     }
 
     // Load in the user's playlists and them to the menu
     private fun requestPlaylists() {
-        val response = playlistGetRequest(URLs.PLAYLISTS, token)
-        if (response.length() > 0) {
-            playlists =
-                    om.readValue(response.toString(), arrayOf(PlaylistDTO())::class.java).toList()
-            val menu = nav_view.menu
-            val subMenu = menu.addSubMenu("Playlists")
-            playlists.forEach { subMenu.add(PLAYLIST_GROUP_ID, it.id.toInt(), 1, it.name) }
+        val menu = nav_view.menu
+        val subMenu = menu.addSubMenu("Playlists")
+
+        httpClient.get(URLs.PLAYLISTS, Array<PlaylistDTO>::class) { response ->
+            if (!response.success) {
+                logger.error("Failed to fetch playlists!")
+                return@get
+            }
+
+            runOnUiThread {
+                response.data.forEach { subMenu.add(PLAYLIST_GROUP_ID, it.id.toInt(), 1, it.name) }
+            }
         }
     }
 
@@ -389,7 +397,7 @@ class PlaylistActivity : AppCompatActivity(),
         musicPlayerService!!.requestAudioFocus()
     }
 
-    fun play() {
+    private fun play() {
         playbackPaused = false
         start()
     }
@@ -450,13 +458,13 @@ class PlaylistActivity : AppCompatActivity(),
     //  SeekBar
     // *********
 
-    fun updateProgressBar() {
+    private fun updateProgressBar() {
         mHandler.postDelayed(mUpdateTimeTask, 1000)
     }
 
     private val mUpdateTimeTask = Runnable { run() }
 
-    fun run() {
+    private fun run() {
         if (!playbackPaused) {
             musicPlayerService!!.getPosition()
         }
@@ -472,7 +480,6 @@ class PlaylistActivity : AppCompatActivity(),
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
         mHandler.removeCallbacks(mUpdateTimeTask)
-        val totalDuration = musicPlayerService!!.getDuration()
         val currentPosition = seekBar!!.progress
 
         musicPlayerService!!.seek(currentPosition)
@@ -485,13 +492,13 @@ class PlaylistActivity : AppCompatActivity(),
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun playNextEvent(event: PlayNextSongEvent) {
-        Log.i("EventBus", "Message received ${event.message}")
+        Log.d("EventBus", "Message received ${event.message}")
         playNext()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onMediaPlayerLoadedEvent(event: MediaPlayerLoadedEvent) {
-        Log.i("EventBus", "Message received ${event.message}")
+        Log.d("EventBus", "Message received ${event.message}")
         Log.i("EventBus", "Duration is ${event.songDuration}")
         val currentSong = "${event.songTitle} - ${event.songArtist}"
         songDurationTextView.text = event.songDuration.toLong().getSongTimeFromMilliseconds()
@@ -502,7 +509,7 @@ class PlaylistActivity : AppCompatActivity(),
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLosses(event: MediaPlayerTransientAudioLossEvent) {
-        Log.i("EventBus", "Message Received ${event.message}")
+        Log.d("EventBus", "Message Received ${event.message}")
         pause()
     }
 
@@ -514,28 +521,31 @@ class PlaylistActivity : AppCompatActivity(),
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onAudioFocusLoss(event: MediaPlayerAudioLossEvent) {
-        Log.i("EventBus", "Message Received ${event.message}")
+        Log.d("EventBus", "Message Received ${event.message}")
         stopService(playIntent)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onStartSongEvent(event: MediaPlayerStartSongEvent) {
-        Log.i("EventBus", "Message Received ${event.message}")
+        Log.d("EventBus", "Message Received ${event.message}")
         start()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onPlayPreviousSongEvent(event: PlayPreviousSongEvent) {
-        Log.i("EventBus", "Message Received ${event.message}")
+        Log.d("EventBus", "Message Received ${event.message}")
         playPrevious()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     fun onUpdateSeekBarEvent(event: UpdateSeekBarEvent) {
-        Log.i("EventBus", "Message Received ${event.message}")
+        Log.d("EventBus", "Message Received ${event.message}")
         seekBar.progress = event.position
         songPositionTextView.text = event.position.toLong().getSongTimeFromMilliseconds()
     }
+
+    private data class LibraryResponse(val content: List<Track>)
+    private data class PlaylistResponse(val content: List<PlaylistSongDTO>)
 }
 
 fun Long.getSongTimeFromMilliseconds(): String {
@@ -554,43 +564,23 @@ fun Long.getSongTimeFromSeconds(): String {
     return "$minutes:${String.format("%02d", seconds)}"
 }
 
-class PlayNextSongEvent(message: String) {
-    val message = message
-}
+class PlayNextSongEvent(val message: String)
 
 class MediaPlayerLoadedEvent(
-        message: String,
-        songTitle: String?,
-        songArtist: String?,
-        songDuration: Int
-) {
-    val message = message
-    val songTitle = songTitle
-    val songArtist = songArtist
-    val songDuration = songDuration
-}
+    val message: String,
+    val songTitle: String?,
+    val songArtist: String?,
+    val songDuration: Int
+)
 
-class MediaPlayerTransientAudioLossEvent(message: String) {
-    val message = message
-}
+class MediaPlayerTransientAudioLossEvent(val message: String)
 
-class MediaPlayerAudioLossEvent(message: String) {
-    val message = message
-}
+class MediaPlayerAudioLossEvent(val message: String)
 
-class MediaPlayerPauseEvent(message: String) {
-    val message = message
-}
+class MediaPlayerPauseEvent(val message: String)
 
-class MediaPlayerStartSongEvent(message: String) {
-    val message = message
-}
+class MediaPlayerStartSongEvent(val message: String)
 
-class PlayPreviousSongEvent(message: String) {
-    val message = message
-}
+class PlayPreviousSongEvent(val message: String)
 
-class UpdateSeekBarEvent(message: String, position: Int) {
-    val message = message
-    val position = position
-}
+class UpdateSeekBarEvent(val message: String, val position: Int)

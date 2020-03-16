@@ -1,102 +1,183 @@
 package com.example.gorillagroove.client
 
-import android.util.Log
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import com.example.gorillagroove.db.GroovinDB
+import com.example.gorillagroove.db.repository.UserRepository
+import com.example.gorillagroove.utils.logger
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.IOException
-import kotlin.concurrent.thread
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import kotlin.reflect.KClass
 
-private val client = OkHttpClient()
-private const val VERSION = "1.2.0"
 
-fun loginRequest(url: String, email: String, password: String): JSONObject {
-    val body = """{"email":"$email","password":"$password"}"""
+@Suppress("unused")
+class HttpClient {
+    private val objectMapper = createMapper()
+    private val client = OkHttpClient()
+    private val logger = logger()
 
-    val request = Request.Builder()
-        .url(url)
-        .post(RequestBody.create("application/json".toMediaTypeOrNull(), body))
-        .build()
+    fun<T: Any> get(
+        url: String,
+        kClass: KClass<T>,
+        callback: ((response: HttpResponse<T>) -> Unit)? = null
+    ) {
+        sendRequest("GET", url, null, kClass, callback)
+    }
 
-    var responseVal = JSONObject()
+    fun<T: Any> post(
+        url: String,
+        body: Any? = null,
+        kClass: KClass<T>,
+        callback: ((response: HttpResponse<T>) -> Unit)? = null
+    ) {
+        sendRequest("POST", url, body, kClass, callback)
+    }
 
-    Log.i("Login Request", "Making request with credentials email=$email, password=$password")
+    fun post(
+        url: String,
+        body: Any? = null,
+        callback: ((response: HttpResponse<Nothing>) -> Unit)? = null
+    ) {
+        sendRequestWithoutResponse("POST", url, body, callback)
+    }
 
-    thread {
-        client.newCall(request).execute().use { response ->
-            if (response.isSuccessful) {
-                responseVal = (JSONObject(response.body!!.string()))
-            } else {
-                Log.i("Login Request", "Unsuccessful response with code ${response.code}")
+    fun<T: Any> put(
+        url: String,
+        body: Any? = null,
+        kClass: KClass<T>,
+        callback: ((response: HttpResponse<T>) -> Unit)? = null
+    ) {
+        sendRequest("PUT", url, body, kClass, callback)
+    }
+
+    fun put(
+        url: String,
+        body: Any? = null,
+        callback: ((response: HttpResponse<Nothing>) -> Unit)? = null
+    ) {
+        sendRequestWithoutResponse("PUT", url, body, callback)
+    }
+
+    fun<T: Any> delete(
+        url: String,
+        kClass: KClass<T>,
+        callback: ((response: HttpResponse<T>) -> Unit)? = null
+    ) {
+        sendRequest("DELETE", url, null, kClass, callback)
+    }
+
+    fun delete(
+        url: String,
+        callback: ((response: HttpResponse<Nothing>) -> Unit)? = null
+    ) {
+        sendRequestWithoutResponse("DELETE", url, null, callback)
+    }
+
+    private fun<T: Any> sendRequest(
+        protocol: String,
+        url: String,
+        body: Any?,
+        kClass: KClass<T>,
+        callback: ((response: HttpResponse<T>) -> Unit)?
+    ) {
+        GlobalScope.launch {
+            client.send(protocol, body, url).use { response ->
+                val success = response.isSuccessful
+
+                if (!success) {
+                    logger.warn("Error ${response.code} sending $protocol to '$url'. Response: ${response.body?.string()}")
+                }
+
+                val responseData = HttpResponse(
+                    statusCode = response.code,
+                    success = success,
+                    nullableData = if (success) {
+                        objectMapper.readValue(response.body!!.string(), kClass.java)
+                    } else {
+                        null
+                    },
+                    error = if (!success && response.body != null && response.body!!.contentLength() > 0) {
+                        response.body!!.string()
+                    } else {
+                        null
+                    }
+                )
+
+                callback?.invoke(responseData)
             }
         }
-    }.join()
-    return responseVal
-}
+    }
 
+    // There is a lot of duplicate code in here and I hates it. But to make the API for this class work the way I want,
+    // I see no other way. Dang Java type erasure making generics funky. This code path allows methods to not have to
+    // supply a class for deserialization if they are not interested in a response.
+    private fun sendRequestWithoutResponse(
+        protocol: String,
+        url: String,
+        body: Any?,
+        callback: ((response: HttpResponse<Nothing>) -> Unit)?
+    ) {
+        GlobalScope.launch {
+            client.send(protocol, body, url).use { response ->
+                val success = response.isSuccessful
 
-fun authenticatedGetRequest(url: String, token: String): JSONObject {
-    val request = Request.Builder()
-        .url(url)
-        .get()
-        .addHeader("Authorization", "Bearer $token")
-        .build()
+                if (!success) {
+                    logger.warn("Error ${response.code} sending $protocol to '$url'. Response: ${response.body?.string()}")
+                }
 
-    var responseVal = JSONObject()
-
-    thread {
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            responseVal = JSONObject(response.body!!.string())
+                val responseData = HttpResponse(
+                    statusCode = response.code,
+                    success = success,
+                    nullableData = null,
+                    error = if (!success) response.body?.string() else null
+                )
+                callback?.invoke(responseData)
+            }
         }
-    }.join()
-    return responseVal
-}
+    }
 
-fun playlistGetRequest(url: String, token: String): JSONArray {
-    val request = Request.Builder()
-        .url(url)
-        .get()
-        .addHeader("Authorization", "Bearer $token")
-        .build()
+    private fun OkHttpClient.send(httpMethod: String, body: Any?, url: String): Response {
+        val userRepository = UserRepository(GroovinDB.getDatabase().userRepository())
 
-    var responseVal = JSONArray()
-
-    thread {
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            responseVal = JSONArray(response.body!!.string())
+        val user = userRepository.lastLoggedInUser()
+        val requestBody = body?.let {
+            objectMapper.writeValueAsString(it).toRequestBody("application/json".toMediaType())
         }
-    }.join()
-    return responseVal
+
+        val requestBuilder = Request.Builder()
+            .url(url)
+            .method(httpMethod, requestBody)
+
+        user?.token?.let { token ->
+            requestBuilder.addHeader("Authorization", "Bearer $token")
+        }
+
+        return this.newCall(requestBuilder.build()).execute()
+    }
+
+    private fun createMapper(): ObjectMapper {
+        val mapper = jacksonObjectMapper()
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+        return mapper
+    }
 }
 
-fun updateDevice(url: String, token: String, deviceId: String) {
-    val body = """{
-        |"deviceId": "$deviceId",
-        |"version":"$VERSION",
-        |"deviceType":"ANDROID"
-        |}
-    """.trimMargin()
-    val request = Request.Builder()
-        .url(url)
-        .put(RequestBody.create("application/json".toMediaTypeOrNull(), body))
-        .header("Authorization", "Bearer $token")
-        .build()
-
-    thread { client.newCall(request).execute() }.join()
-}
-
-fun markListenedRequest(url: String, trackId: Long?, token: String, deviceId: String) {
-    val body = """{"trackId":$trackId,"deviceId":"$deviceId"}"""
-    val request = Request.Builder()
-        .url(url)
-        .post(RequestBody.create("application/json".toMediaTypeOrNull(), body))
-        .header("Authorization", "Bearer $token")
-        .build()
-
-    thread { client.newCall(request).execute() }.join()
+@Suppress("unused")
+class HttpResponse<T>(
+    val statusCode: Int,
+    val success: Boolean,
+    val error: String?,
+    private val nullableData: T?
+) {
+    // Data should be present unless there was an error or if no response was returned.
+    // In either case the callers should know that the data is here if they are accessing it.
+    // Don't make them !! all the time.
+    val data: T get() = nullableData!!
 }

@@ -8,7 +8,7 @@ data class SongResponse(
     val imageUrl: String?
 )
 
-data class TrackResponse(
+data class TrackLinkResponse(
     val songLink: String,
     val albumArtLink: String?
 )

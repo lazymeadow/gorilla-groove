@@ -11,18 +11,17 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.example.gorillagroove.R
 import com.example.gorillagroove.activities.*
-import com.example.gorillagroove.client.authenticatedGetRequest
-import com.example.gorillagroove.client.markListenedRequest
+import com.example.gorillagroove.client.HttpClient
 import com.example.gorillagroove.db.GroovinDB
 import com.example.gorillagroove.db.repository.UserRepository
 import com.example.gorillagroove.dto.PlaylistSongDTO
-import com.example.gorillagroove.dto.TrackResponse
+import com.example.gorillagroove.dto.TrackLinkResponse
 import com.example.gorillagroove.utils.URLs
+import com.example.gorillagroove.utils.logger
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 
@@ -47,8 +46,9 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     CoroutineScope by MainScope() {
     private val player = MediaPlayer()
     private val musicBind: IBinder = MusicBinder()
+    private val httpClient = HttpClient()
+    private val logger = logger()
 
-    private var token = ""
     private var email = ""
     private var deviceId = ""
     private var songTitle = ""
@@ -64,7 +64,6 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     private var markedListened = false
     private var currentSongPosition = 0
     private var shuffledSongs: List<Int> = emptyList()
-    private var nowPlayingCounter = 0
 
     private lateinit var userRepository: UserRepository
     private lateinit var songs: List<PlaylistSongDTO>
@@ -72,38 +71,31 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     private val mFocusLock = Object()
 
     override fun onCreate() {
-        Log.i("MSP", "onCreate is called")
+        logger.debug("onCreate is called")
         super.onCreate()
         songPosition = 0
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         initMusicPlayer()
 
-        userRepository =
-            UserRepository(GroovinDB.getDatabase(this@MusicPlayerService).userRepository())
-        if (token.isBlank() || deviceId.isBlank() || email.isBlank()) {
+        userRepository = UserRepository(GroovinDB.getDatabase().userRepository())
+        if (deviceId.isBlank() || email.isBlank()) {
             launch {
                 withContext(Dispatchers.IO) {
-                    userInformation()
+                    setUserInformation()
                 }
             }
         }
     }
 
-    private fun userInformation() {
-        try {
-            val user = userRepository.lastLoggedInUser()
-            if (user != null) {
-                token = user.token!!
-                deviceId = user.deviceId!!
-                email = user.email
-            }
-        } catch (e: Exception) {
-            Log.e("MusicPlayerService", "User not found!: $e")
+    private fun setUserInformation() {
+        userRepository.lastLoggedInUser()?.let {
+            deviceId = it.deviceId!!
+            email = it.email
         }
     }
 
     private fun initMusicPlayer() {
-        Log.i("MSP", "Initializing Media Player")
+        logger.debug("Initializing Media Player")
         player.setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
         player.setAudioStreamType(AudioManager.STREAM_MUSIC) // We are supporting API 19, and thus need this deprecated method
         player.setOnPreparedListener(this)
@@ -240,7 +232,7 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         songPosition += 1
         if (songPosition >= songs.size) songPosition = 0
 
-        Log.i("MusicPlayerService", "Current songPosition is now=$songPosition")
+        logger.debug("Current songPosition is now=$songPosition")
         playSong()
     }
 
@@ -374,7 +366,6 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
     override fun onBind(intent: Intent?): IBinder? {
         if (intent != null) {
             if (intent.hasExtra("email")) email = intent.getStringExtra("email")
-            if (intent.hasExtra("token")) token = intent.getStringExtra("token")
             if (intent.hasExtra("deviceId")) deviceId = intent.getStringExtra("deviceId")
         }
         return musicBind
@@ -394,14 +385,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         shuffle = !shuffle
         if (shuffle) {
             shuffledSongs = songs.indices.toList().shuffled()
-            Log.i(
+            logger.info(
                 "Shuffling",
                 "Shuffled list is: $shuffledSongs\n Songs list is ${songs.indices.toList()}"
             )
         } else {
             songPosition = currentSongPosition
         }
-        Log.i("Shuffle Alert!", "Shuffle is now set to $shuffle")
+        logger.info("Shuffle Alert!", "Shuffle is now set to $shuffle")
         return shuffle
     }
 
@@ -417,13 +408,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         songTitle = song.track.name.toString()
         artist = song.track.artist.toString()
 
-        val trackResponse = getSongStreamInfo(song.track.id)
+        logger.debug("Getting song info for track: ${song.track.id}")
 
-        try {
-            player.setDataSource(trackResponse.songLink)
-            player.prepare()
-        } catch (e: Exception) {
-            Log.e("MusicPlayerService", "Error setting data source: $e")
+        httpClient.get(URLs.TRACK + song.track.id, TrackLinkResponse::class) { response ->
+            if (response.success) {
+                player.reset()
+                player.setDataSource(response.data.songLink)
+                player.prepareAsync()
+            }
         }
     }
 
@@ -431,14 +423,6 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         playCountPosition = 0
         playCountDuration = 0
         markedListened = false
-    }
-
-    private fun getSongStreamInfo(trackId: Long): TrackResponse {
-        Log.d("MusicPlayerService", "Getting song info for track=$trackId with token=$token")
-
-        val response = authenticatedGetRequest(URLs.TRACK + "$trackId", token)
-
-        return TrackResponse(response["songLink"].toString(), response["albumArtLink"].toString())
     }
 
     // Will come back to this in a future update
@@ -463,26 +447,23 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
         deviceId: String
     ) {
         val trackId = getCurrentTrackId()
-        Log.d(
-            "MusicPlayerService",
-            "Marking track=$trackId as listened with:\nplayCountPosition=$playCountPosition\nplayerCurrentPosition=$playerCurrentPosition\nplayCountDuration=$playCountDuration"
-        )
-        launch {
-            withContext(Dispatchers.IO) {
-                markListenedRequest(
-                    URLs.MARK_LISTENED,
-                    trackId,
-                    token,
-                    deviceId
-                )
-            }
-        }
+        logger.debug("""
+          |Marking track=$trackId as listened with:
+          |  playCountPosition=$playCountPosition
+          |  playerCurrentPosition=$playerCurrentPosition
+          |  playCountDuration=$playCountDuration
+          |""".trimMargin())
+
+        val request = MarkListenedRequest(trackId, deviceId)
+        httpClient.post(URLs.MARK_LISTENED, request)
     }
+
+    data class MarkListenedRequest(val trackId: Long, val deviceId: String)
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
-                Log.d("MusicPlayerService", "Audio Focus Gained")
+                logger.debug("Audio Focus Gained")
                 hasAudioFocus = true
                 if (!paused) {
                     player.start()
@@ -498,14 +479,14 @@ class MusicPlayerService : Service(), MediaPlayer.OnPreparedListener, MediaPlaye
                 }
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                Log.d("MusicPlayerService", "Audio Focus Loss Transient")
+                logger.debug("Audio Focus Loss Transient")
                 hasAudioFocus = false
                 paused = true
                 EventBus.getDefault()
                     .post(MediaPlayerTransientAudioLossEvent("Transient Audiofocus Loss, Pausing Playback"))
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
-                Log.d("MusicPlayerService", "AudioFocusLoss")
+                logger.debug("AudioFocusLoss")
                 hasAudioFocus = false
                 paused = true
                 EventBus.getDefault()

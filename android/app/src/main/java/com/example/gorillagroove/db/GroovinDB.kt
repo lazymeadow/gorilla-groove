@@ -19,23 +19,19 @@ abstract class GroovinDB : RoomDatabase() {
 
     companion object {
         @Volatile
-        private var INSTANCE: GroovinDB? = null
+        private lateinit var instance: GroovinDB
 
-        fun getDatabase(context: Context): GroovinDB {
-            val tempInstance = INSTANCE
-            if (tempInstance != null) {
-                return tempInstance
-            }
-            synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    GroovinDB::class.java,
-                    "GroovinDB"
-                ).addMigrations(MIGRATION_1_2)
-                    .build()
-                INSTANCE = instance
-                return instance
-            }
+        fun initialize(context: Context) {
+            instance = Room.databaseBuilder(
+                context.applicationContext,
+                GroovinDB::class.java,
+                "GroovinDB"
+            ).addMigrations(MIGRATION_1_2)
+                .build()
+        }
+
+        fun getDatabase(): GroovinDB {
+            return instance
         }
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
