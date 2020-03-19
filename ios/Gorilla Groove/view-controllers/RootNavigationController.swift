@@ -56,8 +56,13 @@ class RootNavigationController : UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        UserState().postCurrentDevice()
-        ServerSynchronizer().syncWithServer()
+        DispatchQueue.global().async {
+            UserState().postCurrentDevice()
+
+            // No need to do this in a blocking way. It shouldn't be syncing all that much stuff.
+            // If we block, there is a second delay or so before we can start using the app no matter what.
+            ServerSynchronizer().syncWithServer()
+        }
     }
     
     private func createNavigationControls() -> UIView {

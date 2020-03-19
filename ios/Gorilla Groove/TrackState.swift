@@ -7,7 +7,7 @@ class TrackState {
     let userSyncManager = UserState()
     
     
-    func getTracks(album: String? = nil) -> Array<Track> {
+    func getTracks(album: String? = nil, artist: String? = nil) -> Array<Track> {
         let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
@@ -17,8 +17,25 @@ class TrackState {
             NSPredicate(format: "is_hidden == FALSE")
         ]
         
+        if (artist != nil) {
+            predicates.append(NSPredicate(format: "artist == %@", artist!))
+        }
+        
         if (album != nil) {
             predicates.append(NSPredicate(format: "album == %@", album!))
+        }
+        
+        // Sort differently depending on how we are trying to load things
+        if (artist != nil && album == nil) {
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(
+                    key: "album",
+                    ascending: true,
+                    selector: #selector(NSString.caseInsensitiveCompare)
+                ),
+                NSSortDescriptor(key: "track_number", ascending: true)
+            ]
+        } else if (album != nil) {
             fetchRequest.sortDescriptors = [
                 NSSortDescriptor(key: "track_number", ascending: true)
             ]
@@ -117,15 +134,47 @@ class TrackState {
         return result![0] as? Track
     }
     
-    func getAlbums() -> Array<Album> {
+    func getArtists() -> Array<String> {
         let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
         
-        let idPredicate = NSPredicate(format: "user_id == \(ownId)")
-        let hiddenPredicate = NSPredicate(format: "is_hidden == FALSE")
+        let predicates = [
+            NSPredicate(format: "user_id == \(ownId)"),
+            NSPredicate(format: "is_hidden == FALSE")
+        ]
+        
+        fetchRequest.predicate = NSCompoundPredicate(type: .and, subpredicates: predicates)
+        fetchRequest.sortDescriptors = [
+            NSSortDescriptor(
+                key: "artist",
+                ascending: true,
+                selector: #selector(NSString.caseInsensitiveCompare)
+            )
+        ]
+        let tracks = (try! context.fetch(fetchRequest)) as! Array<Track>
+        
+        // Want to find distinct artists from all of our tracks. Hard to do in Core Data
+        let artists: Set<String> = Set(tracks.map { $0.artist })
 
-        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [idPredicate, hiddenPredicate])
+        return Array(artists).sorted()
+    }
+    
+    func getAlbums(artist: String? = nil) -> Array<Album> {
+        let ownId = FileState.read(LoginState.self)!.id
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
+        
+        var predicates = [
+            NSPredicate(format: "user_id == \(ownId)"),
+            NSPredicate(format: "is_hidden == FALSE")
+        ]
+        
+        if (artist != nil) {
+            predicates.append(NSPredicate(format: "artist == %@", artist!))
+        }
+
+        let andPredicate = NSCompoundPredicate(type: .and, subpredicates: predicates)
         
         fetchRequest.predicate = andPredicate
         fetchRequest.sortDescriptors = [

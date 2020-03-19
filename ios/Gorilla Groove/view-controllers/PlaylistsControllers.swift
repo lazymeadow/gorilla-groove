@@ -40,7 +40,8 @@ class PlaylistsController : UITableViewController {
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! TableViewCell<Playlist>
-        // cell.animateSelectionColor()
+        cell.animateSelectionColor()
+        
         let playlist = cell.data!
         
         let tracks = trackState.getTracksForPlaylist(playlist.id)

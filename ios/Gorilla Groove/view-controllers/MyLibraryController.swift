@@ -66,14 +66,7 @@ class MyLibraryController: UITableViewController {
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! UITableViewCell
-        
-        UIView.animate(withDuration: 0.12, animations: {
-            cell.backgroundColor = SongViewCell.selectionColor
-        }) { (finished) in
-            UIView.animate(withDuration: 0.12, animations: {
-                cell.backgroundColor = SongViewCell.normalColor
-            })
-        }
+        cell.animateSelectionColor()
         
         let tapLocation = sender.location(in: self.tableView)
         
@@ -84,7 +77,7 @@ class MyLibraryController: UITableViewController {
         case .TITLE:
             loadTitleView()
         case .ARTIST:
-            loadTitleView()
+            loadArtistView()
         case .ALBUM:
             loadAlbumView()
         }
@@ -97,10 +90,17 @@ class MyLibraryController: UITableViewController {
         self.navigationController!.pushViewController(view, animated: true)
     }
     
+    @objc private func loadArtistView() {
+        let artists = trackState.getArtists()
+
+        let view = ArtistViewController("Artist", artists, trackState)
+        self.navigationController!.pushViewController(view, animated: true)
+    }
+    
     @objc private func loadAlbumView() {
         let albums = trackState.getAlbums()
 
-        let view = AlbumViewController("Album", albums, trackState)
+        let view = AlbumViewController("Album", albums, nil, trackState)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

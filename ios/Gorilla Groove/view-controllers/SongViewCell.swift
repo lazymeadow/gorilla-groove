@@ -2,9 +2,7 @@ import UIKit
 import Foundation
 
 class SongViewCell: UITableViewCell {
-    static let normalColor = UIColor.white
-    static let selectionColor = UIColor(white: 0.85, alpha: 1)
-    
+
     var track: Track? {
         didSet {
             guard let track = track else {return}
@@ -54,17 +52,7 @@ class SongViewCell: UITableViewCell {
     }()
     
     var tableIndex: Int = -1
-    
-    func animateSelectionColor() {
-        UIView.animate(withDuration: 0.12, animations: {
-            self.backgroundColor = SongViewCell.selectionColor
-        }) { (finished) in
-            UIView.animate(withDuration: 0.12, animations: {
-                self.backgroundColor = SongViewCell.normalColor
-            })
-        }
-    }
-    
+
     func checkIfPlaying() {
         if (track != nil && track?.id == NowPlayingTracks.currentTrack?.id) {
             artistLabel.textColor = Colors.primary
@@ -102,7 +90,6 @@ class SongViewCell: UITableViewCell {
         containerView.setCustomSpacing(8.0, after: nameLabel)
 
         self.contentView.addSubview(containerView)
-        self.backgroundColor = SongViewCell.normalColor
         
         NSLayoutConstraint.activate([
             containerView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),

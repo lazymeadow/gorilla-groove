@@ -1,22 +1,14 @@
 import UIKit
 import Foundation
 
-class AlbumViewCell: UITableViewCell {
+class ArtistViewCell: UITableViewCell {
     
-    var album: Album? {
+    var artist: String? {
         didSet {
-            guard let album = album else {return}
-            nameLabel.text = album.name.isEmpty ? "(No Album)" : album.name
-            artView.image = album.art
+            guard let artist = artist else {return}
+            nameLabel.text = artist.isEmpty ? "(No Artist)" : artist
         }
     }
-    
-    var artView: UIImageView = {
-        let view = UIImageView()
-        view.contentMode = .scaleAspectFit
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
     
     let nameLabel: UILabel = {
         let label = UILabel()
@@ -25,14 +17,6 @@ class AlbumViewCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    
-    var tableIndex: Int = -1
-
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        
-        artView.image = nil
-    }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -43,20 +27,18 @@ class AlbumViewCell: UITableViewCell {
         containerView.alignment = .center
         containerView.translatesAutoresizingMaskIntoConstraints = false
         
-        containerView.addArrangedSubview(artView)
         containerView.addArrangedSubview(nameLabel)
         
         self.contentView.addSubview(containerView)
-        
-        containerView.setCustomSpacing(4.0, after: artView)
-        
+                
+        let constraint = self.contentView.heightAnchor.constraint(equalToConstant: 40)
+        constraint.priority = UILayoutPriority(750)
+        constraint.isActive = true
+
         NSLayoutConstraint.activate([
             containerView.heightAnchor.constraint(equalTo: self.contentView.heightAnchor),
             containerView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 6),
             containerView.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -6),
-            
-            artView.widthAnchor.constraint(equalToConstant: 32),
-            artView.heightAnchor.constraint(equalToConstant: 32),
         ])
     }
     

@@ -5,26 +5,27 @@ import AVKit
 
 class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var albums: Array<Album> = []
+    var artist: String? = nil
     var trackState: TrackState? = nil
-    let contactsTableView = UITableView()
+    let albumTableView = UITableView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.addSubview(contactsTableView)
+        view.addSubview(albumTableView)
         
-        contactsTableView.translatesAutoresizingMaskIntoConstraints = false
-        contactsTableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
-        contactsTableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
-        contactsTableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
-        contactsTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
+        albumTableView.translatesAutoresizingMaskIntoConstraints = false
+        albumTableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
+        albumTableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
+        albumTableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
+        albumTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
         
-        contactsTableView.dataSource = self
-        contactsTableView.delegate = self
-        contactsTableView.register(AlbumViewCell.self, forCellReuseIdentifier: "albumCell")
+        albumTableView.dataSource = self
+        albumTableView.delegate = self
+        albumTableView.register(AlbumViewCell.self, forCellReuseIdentifier: "albumCell")
         
         // Remove extra table rows when we don't have a full screen of songs
-        contactsTableView.tableFooterView = UIView(frame: .zero)
+        albumTableView.tableFooterView = UIView(frame: .zero)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -49,16 +50,20 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         cell.animateSelectionColor()
         
-        let tracks = trackState!.getTracks(album: cell.album!.name)
+        // If someone picked the special "View All" album at the top, then load everything by nilling this out
+        let albumToLoad = cell.album!.viewAllAlbum ? nil : cell.album!.name
+        let viewName = cell.album!.viewAllAlbum ? "All " + artist! : albumToLoad!
         
-        let view = SongViewController(cell.album!.name, tracks)
+        let tracks = trackState!.getTracks(album: albumToLoad, artist: artist)
+        
+        let view = SongViewController(viewName, tracks)
         self.navigationController!.pushViewController(view, animated: true)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         let albumViewCell = cell as! AlbumViewCell
         
-        if (albums[indexPath.row].imageLoadFired) {
+        if (albums[indexPath.row].imageLoadFired || albums[indexPath.row].linkRequestLink.isEmpty) {
             return
         }
         
@@ -77,7 +82,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                 DispatchQueue.main.async {
                     self.albums[indexPath.row].art = art
                     
-                    let foundCell = self.contactsTableView.visibleCells.first { rawCell in
+                    let foundCell = self.albumTableView.visibleCells.first { rawCell in
                         let cell = rawCell as! AlbumViewCell
                         return cell.tableIndex == indexPath.row
                     }
@@ -92,9 +97,24 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     // It's stupid to pass in trackState. I just need to make it a singleton.
     // When I don't do this, the tracks get garbage collected when you play a song and navigate away from this view
-    init(_ title: String, _ albums: Array<Album>, _ trackState: TrackState) {
-        self.albums = albums
+    init(_ title: String, _ albums: Array<Album>, _ artist: String?, _ trackState: TrackState) {
         self.trackState = trackState
+        self.artist = artist
+        
+        var displayedAlbums = albums
+        if (artist != nil && displayedAlbums.count > 1) {
+            let viewAll = Album(
+                name: "View All",
+                linkRequestLink: "",
+                art: nil,
+                imageLoadFired: false,
+                viewAllAlbum: true
+            )
+            
+            displayedAlbums.insert(viewAll, at: 0)
+        }
+        
+        self.albums = displayedAlbums
         
         super.init(nibName: nil, bundle: nil)
 
@@ -111,4 +131,5 @@ struct Album {
     let linkRequestLink: String
     var art: UIImage? = nil
     var imageLoadFired: Bool = false
+    var viewAllAlbum: Bool = false
 }

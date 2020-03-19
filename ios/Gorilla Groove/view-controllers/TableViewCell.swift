@@ -2,22 +2,10 @@ import UIKit
 import Foundation
 
 class TableViewCell<T>: UITableViewCell {
-    private let normalColor = UIColor.white
-    private let selectionColor = UIColor(white: 0.85, alpha: 1)
-    
+
     var data: T? = nil
     var tableIndex: Int = -1
-    
-    func animateSelectionColor() {
-        UIView.animate(withDuration: 0.12, animations: {
-            self.backgroundColor = self.selectionColor
-        }) { (finished) in
-            UIView.animate(withDuration: 0.12, animations: {
-                self.backgroundColor = self.normalColor
-            })
-        }
-    }
-    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
@@ -26,5 +14,18 @@ class TableViewCell<T>: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+    }
+}
+
+
+extension UITableViewCell {
+    func animateSelectionColor() {
+        UIView.animate(withDuration: 0.12, animations: {
+            self.backgroundColor = UIColor(white: 0.85, alpha: 1)
+        }) { (finished) in
+            UIView.animate(withDuration: 0.12, animations: {
+                self.backgroundColor = UIColor.white
+            })
+        }
     }
 }
