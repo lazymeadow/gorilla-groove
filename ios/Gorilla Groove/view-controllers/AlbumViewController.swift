@@ -5,7 +5,7 @@ import AVKit
 
 class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var albums: Array<Album> = []
-    let trackState = TrackState()
+    var trackState: TrackState? = nil
     let contactsTableView = UITableView()
     
     override func viewDidLoad() {
@@ -49,7 +49,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         cell.animateSelectionColor()
         
-        let tracks = trackState.getTracks(album: cell.album!.name)
+        let tracks = trackState!.getTracks(album: cell.album!.name)
         
         let view = SongViewController(cell.album!.name, tracks)
         self.navigationController!.pushViewController(view, animated: true)
@@ -90,8 +90,11 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
-    init(_ title: String, _ albums: Array<Album>) {
+    // It's stupid to pass in trackState. I just need to make it a singleton.
+    // When I don't do this, the tracks get garbage collected when you play a song and navigate away from this view
+    init(_ title: String, _ albums: Array<Album>, _ trackState: TrackState) {
         self.albums = albums
+        self.trackState = trackState
         
         super.init(nibName: nil, bundle: nil)
 

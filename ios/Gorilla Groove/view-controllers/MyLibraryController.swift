@@ -100,7 +100,7 @@ class MyLibraryController: UITableViewController {
     @objc private func loadAlbumView() {
         let albums = trackState.getAlbums()
 
-        let view = AlbumViewController("Album", albums)
+        let view = AlbumViewController("Album", albums, trackState)
         self.navigationController!.pushViewController(view, animated: true)
     }
     
