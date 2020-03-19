@@ -19,18 +19,23 @@ class TrackState {
         
         if (album != nil) {
             predicates.append(NSPredicate(format: "album == %@", album!))
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(key: "track_number", ascending: true)
+            ]
+        } else {
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(
+                    key: "name",
+                    ascending: true,
+                    selector: #selector(NSString.caseInsensitiveCompare)
+                )
+            ]
         }
         
         let andPredicate = NSCompoundPredicate(type: .and, subpredicates: predicates)
         
         fetchRequest.predicate = andPredicate
-        fetchRequest.sortDescriptors = [
-            NSSortDescriptor(
-                key: "name",
-                ascending: true,
-                selector: #selector(NSString.caseInsensitiveCompare)
-            )
-        ]
+
         let result = try! context.fetch(fetchRequest)
         
         return result as! Array<Track>
