@@ -96,7 +96,7 @@ class SystemStorageService(
 	}
 
 	override fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String {
-		return getCachedSongLink(trackId, anonymousAccess, audioFormat) { track ->
+		return getCachedTrackLink(trackId, anonymousAccess, audioFormat, false) { track ->
 			val fileName = when (audioFormat) {
 				AudioFormat.OGG -> track.fileName
 				AudioFormat.MP3 -> track.fileName.withNewExtension(AudioFormat.MP3.extension)
@@ -108,10 +108,10 @@ class SystemStorageService(
 	}
 
 	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String? {
-		getTrackForAlbumArt(trackId, anonymousAccess)
-
-		val parentDir = trackId / 1000
-		return "http://localhost:8080/album-art/$parentDir/$trackId.png"
+		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true) {
+			val parentDir = trackId / 1000
+			"http://localhost:8080/album-art/$parentDir/$trackId.png"
+		}
 	}
 
 	override fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat) {

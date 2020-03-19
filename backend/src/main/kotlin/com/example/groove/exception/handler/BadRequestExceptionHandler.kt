@@ -32,9 +32,9 @@ class BadRequestExceptionHandler {
 		return resp.sendError(HttpStatus.NOT_FOUND.value(), ex.message)
 	}
 
-	// These exceptions should return a 401
+	// These exceptions should return a 403
 	@ExceptionHandler(PermissionDeniedException::class)
 	protected fun handleUnauthorized(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
-		return resp.sendError(HttpStatus.UNAUTHORIZED.value(), ex.message)
+		return resp.sendError(HttpStatus.FORBIDDEN.value(), ex.message)
 	}
 }

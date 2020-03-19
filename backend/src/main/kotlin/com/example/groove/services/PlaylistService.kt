@@ -6,6 +6,7 @@ import com.example.groove.db.dao.PlaylistUserRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.OwnershipType
+import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.unwrap
@@ -39,7 +40,7 @@ class PlaylistService(
 			playlist.name = name
 			playlist.updatedAt = now()
 		} else {
-			throw IllegalArgumentException("User has insufficient privileges to view playlist with ID: $playlistId")
+			throw PermissionDeniedException("User has insufficient privileges to view playlist with ID: $playlistId")
 		}
 
 		playlistRepository.save(playlist)
@@ -68,7 +69,7 @@ class PlaylistService(
 				?: throw IllegalArgumentException("Playlist not found with ID $playlistId")
 
 		if (playlistUser.ownershipType != OwnershipType.OWNER) {
-			throw IllegalArgumentException("Must be a playlist's owner to delete it.")
+			throw PermissionDeniedException("Must be a playlist's owner to delete it.")
 		}
 
 		playlist.deleted = true
@@ -87,7 +88,7 @@ class PlaylistService(
 		val playlist = playlistRepository.findById(playlistId).unwrap()
 				?: throw IllegalArgumentException("No playlist with ID: $playlistId found")
 		playlistUserRepository.findByUserAndPlaylist(loadLoggedInUser(), playlist)
-				?: throw IllegalArgumentException("User has insufficient privileges to view playlist with ID: $playlistId")
+				?: throw PermissionDeniedException("User has insufficient privileges to view playlist with ID: $playlistId")
 
 		return playlistTrackRepository.getTracks(name, artist, album, playlist, searchTerm, pageable)
 	}
@@ -105,7 +106,7 @@ class PlaylistService(
 
 		if (playlist == null || !userCanEditPlaylist(user, playlist, tracks)) {
 			logger.warn("User of ID ${user.id} tried to add tracks to the playlist of ID ${playlist.id} but did not have the permission to do so")
-			throw IllegalArgumentException("Insufficient privileges to add the selected tracks to the playlist")
+			throw PermissionDeniedException("Insufficient privileges to add the selected tracks to the playlist")
 		}
 
 		tracks.forEach {
@@ -128,7 +129,7 @@ class PlaylistService(
 			} else {
 				logger.warn("User of ID ${user.id} tried to remove tracks from the playlist of ID ${playlistTrack.playlist.id} " +
 						"but did not have the permission to do so")
-				throw IllegalArgumentException("Insufficient privileges to remove the selected tracks from the playlist")
+				throw PermissionDeniedException("Insufficient privileges to remove the selected tracks from the playlist")
 			}
 		}
 	}
@@ -140,7 +141,7 @@ class PlaylistService(
 			return false
 		}
 
-		return tracks == null || tracks.all { it.user == user }
+		return tracks == null || tracks.all { it.user.id == user.id }
 	}
 
 	companion object {

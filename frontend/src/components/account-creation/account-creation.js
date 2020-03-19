@@ -10,7 +10,6 @@ export default function AccountCreation(props) {
 
 	useEffect(() => {
 		Api.get('user-invite-link/public/' + props.match.params.key).then(res => {
-			console.log(res);
 			setInviteLink(res);
 		}).catch(error => {
 			console.error(error);

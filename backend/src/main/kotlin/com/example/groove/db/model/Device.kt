@@ -1,6 +1,7 @@
 package com.example.groove.db.model
 
 import com.example.groove.db.model.enums.DeviceType
+import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
 import javax.persistence.*
@@ -51,9 +52,20 @@ data class Device(
 		@Column(name = "additional_data")
 		var additionalData: String? = null,
 
+		@Column(name = "party_enabled_until")
+		var partyEnabledUntil: Timestamp? = null,
+
+		@JsonIgnore
+		@ManyToMany
+		@JoinTable(
+				name = "device_party_user",
+				joinColumns = [JoinColumn(name = "device_id")],
+				inverseJoinColumns = [JoinColumn(name = "user_id")])
+		var partyUsers: MutableList<User> = mutableListOf(),
+
 		@Column(name = "created_at")
-		val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+		val createdAt: Timestamp = now(),
 
 		@Column(name = "updated_at")
-		var updatedAt: Timestamp = Timestamp(System.currentTimeMillis())
+		var updatedAt: Timestamp = now()
 )

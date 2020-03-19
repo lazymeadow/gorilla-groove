@@ -35,7 +35,11 @@ data class User(
 
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")
-		var deleted: Boolean = false
+		var deleted: Boolean = false,
+
+		@JsonIgnore
+		@ManyToMany(mappedBy = "partyUsers")
+		var partyDevices: MutableList<Device> = mutableListOf()
 
 ) : UserDetails {
 	override fun getAuthorities(): MutableCollection<out GrantedAuthority> {

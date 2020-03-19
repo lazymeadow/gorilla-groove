@@ -53,7 +53,7 @@ export class AlbumArt extends React.Component {
 				{/* Use a background image here because it behaves better at staying within boundaries */}
 				<div
 					className="album-art"
-					style={{ backgroundImage: 'url(' + this.state.imageUrl + ')' }}
+					style={{ backgroundImage: `url(${this.state.imageUrl})` }}
 				/>
 				<Modal
 					isOpen={this.state.modalOpen}

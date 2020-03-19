@@ -5,6 +5,8 @@ import {PermissionType} from "../enums/permission-type";
 
 export const UserContext = React.createContext();
 
+let partyModeTimeout = null;
+
 export class UserProvider extends React.Component {
 	constructor(props) {
 		super(props);
@@ -12,6 +14,7 @@ export class UserProvider extends React.Component {
 		this.state = {
 			ownUser: {},
 			otherUsers: [],
+			ownDevice: {},
 			ownPermissions: new Set(),
 
 			initialize: (...args) => this.initialize(...args),

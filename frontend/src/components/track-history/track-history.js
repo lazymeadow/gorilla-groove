@@ -63,8 +63,8 @@ function TrackHistoryModal(props) {
 						: <div/>
 				}
 				<div className="flex-between confirm-modal-buttons">
-					<button onMouseDown={deleteHistory}>Let's get it over with</button>
-					<button onMouseDown={() => setPendingDeleteData(null)}>Wait. I need to reconsider</button>
+					<button onClick={deleteHistory}>Let's get it over with</button>
+					<button onClick={() => setPendingDeleteData(null)}>Wait. I need to reconsider</button>
 				</div>
 			</Modal>
 
@@ -154,7 +154,7 @@ export default function TrackHistory() {
 	const closeFunction = () => setModalOpen(false);
 
 	return (
-		<div id="track-history" onMouseDown={() => setModalOpen(true)}>
+		<div id="track-history" onClick={() => setModalOpen(true)}>
 			Track History
 			<Modal
 				isOpen={modalOpen}

@@ -1,5 +1,5 @@
 .popout-menu {
-  position: absolute;
+  position: fixed;
   z-index: 15;
   background-color: lighten(@deep-blue, 10);
   color: black;
@@ -11,11 +11,25 @@
   }
 
   li {
-    padding-left: 8px;
-    padding-right: 8px;
     cursor: pointer;
     &:hover {
       background-color: @deep-blue;
     }
+
+    > * {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+  }
+
+  .expansion-caret {
+    position: absolute;
+    right: 0;
+    top: -1px;
+    font-size: 0.9em;
+  }
+
+  .expandable-width {
+    padding-right: 44px;
   }
 }

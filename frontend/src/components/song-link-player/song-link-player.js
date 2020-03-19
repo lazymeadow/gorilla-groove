@@ -1,47 +1,67 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Api} from "..";
+import MiniPlayer from "../playback-controls/mini-player/mini-player";
 
-export class SongLinkPlayer extends React.Component {
-	constructor(props) {
-		super(props);
+export default function SongLinkPlayer(props) {
+	const audioRef = useRef(null);
 
-		this.state = {
-			trackData: {}
-		}
-	}
+	const [trackData, setTrackData] = useState({});
 
-	componentDidMount() {
-		Api.get('track/public/' + this.props.match.params.trackId).then(res => {
-			this.setState({ trackData: res }, () => {
-				document.getElementById('audio-player').play();
-			})
+	const [volume, setVolume] = useState(1);
+	const [muted, setMuted] = useState(false);
+	const [playing, setPlaying] = useState(false);
+	const [timePlayed, setTimePlayed] = useState(false);
+
+	useEffect(() => {
+		Api.get('track/public/' + props.match.params.trackId).then(res => {
+			setTrackData(res);
 		});
-	}
 
-	getDisplayedSongName() {
-		const playedTrack = this.state.trackData;
-		if (!playedTrack) {
-			return '';
-		} else if (playedTrack.name && playedTrack.artist) {
-			return `${playedTrack.name} - ${playedTrack.artist}`
-		} else if (playedTrack.name) {
-			return playedTrack.name
-		} else if (playedTrack.artist) {
-			return playedTrack.artist
-		} else {
-			return '-----'
-		}
-	}
+		const audio = audioRef.current;
+		audio.addEventListener('timeupdate', event => {
+			setTimePlayed(event.target.currentTime);
+		});
+		audio.addEventListener('ended', () => {
+			setPlaying(false);
+		});
+	}, []);
 
-	render() {
-		return (
-			<div id="song-link-player">
-				<img src={this.state.trackData.albumLink}/>
-				<div>{this.getDisplayedSongName()}</div>
-				<audio id="audio-player" src={this.state.trackData.trackLink} controls>
-					Your browser is ancient. Use a better browser
-				</audio>
-			</div>
-		);
-	}
+	return (
+		<div id="song-link-player">
+			<audio ref={audioRef} src={trackData.trackLink}/>
+			<MiniPlayer
+				trackData={trackData}
+				playing={playing}
+				timePlayed={timePlayed}
+				onTimeChange={(newTimePercent, isHeld) => {
+					if (!isHeld) {
+						return;
+					}
+
+					const newTime = newTimePercent * trackData.length;
+					setTimePlayed(newTime);
+					audioRef.current.currentTime = newTime;
+				}}
+				onPauseChange={() => {
+					if (playing) {
+						audioRef.current.pause();
+					} else {
+						audioRef.current.play();
+					}
+
+					setPlaying(!playing);
+				}}
+				volume={volume}
+				onVolumeChange={newVolume => {
+					setVolume(newVolume);
+					audioRef.current.volume = newVolume;
+				}}
+				muted={muted}
+				onMuteChange={() => {
+					audioRef.current.muted = !muted;
+					setMuted(!muted);
+				}}
+			/>
+		</div>
+	);
 }

@@ -35,32 +35,49 @@ abstract class FileStorageService(
 
 	// Do all of this in a synchronized, new transaction to prevent race conditions with link creation / searching
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	protected fun getCachedSongLink(
+	protected fun getCachedTrackLink(
 			trackId: Long,
 			anonymousAccess: Boolean,
-			audioFormat: AudioFormat,
+			audioFormat: AudioFormat = AudioFormat.MP3,
+			isArtLink: Boolean,
 			newLinkFun: (track: Track) -> String
 	): String {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
 		synchronized(this) {
-			val trackLink = trackLinkRepository.findUnexpiredByTrackIdAndAudioFormat(track.id, audioFormat)
+			val trackLink = if (isArtLink) {
+				trackLinkRepository.findUnexpiredArtByTrackId(track.id)
+			} else {
+				trackLinkRepository.findUnexpiredSongByTrackIdAndAudioFormat(track.id, audioFormat)
+			}
 
 			return when {
 				trackLink != null -> trackLink.link
-				!anonymousAccess -> cacheSongLink(track, audioFormat, newLinkFun(track))
+				!anonymousAccess -> cacheLink(
+						track = track,
+						audioFormat = audioFormat,
+						link = newLinkFun(track),
+						isArt = isArtLink
+				)
 				else -> throw ResourceNotFoundException("No valid link found")
 			}
 		}
 	}
 
-	private fun cacheSongLink(track: Track, audioFormat: AudioFormat, link: String): String {
+	private fun cacheLink(track: Track, audioFormat: AudioFormat, link: String, isArt: Boolean): String {
 		// Expire the link 1 minute earlier than 4 hours, so someone can't request the link and then
 		// have Amazon revoke it right before they get a chance to stream the data
 		val expirationMillis = expireHoursOut(4).time - 60_000
 
 		val expiration = Timestamp(expirationMillis)
-		val trackLink = TrackLink(track = track, link = link, audioFormat = audioFormat, expiresAt = expiration)
+		val trackLink = TrackLink(
+				track = track,
+				link = link,
+				audioFormat = audioFormat,
+				expiresAt = expiration,
+				isArt = isArt
+		)
+
 		trackLinkRepository.save(trackLink)
 
 		return link
@@ -71,7 +88,7 @@ abstract class FileStorageService(
 
 		// If we are doing anonymous access, also make sure that the track is within its temporary access time
 		if (anonymousAccess) {
-			trackLinkRepository.findUnexpiredByTrackIdAndAudioFormat(track.id, null)
+			trackLinkRepository.findUnexpiredSongByTrackIdAndAudioFormat(track.id, null)
 					?: throw IllegalArgumentException("Album art for track ID: $trackId not available to anonymous users!")
 		}
 

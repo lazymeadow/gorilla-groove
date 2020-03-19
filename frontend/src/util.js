@@ -142,3 +142,27 @@ export function copyToClipboard(text) {
 		}
 	});
 }
+
+export function getScreenHeight() {
+	// I had issues using window.screen.height / availHeight. The number seemed too large...
+	// Because we use 100vh for the body, getting the root height works great for this
+	return document.getElementById('root').offsetHeight;
+}
+
+export function getVolumeIcon(volume, muted) {
+	if (muted) {
+		return 'fa-volume-mute'
+	} else if (volume > 0.5) {
+		return 'fa-volume-up';
+	} else if (volume > 0) {
+		return 'fa-volume-down'
+	} else {
+		return 'fa-volume-off'
+	}
+}
+
+export function omit(key, obj) {
+	// noinspection JSUnusedLocalSymbols
+	const { [key]: _, ...rest } = obj;
+	return rest;
+}

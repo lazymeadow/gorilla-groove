@@ -7,6 +7,7 @@ import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.db.model.User
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.DateUtils
 import com.example.groove.util.loadLoggedInUser
@@ -54,6 +55,30 @@ class TrackService(
 				searchTerm = searchTerm,
 				pageable = pageable
 		)
+	}
+
+	@Transactional(readOnly = true)
+	fun getTracksByIds(ids: Set<Long>): List<Track> {
+		val user = loadLoggedInUser()
+
+		val tracks = trackRepository.findAllById(ids).toList()
+
+		// Make sure we found a track for every ID that was requested
+		if (tracks.size != ids.size) {
+			val foundIds = tracks.map { it.id }.toSet()
+			throw ResourceNotFoundException("Could not find tracks with IDs ${ids - foundIds}!")
+		}
+
+		// As always, make sure private tracks are only accessible to the user that owns them
+		val invalidTracks = tracks.filter { track ->
+			track.private && track.user.id != user.id
+		}
+		if (invalidTracks.isNotEmpty()) {
+			val invalidIds = invalidTracks.map { it.id }.toSet()
+			throw ResourceNotFoundException("Could not find tracks with IDs $invalidIds!")
+		}
+
+		return tracks
 	}
 
 	@Transactional(readOnly = true)
@@ -216,10 +241,12 @@ class TrackService(
 
 		return mapOf(
 				"trackLink" to trackLink,
-				"albumLink" to albumLink,
+				"albumArtLink" to albumLink,
 				"name" to track.name,
 				"artist" to track.artist,
-				"album" to track.album
+				"album" to track.album,
+				"releaseYear" to track.releaseYear,
+				"length" to track.length
 		)
 	}
 

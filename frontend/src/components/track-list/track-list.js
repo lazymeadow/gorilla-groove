@@ -4,7 +4,7 @@ import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
 import SongPopoutMenu from "../popout-menu/song-popout-menu/song-popout-menu";
-import {TrackView} from "../../enums/track-view";
+import {TrackView} from "../../enums/site-views";
 import * as LocalStorage from "../../local-storage";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {displayKeyToTrackKey} from "../../util";
@@ -14,12 +14,14 @@ let doubleClickTimeout = null;
 let withinDoubleClick = false;
 let pendingEditableCell = null;
 
+let lastScroll = Date.now();
+
 export class TrackList extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			selected: {}, // FIXME Pretty sure I should have made this a set. Pretty sure it's being used like a set
+			selected: new Set(),
 			firstSelectedIndex: null,
 			lastSelectedIndex: null,
 			editableCell: null,
@@ -149,11 +151,13 @@ export class TrackList extends React.Component {
 		}
 
 		if (event.key === 'Enter') {
-			let indexes = Object.keys(this.state.selected);
-			if (indexes.length === 1) {
-				this.context.playFromTrackIndex(parseInt(indexes[0]), true);
+			if (this.state.selected.size === 1) {
+				const trackKey = this.state.selected.values().next().value;
+				const trackIndex = this.context.nowPlayingTracks.findIndex(it => it.selectionKey === trackKey);
+
+				this.context.playFromTrackIndex(trackIndex, true);
 			} else {
-				let tracks = indexes.map(index => this.props.userTracks[index]);
+				const tracks = this.context.nowPlayingTracks.map(it => this.state.selected.has(it.selectionKey));
 				this.context.playTracks(tracks);
 			}
 		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -161,17 +165,18 @@ export class TrackList extends React.Component {
 				return;
 			}
 
-			let newIndex = this.state.lastSelectedIndex + (event.key === 'ArrowDown' ? 1 : -1);
+			const newIndex = this.state.lastSelectedIndex + (event.key === 'ArrowDown' ? 1 : -1);
 
 			if (newIndex >= this.props.userTracks.length || newIndex < 0) {
 				return;
 			}
 
-			const selected = {};
-			selected[newIndex] = true;
+			const selected = new Set();
+			selected.add(this.props.userTracks[newIndex].selectionKey);
+
 			this.setState({ selected: selected, lastSelectedIndex: newIndex });
 
-			const trackList = document.getElementById('library-view');
+			const trackList = document.getElementById('center-view');
 			const selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
 
 			if (event.key === 'ArrowDown') {
@@ -190,11 +195,18 @@ export class TrackList extends React.Component {
 	handleScroll() {
 		const scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
 
+		// Dumb hack to prevent too many scroll events from firing. Can't reliably use the context's loading
+		// to stop this because setState isn't instant
+		if (Date.now() - lastScroll < 500) {
+			return
+		}
+
 		const container = document.getElementsByClassName('border-layout-center')[0];
 		if (!this.context.loadingTracks
 			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
 			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
 
+			lastScroll = Date.now();
 			this.context.loadMoreTracks();
 		}
 	}
@@ -209,7 +221,9 @@ export class TrackList extends React.Component {
 			return; // If we clicked an input just ignore the click entirely since we were editing a song
 		}
 
-		let selected = this.state.selected;
+		const userTrack = this.props.userTracks[userTrackIndex];
+
+		const selected = new Set(this.state.selected);
 		const newState = { lastSelectedIndex: userTrackIndex };
 
 		// Always set the first selected if there wasn't one
@@ -219,14 +233,14 @@ export class TrackList extends React.Component {
 
 		// If we aren't holding a modifier, we want to deselect all rows that were selected, and remember the track we picked
 		// Additionally, if right clicking, we don't want to deselect if we selected an already selected row
-		if (!event.ctrlKey && !event.shiftKey && !(!isLeftClick && selected[userTrackIndex])) {
-			selected = {};
+		if (!event.ctrlKey && !event.shiftKey && !(!isLeftClick && this.state.selected.has(userTrack.selectionKey))) {
+			selected.clear();
 			newState.firstSelectedIndex = userTrackIndex;
 		}
 
 		// If we're holding shift, we should select the rows between this click and the first click
 		if (event.shiftKey && this.state.firstSelectedIndex !== null) {
-			selected = {};
+			selected.clear();
 			let startingRow = Math.min(this.state.firstSelectedIndex, userTrackIndex);
 			let endingRow = Math.max(this.state.firstSelectedIndex, userTrackIndex);
 			if (startingRow < endingRow) {
@@ -234,12 +248,12 @@ export class TrackList extends React.Component {
 			}
 
 			for (let i = startingRow; i < endingRow; i++) {
-				selected[i] = true;
+				selected.add(this.props.userTracks[i].selectionKey);
 			}
 		}
 
 		// The track we clicked needs to always be selected
-		selected[userTrackIndex] = true;
+		selected.add(userTrack.selectionKey);
 
 		if (isLeftClick) {
 			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
@@ -253,7 +267,6 @@ export class TrackList extends React.Component {
 				const pendingEditableCell = this.setupEdit(event, selected, userTrackIndex);
 				this.setupDoubleClick(pendingEditableCell);
 			}
-
 		}
 
 		newState.selected = selected;
@@ -275,7 +288,7 @@ export class TrackList extends React.Component {
 	setupEdit(event, selectedIndexes, userTrackIndex) {
 		// If we ALREADY had exactly one thing selected and we clicked the same thing, mark the cell
 		// so that it will be edited if the user doesn't click a second time
-		if (Object.keys(selectedIndexes).length === 1 && this.state.firstSelectedIndex === userTrackIndex) {
+		if (selectedIndexes.size === 1 && this.state.firstSelectedIndex === userTrackIndex) {
 
 			// If a table cell is empty, it clicks on a different element. So just make sure we grab the ID, either
 			// from the current element, or one of its children if the child node was empty and thus not clicked on
@@ -315,11 +328,12 @@ export class TrackList extends React.Component {
 	}
 
 	getSelectedTracks() {
-		return Object.keys(this.state.selected).map(index => this.props.userTracks[index]);
-	}
+		// This can happen if we are attempting to get the selected tracks during a reload (like after deleting)
+		if (this.props.userTracks.length === 0) {
+			return [];
+		}
 
-	getSelectedTrackIndexes() {
-		return Object.keys(this.state.selected).map(index => parseInt(index));
+		return this.props.userTracks.filter(it => this.state.selected.has(it.selectionKey));
 	}
 
 	handleHeaderClick(event) {
@@ -370,6 +384,13 @@ export class TrackList extends React.Component {
 	}
 
 	closeContextMenu(event) {
+		// This is probably a stupid way to do this, but if we clicked on a row that was expandable,
+		// then we don't want to actually close the menu as clicking it should really have no effect
+		const classes = event.target.classList;
+		if (classes.contains('expandable-width') || classes.contains('expansion-caret')) {
+			return;
+		}
+
 		if (this.state.contextMenuOptions.expanded && event.button === 0) {
 			this.setState({ contextMenuOptions: { expanded: false }});
 		}
@@ -405,7 +426,7 @@ export class TrackList extends React.Component {
 					<SongPopoutMenu
 						closeContextMenu={this.closeContextMenu.bind(this)}
 						getSelectedTracks={this.getSelectedTracks.bind(this)}
-						getSelectedTrackIndexes={this.getSelectedTrackIndexes.bind(this)}
+						selectionKeys={this.state.selected}
 						expanded={this.state.contextMenuOptions.expanded}
 						trackView={this.state.contextMenuOptions.trackView}
 						x={this.state.contextMenuOptions.x}
@@ -438,10 +459,10 @@ export class TrackList extends React.Component {
 								key={index}
 								columns={this.props.columns}
 								rowIndex={index}
-								editableCell={this.state.editableCell}
+								editableCell={this.props.trackView && this.state.editableCell}
 								played={played}
 								userTrack={userTrack}
-								selected={this.state.selected[index.toString()]}
+								selected={this.state.selected.has(userTrack.selectionKey)}
 								onClick={this.handleRowClick.bind(this)}
 								stopCellEdits={this.stopCellEdits.bind(this)}
 							/>

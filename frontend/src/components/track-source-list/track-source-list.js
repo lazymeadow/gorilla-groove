@@ -1,13 +1,14 @@
 import React, {useContext, useEffect, useState} from 'react';
 import TreeView from 'react-treeview'
 import {MusicContext} from "../../services/music-provider";
-import {TrackView} from "../../enums/track-view";
+import {CenterView, TrackView} from "../../enums/site-views";
 import {EditableDiv} from "../editable-div/editable-div";
 import AddPlaylistButton from "../add-playlist/add-playlist";
 import {Modal} from "../modal/modal";
 import {SocketContext} from "../../services/socket-provider";
 import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
+import {DeviceContext} from "../../services/device-provider";
 
 let pendingDeletePlaylist = {};
 
@@ -18,6 +19,7 @@ export default function TrackSourceList(props) {
 
 	const userContext = useContext(UserContext);
 	const musicContext = useContext(MusicContext);
+	const deviceContext = useContext(DeviceContext);
 	const socketContext = useContext(SocketContext);
 	const playlistContext = useContext(PlaylistContext);
 
@@ -58,12 +60,17 @@ export default function TrackSourceList(props) {
 	};
 
 	const selectEntry = (section, entry, elementId) => {
-		if (section === musicContext.trackView && entry.id === musicContext.viewedEntityId) {
+		if (
+			props.centerView === CenterView.TRACKS &&
+			section === musicContext.trackView &&
+			entry.id === musicContext.viewedEntityId
+		) {
 			setEditedId(elementId);
 			return; // User selected the same thing as before
 		}
 		setEditedId(null);
 
+		props.setCenterView(CenterView.TRACKS);
 		if (section === TrackView.USER) {
 			musicContext.loadSongsForUser(entry.id, {}, false);
 		} else {
@@ -72,30 +79,60 @@ export default function TrackSourceList(props) {
 	};
 
 	const getNowPlayingElement = entry => {
-		const data = socketContext.nowListeningUsers[entry.id];
-		if (!data) {
-			return <span/>
+		const listeningDevices = socketContext.nowListeningUsers[entry.id];
+		if (!listeningDevices) {
+			return null;
 		}
 
-		const songName = data.song;
-		const isMobile = data.isPhone === null ? false : data.isPhone;
-		const deviceText = data.deviceName === null ? '' : 'Device: ' + data.deviceName;
+		const playingDevices = listeningDevices.filter(device => device.playing && device.trackData);
 
-		return <span className="user-listening" title={`${songName}\n${deviceText}`}>
+		if (playingDevices.length === 0) {
+			return null;
+		}
+
+		const isMobile = playingDevices.every(device => device.isMobile);
+
+		const displayText = playingDevices.map(device =>
+			`${device.trackData.name} - ${device.trackData.artist}\nDevice: ${device.deviceName}`
+		).join('\n\n');
+
+		return <span className="user-listening" title={displayText}>
 			{ isMobile ? <i className="fas fa-mobile"/> : <i className="fas fa-music"/> }
 		</span>
 	};
 
-	const librarySelected = musicContext.trackView === TrackView.LIBRARY ? 'selected' : '';
+	const isUserPartying = entry => {
+		// If we can see any of the user's devices as active, we know we've been invited to a party
+		const devicesForUser = deviceContext.otherDevices.filter(it => it.userId === entry.id);
+		return devicesForUser.length > 0;
+	};
+
+	const librarySelected = musicContext.trackView === TrackView.LIBRARY && props.centerView === CenterView.TRACKS
+		? 'selected' : '';
+	const deviceManagementSelected = props.centerView === CenterView.REMOTE_DEVICES
+		? 'selected' : '';
 
 	return (
 		<div id="view-source-list">
 			<div
-				className={`library-option ${librarySelected}`}
-				onMouseDown={() => musicContext.loadSongsForUser()}
+				className={`large-option ${librarySelected}`}
+				onMouseDown={() => {
+					props.setCenterView(CenterView.TRACKS);
+					musicContext.loadSongsForUser();
+				}}
 			>
 				<span className="my-library">My Library</span>
 			</div>
+
+			<div
+				className={`remote-play ${deviceManagementSelected}`}
+				onMouseDown={() => {
+					props.setCenterView(CenterView.REMOTE_DEVICES);
+				}}
+			>
+				<span>Remote Play</span>
+			</div>
+
 			{dataSource.map((node, i) => {
 				const label =
 					<div className="tree-node" onMouseDown={() => handleParentNodeClick(i)}>
@@ -109,13 +146,21 @@ export default function TrackSourceList(props) {
 						onClick={() => handleParentNodeClick(i)}
 					>
 						{node.data.map(entry => {
-							const entrySelected = musicContext.trackView === node.section & entry.id === musicContext.viewedEntityId;
+							const entrySelected = musicContext.trackView === node.section &&
+								entry.id === musicContext.viewedEntityId &&
+								props.centerView === CenterView.TRACKS;
 							const entryClass = entrySelected ? 'selected' : '';
+							const partyClass = node.section === TrackView.USER && isUserPartying(entry) ? 'animation-rainbow' : '';
+
+							const tooltip = partyClass ? 'This user invited you to party' : '';
+
 							const cellId = i + '-' + entry.id;
+
 							return (
 								<div
 									id={cellId}
-									className={`tree-child ${entryClass}`}
+									title={tooltip}
+									className={`tree-child ${entryClass} ${partyClass}`}
 									key={entry.id}
 									onMouseDown={() => selectEntry(node.section, entry, cellId)}
 								>

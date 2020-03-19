@@ -2,7 +2,7 @@ import React from "react";
 import {formatDate, formatTimeFromSeconds} from "../../formatters";
 import {MusicContext} from "../../services/music-provider";
 import {EditableDiv} from "../editable-div/editable-div";
-import {TrackView} from "../../enums/track-view";
+import {TrackView} from "../../enums/site-views";
 import {displayKeyToTrackKey} from "../../util";
 
 export class SongRow extends React.Component {

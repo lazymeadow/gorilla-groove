@@ -12,9 +12,13 @@ import {SocketContext} from "../../services/socket-provider";
 import PlaybackControls from "../playback-controls/playback-controls";
 import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
+import {CenterView} from "../../enums/site-views";
+import RemotePlayManagement from "../remote-play/management/remote-play-management";
+import {DeviceContext} from "../../services/device-provider";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
+	const [centerView, setCenterView] = useState(CenterView.TRACKS);
 
 	if (!isLoggedIn()) {
 		console.info('Not logged in. Awaiting redirect');
@@ -29,6 +33,7 @@ export default function SiteLayout(props) {
 	const musicContext = useContext(MusicContext);
 	const socketContext = useContext(SocketContext);
 	const userContext = useContext(UserContext);
+	const deviceContext = useContext(DeviceContext);
 	const playlistContext = useContext(PlaylistContext);
 
 	useEffect(() => {
@@ -37,11 +42,14 @@ export default function SiteLayout(props) {
 			// If we had an error here it PROBABLY means we had a failure to login
 			props.history.push('/login');
 		});
-		socketContext.connectToSocket();
 		musicContext.loadSongsForUser();
 		playlistContext.loadPlaylists();
 
-		notifyVersion();
+		// Let other things finish loading before we start hogging available network connections with long polling
+		setTimeout(socketContext.connectToSocket, 1000);
+
+		// After we tell the server about our device load server side information about it
+		notifyVersion().then(deviceContext.loadOwnDevice);
 	}, []);
 
 	const displayedColumns = musicContext.columnPreferences
@@ -50,21 +58,31 @@ export default function SiteLayout(props) {
 
 	return (
 		<div className="full-screen border-layout">
+			{ deviceContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
+
 			<div className="border-layout-north">
 				<HeaderBar/>
 			</div>
 			<div className="border-layout-west">
 				<TrackSourceList
 					playlists={playlistContext.playlists}
+					centerView={centerView}
+					setCenterView={setCenterView}
 				/>
 			</div>
-			<div id="library-view" className="border-layout-center track-list-container p-relative">
-				<TrackList
-					columns={displayedColumns}
-					userTracks={musicContext.viewedTracks}
-					trackView={true}
-				/>
+
+			<div id="center-view" className="border-layout-center track-list-container p-relative">
+				{
+					centerView === CenterView.TRACKS
+						? <TrackList
+							columns={displayedColumns}
+							userTracks={musicContext.viewedTracks}
+							trackView={true}
+						/>
+						: <RemotePlayManagement/>
+				}
 			</div>
+
 			<div className="border-layout-east track-list-container">
 				<NowPlayingList
 					columns={["#", "Name"]}

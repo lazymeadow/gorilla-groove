@@ -22,6 +22,9 @@ data class TrackLink(
 		@Enumerated
 		val audioFormat: AudioFormat,
 
+		@Column(name = "is_art", columnDefinition = "BIT")
+		val isArt: Boolean,
+
 		@Column(name = "expires_at")
 		val expiresAt: Timestamp
 )

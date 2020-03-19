@@ -1,0 +1,98 @@
+@picture-size: 150px;
+@info-width: 300px;
+
+.mini-player {
+  width: 450px;
+  background-color: @light-blue;
+  border: 1px solid @deeper-blue;
+
+  .album-art {
+    width: @picture-size;
+    height: @picture-size;
+
+    border-bottom: 1px solid @deeper-blue;
+    border-right: 1px solid @deeper-blue;
+  }
+
+  .title-box {
+    font-weight: bold;
+    border-bottom: 1px solid @deeper-blue;
+  }
+
+  .playback-controls {
+    font-size: 1.8em;
+    width: @picture-size;
+    margin-top: 5px;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    .fa-pause, .fa-play {
+      font-size: 1.3em;
+    }
+  }
+
+  .slider-section {
+    width: @info-width;
+    margin-left: 8px;
+  }
+
+  .time-slider-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .time-slider {
+      width: 200px;
+    }
+  }
+
+  .bottom-section {
+    padding: 5px;
+  }
+
+  .time-indicators {
+    font-size: 0.8em;
+    margin-right: 10px;
+  }
+
+  .bottom-controls {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+
+    > * {
+      margin-left: 5px;
+      margin-right: 5px;
+    }
+
+    .volume-slider {
+      width: 100px;
+    }
+
+    .volume-icon {
+      margin-left: 20px;
+      margin-right: 10px;
+      width: 15px;
+    }
+
+    .control {
+      font-size: 1.3em;
+    }
+  }
+
+  .song-information {
+    width: @info-width;
+    border-bottom: 1px solid @deeper-blue;
+
+    ul {
+      text-align: left;
+      padding-left: 5px;
+
+      li {
+        margin-bottom: 5px;
+      }
+    }
+  }
+}

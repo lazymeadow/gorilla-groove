@@ -1,7 +1,7 @@
-.playback-controls {
+#playback-controls {
   margin-left: 15px;
 
-  #shuffle-wrapper {
+  .shuffle-wrapper {
     margin-left: 10px;
     margin-top: 20px;
   }
@@ -27,9 +27,6 @@
 
   .fa-random, .fa-sync-alt {
     font-size: 1.8em;
-    &.enabled {
-      color: @select-blue;
-    }
   }
 
   .play-time-wrapper {
@@ -50,5 +47,13 @@
     display: flex;
     justify-content: space-between;
     width: 195px;
+  }
+}
+
+.song-player {
+  .fa-random, .fa-sync-alt {
+    &.enabled {
+      color: @select-blue;
+    }
   }
 }

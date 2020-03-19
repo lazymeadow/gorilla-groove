@@ -98,16 +98,16 @@ class S3StorageService(
 	}
 
 	override fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String {
-		return getCachedSongLink(trackId, anonymousAccess, audioFormat) { track ->
+		return getCachedTrackLink(trackId, anonymousAccess, audioFormat, false) { track ->
 			val key = "${audioFormat.s3Directory}/${track.fileName.withNewExtension(audioFormat.extension)}"
 			s3Client.generatePresignedUrl(bucketName, key, expireHoursOut(4)).toString()
 		}
 	}
 
 	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String? {
-		val track = getTrackForAlbumArt(trackId, anonymousAccess)
-
-		return s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
+		return getCachedTrackLink(trackId, anonymousAccess, isArtLink = true) { track ->
+			s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
+		}
 	}
 
 	override fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat) {
