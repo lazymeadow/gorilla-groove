@@ -7,7 +7,12 @@ class TrackState {
     let userSyncManager = UserState()
     
     
-    func getTracks(album: String? = nil, artist: String? = nil) -> Array<Track> {
+    func getTracks(
+        album: String? = nil,
+        artist: String? = nil,
+        sortOverrideKey: String? = nil,
+        sortAscending: Bool = true
+    ) -> Array<Track> {
         let ownId = FileState.read(LoginState.self)!.id
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Track")
@@ -26,24 +31,32 @@ class TrackState {
         }
         
         // Sort differently depending on how we are trying to load things
-        if (artist != nil && album == nil) {
+        if (sortOverrideKey != nil) {
+            fetchRequest.sortDescriptors = [
+                NSSortDescriptor(
+                    key: sortOverrideKey!,
+                    ascending: sortAscending,
+                    selector: #selector(NSString.caseInsensitiveCompare)
+                )
+            ]
+        } else if (artist != nil && album == nil) {
             fetchRequest.sortDescriptors = [
                 NSSortDescriptor(
                     key: "album",
-                    ascending: true,
+                    ascending: sortAscending,
                     selector: #selector(NSString.caseInsensitiveCompare)
                 ),
                 NSSortDescriptor(key: "track_number", ascending: true)
             ]
         } else if (album != nil) {
             fetchRequest.sortDescriptors = [
-                NSSortDescriptor(key: "track_number", ascending: true)
+                NSSortDescriptor(key: "track_number", ascending: sortAscending)
             ]
         } else {
             fetchRequest.sortDescriptors = [
                 NSSortDescriptor(
                     key: "name",
-                    ascending: true,
+                    ascending: sortAscending,
                     selector: #selector(NSString.caseInsensitiveCompare)
                 )
             ]

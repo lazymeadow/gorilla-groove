@@ -53,7 +53,7 @@ class MyLibraryController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
         
-        cell.textLabel!.text = "\(options[indexPath.row])".capitalized
+        cell.textLabel!.text = "\(options[indexPath.row])".toTitleCase()
         cell.textLabel!.textColor = #colorLiteral(red: 0.1764705926, green: 0.4980392158, blue: 0.7568627596, alpha: 1)
         let tapGesture = UITapGestureRecognizer(
             target: self,
@@ -80,11 +80,15 @@ class MyLibraryController: UITableViewController {
             loadArtistView()
         case .ALBUM:
             loadAlbumView()
+        case .PLAY_COUNT:
+            loadTitleView("play_count", sortAscending: false)
+        case .DATE_ADDED:
+            loadTitleView("created_at", sortAscending: false)
         }
     }
     
-    @objc private func loadTitleView() {
-        let tracks = trackState.getTracks()
+    @objc private func loadTitleView(_ sortOverrideKey: String? = nil, sortAscending: Bool = true) {
+        let tracks = trackState.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
 
         let view = SongViewController("Title", tracks)
         self.navigationController!.pushViewController(view, animated: true)
@@ -108,5 +112,13 @@ class MyLibraryController: UITableViewController {
         case TITLE
         case ARTIST
         case ALBUM
+        case PLAY_COUNT
+        case DATE_ADDED
+    }
+}
+
+extension String {
+    func toTitleCase() -> String {
+        return self.replacingOccurrences(of: "_", with: " ").capitalized
     }
 }
