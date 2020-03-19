@@ -253,7 +253,7 @@ class TrackService(
 	fun trimTrack(trackId: Long, startTime: String?, duration: String?): Int {
 		val track = trackRepository.findById(trackId).unwrap()
 
-		if (track == null || track.user != loadLoggedInUser()) {
+		if (track == null || track.user.id != loadLoggedInUser().id) {
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
