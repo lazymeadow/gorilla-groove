@@ -170,7 +170,7 @@ class TrackState {
         // Want to find distinct artists from all of our tracks. Hard to do in Core Data
         let artists: Set<String> = Set(tracks.map { $0.artist })
 
-        return Array(artists).sorted()
+        return Array(artists).sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
     }
     
     func getAlbums(artist: String? = nil) -> Array<Album> {
