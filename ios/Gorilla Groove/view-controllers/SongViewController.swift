@@ -1,19 +1,36 @@
 import UIKit
 import Foundation
-import AVFoundation
 import AVKit
 
-class SongViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class SongViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchResultsUpdating, UISearchBarDelegate {
 
     var tracks: Array<Track> = []
+    var visibleTracks: Array<Track> = []
+    
+    var contactsTableView = UITableView()
+    var searchController = UISearchController()
+    var persistentSearchTerm = ""
+    var searchWasCanceled = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try! AVAudioSession.sharedInstance().setActive(true)
+        let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
+        let searchIcon = UIImage(systemName: "magnifyingglass", withConfiguration: config)!
         
-        let contactsTableView = UITableView()
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(
+              image: searchIcon,
+              style: .plain,
+              target: self,
+              action: #selector(search)
+        )
+        
+        searchController.obscuresBackgroundDuringPresentation = false
+        self.navigationItem.hidesSearchBarWhenScrolling = false
+
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.delegate = self
+        
         view.addSubview(contactsTableView)
         
         contactsTableView.translatesAutoresizingMaskIntoConstraints = false
@@ -21,6 +38,8 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         contactsTableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
         contactsTableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
         contactsTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
+        
+        contactsTableView.keyboardDismissMode = .onDrag
         
         contactsTableView.dataSource = self
         contactsTableView.delegate = self
@@ -32,7 +51,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         // viewDidLoad only seems to be called once. But I am wary of more than one of these being registered
         NowPlayingTracks.addTrackChangeObserver { _ in
             DispatchQueue.main.async {
-                contactsTableView.visibleCells.forEach { cell in
+                self.contactsTableView.visibleCells.forEach { cell in
                     let songViewCell = cell as! SongViewCell
                     songViewCell.checkIfPlaying()
                 }
@@ -40,20 +59,57 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         }
     }
     
+    func updateSearchResults(for searchController: UISearchController) {
+        let searchTerm = searchController.searchBar.text!.lowercased()
+        print("New search term")
+        print(searchTerm)
+        if (searchTerm.isEmpty) {
+            visibleTracks = tracks
+        } else {
+            visibleTracks = tracks.filter { $0.name.lowercased().contains(searchTerm) }
+        }
+        
+        contactsTableView.reloadData()
+    }
+
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        // When you mark a search bar as inactive the term is unhelpfully cleared out. Put it back
+        persistentSearchTerm = searchBar.text!
+        
+        searchController.isActive = false
+        searchBar.text = persistentSearchTerm
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchController.isActive = false
+        self.navigationItem.searchController = nil
+    }
+    
+    @objc func search(_ sender: Any) {
+        if (self.navigationItem.searchController == nil) {
+            self.navigationItem.searchController = searchController
+        } else {
+            self.navigationItem.searchController = nil
+        }
+        
+        let bar = self.navigationController?.navigationBar
+        bar!.sizeToFit()
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return tracks.count
+        return visibleTracks.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "songCell", for: indexPath) as! SongViewCell
-        let track = tracks[indexPath.row]
+        let track = visibleTracks[indexPath.row]
         
         cell.tableIndex = indexPath.row
         cell.track = track
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
         cell.addGestureRecognizer(tapGesture)
-        
+        	
         return cell
     }
     
@@ -66,11 +122,14 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         let cell = sender.view as! SongViewCell
         
         cell.animateSelectionColor()
-        NowPlayingTracks.setNowPlayingTracks(self.tracks, playFromIndex: cell.tableIndex)
+        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: cell.tableIndex)
+        
+        self.navigationItem.searchController?.isActive = false
     }
     
     init(_ title: String, _ tracks: Array<Track>) {
         self.tracks = tracks
+        self.visibleTracks = tracks
         
         super.init(nibName: nil, bundle: nil)
 

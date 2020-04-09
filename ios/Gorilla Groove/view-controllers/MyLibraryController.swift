@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 import CoreData
 
 class MyLibraryController: UITableViewController {
@@ -7,8 +8,13 @@ class MyLibraryController: UITableViewController {
     
     override func viewDidLoad() {
         print("Loaded my library")
+
         super.viewDidLoad()
+
         self.title = "My Library"
+        
+        try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        try! AVAudioSession.sharedInstance().setActive(true)
         
         let view = self.view as! UITableView
         
@@ -72,25 +78,30 @@ class MyLibraryController: UITableViewController {
         
         let optionIndex = self.tableView.indexPathForRow(at: tapLocation)![1]
         let viewType = options[optionIndex]
+        let viewText = "\(viewType)".toTitleCase()
         
         switch (viewType) {
         case .TITLE:
-            loadTitleView()
+            loadTitleView(viewText)
         case .ARTIST:
             loadArtistView()
         case .ALBUM:
             loadAlbumView()
         case .PLAY_COUNT:
-            loadTitleView("play_count", sortAscending: false)
+            loadTitleView(viewText, "play_count", sortAscending: false)
         case .DATE_ADDED:
-            loadTitleView("created_at", sortAscending: false)
+            loadTitleView(viewText, "created_at", sortAscending: false)
         }
     }
     
-    @objc private func loadTitleView(_ sortOverrideKey: String? = nil, sortAscending: Bool = true) {
+    @objc private func loadTitleView(
+        _ viewTitle: String,
+        _ sortOverrideKey: String? = nil,
+        sortAscending: Bool = true
+    ) {
         let tracks = trackState.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
 
-        let view = SongViewController("Title", tracks)
+        let view = SongViewController(viewTitle, tracks)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

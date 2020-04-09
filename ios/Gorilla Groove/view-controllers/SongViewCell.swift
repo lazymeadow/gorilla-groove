@@ -6,6 +6,7 @@ class SongViewCell: UITableViewCell {
     var track: Track? {
         didSet {
             guard let track = track else {return}
+            
             nameLabel.text = track.name.isEmpty ? " " : track.name
             artistLabel.text = track.artist.isEmpty ? " " : track.artist.uppercased()
             albumLabel.text = track.album.isEmpty ? " " : track.album

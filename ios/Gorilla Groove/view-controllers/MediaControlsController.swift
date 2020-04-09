@@ -147,7 +147,7 @@ class MediaControlsController: UIViewController {
         self.view.addSubview(content)
         self.view.backgroundColor = Colors.primary
         self.view.translatesAutoresizingMaskIntoConstraints = false
-        
+
         NSLayoutConstraint.activate([
             self.view.heightAnchor.constraint(equalToConstant: 90.0),
             
@@ -254,7 +254,10 @@ class MediaControlsController: UIViewController {
         wrapper.tintColor = .white
         
         wrapper.widthAnchor.constraint(equalTo: icon.widthAnchor, constant: 10).isActive = true
-        wrapper.heightAnchor.constraint(equalTo: icon.heightAnchor, constant: 10).isActive = true
+        
+        let heightConstraint = wrapper.heightAnchor.constraint(equalTo: icon.heightAnchor, constant: 10)
+        heightConstraint.priority = UILayoutPriority(1000) // FIXME This creates a constraint warning. Need to figure it out
+        heightConstraint.isActive = true
         
         return wrapper
     }
