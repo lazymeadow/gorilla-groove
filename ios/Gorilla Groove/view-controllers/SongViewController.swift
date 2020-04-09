@@ -11,6 +11,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
     var searchController = UISearchController()
     var persistentSearchTerm = ""
     var searchWasCanceled = false
+    var handlingSearchEnd = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,8 +62,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     func updateSearchResults(for searchController: UISearchController) {
         let searchTerm = searchController.searchBar.text!.lowercased()
-        print("New search term")
-        print(searchTerm)
+
         if (searchTerm.isEmpty) {
             visibleTracks = tracks
         } else {
@@ -73,10 +73,22 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
 
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        // This is triggered when isActive is set to false. We call this method manually sometimes, and set
+        // isActive to false at that time. This will cause a re-trigger that we want to ignore.
+        // Unfortunately we can't just listen for "searchController.isActive" because that is set false too late
+        if (handlingSearchEnd) {
+            return
+        }
+        
         // When you mark a search bar as inactive the term is unhelpfully cleared out. Put it back
         persistentSearchTerm = searchBar.text!
         
+        // We want to ignore the re-trigger that iOS does for ending the event when we mark it as inactive manually.
+        // Keep around a boolean so we know to ignore it.
+        handlingSearchEnd = true
         searchController.isActive = false
+        handlingSearchEnd = false
+        
         searchBar.text = persistentSearchTerm
     }
     
@@ -124,7 +136,9 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         cell.animateSelectionColor()
         NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: cell.tableIndex)
         
-        self.navigationItem.searchController?.isActive = false
+        if let search = self.navigationItem.searchController {
+            searchBarTextDidEndEditing(search.searchBar)
+        }
     }
     
     init(_ title: String, _ tracks: Array<Track>) {
