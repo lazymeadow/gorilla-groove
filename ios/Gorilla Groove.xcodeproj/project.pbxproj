@@ -24,6 +24,8 @@
 		A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */; };
 		E85966432423201100AA8727 /* ArtistViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966422423201100AA8727 /* ArtistViewController.swift */; };
 		E85966452423207B00AA8727 /* ArtistViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966442423207B00AA8727 /* ArtistViewCell.swift */; };
+		E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */; };
+		E85966492440021200AA8727 /* UIExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966482440021200AA8727 /* UIExtensions.swift */; };
 		E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF023F0C6150095450E /* AlbumViewController.swift */; };
 		E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */; };
 		E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */; };
@@ -69,6 +71,8 @@
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E85966422423201100AA8727 /* ArtistViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistViewController.swift; sourceTree = "<group>"; };
 		E85966442423207B00AA8727 /* ArtistViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistViewCell.swift; sourceTree = "<group>"; };
+		E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableSearchAugmenter.swift; sourceTree = "<group>"; };
+		E85966482440021200AA8727 /* UIExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIExtensions.swift; sourceTree = "<group>"; };
 		E8597AF023F0C6150095450E /* AlbumViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewController.swift; sourceTree = "<group>"; };
 		E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewCell.swift; sourceTree = "<group>"; };
 		E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaControlsController.swift; sourceTree = "<group>"; };
@@ -144,6 +148,7 @@
 				E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */,
 				E85966422423201100AA8727 /* ArtistViewController.swift */,
 				E85966442423207B00AA8727 /* ArtistViewCell.swift */,
+				E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -167,6 +172,7 @@
 		A89100EC23BD339D00D6EA2D /* Gorilla Groove */ = {
 			isa = PBXGroup;
 			children = (
+				E85966482440021200AA8727 /* UIExtensions.swift */,
 				A829AC2223CC2B510034AD69 /* view-controllers */,
 				A829AC2123CC2ABC0034AD69 /* storyboards */,
 				A829AC2023CC29B70034AD69 /* db */,
@@ -263,6 +269,7 @@
 				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
 				A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */,
 				E86AFF1023E7D63E005B84EB /* Playlist+CoreDataClass.swift in Sources */,
+				E85966492440021200AA8727 /* UIExtensions.swift in Sources */,
 				E86AFF1123E7D63E005B84EB /* Playlist+CoreDataProperties.swift in Sources */,
 				E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */,
 				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,
@@ -288,6 +295,7 @@
 				E85966452423207B00AA8727 /* ArtistViewCell.swift in Sources */,
 				E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */,
 				E86AFF1723E7D63E005B84EB /* Track+CoreDataProperties.swift in Sources */,
+				E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */,
 				E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */,
 				E86AFF1523E7D63E005B84EB /* PlaylistTrack+CoreDataProperties.swift in Sources */,
 				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
