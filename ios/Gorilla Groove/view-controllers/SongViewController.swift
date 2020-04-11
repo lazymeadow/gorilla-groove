@@ -6,12 +6,11 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
 
     var tracks: Array<Track> = []
     var visibleTracks: Array<Track> = []
-    
-    var contactsTableView = UITableView()
-    var searchWasCanceled = false
-    
+       
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let contactsTableView = UITableView()
 
         view.addSubview(contactsTableView)
         
@@ -42,7 +41,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         // viewDidLoad only seems to be called once. But I am wary of more than one of these being registered
         NowPlayingTracks.addTrackChangeObserver { _ in
             DispatchQueue.main.async {
-                self.contactsTableView.visibleCells.forEach { cell in
+                contactsTableView.visibleCells.forEach { cell in
                     let songViewCell = cell as! SongViewCell
                     songViewCell.checkIfPlaying()
                 }

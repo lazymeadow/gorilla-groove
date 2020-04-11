@@ -5,12 +5,15 @@ import AVKit
 
 class ArtistViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var artists: Array<String> = []
+    var visibleArtists: Array<String> = []
+    
     var trackState: TrackState? = nil
-    let artistTableView = UITableView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let artistTableView = UITableView()
+
         view.addSubview(artistTableView)
         
         artistTableView.translatesAutoresizingMaskIntoConstraints = false
@@ -23,17 +26,27 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         artistTableView.delegate = self
         artistTableView.register(ArtistViewCell.self, forCellReuseIdentifier: "artistCell")
         
+        TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: artistTableView) { input in
+            let searchTerm = input.lowercased()
+            print(searchTerm)
+            if (searchTerm.isEmpty) {
+                self.visibleArtists = self.artists
+            } else {
+                self.visibleArtists = self.artists.filter { $0.lowercased().contains(searchTerm) }
+            }
+        }
+        
         // Remove extra table rows when we don't have a full screen of songs
         artistTableView.tableFooterView = UIView(frame: .zero)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return artists.count
+        return visibleArtists.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "artistCell", for: indexPath) as! ArtistViewCell
-        let artist = artists[indexPath.row]
+        let artist = visibleArtists[indexPath.row]
         
         cell.artist = artist
         
@@ -68,6 +81,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     // When I don't do this, the tracks get garbage collected when you play a song and navigate away from this view
     init(_ title: String, _ artists: Array<String>, _ trackState: TrackState) {
         self.artists = artists
+        self.visibleArtists = artists
         self.trackState = trackState
         
         super.init(nibName: nil, bundle: nil)
