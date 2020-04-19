@@ -172,7 +172,7 @@ export default function YoutubeDlButton(props) {
 
 	const buttonClass = downloading ? 'display-none' : '';
 	const loaderClass = downloading ? '' : 'display-none';
-	const title = downloading ? '' : 'Download from YouTube';
+	const title = downloading ? '' : 'Import from YouTube';
 	const faIcon = props.iconOverride !== undefined ? props.iconOverride : 'fab fa-youtube';
 
 	const initialUrl = props.video !== undefined ? props.video.videoUrl : undefined;
