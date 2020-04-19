@@ -53,6 +53,7 @@ fun Image.writeToFile(destination: File, imageType: String) {
 	ImageIO.write(bufferedImage, imageType, destination)
 }
 
-inline fun <reified T> logger(): Logger {
+@Suppress("unused")
+inline fun <reified T> T.logger(): Logger {
 	return LoggerFactory.getLogger(T::class.java)
 }

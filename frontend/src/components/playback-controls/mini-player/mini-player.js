@@ -7,7 +7,11 @@ export default function MiniPlayer(props) {
 	const volumeSliderRef = useRef(null);
 
 	if (timeSliderRef.current !== null) {
-		timeSliderRef.current.value = props.timePlayed / props.trackData.length;
+		if (props.timePlayed === undefined || props.trackData.length === undefined) {
+			timeSliderRef.current.value = 0;
+		} else {
+			timeSliderRef.current.value = props.timePlayed / props.trackData.length;
+		}
 	}
 
 	if (volumeSliderRef.current !== null) {
@@ -17,6 +21,18 @@ export default function MiniPlayer(props) {
 	const shuffleClass = props.shuffling === undefined ? 'hidden' : '';
 	const repeatClass = props.shuffling === undefined ? 'hidden' : '';
 	const songChangeClass = props.onPlayNext === undefined ? 'hidden' : '';
+
+	const createNameElement = (name, link) => {
+		if (name === undefined) {
+			return null;
+		} else if (link === undefined) {
+			return <li>{name}</li>
+		} else {
+			return <li>
+				<a href={link} target="_blank">{name}</a>
+			</li>
+		}
+	};
 
 	return (
 		<div className="song-player mini-player">
@@ -32,11 +48,12 @@ export default function MiniPlayer(props) {
 				/>
 				<div className="song-information">
 					<ul>
-						<li>{props.trackData.name}</li>
+						{ createNameElement(props.trackData.name, props.nameLink)}
 						<li>{props.trackData.artist}</li>
 						<li>{props.trackData.album}</li>
 						<li>{props.trackData.releaseYear}</li>
 					</ul>
+					<div className="additional-item">{props.additionalItem}</div>
 				</div>
 			</div>
 

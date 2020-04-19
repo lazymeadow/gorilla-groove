@@ -15,6 +15,7 @@ import {PlaylistContext} from "../../services/playlist-provider";
 import {CenterView} from "../../enums/site-views";
 import RemotePlayManagement from "../remote-play/management/remote-play-management";
 import {DeviceContext} from "../../services/device-provider";
+import GlobalSearch from "../global-search/global-search";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
@@ -79,7 +80,7 @@ export default function SiteLayout(props) {
 							userTracks={musicContext.viewedTracks}
 							trackView={true}
 						/>
-						: <RemotePlayManagement/>
+						: centerView === CenterView.REMOTE_DEVICES ? <RemotePlayManagement/> : <GlobalSearch/>
 				}
 			</div>
 

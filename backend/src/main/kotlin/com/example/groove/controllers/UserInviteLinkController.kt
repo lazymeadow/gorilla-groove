@@ -38,6 +38,6 @@ class UserInviteLinkController(
 	data class UserInviteLinkResponse(val invitingUserName: String, val alreadyUsed: Boolean)
 
 	companion object {
-		val logger = logger<UserInviteLinkController>()
+		val logger = logger()
 	}
 }

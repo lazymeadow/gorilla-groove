@@ -110,7 +110,7 @@ class SyncableEntityService(
 	}
 
 	companion object {
-		val logger = logger<SyncableEntityService>()
+		val logger = logger()
 	}
 
 	// User entities have a lot of sensitive info in them built in as part of spring.

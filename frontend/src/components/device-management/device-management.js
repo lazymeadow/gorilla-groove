@@ -260,7 +260,7 @@ export default function DeviceManagement() {
 				isOpen={modalOpen}
 				closeFunction={closeFunction}
 			>
-				{ modalOpen ? <DeviceManagementModal closeFunction={closeFunction}/> : <div/> }
+				{ modalOpen ? <DeviceManagementModal closeFunction={closeFunction}/> : null }
 			</Modal>
 		</div>
 	)

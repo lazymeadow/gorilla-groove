@@ -111,6 +111,8 @@ export default function TrackSourceList(props) {
 		? 'selected' : '';
 	const deviceManagementSelected = props.centerView === CenterView.REMOTE_DEVICES
 		? 'selected' : '';
+	const globalSearchSelected = props.centerView === CenterView.GLOBAL_SEARCH
+		? 'selected' : '';
 
 	return (
 		<div id="view-source-list">
@@ -125,12 +127,21 @@ export default function TrackSourceList(props) {
 			</div>
 
 			<div
-				className={`remote-play ${deviceManagementSelected}`}
+				className={`secondary-option ${deviceManagementSelected}`}
 				onMouseDown={() => {
 					props.setCenterView(CenterView.REMOTE_DEVICES);
 				}}
 			>
 				<span>Remote Play</span>
+			</div>
+
+			<div
+				className={`secondary-option ${globalSearchSelected}`}
+				onMouseDown={() => {
+					props.setCenterView(CenterView.GLOBAL_SEARCH);
+				}}
+			>
+				<span>YouTube</span>
 			</div>
 
 			{dataSource.map((node, i) => {

@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {YoutubeDlButton} from "../youtube-dl/youtube-dl";
+import YoutubeDlButton from "../youtube-dl/youtube-dl";
 import SearchBar from "../search-bar/search-bar";
 import {UserContext} from "../../services/user-provider";
 import UserButton from "../user-button/user-button";

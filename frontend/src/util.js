@@ -166,3 +166,12 @@ export function omit(key, obj) {
 	const { [key]: _, ...rest } = obj;
 	return rest;
 }
+
+export function numberWithCommas(number) {
+	if (number < 10000) {
+		return number.toString();
+	}
+
+	// https://stackoverflow.com/a/2901298
+	return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}

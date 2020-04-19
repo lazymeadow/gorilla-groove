@@ -13,6 +13,17 @@ export function formatDate(dateString, includeTime) {
 	return dateResult + timeResult;
 }
 
+export function formatDateEnglish(dateString) {
+	if (!dateString) {
+		return '';
+	}
+
+	const date = new Date(dateString);
+	const month = date.toLocaleString('default', { month: 'long' });
+
+	return `${date.getDate()} ${month} ${date.getFullYear()}`;
+}
+
 export function formatTimeFromSeconds(lotsOfSeconds) {
 	lotsOfSeconds = parseInt(lotsOfSeconds);
 

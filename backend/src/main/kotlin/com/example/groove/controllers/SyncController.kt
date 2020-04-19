@@ -32,6 +32,6 @@ class SyncController(
 	}
 
 	companion object {
-		val logger = logger<SyncController>()
+		val logger = logger()
 	}
 }

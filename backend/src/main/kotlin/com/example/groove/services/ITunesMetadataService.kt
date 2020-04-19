@@ -2,6 +2,7 @@ package com.example.groove.services
 
 import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.util.createMapper
+import com.example.groove.util.logger
 import org.apache.http.client.utils.URIBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -187,6 +188,6 @@ class ITunesMetadataService(private val restTemplate: RestTemplate) {
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(ITunesMetadataService::class.java)!!
+		val logger = logger()
 	}
 }

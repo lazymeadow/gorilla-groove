@@ -3,36 +3,38 @@ import {MusicContext} from "../../services/music-provider";
 import {MusicFilterContext} from "../../services/music-filter-provider";
 
 export default function SearchBar() {
-	const [debounceTimeout, setDebounceTimeout] = useState(null);
-
-	const musicContext = useContext(MusicContext);
 	const musicFilterContext = useContext(MusicFilterContext);
+	const musicContext = useContext(MusicContext);
 
-	const handleKeyPress = event => {
+	const [debounceTimeout, setDebounceTimeout] = useState(null);
+	const [searchTerm, setSearchTerm] = useState(musicFilterContext.searchTerm);
+
+
+	const handleKeyPress = (newSearchTerm, event) => {
 		if (debounceTimeout) {
 			clearTimeout(debounceTimeout);
 		}
 
 		if (event === undefined) {
-			musicContext.reloadTracks();
+			musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
 		} else if (event.key === 'Enter') {
 			event.preventDefault();
 			event.stopPropagation();
-			musicContext.reloadTracks();
+			musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
 		}
 	};
 
-	const debouncedKeyPress = () => {
+	const debouncedKeyPress = newSearchTerm => {
 		if (debounceTimeout) {
 			clearTimeout(debounceTimeout);
 		}
-		const timeout = setTimeout(() => handleKeyPress(), 400);
+		const timeout = setTimeout(() => handleKeyPress(newSearchTerm), 400);
 		setDebounceTimeout(timeout);
 	};
 
 	const handleInputChange = event => {
-		musicFilterContext.setProviderState({ searchTerm: event.target.value });
-		debouncedKeyPress();
+		setSearchTerm(event.target.value);
+		debouncedKeyPress(event.target.value);
 	};
 
 	const handleHiddenChange = () => {
@@ -40,19 +42,23 @@ export default function SearchBar() {
 	};
 
 	const clearInput = () => {
+		setSearchTerm('');
 		musicFilterContext.setProviderState({ searchTerm: '' }, musicContext.reloadTracks);
 	};
 
 	return (
-		<div className="d-flex search" onKeyDown={e => e.nativeEvent.propagationStopped = true}>
+		<div
+			className="d-flex search"
+			onKeyDown={e => { e.nativeEvent.propagationStopped = true; handleKeyPress(e.target.value, e) }}
+		>
 			<div className="p-relative">
 				Search
 				<input
 					className="search-bar"
-					value={musicFilterContext.searchTerm}
+					value={searchTerm}
 					onChange={handleInputChange}
 				/>
-				{ musicFilterContext.searchTerm
+				{ searchTerm
 					? <i
 						className="fas fa-times-circle close-button"
 						onClick={clearInput}

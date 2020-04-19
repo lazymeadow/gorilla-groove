@@ -1,17 +1,28 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Api} from "../../api";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
 import {MusicContext} from "../../services/music-provider";
 
-export class YoutubeDlButton extends React.Component {
+export class YoutubeDlModal extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
 			modalOpen: false,
-			downloading: false,
 			cropArtToSquare: true
+		}
+	}
+
+	componentDidMount() {
+		if (this.props.initialUrl !== undefined) {
+			document.getElementById('song-url').value = this.props.initialUrl;
+		}
+		if (this.props.initialTitle !== undefined) {
+			document.getElementById('song-name').value = this.props.initialTitle;
+		}
+		if (this.props.initialYear !== undefined) {
+			document.getElementById('song-year').value = this.props.initialYear;
 		}
 	}
 
@@ -64,10 +75,8 @@ export class YoutubeDlButton extends React.Component {
 			params.featuring = featuring;
 		}
 
-		this.setState({
-			downloading: true,
-			modalOpen: false
-		});
+		this.props.setDownloading(true);
+		this.props.closeFunction();
 
 		Api.post('track/youtube-dl', params).then(track => {
 			this.context.addUploadToExistingLibraryView(track);
@@ -76,94 +85,124 @@ export class YoutubeDlButton extends React.Component {
 			console.error(error);
 			toast.error('The download from YouTube failed');
 		}).finally(() => {
-			this.setState({ downloading: false });
+			this.props.setDownloading(false);
 		});
 	}
 
 	render() {
-		const buttonClass = this.state.downloading ? 'display-none' : '';
-		const loaderClass = this.state.downloading ? '' : 'display-none';
-		const title = this.state.downloading ? '' : 'Download from YouTube';
-
 		return (
-			<div className="vertical-center" onClick={() => this.setModalOpen(true)}>
-				<div className="icon-container">
-					<i className={`${buttonClass} fab fa-youtube`} title={`${title}`}>
-						<Modal isOpen={this.state.modalOpen} closeFunction={() => this.setModalOpen(false)}>
-							<form className="form-modal" onSubmit={this.submitDownloadForm.bind(this)}>
-								<div className="flex-label">
-									<label htmlFor="song-url">URL</label>
-									<input id="song-url" name="song-url" type="text" required/>
-								</div>
-
-								<h4>Optional Metadata</h4>
-
-								<div className="flex-label">
-									<label htmlFor="song-name">Name</label>
-									<input id="song-name" name="song-name" type="text"/>
-								</div>
-
-								<div className="flex-label">
-									<label htmlFor="song-artist">Artist</label>
-									<input id="song-artist" name="song-artist" type="text"/>
-								</div>
-
-								<div className="flex-label">
-									<label htmlFor="song-featuring">Featuring</label>
-									<input id="song-featuring" name="song-featuring" type="text"/>
-								</div>
-
-								<div className="flex-label">
-									<label htmlFor="song-album">Album</label>
-									<input id="song-album" name="song-album" type="text"/>
-								</div>
-
-								<div className="flex-label">
-									<label htmlFor="song-year">Release Year</label>
-									<input id="song-year" name="song-year" type="text"/>
-								</div>
-
-								<div className="flex-label">
-									<label htmlFor="song-track-number">Track Number</label>
-									<input id="song-track-number" name="song-track-number" type="text"/>
-								</div>
-
-								<div className="flex-label">
-									<label htmlFor="song-genre">Genre</label>
-									<input id="song-genre" name="song-genre" type="text"/>
-								</div>
-
-								<hr/>
-								<div>
-									Crop Art to Square?
-									<input
-										id="crop-yes"
-										type="radio"
-										name="crop"
-										value="true"
-										checked={this.state.cropArtToSquare}
-										onChange={() => this.setState({ cropArtToSquare: true })}
-									/>
-									<label htmlFor="crop-yes">Yes</label>
-
-									<input
-										id="crop-no"
-										type="radio"
-										name="crop"
-										value="false"
-										checked={!this.state.cropArtToSquare}
-										onChange={() => this.setState({ cropArtToSquare: false })}
-									/>
-									<label htmlFor="crop-no">No</label>
-								</div>
-								<button>Download Song</button>
-							</form>
-						</Modal>
-					</i>
-					<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
+			<form className="form-modal" onSubmit={this.submitDownloadForm.bind(this)}>
+				<div className="flex-label">
+					<label htmlFor="song-url">URL</label>
+					<input id="song-url" name="song-url" type="text" required/>
 				</div>
-			</div>
+
+				<h4>Optional Metadata</h4>
+
+				<div className="flex-label">
+					<label htmlFor="song-name">Name</label>
+					<input id="song-name" name="song-name" type="text"/>
+				</div>
+
+				<div className="flex-label">
+					<label htmlFor="song-artist">Artist</label>
+					<input id="song-artist" name="song-artist" type="text"/>
+				</div>
+
+				<div className="flex-label">
+					<label htmlFor="song-featuring">Featuring</label>
+					<input id="song-featuring" name="song-featuring" type="text"/>
+				</div>
+
+				<div className="flex-label">
+					<label htmlFor="song-album">Album</label>
+					<input id="song-album" name="song-album" type="text"/>
+				</div>
+
+				<div className="flex-label">
+					<label htmlFor="song-year">Release Year</label>
+					<input id="song-year" name="song-year" type="text"/>
+				</div>
+
+				<div className="flex-label">
+					<label htmlFor="song-track-number">Track Number</label>
+					<input id="song-track-number" name="song-track-number" type="text"/>
+				</div>
+
+				<div className="flex-label">
+					<label htmlFor="song-genre">Genre</label>
+					<input id="song-genre" name="song-genre" type="text"/>
+				</div>
+
+				<hr/>
+				<div>
+					Crop Art to Square?
+					<input
+						id="crop-yes"
+						type="radio"
+						name="crop"
+						value="true"
+						checked={this.state.cropArtToSquare}
+						onChange={() => this.setState({ cropArtToSquare: true })}
+					/>
+					<label htmlFor="crop-yes">Yes</label>
+
+					<input
+						id="crop-no"
+						type="radio"
+						name="crop"
+						value="false"
+						checked={!this.state.cropArtToSquare}
+						onChange={() => this.setState({ cropArtToSquare: false })}
+					/>
+					<label htmlFor="crop-no">No</label>
+				</div>
+				<button>Download Song</button>
+			</form>
 		)
 	}
 }
-YoutubeDlButton.contextType = MusicContext;
+YoutubeDlModal.contextType = MusicContext;
+
+export default function YoutubeDlButton(props) {
+	const [modalOpen, setModalOpen] = useState(false);
+	const [downloading, setDownloading] = useState(false);
+
+	const closeFunction = () => setModalOpen(false);
+
+	const buttonClass = downloading ? 'display-none' : '';
+	const loaderClass = downloading ? '' : 'display-none';
+	const title = downloading ? '' : 'Download from YouTube';
+	const faIcon = props.iconOverride !== undefined ? props.iconOverride : 'fab fa-youtube';
+
+	const initialUrl = props.video !== undefined ? props.video.videoUrl : undefined;
+	const initialTitle = props.video !== undefined ? props.video.title : undefined;
+	const initialYear = props.video !== undefined ? (new Date(props.video.publishedAt)).getFullYear() : undefined;
+
+	return (
+		<div className="vertical-center youtube-download-button" onClick={() => setModalOpen(true)}>
+			<div className="icon-container">
+				<i className={`${buttonClass} ${faIcon}`} title={`${title}`}>
+					<Modal
+						isOpen={modalOpen}
+						closeFunction={closeFunction}
+						setDownloading={setDownloading}
+					>
+						{ modalOpen
+							? <YoutubeDlModal
+								closeFunction={closeFunction}
+								setDownloading={setDownloading}
+								initialUrl={initialUrl}
+								initialTitle={initialTitle}
+								initialYear={initialYear}
+							/>
+							: null
+						}
+					</Modal>
+				</i>
+
+				<img src="./images/ajax-loader.gif" className={`${loaderClass}`}/>
+			</div>
+		</div>
+	)
+}
