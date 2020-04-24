@@ -11,164 +11,175 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
+import java.util.*
 
 
 @Service
 class DeviceService(
-		private val deviceRepository: DeviceRepository,
-		private val userRepository: UserRepository,
-		private val trackHistoryRepository: TrackHistoryRepository
+        private val deviceRepository: DeviceRepository,
+        private val userRepository: UserRepository,
+        private val trackHistoryRepository: TrackHistoryRepository
 ) {
 
-	@Transactional(readOnly = true)
-	fun getDevices(user: User): List<Device> {
-		return deviceRepository.findByUser(user)
-	}
+    @Transactional(readOnly = true)
+    fun getDevices(user: User): List<Device> {
+        return deviceRepository.findByUser(user)
+    }
 
-	@Transactional(readOnly = true)
-	fun getDeviceById(deviceIdentifier: String): Device {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, loadLoggedInUser())
-				?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier")
-		return device.mergedDevice ?: device
-	}
+    @Transactional(readOnly = true)
+    fun getDeviceById(deviceIdentifier: String): Device {
+        val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, loadLoggedInUser())
+                ?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier")
+        return device.mergedDevice ?: device
+    }
 
-	@Transactional(readOnly = true)
-	fun getDeviceById(deviceId: Long): Device {
-		val device = deviceRepository.findById(deviceId).unwrap()
-				?: throw ResourceNotFoundException("No device found with id $deviceId")
+    @Transactional(readOnly = true)
+    fun getDeviceById(deviceId: Long): Device {
+        val device = deviceRepository.findById(deviceId).unwrap()
+                ?: throw ResourceNotFoundException("No device found with id $deviceId")
 
-		return device.mergedDevice ?: device
-	}
+        return device.mergedDevice ?: device
+    }
 
-	@Transactional
-	fun createOrUpdateDevice(
-			user: User,
-			deviceId: String,
-			deviceType: DeviceType,
-			version: String,
-			ipAddress: String?,
-			additionalData: String?
-	) {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user)
-				?: run {
-					logger.info("First time seeing device $deviceId for user ${user.name}")
-					Device(
-							user = user,
-							deviceId = deviceId,
-							deviceName = deviceId,
-							deviceType = deviceType,
-							applicationVersion = version,
-							lastIp = ipAddress ?: "0.0.0.0"
-					)
-				}
+//    TODO KILL ME WHEN 1.3
+	fun <T> List<T>.tempRandom(): T {
+        return this[Random().nextInt(this.size)]
+    }
 
-		// If this device has been merged, we need to update the version of the parent
-		val deviceToUpdate = device.mergedDevice ?: device
+    private fun setDefaultName(): String {
+        val list = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
+        return list.tempRandom()
+    }
 
-		deviceToUpdate.applicationVersion = version
-		deviceToUpdate.updatedAt = Timestamp(System.currentTimeMillis())
-		deviceToUpdate.additionalData = additionalData
-		ipAddress?.let { deviceToUpdate.lastIp = ipAddress }
+    @Transactional
+    fun createOrUpdateDevice(
+            user: User,
+            deviceId: String,
+            deviceType: DeviceType,
+            version: String,
+            ipAddress: String?,
+            additionalData: String?
+    ) {
+        val device = deviceRepository.findByDeviceIdAndUser(deviceId, user)
+                ?: run {
+                    logger.info("First time seeing device $deviceId for user ${user.name}")
+                    Device(
+                            user = user,
+                            deviceId = deviceId,
+                            deviceName = setDefaultName(),
+                            deviceType = deviceType,
+                            applicationVersion = version,
+                            lastIp = ipAddress ?: "0.0.0.0"
+                    )
+                }
 
-		deviceRepository.save(deviceToUpdate)
-	}
+        // If this device has been merged, we need to update the version of the parent
+        val deviceToUpdate = device.mergedDevice ?: device
 
-	private fun findActiveDevice(id: Long): Device {
-		val device = deviceRepository.findById(id).unwrap()
-		if (device == null || device.user.id != loadLoggedInUser().id) {
-			throw ResourceNotFoundException("No device found with ID $id")
-		}
+        deviceToUpdate.applicationVersion = version
+        deviceToUpdate.updatedAt = Timestamp(System.currentTimeMillis())
+        deviceToUpdate.additionalData = additionalData
+        ipAddress?.let { deviceToUpdate.lastIp = ipAddress }
 
-		return device
-	}
+        deviceRepository.save(deviceToUpdate)
+    }
 
-	@Transactional
-	fun updateDevice(id: Long, deviceName: String) {
-		val device = findActiveDevice(id)
+    private fun findActiveDevice(id: Long): Device {
+        val device = deviceRepository.findById(id).unwrap()
+        if (device == null || device.user.id != loadLoggedInUser().id) {
+            throw ResourceNotFoundException("No device found with ID $id")
+        }
 
-		device.deviceName = deviceName
-		deviceRepository.save(device)
-	}
+        return device
+    }
 
-	@Transactional
-	fun archiveDevice(id: Long, archived: Boolean) {
-		val device = findActiveDevice(id)
+    @Transactional
+    fun updateDevice(id: Long, deviceName: String) {
+        val device = findActiveDevice(id)
 
-		device.archived = archived
-		deviceRepository.save(device)
-	}
+        device.deviceName = deviceName
+        deviceRepository.save(device)
+    }
 
-	@Transactional
-	fun deleteDevice(id: Long) {
-		val device = findActiveDevice(id)
+    @Transactional
+    fun archiveDevice(id: Long, archived: Boolean) {
+        val device = findActiveDevice(id)
 
-		// Database handles nulling the references to this in TrackHistory
-		deviceRepository.delete(device)
-	}
+        device.archived = archived
+        deviceRepository.save(device)
+    }
 
-	@Transactional
-	fun mergeDevices(id: Long, targetId: Long) {
-		val user = loadLoggedInUser()
+    @Transactional
+    fun deleteDevice(id: Long) {
+        val device = findActiveDevice(id)
 
-		logger.info("Merging device $id into $targetId for user ${user.name}")
+        // Database handles nulling the references to this in TrackHistory
+        deviceRepository.delete(device)
+    }
 
-		val device = findActiveDevice(id)
-		val targetDevice = findActiveDevice(targetId)
+    @Transactional
+    fun mergeDevices(id: Long, targetId: Long) {
+        val user = loadLoggedInUser()
 
-		if (device.deviceType != targetDevice.deviceType) {
-			throw IllegalArgumentException("Cannot merge two devices that have a different device type!")
-		}
+        logger.info("Merging device $id into $targetId for user ${user.name}")
 
-		device.mergedDevice = targetDevice
-		deviceRepository.save(device)
+        val device = findActiveDevice(id)
+        val targetDevice = findActiveDevice(targetId)
 
-		// Update all our old references so that they point to just one device- the one we merged into
-		trackHistoryRepository.updateDevice(newDevice = targetDevice, oldDevice = device)
+        if (device.deviceType != targetDevice.deviceType) {
+            throw IllegalArgumentException("Cannot merge two devices that have a different device type!")
+        }
 
-		if (device.mergedDevices.isNotEmpty()) {
-			logger.info("Merging ${device.mergedDevices.size} additional device(s) into $targetId")
-			device.mergedDevices.forEach {
-				it.mergedDevice = targetDevice
-				deviceRepository.save(it)
-			}
-		}
-	}
+        device.mergedDevice = targetDevice
+        deviceRepository.save(device)
 
-	@Transactional
-	fun enableParty(deviceIdentifier: String, partyUntil: Timestamp, partyUserIds: Set<Long>): Device {
-		val currentDevice = getDeviceById(deviceIdentifier)
+        // Update all our old references so that they point to just one device- the one we merged into
+        trackHistoryRepository.updateDevice(newDevice = targetDevice, oldDevice = device)
 
-		currentDevice.partyEnabledUntil = partyUntil
-		currentDevice.partyUsers.removeAll { true }
-		partyUserIds.forEach { userId ->
-			val user = userRepository.findById(userId).unwrap()
-					?: throw ResourceNotFoundException("No user found with ID $userId!")
+        if (device.mergedDevices.isNotEmpty()) {
+            logger.info("Merging ${device.mergedDevices.size} additional device(s) into $targetId")
+            device.mergedDevices.forEach {
+                it.mergedDevice = targetDevice
+                deviceRepository.save(it)
+            }
+        }
+    }
 
-			require(currentDevice.user.id != userId) {
-				"Cannot add own user as a party user!"
-			}
+    @Transactional
+    fun enableParty(deviceIdentifier: String, partyUntil: Timestamp, partyUserIds: Set<Long>): Device {
+        val currentDevice = getDeviceById(deviceIdentifier)
 
-			currentDevice.partyUsers.add(user)
-		}
+        currentDevice.partyEnabledUntil = partyUntil
+        currentDevice.partyUsers.removeAll { true }
+        partyUserIds.forEach { userId ->
+            val user = userRepository.findById(userId).unwrap()
+                    ?: throw ResourceNotFoundException("No user found with ID $userId!")
 
-		deviceRepository.save(currentDevice)
+            require(currentDevice.user.id != userId) {
+                "Cannot add own user as a party user!"
+            }
 
-		return currentDevice
-	}
+            currentDevice.partyUsers.add(user)
+        }
 
-	@Transactional
-	fun disableParty(deviceIdentifier: String): Device {
-		val currentDevice = getDeviceById(deviceIdentifier)
+        deviceRepository.save(currentDevice)
 
-		currentDevice.partyEnabledUntil = null
-		currentDevice.partyUsers.removeAll { true }
+        return currentDevice
+    }
 
-		deviceRepository.save(currentDevice)
+    @Transactional
+    fun disableParty(deviceIdentifier: String): Device {
+        val currentDevice = getDeviceById(deviceIdentifier)
 
-		return currentDevice
-	}
+        currentDevice.partyEnabledUntil = null
+        currentDevice.partyUsers.removeAll { true }
 
-	companion object {
-		val logger = LoggerFactory.getLogger(DeviceService::class.java)!!
-	}
+        deviceRepository.save(currentDevice)
+
+        return currentDevice
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(DeviceService::class.java)!!
+    }
 }
