@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
+import java.util.*
 
 
 @Service
@@ -40,6 +41,16 @@ class DeviceService(
 		return device.mergedDevice ?: device
 	}
 
+	//    TODO KILL ME WHEN 1.3
+	fun <T> List<T>.tempRandom(): T {
+		return this[Random().nextInt(this.size)]
+	}
+
+	private fun setDefaultName(): String {
+		val list = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
+		return list.tempRandom()
+	}
+
 	@Transactional
 	fun createOrUpdateDevice(
 			user: User,
@@ -55,7 +66,7 @@ class DeviceService(
 					Device(
 							user = user,
 							deviceId = deviceId,
-							deviceName = deviceId,
+							deviceName = setDefaultName(),
 							deviceType = deviceType,
 							applicationVersion = version,
 							lastIp = ipAddress ?: "0.0.0.0"
