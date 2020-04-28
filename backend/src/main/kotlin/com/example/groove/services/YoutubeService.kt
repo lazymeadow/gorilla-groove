@@ -58,13 +58,13 @@ class YoutubeService(
 		// Slightly complicates finding the file after we save it, though
 		val track = songIngestionService.convertAndSaveTrackForUser(newSong, loadLoggedInUser(), url)
 		// If the uploader provided any metadata, add it to the track and save it again
-		youtubeDownloadDTO.name?.let { track.name = it }
-		youtubeDownloadDTO.artist?.let { track.artist = it }
-		youtubeDownloadDTO.featuring?.let { track.featuring = it }
-		youtubeDownloadDTO.album?.let { track.album = it }
+		youtubeDownloadDTO.name?.let { track.name = it.trim() }
+		youtubeDownloadDTO.artist?.let { track.artist = it.trim() }
+		youtubeDownloadDTO.featuring?.let { track.featuring = it.trim() }
+		youtubeDownloadDTO.album?.let { track.album = it.trim() }
 		youtubeDownloadDTO.releaseYear?.let { track.releaseYear = it }
 		youtubeDownloadDTO.trackNumber?.let { track.trackNumber = it }
-		youtubeDownloadDTO.genre?.let { track.genre = it }
+		youtubeDownloadDTO.genre?.let { track.genre = it.trim() }
 		trackRepository.save(track)
 
 		if (youtubeDownloadDTO.cropArtToSquare) {

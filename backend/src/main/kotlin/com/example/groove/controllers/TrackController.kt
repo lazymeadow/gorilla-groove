@@ -6,6 +6,7 @@ import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeService
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 
@@ -162,6 +163,6 @@ class TrackController(
 	)
 
 	companion object {
-		val logger = LoggerFactory.getLogger(TrackController::class.java)!!
+		val logger = logger()
 	}
 }

@@ -2,7 +2,6 @@ package com.example.groove.services
 
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
-import com.example.groove.properties.FileStorageProperties
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.datatype.Artwork
@@ -62,12 +61,12 @@ class FileMetadataService {
 		return Track(
 				user = user,
 				fileName = song.name,
-				name = audioFile.tag.getFirst(FieldKey.TITLE).ifEmpty(backupName),
-				artist = audioFile.tag.getFirst(FieldKey.ARTIST).ifEmpty(backupArtist),
-				album = audioFile.tag.getFirst(FieldKey.ALBUM),
+				name = audioFile.tag.getFirst(FieldKey.TITLE).ifEmpty(backupName).trim(),
+				artist = audioFile.tag.getFirst(FieldKey.ARTIST).ifEmpty(backupArtist).trim(),
+				album = audioFile.tag.getFirst(FieldKey.ALBUM).trim(),
 				trackNumber = parseTrackNumber(audioFile.tag.getFirst(FieldKey.TRACK)),
 				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
-				genre = audioFile.tag.getFirst(FieldKey.GENRE),
+				genre = audioFile.tag.getFirst(FieldKey.GENRE).trim(),
 				length = audioFile.audioHeader.trackLength,
 				bitRate = audioFile.audioHeader.bitRateAsNumber,
 				sampleRate = audioFile.audioHeader.sampleRateAsNumber

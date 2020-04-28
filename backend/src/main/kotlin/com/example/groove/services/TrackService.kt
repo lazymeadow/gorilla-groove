@@ -126,14 +126,14 @@ class TrackService(
 				throw IllegalArgumentException("No track found by ID $trackId!")
 			}
 
-			updateTrackDTO.name?.let { track.name = it }
-			updateTrackDTO.artist?.let { track.artist = it }
-			updateTrackDTO.featuring?.let { track.featuring = it }
-			updateTrackDTO.album?.let { track.album = it }
+			updateTrackDTO.name?.let { track.name = it.trim() }
+			updateTrackDTO.artist?.let { track.artist = it.trim() }
+			updateTrackDTO.featuring?.let { track.featuring = it.trim() }
+			updateTrackDTO.album?.let { track.album = it.trim() }
 			updateTrackDTO.releaseYear?.let { track.releaseYear = it }
 			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
-			updateTrackDTO.note?.let { track.note = it }
-			updateTrackDTO.genre?.let { track.genre = it }
+			updateTrackDTO.note?.let { track.note = it.trim() }
+			updateTrackDTO.genre?.let { track.genre = it.trim() }
 			updateTrackDTO.hidden?.let { track.hidden = it }
 			track.updatedAt = Timestamp(System.currentTimeMillis())
 
