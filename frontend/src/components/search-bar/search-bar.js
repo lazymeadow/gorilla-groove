@@ -10,25 +10,19 @@ export default function SearchBar() {
 	const [searchTerm, setSearchTerm] = useState(musicFilterContext.searchTerm);
 
 
-	const handleKeyPress = (newSearchTerm, event) => {
+	const updateSearchTerm = newSearchTerm => {
 		if (debounceTimeout) {
 			clearTimeout(debounceTimeout);
 		}
 
-		if (event === undefined) {
-			musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
-		} else if (event.key === 'Enter') {
-			event.preventDefault();
-			event.stopPropagation();
-			musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
-		}
+		musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
 	};
 
 	const debouncedKeyPress = newSearchTerm => {
 		if (debounceTimeout) {
 			clearTimeout(debounceTimeout);
 		}
-		const timeout = setTimeout(() => handleKeyPress(newSearchTerm), 400);
+		const timeout = setTimeout(() => updateSearchTerm(newSearchTerm), 400);
 		setDebounceTimeout(timeout);
 	};
 
@@ -46,11 +40,18 @@ export default function SearchBar() {
 		musicFilterContext.setProviderState({ searchTerm: '' }, musicContext.reloadTracks);
 	};
 
+	const handleKeyPress = event => {
+		event.nativeEvent.propagationStopped = true;
+
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			event.stopPropagation();
+			updateSearchTerm(event.target.value);
+		}
+	};
+
 	return (
-		<div
-			className="d-flex search"
-			onKeyDown={e => { e.nativeEvent.propagationStopped = true; handleKeyPress(e.target.value, e) }}
-		>
+		<div className="d-flex search" onKeyDown={handleKeyPress}>
 			<div className="p-relative">
 				Search
 				<input
