@@ -34,6 +34,16 @@ export default function MiniPlayer(props) {
 		}
 	};
 
+	const getPlayButtonClasses = () => {
+		if (props.buffering) {
+			return 'circle-notch animation-spin'
+		} else if (props.playing) {
+			return 'pause';
+		} else {
+			return 'play';
+		}
+	};
+
 	return (
 		<div className="song-player mini-player">
 			{ props.title !== undefined
@@ -65,7 +75,7 @@ export default function MiniPlayer(props) {
 					/>
 					<i
 						onMouseDown={props.onPauseChange}
-						className={`fas fa-${props.playing ? 'pause' : 'play'}`}
+						className={`fas fa-${getPlayButtonClasses()}`}
 					/>
 					<i
 						onMouseDown={props.onPlayNext}

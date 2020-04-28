@@ -4,14 +4,17 @@ import {Api} from "../../api";
 import {MusicFilterContext} from "../../services/music-filter-provider";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {toast} from "react-toastify";
+import {PlaybackContext} from "../../services/playback-provider";
 
 export default function GlobalSearch() {
 	const [videos, setVideos] = useState([]);
+	const [playingId, setPlayingId] = useState(null);
 	const [apiInitialized, setApiInitialized] = useState(!!window.YT);
 	const [loading, setLoading] = useState(false);
 	const [errorEncountered, setErrorEncountered] = useState(false);
 
 	const musicFilterContext = useContext(MusicFilterContext);
+	const playbackContext = useContext(PlaybackContext);
 
 	const initializeYoutubeApi = () => {
 		const tag = document.createElement('script');
@@ -58,13 +61,35 @@ export default function GlobalSearch() {
 		return null;
 	};
 
+	const setPlayingStatus = (videoId, nowPlaying) => {
+		// Handle pausing the "main" song player. Start playing the YT video after it finishes to avoid race conditions
+		if (nowPlaying && playbackContext.isPlaying) {
+			playbackContext.setProviderState(
+				{ isPlaying: false },
+				() => setPlayingId(videoId)
+			);
+		} else {
+			setPlayingId(nowPlaying ? videoId : null);
+		}
+	};
+
+	// Handle the "main" song player being started with a YT video playing
+	if (playbackContext.isPlaying && playingId !== null) {
+		setPlayingId(null);
+	}
+
 	return <div id="global-search d-relative">
 		<LoadingSpinner visible={loading || (videos.length && !apiInitialized)}/>
 		{ getDisplayedText() }
 		<div id="global-search-container">
 			{
 				apiInitialized
-					? videos.map(video => <YoutubePlayer key={video.id} video={video}/>)
+					? videos.map(video => <YoutubePlayer
+						key={video.id}
+						video={video}
+						isPlaying={video.id === playingId}
+						setPlayingStatus={setPlayingStatus}
+					/>)
 					: null
 			}
 		</div>
