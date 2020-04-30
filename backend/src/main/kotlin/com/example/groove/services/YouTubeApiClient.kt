@@ -47,7 +47,14 @@ class YoutubeApiClient(
 	private fun searchYoutube(searchTerm: String): List<String> {
 		val url = "$SEARCH_API_URL&q=$searchTerm".withApiKey()
 
-		val rawResponse = restTemplate.getForObject(url, String::class.java)!!
+		val rawResponse = try {
+			restTemplate.getForObject(url, String::class.java)!!
+		} catch (e: Exception) {
+			logger.error("Failed to search YouTube with URL: $url")
+
+			throw e
+		}
+
 		val parsedResponse: RawYoutubeSearchResponse = try {
 			objectMapper.readValue(rawResponse, RawYoutubeSearchResponse::class.java)
 		} catch (e: Exception) {
@@ -67,7 +74,14 @@ class YoutubeApiClient(
 		val idString = videoIds.joinToString(",")
 		val url = "$LIST_VIDEOS_URL&id=$idString".withApiKey()
 
-		val rawResponse = restTemplate.getForObject(url, String::class.java)!!
+		val rawResponse = try {
+			restTemplate.getForObject(url, String::class.java)!!
+		} catch (e: Exception) {
+			logger.error("Failed to get YouTube video information with URL: $url")
+
+			throw e
+		}
+
 		val parsedResponse = try {
 			objectMapper.readValue(rawResponse, RawYoutubeVideoInfoResponse::class.java)
 		} catch (e: Exception) {
