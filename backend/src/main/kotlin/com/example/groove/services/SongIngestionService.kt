@@ -7,10 +7,7 @@ import com.example.groove.db.model.Track
 import com.example.groove.exception.FileStorageException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
-import com.example.groove.util.loadLoggedInUser
-import com.example.groove.util.unwrap
-import com.example.groove.util.withNewExtension
-import com.example.groove.util.withoutExtension
+import com.example.groove.util.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -248,7 +245,7 @@ class SongIngestionService(
 		val songFile = fileStorageService.loadSong(track, AudioFormat.OGG)
 		val songArtist = if (track.artist.isBlank()) "Unknown" else track.artist
 		val songName = if (track.name.isBlank()) "Unknown" else track.name
-		val newName = "$songArtist - $songName.ogg"
+		val newName = "$songArtist - $songName.ogg".withoutReservedFileSystemCharacters()
 
 		val artworkFile = fileStorageService.loadAlbumArt(trackId)
 

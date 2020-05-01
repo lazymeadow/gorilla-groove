@@ -47,6 +47,12 @@ fun String.withoutExtension(): String {
 			.joinToString(".")
 }
 
+// Windows is the worst offending OS, so this is just the list of characters that Windows won't let you put in a file name
+val sensitiveCharacters = setOf('/', '\\', '<', '>', ':', '"', '|', '?', '*')
+fun String.withoutReservedFileSystemCharacters(): String {
+	return this.filter { !sensitiveCharacters.contains(it) }
+}
+
 fun Image.writeToFile(destination: File, imageType: String) {
 	val bufferedImage = BufferedImage(this.getWidth(null), this.getHeight(null), BufferedImage.TYPE_INT_RGB)
 	bufferedImage.graphics.drawImage(this, 0, 0, null)
