@@ -14,7 +14,7 @@ import java.util.*
 
 
 @Service
-class YoutubeService(
+class YoutubeDownloadService(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageProperties: FileStorageProperties,
 		private val trackRepository: TrackRepository,
@@ -38,6 +38,7 @@ class YoutubeService(
 				"vorbis",
 				"-o",
 				"$destination.ogg",
+				"--no-cache-dir", // Ran into issues with YT giving us 403s unless we cleared cache often, so just ignore cache
 				"--write-thumbnail" // Seems to plop things out as .pngs in my testing. May need to convert it if not always PNGs
 		)
 		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
@@ -82,7 +83,7 @@ class YoutubeService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(YoutubeService::class.java)!!
+		val logger = LoggerFactory.getLogger(YoutubeDownloadService::class.java)!!
 	}
 }
 
