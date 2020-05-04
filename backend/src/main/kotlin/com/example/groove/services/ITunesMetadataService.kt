@@ -4,7 +4,6 @@ import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.util.createMapper
 import com.example.groove.util.logger
 import org.apache.http.client.utils.URIBuilder
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.awt.Image

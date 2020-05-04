@@ -4,6 +4,7 @@ import com.example.groove.properties.YouTubeApiProperties
 import com.example.groove.util.createMapper
 import com.example.groove.util.logger
 import com.fasterxml.jackson.annotation.JsonValue
+import org.apache.http.client.utils.URIBuilder
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.sql.Timestamp
@@ -17,35 +18,50 @@ class YoutubeApiClient(
 
 	private val objectMapper = createMapper()
 
-	fun findVideos(searchTerm: String): YoutubeApiResponse {
+	fun findVideos(searchTerm: String? = null, channelId: String? = null): YoutubeApiResponse {
 		// YouTube doesn't return all the necessary data in its 'search' response. So we search and collect the IDS,
 		// then do a follow-up request with those IDs to get all the data we care about, while preserving video order.
-		val videoIds = searchYoutube(searchTerm)
+		val videoIds = searchYoutube(searchTerm, channelId)
 		val videoInfo = getVideoInformation(videoIds)
 
-		return YoutubeApiResponse(
-				videos = videoInfo.filter {
-					it.snippet.liveBroadcastContent == LiveBroadcastContent.NONE
-				}.map { YoutubeVideo(
-						title = it.snippet.title,
-						description = it.snippet.description,
-						channelTitle = it.snippet.channelTitle,
-						thumbnails = it.snippet.thumbnails,
-						publishedAt = it.snippet.publishedAt,
-						duration = it.contentDetails.duration.decodeIso8601(),
-						viewCount = it.statistics.viewCount,
-						likes = it.statistics.likeCount,
-						dislikes = it.statistics.dislikeCount,
-						videoUrl = VIDEO_URL + it.id,
-						embedUrl = EMBED_URL + it.id,
-						id = it.id
-				) }.take(6) // Take only the top 6. The extras we query for are used for providing better results
-		)
+		val videos = videoInfo.filter {
+			it.snippet.liveBroadcastContent == LiveBroadcastContent.NONE
+		}.map { YoutubeVideo(
+				title = it.snippet.title,
+				description = it.snippet.description,
+				channelTitle = it.snippet.channelTitle,
+				thumbnails = it.snippet.thumbnails,
+				publishedAt = it.snippet.publishedAt,
+				duration = it.contentDetails.duration.decodeIso8601(),
+				viewCount = it.statistics.viewCount,
+				likes = it.statistics.likeCount,
+				dislikes = it.statistics.dislikeCount,
+				videoUrl = VIDEO_URL + it.id,
+				embedUrl = EMBED_URL + it.id,
+				id = it.id
+		) }.take(6) // Take only the top 6. The extras we query for are used for providing better results
+
+		// If we have a search term, then we are searching using relevance. We will be doing additional stuff
+		// on our end later to improve relevance for music, so only take the top 6 for now
+		return if (searchTerm != null) {
+			YoutubeApiResponse(videos.take(6))
+		} else {
+			YoutubeApiResponse(videos)
+		}
 	}
 
 	// Return a list instead of a set, because the order we get them in is Youtube's relevance
-	private fun searchYoutube(searchTerm: String): List<String> {
-		val url = "$SEARCH_API_URL&q=$searchTerm".withApiKey()
+	private fun searchYoutube(searchTerm: String? = null, channelId: String? = null): List<String> {
+		val url = createSearchUrl(
+				"search",
+				searchTerm,
+				channelId,
+				mapOf(
+						"part" to "id",
+						"type" to "video",
+						"order" to if (searchTerm != null) "relevance" else "date"
+				)
+		)
 
 		val rawResponse = try {
 			restTemplate.getForObject(url, String::class.java)!!
@@ -72,7 +88,12 @@ class YoutubeApiClient(
 		}
 
 		val idString = videoIds.joinToString(",")
-		val url = "$LIST_VIDEOS_URL&id=$idString".withApiKey()
+		val url = createSearchUrl(
+				"videos",
+				null,
+				null,
+				mapOf("id" to idString, "part" to "snippet,contentDetails,statistics")
+		)
 
 		val rawResponse = try {
 			restTemplate.getForObject(url, String::class.java)!!
@@ -93,14 +114,32 @@ class YoutubeApiClient(
 		return parsedResponse.items
 	}
 
+	private fun createSearchUrl(
+			route: String,
+			searchTerm: String? = null,
+			channelId: String? = null,
+			additionalParams: Map<String, String> = emptyMap()
+	): String {
+		val builder = URIBuilder()
+				.setScheme("https")
+				.setHost("www.googleapis.com")
+				.setPath("youtube/v3/$route")
+				.addParameter("maxResults", "10")
+				.addParameter("key", youTubeApiProperties.youtubeApiKey)
+
+		searchTerm?.let { builder.addParameter("searchTerm", searchTerm) }
+		channelId?.let { builder.addParameter("channelId", channelId) }
+
+		additionalParams.forEach { (key, value) -> builder.addParameter(key, value) }
+
+		// For whatever reason the URL encoded commas that the URIBuilder produces makes Google mad...
+		return builder.toString().replace("%2C", ",")
+	}
+
 	// Comes back in ISO 8601 format, which looks something like "PT1H38M7S"
 	fun String.decodeIso8601(): Long {
 		val duration = Duration.parse(this)
 		return duration.seconds
-	}
-
-	fun String.withApiKey(): String {
-		return this + "&key=${youTubeApiProperties.youtubeApiKey}"
 	}
 
 	data class YoutubeApiResponse(
@@ -185,11 +224,6 @@ class YoutubeApiClient(
 	)
 
 	companion object {
-		private const val API_BASE = "https://www.googleapis.com/youtube/v3/"
-
-		const val SEARCH_API_URL = "${API_BASE}search?part=id&type=video&maxResults=10"
-		const val LIST_VIDEOS_URL = "${API_BASE}videos?part=snippet,contentDetails,statistics&maxResults=10"
-
 		const val VIDEO_URL = "https://www.youtube.com/watch?v="
 		const val EMBED_URL = "https://www.youtube.com/embed/"
 

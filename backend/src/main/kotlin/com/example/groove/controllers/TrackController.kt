@@ -112,7 +112,7 @@ class TrackController(
 			throw IllegalArgumentException("Playlist downloads are not allowed")
 		}
 
-		return youTubeDownloadService.downloadSong(youTubeDownloadDTO)
+		return youTubeDownloadService.downloadSong(loadLoggedInUser(), youTubeDownloadDTO)
 	}
 
 	@PostMapping("/trim")

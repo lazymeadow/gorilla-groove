@@ -39,7 +39,11 @@ data class User(
 
 		@JsonIgnore
 		@ManyToMany(mappedBy = "partyUsers")
-		var partyDevices: MutableList<Device> = mutableListOf()
+		var partyDevices: MutableList<Device> = mutableListOf(),
+
+		@JsonIgnore
+		@ManyToMany(mappedBy = "subscribedUsers")
+		var reviewSources: MutableList<ReviewSource> = mutableListOf()
 
 ) : UserDetails {
 	override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
