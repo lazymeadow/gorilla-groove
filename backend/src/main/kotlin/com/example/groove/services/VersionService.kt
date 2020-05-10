@@ -3,7 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.*
 import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.DeviceType
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.data.domain.PageRequest
 
 import org.springframework.stereotype.Service
@@ -30,6 +30,6 @@ class VersionService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(VersionService::class.java)!!
+		val logger = logger()
 	}
 }

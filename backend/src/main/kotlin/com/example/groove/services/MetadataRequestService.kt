@@ -6,7 +6,6 @@ import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.*
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.awt.Image
@@ -108,6 +107,6 @@ class MetadataRequestService(
 	}
 
 	companion object {
-		private val logger = LoggerFactory.getLogger(MetadataRequestService::class.java)!!
+		private val logger = logger()
 	}
 }

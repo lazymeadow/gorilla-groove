@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.CrudRepository
 import java.awt.Image
 import java.util.*
 import javax.imageio.ImageIO
@@ -16,6 +17,11 @@ import java.io.File
 // Kotlin has its own, better way of handling nullable values
 // Here we extend Java's Optional type to return a Kotlin nullable type so it is easier to work with
 fun <T> Optional<T>.unwrap(): T? = orElse(null)
+
+// Screw the previous solution above this. Just add an extension function directly to CrudRepository.
+fun<T> CrudRepository<T, Long>.get(id: Long): T? {
+	return this.findById(id).unwrap()
+}
 
 fun createMapper(): ObjectMapper = ObjectMapper()
 		.registerKotlinModule()

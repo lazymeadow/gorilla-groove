@@ -15,6 +15,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			FROM Track t
 			WHERE t.user.id = :userId
 			AND t.deleted = FALSE
+			AND t.inReview = FALSE
 			AND (t.hidden IS FALSE OR :loadHidden IS TRUE)
 			AND (:loadPrivate IS TRUE OR t.private = FALSE)
 			AND (:name IS NULL OR t.name LIKE %:name%)
@@ -36,6 +37,18 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("loadPrivate") loadPrivate: Boolean = false,
 			@Param("loadHidden") loadHidden: Boolean = false,
 			@Param("searchTerm") searchTerm: String? = null,
+			pageable: Pageable = Pageable.unpaged()
+	): Page<Track>
+
+	@Query("""
+			SELECT t
+			FROM Track t
+			WHERE t.user.id = :userId
+			AND t.inReview = TRUE
+			ORDER BY t.lastReviewed ASC
+		""")
+	fun getTracksInReview(
+			@Param("userId") userId: Long,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
 
@@ -68,6 +81,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			WHERE t.createdAt > :timestamp
 			AND t.private = FALSE
 			AND t.deleted = FALSE
+			AND t.inReview = FALSE
 			""")
 	fun countAllTracksAddedSinceTimestamp(
 			@Param("timestamp") timestamp: Timestamp
@@ -80,6 +94,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			AND t.updatedAt < :maximum
 			AND t.user.id = :userId
 			AND (t.deleted = FALSE OR t.createdAt < :minimum)
+			AND t.inReview = FALSE
 			ORDER BY t.id
 			""")
 	// Filter out things that were created AND deleted in the same time frame

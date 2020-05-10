@@ -7,7 +7,7 @@ import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.io.FileInputStream
@@ -119,7 +119,7 @@ class FileController(
 	}
 
     companion object {
-        private val logger = LoggerFactory.getLogger(FileController::class.java)
+        private val logger = logger()
     }
 
 	data class TrackLinks(

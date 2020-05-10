@@ -1,7 +1,7 @@
 package com.example.groove.security
 
 import com.example.groove.properties.S3Properties
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -35,7 +35,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class SecurityConfiguration(
 		private val tokenAuthenticationProvider: TokenAuthenticationProvider,
 		private val dataSource: DataSource,
-		private val s3Properties: S3Properties
+		s3Properties: S3Properties
 ) : WebSecurityConfigurerAdapter() {
 
 	private val publicUrls = OrRequestMatcher(
@@ -139,7 +139,7 @@ class SecurityConfiguration(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(SecurityConfiguration::class.java)!!
+		val logger = logger()
 
 		val allowedOrigins = arrayOf(
 				"http://127.0.0.1:8081",

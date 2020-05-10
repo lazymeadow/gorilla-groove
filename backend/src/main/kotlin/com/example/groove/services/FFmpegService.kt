@@ -3,12 +3,12 @@ package com.example.groove.services
 import com.example.groove.properties.FFmpegProperties
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.logger
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
 import org.springframework.stereotype.Component
 import net.bramp.ffmpeg.FFmpegExecutor
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -88,6 +88,6 @@ class FFmpegService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(FFmpegService::class.java)!!
+		val logger = logger()
 	}
 }

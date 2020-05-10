@@ -6,7 +6,7 @@ import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
@@ -83,7 +83,7 @@ class YoutubeDownloadService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(YoutubeDownloadService::class.java)!!
+		val logger = logger()
 	}
 }
 

@@ -6,11 +6,8 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "review_source_youtube_channel")
+@PrimaryKeyJoinColumn(name = "review_source_id")
 data class ReviewSourceYoutubeChannel(
-		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		val id: Long = 0,
-
 		@Column(name = "channel_id")
 		val channelId: String,
 
@@ -19,4 +16,4 @@ data class ReviewSourceYoutubeChannel(
 
 		@Column(name = "last_searched")
 		var lastSearched: Timestamp = now()
-) : ReviewSourceImplementation
+) : ReviewSource()

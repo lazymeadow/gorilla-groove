@@ -1,7 +1,7 @@
 package com.example.groove.services
 
 import com.example.groove.properties.FileStorageProperties
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.stereotype.Service
 import java.awt.image.BufferedImage
 import java.io.File
@@ -48,6 +48,6 @@ class ImageService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(ImageService::class.java)!!
+		val logger = logger()
 	}
 }

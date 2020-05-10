@@ -1,7 +1,7 @@
 package com.example.groove.db.model
 
+import com.example.groove.util.DateUtils.now
 import java.sql.Timestamp
-import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -20,5 +20,5 @@ data class UserToken(
 		val token: String = "",
 
 		@Column(name = "created_at", nullable = false)
-		val createdAt: Timestamp = Timestamp(Date().time)
+		val createdAt: Timestamp = now()
 )

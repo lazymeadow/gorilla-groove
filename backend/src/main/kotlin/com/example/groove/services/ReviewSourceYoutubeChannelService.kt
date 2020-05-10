@@ -1,12 +1,9 @@
 package com.example.groove.services
 
-import com.example.groove.db.dao.ReviewSourceRepository
 import com.example.groove.db.dao.ReviewSourceYoutubeChannelRepository
 import com.example.groove.db.dao.TrackRepository
-import com.example.groove.db.dao.TrackReviewInfoRepository
 import com.example.groove.db.model.ReviewSource
 import com.example.groove.db.model.Track
-import com.example.groove.db.model.TrackReviewInfo
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.logger
@@ -18,10 +15,9 @@ import org.springframework.transaction.annotation.Transactional
 class ReviewSourceYoutubeChannelService(
 		private val youtubeApiClient: YoutubeApiClient,
 		private val reviewSourceYoutubeChannelRepository: ReviewSourceYoutubeChannelRepository,
-		private val reviewSourceRepository: ReviewSourceRepository,
 		private val youtubeDownloadService: YoutubeDownloadService,
-		private val trackRepository: TrackRepository,
-		private val trackReviewInfoRepository: TrackReviewInfoRepository
+		private val trackService: TrackService,
+		private val trackRepository: TrackRepository
 ) {
 	@Scheduled(cron = "0 0 8 * * *") // 8 AM every day (UTC)
 	@Transactional
@@ -32,13 +28,10 @@ class ReviewSourceYoutubeChannelService(
 
 		allSources.forEach { source ->
 			logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
-			val reviewSource = reviewSourceRepository.findByReviewSourceImplementationId(source.id)
-					?: throw IllegalStateException("No review source found for Youtube source ID: ${source.id}!")
-
-			val users = reviewSource.subscribedUsers
+			val users = source.subscribedUsers
 
 			if (users.isEmpty()) {
-				logger.error("No users were set up for review source with ID: ${reviewSource.id}! It should be deleted!")
+				logger.error("No users were set up for review source with ID: ${source.id}! It should be deleted!")
 				return@forEach
 			}
 
@@ -62,7 +55,9 @@ class ReviewSourceYoutubeChannelService(
 						cropArtToSquare = true
 				)
 				val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
-				track.saveReviewInfo(reviewSource)
+				track.reviewSource = source
+				track.lastReviewed = now()
+				trackRepository.save(track)
 
 				// The YT download service will save the Track for the user that downloads it.
 				// So for every other user just copy that DB entity and give it the user. It will
@@ -70,9 +65,7 @@ class ReviewSourceYoutubeChannelService(
 				// right now so that will need to be copied!
 				// TODO album art copying
 				otherUsers.forEach { otherUser ->
-					val otherUserTrack = track.copy(id = 0, user = otherUser)
-					trackRepository.save(otherUserTrack)
-					otherUserTrack.saveReviewInfo(reviewSource)
+					trackService.saveTrackForUserReview(otherUser, track, source)
 				}
 			}
 
@@ -81,13 +74,6 @@ class ReviewSourceYoutubeChannelService(
 		}
 
 		logger.info("Review Source Youtube Channel Downloader complete")
-	}
-
-	private fun Track.saveReviewInfo(reviewSource: ReviewSource) {
-		TrackReviewInfo(
-				reviewSource = reviewSource,
-				track = this
-		).also { trackReviewInfoRepository.save(it) }
 	}
 
 	companion object {

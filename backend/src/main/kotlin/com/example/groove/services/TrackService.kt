@@ -3,16 +3,14 @@ package com.example.groove.services
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackRepository
-import com.example.groove.db.model.Track
-import com.example.groove.db.model.TrackHistory
-import com.example.groove.db.model.User
+import com.example.groove.db.model.*
 import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.enums.AudioFormat
-import com.example.groove.util.DateUtils
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.example.groove.util.unwrap
-import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -98,8 +96,8 @@ class TrackService(
 		// May want to do some sanity checks / server side validation here to prevent this incrementing too often.
 		// We know the last played date of a track and can see if it's even possible to have listened to this song
 		track.playCount++
-		track.lastPlayed = Timestamp(System.currentTimeMillis())
-		track.updatedAt = Timestamp(System.currentTimeMillis())
+		track.lastPlayed = now()
+		track.updatedAt = now()
 
 		val device = deviceId?.let { id ->
 			val savedDevice = deviceRepository.findByDeviceIdAndUser(id, user)
@@ -135,7 +133,7 @@ class TrackService(
 			updateTrackDTO.note?.let { track.note = it.trim() }
 			updateTrackDTO.genre?.let { track.genre = it.trim() }
 			updateTrackDTO.hidden?.let { track.hidden = it }
-			track.updatedAt = Timestamp(System.currentTimeMillis())
+			track.updatedAt = now()
 
 			if (albumArt != null) {
 				songIngestionService.storeAlbumArtForTrack(albumArt, track, updateTrackDTO.cropArtToSquare)
@@ -180,7 +178,7 @@ class TrackService(
 
 		tracks.forEach { track ->
 			track.deleted = true
-			track.updatedAt = Timestamp(System.currentTimeMillis())
+			track.updatedAt = now()
 			trackRepository.save(track)
 
 			deleteFileIfUnused(track.fileName)
@@ -212,7 +210,7 @@ class TrackService(
 		}
 
 		return tracksToImport.map { track ->
-			val now = DateUtils.now()
+			val now = now()
 			val forkedTrack = track!!.copy(
 					id = 0,
 					user = user,
@@ -260,13 +258,26 @@ class TrackService(
 		val newLength = songIngestionService.trimSong(track, startTime, duration)
 
 		track.length = newLength
-		track.updatedAt = Timestamp(System.currentTimeMillis())
+		track.updatedAt = now()
 		trackRepository.save(track)
 
 		return newLength
 	}
 
+	// This track is being given to someone for review. Copy the track with the target user as
+	// the new owner. Save it, and the track review info
+	fun saveTrackForUserReview(user: User, track: Track, reviewSource: ReviewSource) {
+		track.copy(
+				id = 0,
+				user = user,
+				reviewSource = reviewSource,
+				lastReviewed = now(),
+				inReview = true,
+				createdAt = now()
+		).also { trackRepository.save(it) }
+	}
+
 	companion object {
-		val logger = LoggerFactory.getLogger(TrackService::class.java)!!
+		val logger = logger()
 	}
 }
