@@ -128,7 +128,7 @@ class YoutubeApiClient(
 				.addParameter("maxResults", "10")
 				.addParameter("key", youTubeApiProperties.youtubeApiKey)
 
-		searchTerm?.let { builder.addParameter("searchTerm", searchTerm) }
+		searchTerm?.let { builder.addParameter("q", searchTerm) }
 		channelId?.let { builder.addParameter("channelId", channelId) }
 
 		additionalParams.forEach { (key, value) -> builder.addParameter(key, value) }
