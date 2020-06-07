@@ -32,3 +32,10 @@ val sensitiveCharacters = setOf('/', '\\', '<', '>', ':', '"', '|', '?', '*')
 fun String.withoutReservedFileSystemCharacters(): String {
 	return this.filter { !sensitiveCharacters.contains(it) }
 }
+
+fun String.urlDecode(): String {
+	return this
+			.replace("%2C", ",")
+			.replace("%3A", ":")
+}
+

@@ -1,10 +1,7 @@
 package com.example.groove.services
 
 import com.example.groove.dto.MetadataResponseDTO
-import com.example.groove.util.createMapper
-import com.example.groove.util.logger
-import com.example.groove.util.toHeaders
-import com.example.groove.util.toPostBody
+import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.http.client.utils.URIBuilder
 import org.springframework.http.HttpEntity
@@ -19,6 +16,12 @@ import kotlin.concurrent.schedule
 
 private val objectMapper = createMapper()
 
+// It's an error to request more than this
+private const val REQUEST_SIZE_LIMIT = 49
+
+// Even if more results exist, spotify gets mad at you if you look beyond the 2000th result
+private const val MAX_RESULTS = 2000
+
 @Service
 class SpotifyApiClient(
 		private val restTemplate: RestTemplate
@@ -32,31 +35,12 @@ class SpotifyApiClient(
 	fun getMetadataByTrackArtistAndName(artist: String, name: String, album: String?): MetadataResponseDTO? {
 		println(spotifyTokenManager.authenticationToken)
 
-		val url = "https://api.spotify.com/v1/search?limit=1&"
-
-		val query = "q=track:$name artist:$artist&type=track"
-
-		val result = restTemplate.searchSpotify(url + query)
+		val url = createSpotifyUrl(artist, name, 1)
+		val result = restTemplate.searchSpotify(url)
 
 		// Assume spotify has good relevance on its search and just grab the first result
-		// (we limited it to 1 in the query already anyway)
-		val spotifyTrack = result.tracks.items.firstOrNull()
-				?: return null
-
-		val biggestImageUrl = spotifyTrack.album.images.maxBy { it.height }!!.url
-		val biggestImage = ImageIO.read(URL(biggestImageUrl))
-
-		println(biggestImageUrl)
-
-		return MetadataResponseDTO(
-				name = spotifyTrack.name,
-				artist = spotifyTrack.artists.first().name,
-				album = spotifyTrack.album.name,
-				releaseYear = spotifyTrack.album.releaseYear,
-				trackNumber = spotifyTrack.trackNumber,
-				albumArt = biggestImage,
-				songLength = (spotifyTrack.durationMs / 1000).toInt()
-		)
+		// (we already limited ourselves to 1 in the query parameter anyway)
+		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
 	}
 
 	fun RestTemplate.searchSpotify(url: String): SpotifySearchResponse {
@@ -81,8 +65,41 @@ class SpotifyApiClient(
 		}
 	}
 
+	fun getLatestSongsByArtist(artist: String): List<MetadataResponseDTO> {
+		val startingUrl = createSpotifyUrl(artist, null, REQUEST_SIZE_LIMIT)
+		val allTracks = mutableListOf<SpotifyTrack>()
+
+		var result = restTemplate.searchSpotify(startingUrl)
+		allTracks.addAll(result.tracks.items)
+
+		while (result.tracks.next != null) {
+			// Spotify returns us a URL encoded string that it can't even handle... so decode it first
+			val nextUrl = result.tracks.next!!.urlDecode()
+			result = restTemplate.searchSpotify(nextUrl)
+			allTracks.addAll(result.tracks.items)
+		}
+
+		return allTracks.map { it.toMetadataResponseDTO() }
+	}
+
+	private fun createSpotifyUrl(artist: String, name: String?, limit: Int): String {
+		val artistQuery = "artist:$artist"
+		val trackQuery = name?.let { "track:$name" }
+
+		val query = artistQuery + if (trackQuery == null) "" else " $trackQuery"
+
+		return URIBuilder()
+				.setScheme("https")
+				.setHost("api.spotify.com")
+				.setPath("v1/search")
+				.addParameter("limit", limit.toString())
+				.addParameter("type", "track")
+				.addParameter("q", "\"$query\"")
+				.toUnencodedString()
+	}
+
 	data class SpotifySearchResponse(val tracks: SpotifySearchItems)
-	data class SpotifySearchItems(val items: List<SpotifyTrack>)
+	data class SpotifySearchItems(val items: List<SpotifyTrack>, val next: String?)
 	data class SpotifyArtist(val name: String)
 	data class SpotifyAlbumImage(val height: Int, val width: Int, val url: String)
 
@@ -110,6 +127,21 @@ class SpotifyApiClient(
 			val id: String,
 			val name: String
 	)
+
+	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO {
+		val biggestImageUrl = this.album.images.maxBy { it.height }!!.url
+		val biggestImage = ImageIO.read(URL(biggestImageUrl))
+
+		return MetadataResponseDTO(
+				name = this.name,
+				artist = this.artists.first().name,
+				album = this.album.name,
+				releaseYear = this.album.releaseYear,
+				trackNumber = this.trackNumber,
+				albumArt = biggestImage,
+				songLength = (this.durationMs / 1000).toInt()
+		)
+	}
 
 	companion object {
 		private val logger = logger()
@@ -154,8 +186,6 @@ private class SpotifyTokenManager(private val restTemplate: RestTemplate) {
 			throw e
 		}
 
-		println(rawResponse)
-
 		val parsedResponse: SpotifyAuthenticationResponse = try {
 			objectMapper.readValue(rawResponse, SpotifyAuthenticationResponse::class.java)
 		} catch (e: Exception) {
@@ -178,12 +208,11 @@ private class SpotifyTokenManager(private val restTemplate: RestTemplate) {
 	}
 
 	private fun createSpotifyUrl(): String {
-		val builder = URIBuilder()
+		return URIBuilder()
 				.setScheme("https")
 				.setHost("accounts.spotify.com")
 				.setPath("api/token")
-
-		return builder.toString()
+				.toString()
 	}
 
 	data class SpotifyAuthenticationResponse(

@@ -3,6 +3,7 @@ package com.example.groove.util
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.apache.http.client.utils.URIBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.CrudRepository
@@ -56,4 +57,10 @@ fun Map<String, String>.toHeaders(): HttpHeaders {
 	}
 
 	return headers
+}
+
+// The combination of URIBuilder and RestTemplate seem to double-encode things and make things very upset.
+// I didn't see a way to disable one of them encoding... so just have a way to undo I guess
+fun URIBuilder.toUnencodedString(): String {
+	return this.toString().urlDecode()
 }

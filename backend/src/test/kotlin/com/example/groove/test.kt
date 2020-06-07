@@ -29,7 +29,6 @@ class Woohoo {
 
 		println(response.videos)
 	}
-	*/
 
 	@Test
 	fun noThanks() {
@@ -38,6 +37,16 @@ class Woohoo {
 //		val response = api.getMetadataByTrackArtistAndName("Ayumi Hamasaki", "Evolution", null)
 //		val response = api.getMetadataByTrackArtistAndName("EMBRZ", "Sound 4 U", null)
 		val response = api.getMetadataByTrackArtistAndName("LIONE", "Leave This Place", null)
+
+		println(response)
+	}
+	*/
+
+	@Test
+	fun waaWaaWeeWaa() {
+		val api = SpotifyApiClient(RestTemplate())
+
+		val response = api.getLatestSongsByArtist("LIONE")
 
 		println(response)
 	}

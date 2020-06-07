@@ -3,6 +3,7 @@ package com.example.groove.services
 import com.example.groove.properties.YouTubeApiProperties
 import com.example.groove.util.createMapper
 import com.example.groove.util.logger
+import com.example.groove.util.toUnencodedString
 import com.fasterxml.jackson.annotation.JsonValue
 import org.apache.http.client.utils.URIBuilder
 import org.springframework.stereotype.Service
@@ -132,8 +133,7 @@ class YoutubeApiClient(
 
 		additionalParams.forEach { (key, value) -> builder.addParameter(key, value) }
 
-		// For whatever reason the URL encoded commas that the URIBuilder produces makes Google mad...
-		return builder.toString().replace("%2C", ",")
+		return builder.toUnencodedString()
 	}
 
 	// Comes back in ISO 8601 format, which looks something like "PT1H38M7S"
