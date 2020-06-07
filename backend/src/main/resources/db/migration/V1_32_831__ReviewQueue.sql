@@ -27,3 +27,11 @@ CREATE TABLE review_source_user_recommend
     review_source_id INT PRIMARY KEY REFERENCES review_source(id),
     user_id int NOT NULL REFERENCES `user`(id)
 );
+
+CREATE TABLE review_source_artist
+(
+    review_source_id int PRIMARY KEY REFERENCES review_source(id),
+    artist_id varchar(255) NOT NULL,
+    artist_name varchar(255) NOT NULL,
+    last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

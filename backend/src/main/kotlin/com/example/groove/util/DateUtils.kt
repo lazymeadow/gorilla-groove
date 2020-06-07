@@ -2,6 +2,7 @@ package com.example.groove.util
 
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -23,6 +24,7 @@ fun Timestamp.isNewerThan(timeUnit: ChronoUnit, timeAmount: Long): Boolean {
 fun LocalDateTime.toTimestamp(): Timestamp {
 	return Timestamp.valueOf(this)
 }
+
 fun Instant.toTimestamp(): Timestamp {
 	return Timestamp.from(this)
 }

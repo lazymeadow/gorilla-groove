@@ -37,5 +37,6 @@ fun String.urlDecode(): String {
 	return this
 			.replace("%2C", ",")
 			.replace("%3A", ":")
+			.replace("%22", "\"")
 }
 

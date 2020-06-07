@@ -9,6 +9,9 @@ import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.net.URL
+import java.time.LocalDate
+import java.time.Year
+import java.time.YearMonth
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.concurrent.schedule
@@ -32,18 +35,18 @@ class SpotifyApiClient(
 	private val authHeader: String
 		get() = "Bearer ${spotifyTokenManager.authenticationToken}"
 
-	fun getMetadataByTrackArtistAndName(artist: String, name: String, album: String?): MetadataResponseDTO? {
-		println(spotifyTokenManager.authenticationToken)
+//	fun getMetadataByTrackArtistAndName(artist: String, name: String, album: String?): MetadataResponseDTO? {
+//		println(spotifyTokenManager.authenticationToken)
+//
+//		val url = createSpotifySearchUrl(artist, name, 1, "track")
+//		val result = restTemplate.querySpotify(url)
+//
+//		// Assume spotify has good relevance on its search and just grab the first result
+//		// (we already limited ourselves to 1 in the query parameter anyway)
+//		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
+//	}
 
-		val url = createSpotifyUrl(artist, name, 1)
-		val result = restTemplate.searchSpotify(url)
-
-		// Assume spotify has good relevance on its search and just grab the first result
-		// (we already limited ourselves to 1 in the query parameter anyway)
-		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
-	}
-
-	fun RestTemplate.searchSpotify(url: String): SpotifySearchResponse {
+	private inline fun<reified T> RestTemplate.querySpotify(url: String): T {
 		val headers = mapOf("Authorization" to authHeader).toHeaders()
 
 		println(headers)
@@ -57,7 +60,7 @@ class SpotifyApiClient(
 		}
 
 		return try {
-			objectMapper.readValue(rawResponse, SpotifySearchResponse::class.java)
+			objectMapper.readValue(rawResponse, T::class.java)
 		} catch (e: Exception) {
 			logger.error("Failed to deserialize Spotify search response! $rawResponse")
 
@@ -65,24 +68,37 @@ class SpotifyApiClient(
 		}
 	}
 
-	fun getLatestSongsByArtist(artist: String): List<MetadataResponseDTO> {
-		val startingUrl = createSpotifyUrl(artist, null, REQUEST_SIZE_LIMIT)
-		val allTracks = mutableListOf<SpotifyTrack>()
+	fun getSongsByArtist(
+			artist: String,
+			artistId: String? = null,
+			fromDate: LocalDate? = null
+	): List<MetadataResponseDTO> {
+		val artistIdNotNull = artistId // Save ourselves a call to spotify if we already know the ID
+				?: getSpotifyArtistId(artist)
+				?: return emptyList()
 
-		var result = restTemplate.searchSpotify(startingUrl)
-		allTracks.addAll(result.tracks.items)
+		val albumIds = getAlbumsIdsByArtistId(artistIdNotNull)
+		val allTracks = getTracksFromAlbumIds(artistIdNotNull, artist, albumIds)
 
-		while (result.tracks.next != null) {
-			// Spotify returns us a URL encoded string that it can't even handle... so decode it first
-			val nextUrl = result.tracks.next!!.urlDecode()
-			result = restTemplate.searchSpotify(nextUrl)
-			allTracks.addAll(result.tracks.items)
-		}
+		val filteredTracks = fromDate?.let { date ->
+			allTracks.filter { it.album!!.releaseDate.toDate().toEpochDay() > date.toEpochDay() }
+		} ?: allTracks
 
-		return allTracks.map { it.toMetadataResponseDTO() }
+		return filteredTracks.map { it.toMetadataResponseDTO() }
 	}
 
-	private fun createSpotifyUrl(artist: String, name: String?, limit: Int): String {
+	fun getSpotifyArtistId(artist: String): String? {
+		val startingUrl = createSpotifySearchUrl(artist, null, REQUEST_SIZE_LIMIT, "artist")
+
+		val result = restTemplate.querySpotify<SpotifyArtistSearchResponse>(startingUrl)
+
+		val lowerName = artist.toLowerCase()
+		val matchingArtist = result.artists.items.find { it.name.toLowerCase() == lowerName }
+
+		return matchingArtist?.id
+	}
+
+	private fun createSpotifySearchUrl(artist: String, name: String?, limit: Int, searchType: String): String {
 		val artistQuery = "artist:$artist"
 		val trackQuery = name?.let { "track:$name" }
 
@@ -93,19 +109,23 @@ class SpotifyApiClient(
 				.setHost("api.spotify.com")
 				.setPath("v1/search")
 				.addParameter("limit", limit.toString())
-				.addParameter("type", "track")
-				.addParameter("q", "\"$query\"")
+				.addParameter("type", searchType)
+				.addParameter("q", query)
 				.toUnencodedString()
 	}
 
-	data class SpotifySearchResponse(val tracks: SpotifySearchItems)
-	data class SpotifySearchItems(val items: List<SpotifyTrack>, val next: String?)
-	data class SpotifyArtist(val name: String)
+	data class SpotifyArtistSearchResponse(val artists: SpotifySearchItems)
+	data class SpotifySearchItems(val items: List<SpotifyArtist>, val next: String?)
+	data class SpotifyArtist(val name: String, val id: String)
 	data class SpotifyAlbumImage(val height: Int, val width: Int, val url: String)
+	data class SpotifyAlbumResponse(val items: List<SpotifyAlbum>)
+	data class SpotifyAlbumBulkResponse(val albums: List<SpotifyAlbum>)
 
 	data class SpotifyAlbum(
 			val name: String,
 			val images: List<SpotifyAlbumImage>,
+			val id: String,
+			val tracks: SpotifyTrackResponse? = null, // Not returned on all responses that return albums
 
 			// Could be 1981-12-15, or 1981-12, or 1981. Doesn't matter. Year always first
 			@JsonProperty("release_date")
@@ -113,6 +133,8 @@ class SpotifyApiClient(
 	) {
 		val releaseYear: Int = releaseDate.split("-").first().toInt()
 	}
+
+	data class SpotifyTrackResponse(val items: List<SpotifyTrack>)
 
 	data class SpotifyTrack(
 			@JsonProperty("duration_ms")
@@ -122,25 +144,73 @@ class SpotifyApiClient(
 			val trackNumber: Int,
 
 			val artists: List<SpotifyArtist>,
-			val album: SpotifyAlbum,
+			var album: SpotifyAlbum? = null, // Not always here depending on the endpoint
 			val href: String,
 			val id: String,
 			val name: String
 	)
 
 	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO {
-		val biggestImageUrl = this.album.images.maxBy { it.height }!!.url
+		val biggestImageUrl = this.album!!.images.maxBy { it.height }!!.url
 		val biggestImage = ImageIO.read(URL(biggestImageUrl))
 
 		return MetadataResponseDTO(
 				name = this.name,
 				artist = this.artists.first().name,
-				album = this.album.name,
-				releaseYear = this.album.releaseYear,
+				album = this.album!!.name,
+				releaseYear = this.album!!.releaseYear,
 				trackNumber = this.trackNumber,
 				albumArt = biggestImage,
 				songLength = (this.durationMs / 1000).toInt()
 		)
+	}
+
+	// The albums returned by this do not have tracks included
+	fun getAlbumsIdsByArtistId(artistId: String): Set<String> {
+		val url = "https://api.spotify.com/v1/artists/$artistId/albums"
+
+		val result = restTemplate.querySpotify<SpotifyAlbumResponse>(url)
+
+		return result.items.map { it.id }.toSet()
+	}
+
+	// The albums returned by this do have tracks included
+	fun getTracksFromAlbumIds(artistId: String, artistName: String, albumIds: Set<String>): List<SpotifyTrack> {
+		val url = "https://api.spotify.com/v1/albums?ids=${albumIds.joinToString(",")}"
+
+		val result = restTemplate.querySpotify<SpotifyAlbumBulkResponse>(url)
+
+		val allTracks = result.albums.map { album ->
+			val tracksForAlbum = album.tracks!!.items
+			tracksForAlbum.forEach { it.album = album } // We need this album info later, so store it on the track
+			tracksForAlbum
+		}.flatten()
+
+		// Our artist might be on an album, but not have contributed to every song on said album. So do an additional filter
+		val tracksWithArtist = allTracks.filter { track -> track.artists.find { it.id == artistId } != null }
+
+		val lowerArtist = artistName.toLowerCase()
+		val nonRemixTracks = tracksWithArtist.filterNot { track ->
+			val lowerName = track.name.toLowerCase()
+			// Remove remixes that aren't remixes our artist made. This is probably error prone though
+			lowerName.contains("remix") && !lowerName.contains(lowerArtist)
+		}
+
+		// We can get the same song multiple times from different albums. They have different track IDs however
+		val nameToTracks = nonRemixTracks.groupBy { it.name }
+		return nameToTracks.values.map { duplicateTracks ->
+			duplicateTracks.minBy { it.album!!.releaseDate.toDate().toEpochDay() }!!
+		}
+	}
+
+	private fun String.toDate(): LocalDate {
+		val sections = this.split("-")
+		return when {
+			sections.size == 1 -> Year.parse(this).atMonth(0).atDay(0)
+			sections.size == 2 -> YearMonth.parse(this).atDay(0)
+			sections.size == 3 -> LocalDate.parse(this)
+			else -> throw IllegalArgumentException("Weird date encountered on track! $this")
+		}
 	}
 
 	companion object {

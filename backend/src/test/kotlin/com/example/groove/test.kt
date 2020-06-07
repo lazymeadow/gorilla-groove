@@ -2,9 +2,9 @@ package com.example.groove
 
 import com.example.groove.properties.YouTubeApiProperties
 import com.example.groove.services.SpotifyApiClient
-import com.example.groove.services.YoutubeApiClient
 import org.junit.jupiter.api.Test
 import org.springframework.web.client.RestTemplate
+import java.time.LocalDate
 
 class Woohoo {
 
@@ -46,8 +46,13 @@ class Woohoo {
 	fun waaWaaWeeWaa() {
 		val api = SpotifyApiClient(RestTemplate())
 
-		val response = api.getLatestSongsByArtist("LIONE")
+//		val response = api.getSpotifyArtistId("LIONE")
+//		val response = api.getAlbumsByArtistId("4Zv449cAssgslcvInvc0wa")
+//		val response = api.getTracksFromAlbumIds(setOf("62MQvUh5IaT3r0bXgGqImE","6EZ7bYEiEunzlIpcM25GuG","046B22KTV1C8Hsg5XXkxjN"))
 
-		println(response)
+		val testDate = LocalDate.parse("2020-02-10")
+		val response = api.getSongsByArtist("sad alex", testDate)
+
+		println(response.joinToString("\n"))
 	}
 }
