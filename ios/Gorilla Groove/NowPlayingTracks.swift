@@ -82,10 +82,13 @@ class NowPlayingTracks {
             
             do {
                 let data = try Data.init(contentsOf: url)
-                let image = UIImage(data: data)!
-                let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in return image })
+                if let image = UIImage(data: data) {
+                    let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in return image })
                 
-                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                } else {
+                    print("Found image data that could not be displayed. It is probably in an unsupported format like webp")
+                }
             } catch {
                 print(error)
             }
