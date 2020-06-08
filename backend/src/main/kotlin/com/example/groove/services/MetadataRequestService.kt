@@ -38,7 +38,7 @@ class MetadataRequestService(
 				if (track.trackNumber.shouldBeUpdated(request.changeTrackNumber)) {
 					track.trackNumber = metadataResponse.trackNumber
 				}
-				saveAlbumArt(track, metadataResponse.albumArt, request.changeAlbumArt)
+				saveAlbumArt(track, metadataResponse.albumArt!!, request.changeAlbumArt)
 			}
 
 			trackRepository.save(track)

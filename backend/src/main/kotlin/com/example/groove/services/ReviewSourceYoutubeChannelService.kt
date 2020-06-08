@@ -54,6 +54,7 @@ class ReviewSourceYoutubeChannelService(
 				)
 				val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
 				track.reviewSource = source
+				track.inReview = true
 				track.lastReviewed = now()
 				trackRepository.save(track)
 

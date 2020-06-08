@@ -153,6 +153,7 @@ class ITunesMetadataService(private val restTemplate: RestTemplate) {
 				artist = iTunesTrack.artistName,
 				album = iTunesTrack.collectionName!!, // Non-music videos should have this link
 				genre = iTunesTrack.primaryGenreName,
+				songLength = 0, // TODO this isn't right, but going to delete this entire file anyway soon
 				releaseYear = iTunesTrack.releaseDate.toLocalDateTime().year,
 				trackNumber = iTunesTrack.trackNumber,
 				albumArt = albumArt

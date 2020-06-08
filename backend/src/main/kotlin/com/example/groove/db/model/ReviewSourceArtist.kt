@@ -1,6 +1,5 @@
 package com.example.groove.db.model
 
-import com.example.groove.util.DateUtils.now
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -14,6 +13,6 @@ data class ReviewSourceArtist(
 		@Column(name = "artist_name")
 		val artistName: String,
 
-		@Column(name = "last_searched")
-		var lastSearched: Timestamp = now()
+		@Column(name = "search_newer_than")
+		val searchNewerThan: Timestamp? = null
 ) : ReviewSource()

@@ -22,9 +22,6 @@ private val objectMapper = createMapper()
 // It's an error to request more than this
 private const val REQUEST_SIZE_LIMIT = 49
 
-// Even if more results exist, spotify gets mad at you if you look beyond the 2000th result
-private const val MAX_RESULTS = 2000
-
 @Service
 class SpotifyApiClient(
 		private val restTemplate: RestTemplate
@@ -152,7 +149,6 @@ class SpotifyApiClient(
 
 	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO {
 		val biggestImageUrl = this.album!!.images.maxBy { it.height }!!.url
-		val biggestImage = ImageIO.read(URL(biggestImageUrl))
 
 		return MetadataResponseDTO(
 				name = this.name,
@@ -160,7 +156,7 @@ class SpotifyApiClient(
 				album = this.album!!.name,
 				releaseYear = this.album!!.releaseYear,
 				trackNumber = this.trackNumber,
-				albumArt = biggestImage,
+				albumArtUrl = biggestImageUrl,
 				songLength = (this.durationMs / 1000).toInt()
 		)
 	}
