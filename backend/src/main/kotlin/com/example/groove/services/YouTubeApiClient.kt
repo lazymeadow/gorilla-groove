@@ -64,23 +64,9 @@ class YoutubeApiClient(
 				)
 		)
 
-		val rawResponse = try {
-			restTemplate.getForObject(url, String::class.java)!!
-		} catch (e: Exception) {
-			logger.error("Failed to search YouTube with URL: $url")
+		val response = searchUrl<RawYoutubeSearchResponse>(url)
 
-			throw e
-		}
-
-		val parsedResponse: RawYoutubeSearchResponse = try {
-			objectMapper.readValue(rawResponse, RawYoutubeSearchResponse::class.java)
-		} catch (e: Exception) {
-			logger.error("Failed to deserialize YoutubeApiClient search response! $rawResponse")
-
-			throw e
-		}
-
-		return parsedResponse.items.map { it.id.videoId }
+		return response.items.map { it.id.videoId }
 	}
 
 	private fun getVideoInformation(videoIds: List<String>): List<RawYoutubeVideoInfoItem> {
@@ -96,23 +82,7 @@ class YoutubeApiClient(
 				mapOf("id" to idString, "part" to "snippet,contentDetails,statistics")
 		)
 
-		val rawResponse = try {
-			restTemplate.getForObject(url, String::class.java)!!
-		} catch (e: Exception) {
-			logger.error("Failed to get YouTube video information with URL: $url")
-
-			throw e
-		}
-
-		val parsedResponse = try {
-			objectMapper.readValue(rawResponse, RawYoutubeVideoInfoResponse::class.java)
-		} catch (e: Exception) {
-			logger.error("Failed to deserialize YoutubeApiClient video info response! $rawResponse")
-
-			throw e
-		}
-
-		return parsedResponse.items
+		return searchUrl<RawYoutubeVideoInfoResponse>(url).items
 	}
 
 	private fun createSearchUrl(
@@ -140,6 +110,51 @@ class YoutubeApiClient(
 	fun String.decodeIso8601(): Long {
 		val duration = Duration.parse(this)
 		return duration.seconds
+	}
+
+	fun getChannelInfoByChannelId(channelId: String): YoutubeChannelInfo? {
+		val url = "https://www.googleapis.com/youtube/v3/channels?part=snippet&id=$channelId&key=${youTubeApiProperties.youtubeApiKey}"
+
+		return getChannelResponse(url)
+	}
+
+	fun getChannelInfoByUsername(name: String): YoutubeChannelInfo? {
+		val url = "https://www.googleapis.com/youtube/v3/channels?part=snippet&forUsername=$name&key=${youTubeApiProperties.youtubeApiKey}"
+
+		return getChannelResponse(url)
+	}
+
+	private fun getChannelResponse(url: String): YoutubeChannelInfo? {
+		val response = searchUrl<RawYoutubeChannelResponse>(url)
+
+		if (response.items.isEmpty()) {
+			return null
+		}
+
+		val item = response.items.first()
+
+		return YoutubeChannelInfo(
+				title = item.snippet.title,
+				id = item.id
+		)
+	}
+
+	private inline fun<reified T> searchUrl(url: String): T {
+		val rawResponse = try {
+			restTemplate.getForObject(url, String::class.java)!!
+		} catch (e: Exception) {
+			logger.error("Failed to search YouTube with URL: $url")
+
+			throw e
+		}
+
+		return try {
+			objectMapper.readValue(rawResponse, T::class.java)
+		} catch (e: Exception) {
+			logger.error("Failed to deserialize YoutubeApiClient search response! $rawResponse")
+
+			throw e
+		}
 	}
 
 	data class YoutubeApiResponse(
@@ -181,6 +196,11 @@ class YoutubeApiClient(
 			val contentDetails: ItemContentDetails,
 			val statistics: ItemStatistics
 	)
+
+	data class RawYoutubeChannelResponse(val items: List<RawYoutubeChannelInfoItem>)
+	data class RawYoutubeChannelInfoItem(val id: String, val snippet: YoutubeChannelSnippet)
+	data class YoutubeChannelSnippet(val title: String)
+	data class YoutubeChannelInfo(val title: String, val id: String)
 
 	data class ItemId(val videoId: String)
 

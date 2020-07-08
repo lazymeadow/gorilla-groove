@@ -24,8 +24,8 @@ class ReviewSourceArtistService(
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository
 ) {
-	//	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
-	@Scheduled(cron = "0 */5 * * * *") // 9 AM every day (UTC)
+	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
+//	@Scheduled(cron = "0 */5 * * * *") // 9 AM every day (UTC)
 	@Transactional
 	fun downloadNewSongs() {
 		val allSources = reviewSourceArtistRepository.findAll()

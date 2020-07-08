@@ -75,6 +75,14 @@ class ReviewSourceYoutubeChannelService(
 		logger.info("Review Source Youtube Channel Downloader complete")
 	}
 
+	fun subscribeToUser(user: String) {
+
+	}
+
+	fun subscribeToChannelId(channelId: String) {
+		val reviewSource = reviewSourceYoutubeChannelRepository.findByChannelId(channelId)
+	}
+
 	companion object {
 		val logger = logger()
 	}

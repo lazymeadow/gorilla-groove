@@ -2,6 +2,8 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
 import com.example.groove.services.ReviewQueueService
+import com.example.groove.services.ReviewSourceYoutubeChannelService
+import com.example.groove.services.YoutubeApiClient
 import com.example.groove.util.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -11,7 +13,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("api/review-queue")
 class ReviewQueueController(
-		private val reviewQueueService: ReviewQueueService
+		private val reviewQueueService: ReviewQueueService,
+		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService
 ) {
 
 	@GetMapping
@@ -26,10 +29,35 @@ class ReviewQueueController(
 		reviewQueueService.recommend(body.targetUserId, body.trackId)
 	}
 
+	@PostMapping("/subscribe/youtube-channel")
+	fun subscribeToYoutubeChannel(@RequestBody body: YouTubeChannelSubscriptionDTO) {
+		val channelUrl = body.channelUrl
+
+		// Channel URL should conform to one of two patterns,
+		// https://www.youtube.com/channel/UCSXm6c-n6lsjtyjvdD0bFVw
+		// https://www.youtube.com/user/Liquicity
+
+		val regex = Regex("^https://www.youtube.com/(channel|user)/.+\$")
+
+		require (regex.matches(channelUrl)) {
+			"Invalid channel URL supplied! $channelUrl"
+		}
+
+		val searchTerm = channelUrl.split("/").last()
+
+		if (channelUrl.contains("channel", ignoreCase = true)) {
+			reviewSourceYoutubeChannelService.subscribeToChannelId(searchTerm)
+		} else {
+			reviewSourceYoutubeChannelService.subscribeToUser(searchTerm)
+		}
+	}
+
 	data class TrackRecommendDTO(
 			val targetUserId: Long,
 			val trackId: Long
 	)
+
+	data class YouTubeChannelSubscriptionDTO(val channelUrl: String)
 
 	companion object {
 		val logger = logger()

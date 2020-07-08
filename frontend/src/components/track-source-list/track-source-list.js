@@ -113,6 +113,8 @@ export default function TrackSourceList(props) {
 		? 'selected' : '';
 	const globalSearchSelected = props.centerView === CenterView.GLOBAL_SEARCH
 		? 'selected' : '';
+	const reviewQueueSelected = props.centerView === CenterView.REVIEW_QUEUE
+		? 'selected' : '';
 
 	return (
 		<div id="view-source-list">
@@ -133,6 +135,15 @@ export default function TrackSourceList(props) {
 				}}
 			>
 				<span>Remote Play</span>
+			</div>
+
+			<div
+				className={`secondary-option ${reviewQueueSelected}`}
+				onMouseDown={() => {
+					props.setCenterView(CenterView.REVIEW_QUEUE);
+				}}
+			>
+				<span>Review Queue</span>
 			</div>
 
 			<div

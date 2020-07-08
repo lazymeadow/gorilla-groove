@@ -16,6 +16,7 @@ import {CenterView} from "../../enums/site-views";
 import RemotePlayManagement from "../remote-play/management/remote-play-management";
 import {DeviceContext} from "../../services/device-provider";
 import GlobalSearch from "../global-search/global-search";
+import ReviewQueue from "../review-queue/review-queue";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
@@ -57,6 +58,16 @@ export default function SiteLayout(props) {
 		.filter(columnPreference => columnPreference.enabled)
 		.map(columnPreference => columnPreference.name);
 
+	const getCenterView = centerView => {
+		if (centerView === CenterView.REMOTE_DEVICES) {
+			return <RemotePlayManagement/>
+		} else if (centerView === CenterView.GLOBAL_SEARCH) {
+			return <GlobalSearch/>
+		} else if (centerView === CenterView.REVIEW_QUEUE) {
+			return <ReviewQueue/>
+		}
+	};
+
 	return (
 		<div className="full-screen border-layout">
 			{ deviceContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
@@ -80,7 +91,7 @@ export default function SiteLayout(props) {
 							userTracks={musicContext.viewedTracks}
 							trackView={true}
 						/>
-						: centerView === CenterView.REMOTE_DEVICES ? <RemotePlayManagement/> : <GlobalSearch/>
+						: getCenterView(centerView)
 				}
 			</div>
 
