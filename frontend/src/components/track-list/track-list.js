@@ -376,7 +376,7 @@ export class TrackList extends React.Component {
 		}
 
 		this.setState({
-			selected: {},
+			selected: new Set(),
 			lastSelectedIndex: null
 		});
 
