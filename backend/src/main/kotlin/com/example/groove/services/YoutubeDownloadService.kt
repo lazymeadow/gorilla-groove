@@ -51,9 +51,6 @@ class YoutubeDownloadService(
 		if (!newSong.exists()) {
 			throw YouTubeDownloadException("Failed to download song from URL: $url")
 		}
-		if (!newAlbumArt.exists()) {
-			logger.error("Failed to download album art for song at URL: $url. Continuing anyway")
-		}
 
 		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
 		// Slightly complicates finding the file after we save it, though
@@ -68,15 +65,20 @@ class YoutubeDownloadService(
 		youtubeDownloadDTO.genre?.let { track.genre = it.trim() }
 		trackRepository.save(track)
 
-		if (youtubeDownloadDTO.cropArtToSquare) {
-			val croppedArt = imageService.cropToSquare(newAlbumArt)
-			fileStorageService.storeAlbumArt(croppedArt, track.id)
-			croppedArt.delete()
+		if (newAlbumArt.exists()) {
+			if (youtubeDownloadDTO.cropArtToSquare) {
+				val croppedArt = imageService.cropToSquare(newAlbumArt)
+				fileStorageService.storeAlbumArt(croppedArt, track.id)
+				croppedArt.delete()
+			} else {
+				fileStorageService.storeAlbumArt(newAlbumArt, track.id)
+			}
+
+			newAlbumArt.delete()
 		} else {
-			fileStorageService.storeAlbumArt(newAlbumArt, track.id)
+			logger.error("Failed to download album art for song at URL: $url.")
 		}
 
-		newAlbumArt.delete()
 		newSong.delete()
 
 		return track

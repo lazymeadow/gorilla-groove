@@ -47,9 +47,23 @@ class DeviceService(
 		return this[Random().nextInt(this.size)]
 	}
 
-	private fun setDefaultName(): String {
-		val list = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
-		return list.tempRandom()
+	private fun generateDefaultName(): String {
+		val adjectivesByLetter = mapOf(
+				'A' to listOf("Arrogant", "Abiding", "Able", "Abrasive", "Absorbed", "Absurd", "Admiring", "Aerodynamic", "Affectionate", "Affluent", "Afraid", "Ageless"),
+				'B' to listOf("Backward", "Baggy", "Baseless", "Bashful", "Basic", "Beady", "Beautiful", "Benevolent", "Beguiling", "Bitter", "Blunt"),
+				'F' to listOf("Fabulous", "Fair", "Fat", "Faulty", "Fearful", "Fearless", "Fertile", "Fearsome", "Flaky", "Floppy"),
+				'G' to listOf("Gleeful", "Grumpy", "Gangly", "Garish", "Grand", "Great", "Gray", "Grave", "Glistening", "Godless", "Glutinous", "Gorgeous"),
+				'L' to listOf("Lacey", "Legendary", "Laughable", "Lavish", "Lawless", "Lazy", "Leafy", "Lewd", "Lengthy", "Livid", "Logical", "Loyal"),
+				'M' to listOf("Macho", "Mad", "Magical", "Majestic", "Male", "Malnourished", "Manly", "Masterful", "Meager", "Mean", "Meaty", "Meek", "Mellow", "Merciless", "Messy"),
+				'P' to listOf("Paranoid", "Paranormal", "Passable", "Passionate", "Passive", "Patient", "Pathetic", "Peaceful", "Peculiar", "Pedantic", "Perky", "Perplexing", "Petite"),
+				'S' to listOf("Sacred", "Sad", "Sadistic", "Salty", "Sane", "Sassy", "Satisfying", "Saucy", "Scandalous", "Skeptical", "Scholarly", "Scattered", "Secretive", "Seductive", "Sincere")
+		)
+		val characterNames = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
+
+		val characterName = characterNames.tempRandom()
+		val adjective = adjectivesByLetter[characterName.first().toUpperCase()]?.tempRandom() ?: ""
+
+		return "$adjective $characterName"
 	}
 
 	@Transactional
@@ -67,7 +81,7 @@ class DeviceService(
 					Device(
 							user = user,
 							deviceId = deviceId,
-							deviceName = setDefaultName(),
+							deviceName = generateDefaultName(),
 							deviceType = deviceType,
 							applicationVersion = version,
 							lastIp = ipAddress ?: "0.0.0.0"
