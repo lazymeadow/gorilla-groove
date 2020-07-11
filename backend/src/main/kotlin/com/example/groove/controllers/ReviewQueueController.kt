@@ -3,7 +3,8 @@ package com.example.groove.controllers
 import com.example.groove.db.model.Track
 import com.example.groove.services.ReviewQueueService
 import com.example.groove.services.ReviewSourceYoutubeChannelService
-import com.example.groove.services.YoutubeApiClient
+import com.example.groove.services.TrackService
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("api/review-queue")
 class ReviewQueueController(
 		private val reviewQueueService: ReviewQueueService,
+		private val trackService: TrackService,
 		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService
 ) {
 
@@ -52,12 +54,26 @@ class ReviewQueueController(
 		}
 	}
 
+	@PutMapping("/track/{trackId}/change/{type}")
+	fun changeTrack(
+			@PathVariable("trackId") trackId: Long,
+			@PathVariable("type") type: ReviewChangeType
+	) {
+		when (type) {
+			ReviewChangeType.ADD -> reviewQueueService.addToLibrary(trackId)
+			ReviewChangeType.SKIP -> reviewQueueService.skipTrack(trackId)
+			ReviewChangeType.DELETE -> trackService.deleteTracks(loadLoggedInUser(), listOf(trackId))
+		}
+	}
+
 	data class TrackRecommendDTO(
 			val targetUserId: Long,
 			val trackId: Long
 	)
 
 	data class YouTubeChannelSubscriptionDTO(val channelUrl: String)
+
+	enum class ReviewChangeType { ADD, SKIP, DELETE }
 
 	companion object {
 		val logger = logger()

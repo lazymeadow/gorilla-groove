@@ -5,6 +5,7 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.ReviewSourceUserRecommend
 import com.example.groove.db.model.Track
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
@@ -42,6 +43,36 @@ class ReviewQueueService(
 
 	fun getAllForCurrentUser(pageable: Pageable): Page<Track> {
 		return trackRepository.getTracksInReview(loadLoggedInUser().id, pageable)
+	}
+
+	fun addToLibrary(trackId: Long) {
+		val track = trackRepository.get(trackId)
+		track.assertValidReviewTrack(trackId)
+
+		track!!.inReview = false
+		track.lastReviewed = now()
+
+		trackRepository.save(track)
+	}
+
+	fun skipTrack(trackId: Long) {
+		val track = trackRepository.get(trackId)
+		track.assertValidReviewTrack(trackId)
+
+		track!!.lastReviewed = now()
+		trackRepository.save(track)
+	}
+
+	private fun Track?.assertValidReviewTrack(trackId: Long) {
+		val user = loadLoggedInUser()
+
+		if (this == null || this.user.id != user.id) {
+			throw IllegalArgumentException("No track found with ID $trackId!")
+		}
+
+		if (!this.inReview) {
+			throw IllegalArgumentException("Track $trackId is not in review!")
+		}
 	}
 
 	companion object {
