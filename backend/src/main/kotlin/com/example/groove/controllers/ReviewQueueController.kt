@@ -28,7 +28,7 @@ class ReviewQueueController(
 
 	@PostMapping("/recommend")
 	fun recommend(@RequestBody body: TrackRecommendDTO) {
-		reviewQueueService.recommend(body.targetUserId, body.trackId)
+		reviewQueueService.recommend(body.targetUserId, body.trackIds)
 	}
 
 	@PostMapping("/subscribe/youtube-channel")
@@ -54,26 +54,27 @@ class ReviewQueueController(
 		}
 	}
 
-	@PutMapping("/track/{trackId}/change/{type}")
-	fun changeTrack(
-			@PathVariable("trackId") trackId: Long,
-			@PathVariable("type") type: ReviewChangeType
-	) {
-		when (type) {
-			ReviewChangeType.ADD -> reviewQueueService.addToLibrary(trackId)
-			ReviewChangeType.SKIP -> reviewQueueService.skipTrack(trackId)
-			ReviewChangeType.DELETE -> trackService.deleteTracks(loadLoggedInUser(), listOf(trackId))
-		}
+	@PostMapping("/track/{trackId}/skip")
+	fun skipTrack(@PathVariable("trackId") trackId: Long) {
+		reviewQueueService.skipTrack(trackId)
+	}
+
+	@PostMapping("/track/{trackId}/approve")
+	fun changeTrack(@PathVariable("trackId") trackId: Long) {
+		reviewQueueService.addToLibrary(trackId)
+	}
+
+	@DeleteMapping("/track/{trackId}")
+	fun deleteTrack(@PathVariable("trackId") trackId: Long) {
+		trackService.deleteTracks(loadLoggedInUser(), listOf(trackId))
 	}
 
 	data class TrackRecommendDTO(
 			val targetUserId: Long,
-			val trackId: Long
+			val trackIds: List<Long>
 	)
 
 	data class YouTubeChannelSubscriptionDTO(val channelUrl: String)
-
-	enum class ReviewChangeType { ADD, SKIP, DELETE }
 
 	companion object {
 		val logger = logger()

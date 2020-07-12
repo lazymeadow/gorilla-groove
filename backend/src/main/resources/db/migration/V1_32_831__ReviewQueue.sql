@@ -1,7 +1,12 @@
 ALTER TABLE track_history ADD listened_in_review bit(1) DEFAULT b'0' NOT NULL;
 ALTER TABLE track ADD review_source_id int REFERENCES review_source(id);
 ALTER TABLE track ADD last_reviewed timestamp;
+ALTER TABLE track ADD added_to_library timestamp AFTER last_played;
 ALTER TABLE track ADD in_review bit DEFAULT b'0' NOT NULL;
+
+-- Up until now, the day that stuff got added to the library was the same that they were created.
+-- Going forward, things added via review_queue will have a different created and added date
+UPDATE track SET added_to_library = created_at;
 
 CREATE TABLE review_source
 (

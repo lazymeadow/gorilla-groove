@@ -13,7 +13,9 @@ import com.example.groove.util.logger
 import com.example.groove.util.unwrap
 
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -43,6 +45,17 @@ class TrackService(
 		val idToLoad = userId ?: loggedInId
 		val loadPrivate = loggedInId == idToLoad
 
+		// The clients have an old name for the "addedToLibrary" key and
+		// we need to convert it if they are using it to sort
+		val newSort = pageable.sort.toString()
+				.split(",")
+				.map { sortKeyDir ->
+					val (key, dir) = sortKeyDir.split(": ")
+					val convertedKey = if (key == "createdAt") "addedToLibrary" else key
+					Sort.Order(Sort.Direction.fromString(dir), convertedKey)
+				}.toMutableList()
+
+		val page = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(newSort))
 		return trackRepository.getTracks(
 				name = name,
 				artist = artist,
@@ -51,7 +64,7 @@ class TrackService(
 				loadPrivate = loadPrivate,
 				loadHidden = showHidden,
 				searchTerm = searchTerm,
-				pageable = pageable
+				pageable = page
 		)
 	}
 
@@ -110,7 +123,7 @@ class TrackService(
 			savedDevice.mergedDevice ?: savedDevice
 		}
 
-		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp)
+		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp, listenedInReview = track.inReview)
 		trackHistoryRepository.save(trackHistory)
 	}
 
@@ -266,14 +279,19 @@ class TrackService(
 
 	// This track is being given to someone for review. Copy the track with the target user as
 	// the new owner. Save it, and the track review info
-	fun saveTrackForUserReview(user: User, track: Track, reviewSource: ReviewSource) {
-		track.copy(
+	fun saveTrackForUserReview(user: User, track: Track, reviewSource: ReviewSource): Track {
+		return track.copy(
 				id = 0,
 				user = user,
 				reviewSource = reviewSource,
 				lastReviewed = now(),
 				inReview = true,
-				createdAt = now()
+				private = false,
+				hidden = false,
+				addedToLibrary = null,
+				createdAt = now(),
+				playCount = 0,
+				lastPlayed = null
 		).also { trackRepository.save(it) }
 	}
 

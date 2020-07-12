@@ -12,33 +12,41 @@ import com.example.groove.util.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ReviewQueueService(
 		private val trackRepository: TrackRepository,
 		private val userRepository: UserRepository,
 		private val reviewSourceUserRecommendRepository: ReviewSourceUserRecommendRepository,
-		private val trackService: TrackService
+		private val trackService: TrackService,
+		private val fileStorageService: FileStorageService
 ) {
-	fun recommend(targetUserId: Long, recommendedTrackId: Long) {
+	@Transactional
+	fun recommend(targetUserId: Long, recommendedTrackIds: List<Long>) {
+		val currentUser = loadLoggedInUser()
+
 		val targetUser = userRepository.get(targetUserId)
 				?: throw IllegalArgumentException("No user found with ID $targetUserId!")
 
-		val track = trackRepository.get(recommendedTrackId)
+		logger.info("User ${currentUser.name} is recommending ${recommendedTrackIds.size} tracks to ${targetUser.name}")
 
-		val currentUser = loadLoggedInUser()
+		val tracks = recommendedTrackIds.map { trackRepository.get(it) }
 
-		if (track == null || track.private) {
-			if (track?.private == true) {
-				logger.error("User ${currentUser.name} tried to recommend the private track ${track.id}!")
+		// Validate everything before we bother to start inserting
+		tracks.forEach { track ->
+			if (track == null || track.user.id != currentUser.id) {
+				throw IllegalArgumentException("No track found with ID: ${track?.id}!")
 			}
-			throw IllegalArgumentException("No track found with ID: ${track?.id}!")
 		}
 
 		val reviewSource = reviewSourceUserRecommendRepository.findByUser(currentUser)
 				?: ReviewSourceUserRecommend(user = currentUser).also { reviewSourceUserRecommendRepository.save(it) }
 
-		trackService.saveTrackForUserReview(targetUser, track, reviewSource)
+		tracks.forEach { track ->
+			val reviewTrack = trackService.saveTrackForUserReview(targetUser, track!!, reviewSource)
+			fileStorageService.copyAlbumArt(track.id, reviewTrack.id)
+		}
 	}
 
 	fun getAllForCurrentUser(pageable: Pageable): Page<Track> {
@@ -50,7 +58,8 @@ class ReviewQueueService(
 		track.assertValidReviewTrack(trackId)
 
 		track!!.inReview = false
-		track.lastReviewed = now()
+		track.addedToLibrary = now()
+		track.lastReviewed = track.addedToLibrary
 
 		trackRepository.save(track)
 	}

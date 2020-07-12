@@ -45,6 +45,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			FROM Track t
 			WHERE t.user.id = :userId
 			AND t.inReview = TRUE
+			AND t.deleted = FALSE
 			ORDER BY t.lastReviewed ASC
 		""")
 	fun getTracksInReview(
