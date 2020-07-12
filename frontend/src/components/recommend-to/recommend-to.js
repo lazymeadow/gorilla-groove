@@ -53,7 +53,7 @@ function RecommendToModal(props) {
 				<button type="button" onClick={recommendSongs}>
 					They'll definitely like this
 				</button>
-				<button type="button" onClick={e => { e.stopPropagation(); setModalOpen(false); }}>
+				<button type="button" onClick={e => { e.stopPropagation(); props.closeFunction() }}>
 					No, I'll keep this one to myself
 				</button>
 			</div>

@@ -17,6 +17,7 @@ import RemotePlayManagement from "../remote-play/management/remote-play-manageme
 import {DeviceContext} from "../../services/device-provider";
 import GlobalSearch from "../global-search/global-search";
 import ReviewQueue from "../review-queue/review-queue";
+import {ReviewQueueContext} from "../../services/review-queue-provider";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
@@ -37,6 +38,7 @@ export default function SiteLayout(props) {
 	const userContext = useContext(UserContext);
 	const deviceContext = useContext(DeviceContext);
 	const playlistContext = useContext(PlaylistContext);
+	const reviewQueueContext = useContext(ReviewQueueContext);
 
 	useEffect(() => {
 		userContext.initialize().catch(error => {
@@ -46,6 +48,7 @@ export default function SiteLayout(props) {
 		});
 		musicContext.loadSongsForUser();
 		playlistContext.loadPlaylists();
+		reviewQueueContext.fetchReviewTracks();
 
 		// Let other things finish loading before we start hogging available network connections with long polling
 		setTimeout(socketContext.connectToSocket, 1000);

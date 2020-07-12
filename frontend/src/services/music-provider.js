@@ -63,7 +63,7 @@ export class MusicProvider extends React.Component {
 			setColumnPreferences: (...args) => this.setColumnPreferences(...args),
 			setProviderState: (...args) => this.setProviderState(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
-			resetSessionState: (...args) => this.resetSessionState(...args)
+			resetSessionState: (...args) => this.resetSessionState(...args),
 		};
 	}
 

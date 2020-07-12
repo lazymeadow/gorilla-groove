@@ -9,6 +9,7 @@ import {SocketContext} from "../../services/socket-provider";
 import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
 import {DeviceContext} from "../../services/device-provider";
+import {ReviewQueueContext} from "../../services/review-queue-provider";
 
 let pendingDeletePlaylist = {};
 
@@ -22,6 +23,7 @@ export default function TrackSourceList(props) {
 	const deviceContext = useContext(DeviceContext);
 	const socketContext = useContext(SocketContext);
 	const playlistContext = useContext(PlaylistContext);
+	const reviewQueueContext = useContext(ReviewQueueContext);
 
 	const dataSource = [
 		{
@@ -143,7 +145,10 @@ export default function TrackSourceList(props) {
 					props.setCenterView(CenterView.REVIEW_QUEUE);
 				}}
 			>
-				<span>Review Queue</span>
+				<div className="flex-between">
+					<span>Review Queue</span>
+					<span>{ reviewQueueContext.reviewQueueCount > 0 ? `(${reviewQueueContext.reviewQueueCount})` : ''}</span>
+				</div>
 			</div>
 
 			<div
