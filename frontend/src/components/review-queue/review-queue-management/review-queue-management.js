@@ -17,7 +17,7 @@ function ReviewQueueManagementModal(props) {
 		reviewQueueContext.fetchReviewQueueSources().then(() => {
 			setLoading(false);
 		}).catch(() => {
-			toast.error('Failed to load review sources!')
+			toast.error('Failed to load review sources!');
 			setLoading(false);
 		});
 	}, []);
@@ -76,11 +76,48 @@ function ReviewQueueManagementModal(props) {
 }
 
 function AddNewSourceModal() {
+	const [modalOpen, setModalOpen] = useState(false);
+	const [selectedSourceType, setSelectedSourceType] = useState('2');
+
 	return (
-		<div className="text-center">
-			<select id="recommend-to-select">
-				<option value="1">1</option>
-			</select>
+		<div id="add-new-source" className="text-center">
+			<button id="add-review-source-button" onClick={() => { setModalOpen(true) }}>Add Review Source</button>
+			<Modal
+				isOpen={modalOpen}
+				closeFunction={() => { setModalOpen(false) }}
+			>
+				<div id="add-new-source-modal">
+					<h2 className="text-center">Add Review Source</h2>
+					<div className="text-center">
+						<label>Source Type</label>
+						<select
+							id="review-queue-type-select"
+							value={selectedSourceType}
+							onChange={e => setSelectedSourceType(e.target.value)}
+						>
+							<option value="2">Artist</option>
+							<option value="1">YouTube Channel</option>
+						</select>
+					</div>
+
+					<hr/>
+
+					<div className="flex-between">
+						<label htmlFor="review-queue-input">
+							{ selectedSourceType === "2" ? 'Artist Name' : 'Channel or User URL' }
+						</label>
+						<input
+							id="review-queue-input"
+							className="flex-grow"
+							placeholder={selectedSourceType === "2" ? 'Alestorm' : 'https://www.youtube.com/user/MrSuicideSheep'}
+						/>
+					</div>
+
+					<div className="text-center">
+						<button id="create-review-source-button">Create Review Source</button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 	)
 }
