@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.model.enums.ReviewSourceType
 import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
@@ -21,6 +22,9 @@ open class ReviewSource(
 				joinColumns = [JoinColumn(name = "review_source_id")],
 				inverseJoinColumns = [JoinColumn(name = "user_id")])
 		var subscribedUsers: MutableList<User> = mutableListOf(),
+
+		@Column(name = "source_type")
+		val sourceType: ReviewSourceType,
 
 		@Column(name = "created_at")
 		val createdAt: Timestamp = now()

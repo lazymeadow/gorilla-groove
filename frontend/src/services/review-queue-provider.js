@@ -10,13 +10,15 @@ export class ReviewQueueProvider extends React.Component {
 		this.state = {
 			reviewQueueCount: 0,
 			reviewQueueTracks: [],
+			reviewQueueSources: [],
 
-			fetchReviewTracks: (...args) => this.fetchReviewTracks(...args)
+			fetchReviewTracks: (...args) => this.fetchReviewTracks(...args),
+			fetchReviewQueueSources: (...args) => this.fetchReviewQueueSources(...args)
 		}
 	}
 
 	fetchReviewTracks() {
-		return Api.get('review-queue').then(res => {
+		return Api.get('review-queue/track').then(res => {
 			const tracks = res.content;
 
 			this.setState({
@@ -25,6 +27,14 @@ export class ReviewQueueProvider extends React.Component {
 			});
 
 			return tracks
+		})
+	};
+
+	fetchReviewQueueSources() {
+		return Api.get('review-queue/source').then(sources => {
+			this.setState({ reviewQueueSources: sources });
+
+			return sources
 		})
 	};
 

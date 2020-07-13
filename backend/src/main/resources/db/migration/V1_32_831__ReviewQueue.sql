@@ -10,7 +10,9 @@ UPDATE track SET added_to_library = created_at;
 
 CREATE TABLE review_source
 (
-    id int PRIMARY KEY NOT NULL AUTO_INCREMENT
+    id int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    source_type int NOT NULL,
+    created_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE review_source_user

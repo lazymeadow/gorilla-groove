@@ -1,5 +1,6 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.model.ReviewSource
 import com.example.groove.db.model.Track
 import com.example.groove.services.ReviewQueueService
 import com.example.groove.services.ReviewSourceYoutubeChannelService
@@ -19,11 +20,16 @@ class ReviewQueueController(
 		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService
 ) {
 
-	@GetMapping
-	fun getAll(
+	@GetMapping("/track")
+	fun getAllTracks(
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
-		return reviewQueueService.getAllForCurrentUser(pageable)
+		return reviewQueueService.getTracksInReviewForCurrentUser(pageable)
+	}
+
+	@GetMapping("/source")
+	fun getAllQueueSources(): List<ReviewSource> {
+		return reviewQueueService.getAllQueueSourcesForCurrentUser()
 	}
 
 	@PostMapping("/recommend")

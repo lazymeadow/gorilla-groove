@@ -1,8 +1,10 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.ReviewSourceRepository
 import com.example.groove.db.dao.ReviewSourceUserRecommendRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.dao.UserRepository
+import com.example.groove.db.model.ReviewSource
 import com.example.groove.db.model.ReviewSourceUserRecommend
 import com.example.groove.db.model.Track
 import com.example.groove.util.DateUtils.now
@@ -20,12 +22,16 @@ class ReviewQueueService(
 		private val userRepository: UserRepository,
 		private val reviewSourceUserRecommendRepository: ReviewSourceUserRecommendRepository,
 		private val trackService: TrackService,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val reviewSourceRepository: ReviewSourceRepository
 ) {
 	@Transactional
 	fun recommend(targetUserId: Long, recommendedTrackIds: List<Long>) {
 		val currentUser = loadLoggedInUser()
 
+		if (currentUser.id == targetUserId) {
+			throw IllegalArgumentException("Don't recommend songs to yourself!")
+		}
 		val targetUser = userRepository.get(targetUserId)
 				?: throw IllegalArgumentException("No user found with ID $targetUserId!")
 
@@ -49,7 +55,7 @@ class ReviewQueueService(
 		}
 	}
 
-	fun getAllForCurrentUser(pageable: Pageable): Page<Track> {
+	fun getTracksInReviewForCurrentUser(pageable: Pageable): Page<Track> {
 		return trackRepository.getTracksInReview(loadLoggedInUser().id, pageable)
 	}
 
@@ -82,6 +88,12 @@ class ReviewQueueService(
 		if (!this.inReview) {
 			throw IllegalArgumentException("Track $trackId is not in review!")
 		}
+	}
+
+	fun getAllQueueSourcesForCurrentUser(): List<ReviewSource> {
+		val user = loadLoggedInUser()
+
+		return reviewSourceRepository.findBySubscribedUsers(user)
 	}
 
 	companion object {

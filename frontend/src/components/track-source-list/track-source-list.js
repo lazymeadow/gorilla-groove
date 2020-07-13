@@ -10,6 +10,8 @@ import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
 import {DeviceContext} from "../../services/device-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
+import RecommendTo from "../recommend-to/recommend-to";
+import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
 
 let pendingDeletePlaylist = {};
 
@@ -121,8 +123,8 @@ export default function TrackSourceList(props) {
 	return (
 		<div id="view-source-list">
 			<div
-				className={`large-option ${librarySelected}`}
-				onMouseDown={() => {
+				className={`large-option ${librarySelected} hoverable`}
+				onClick={() => {
 					props.setCenterView(CenterView.TRACKS);
 					musicContext.loadSongsForUser();
 				}}
@@ -131,8 +133,8 @@ export default function TrackSourceList(props) {
 			</div>
 
 			<div
-				className={`secondary-option ${deviceManagementSelected}`}
-				onMouseDown={() => {
+				className={`secondary-option ${deviceManagementSelected} hoverable`}
+				onClick={() => {
 					props.setCenterView(CenterView.REMOTE_DEVICES);
 				}}
 			>
@@ -141,19 +143,24 @@ export default function TrackSourceList(props) {
 
 			<div
 				className={`secondary-option ${reviewQueueSelected}`}
-				onMouseDown={() => {
+				onClick={() => {
 					props.setCenterView(CenterView.REVIEW_QUEUE);
 				}}
 			>
 				<div className="flex-between">
-					<span>Review Queue</span>
-					<span>{ reviewQueueContext.reviewQueueCount > 0 ? `(${reviewQueueContext.reviewQueueCount})` : ''}</span>
+					<span className="flex-grow hoverable">Review Queue
+						<span className="small-text">
+							{ reviewQueueContext.reviewQueueCount > 0 ? ` (${reviewQueueContext.reviewQueueCount})` : ''}
+						</span>
+					</span>
+					<ReviewQueueManagement/>
+
 				</div>
 			</div>
 
 			<div
-				className={`secondary-option ${globalSearchSelected}`}
-				onMouseDown={() => {
+				className={`secondary-option ${globalSearchSelected} hoverable`}
+				onClick={() => {
 					props.setCenterView(CenterView.GLOBAL_SEARCH);
 				}}
 			>
@@ -162,7 +169,7 @@ export default function TrackSourceList(props) {
 
 			{dataSource.map((node, i) => {
 				const label =
-					<div className="tree-node" onMouseDown={() => handleParentNodeClick(i)}>
+					<div className="tree-node" onClick={() => handleParentNodeClick(i)}>
 						{node.heading}
 					</div>;
 				return (
@@ -189,7 +196,7 @@ export default function TrackSourceList(props) {
 									title={tooltip}
 									className={`tree-child ${entryClass} ${partyClass}`}
 									key={entry.id}
-									onMouseDown={() => selectEntry(node.section, entry, cellId)}
+									onClick={() => selectEntry(node.section, entry, cellId)}
 								>
 									<EditableDiv
 										editable={editedId === cellId && node.section === TrackView.PLAYLIST}
@@ -201,7 +208,7 @@ export default function TrackSourceList(props) {
 
 									<div className="playlist-delete">
 										{ node.section === TrackView.PLAYLIST
-											? <i className="fas fa-times" onMouseDown={e => {
+											? <i className="fas fa-times" onClick={e => {
 												e.stopPropagation();
 												pendingDeletePlaylist = entry;
 												setModalOpen(true);
@@ -223,7 +230,7 @@ export default function TrackSourceList(props) {
 				<div id="playlist-delete-modal">
 					<div>Are you sure you want to delete the playlist '{pendingDeletePlaylist.name}'?</div>
 					<div className="flex-between confirm-modal-buttons">
-						<button onMouseDown={() => {
+						<button onClick={() => {
 							playlistContext.deletePlaylist(pendingDeletePlaylist).then(() => {
 								if (musicContext.trackView === TrackView.PLAYLIST
 									&& musicContext.viewedEntityId === pendingDeletePlaylist.id) {
@@ -232,7 +239,7 @@ export default function TrackSourceList(props) {
 								setModalOpen(false)
 							})
 						}}>You know I do</button>
-						<button onMouseDown={() => setModalOpen(false)}>No. Woops</button>
+						<button onClick={() => setModalOpen(false)}>No. Woops</button>
 					</div>
 				</div>
 			</Modal>

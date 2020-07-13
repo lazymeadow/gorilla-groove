@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.model.enums.ReviewSourceType
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -15,4 +16,4 @@ data class ReviewSourceArtist(
 
 		@Column(name = "search_newer_than")
 		val searchNewerThan: Timestamp? = null
-) : ReviewSource()
+) : ReviewSource(sourceType = ReviewSourceType.ARTIST)

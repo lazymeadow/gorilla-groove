@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.model.enums.ReviewSourceType
 import com.example.groove.util.DateUtils.now
 import java.sql.Timestamp
 import javax.persistence.*
@@ -16,4 +17,4 @@ data class ReviewSourceYoutubeChannel(
 
 		@Column(name = "last_searched")
 		var lastSearched: Timestamp = now()
-) : ReviewSource()
+) : ReviewSource(sourceType = ReviewSourceType.YOUTUBE_CHANNEL)
