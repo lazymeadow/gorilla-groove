@@ -1,4 +1,4 @@
-package com.example.groove.services
+package com.example.groove.services.review
 
 import com.example.groove.db.dao.ReviewSourceArtistDownloadRepository
 import com.example.groove.db.dao.ReviewSourceArtistRepository
@@ -7,7 +7,12 @@ import com.example.groove.db.model.ReviewSourceArtist
 import com.example.groove.db.model.ReviewSourceArtistDownload
 import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
+import com.example.groove.services.SpotifyApiClient
+import com.example.groove.services.TrackService
+import com.example.groove.services.YoutubeApiClient
+import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.toTimestamp
 import org.springframework.scheduling.annotation.Scheduled
@@ -168,6 +173,39 @@ class ReviewSourceArtistService(
 				.filter { it.isNotBlank() && !unimportantWords.contains(it) }
 
 		return titleWords.all { lowerTitle.contains(it) }
+	}
+
+	fun subscribeToArtist(artistName: String): Pair<Boolean, List<String>> {
+		val currentUser = loadLoggedInUser()
+
+		// First, check if the artist is already subscribed to by someone else
+		reviewSourceArtistRepository.findByArtistName(artistName)?.let { existing ->
+			existing.subscribedUsers.find { it.id == currentUser.id }?.run {
+				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
+			}
+			existing.subscribedUsers.add(currentUser)
+			reviewSourceArtistRepository.save(existing)
+			return true to emptyList()
+		}
+
+		// Ok so nobody has subscribed to this artist before. We need to create a new one and add our user to it
+
+		// Start by finding the artists Spotify gives us based off the name
+		val artists = spotifyApiClient.searchArtistsByName(artistName)
+
+		// Try to find an exact match. If we don't, return a list of artists to try to help the end user
+		// fix any typos or things of that nature
+		val targetName = artistName.toLowerCase()
+		val foundArtist = artists.find { it.name.toLowerCase() == targetName }
+				?: return false to artists.map { it.name }
+
+		// Cool cool cool we found an artist in spotify. Now just save it.
+		// Hard-code "searchNewerThan" to now() until we are not throttled by YouTube and can search unlimited
+		val source = ReviewSourceArtist(artistId = foundArtist.id, artistName = foundArtist.name, searchNewerThan = now())
+		source.subscribedUsers.add(currentUser)
+		reviewSourceArtistRepository.save(source)
+
+		return true to emptyList()
 	}
 
 	companion object {

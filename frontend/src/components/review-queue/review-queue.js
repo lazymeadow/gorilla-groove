@@ -87,7 +87,7 @@ export default function ReviewQueue() {
 		});
 	};
 
-	return <div id="review-queue" className="d-relative text-center">
+	return <div id="review-queue" className="p-relative text-center">
 		<LoadingSpinner visible={loading}/>
 		{
 			reviewTrack !== null ? (

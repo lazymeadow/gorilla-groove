@@ -78,7 +78,7 @@ export default function GlobalSearch() {
 		setPlayingId(null);
 	}
 
-	return <div id="global-search d-relative">
+	return <div id="global-search">
 		<LoadingSpinner visible={loading || (videos.length && !apiInitialized)}/>
 		{ getDisplayedText() }
 		<div id="global-search-container">

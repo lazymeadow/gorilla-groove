@@ -8,12 +8,10 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import java.net.URL
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
 import java.util.*
-import javax.imageio.ImageIO
 import kotlin.concurrent.schedule
 
 
@@ -85,14 +83,18 @@ class SpotifyApiClient(
 	}
 
 	fun getSpotifyArtistId(artist: String): String? {
+		val lowerName = artist.toLowerCase()
+		val matchingArtist = searchArtistsByName(artist).find { it.name.toLowerCase() == lowerName }
+
+		return matchingArtist?.id
+	}
+
+	fun searchArtistsByName(artist: String): List<SpotifyArtist> {
 		val startingUrl = createSpotifySearchUrl(artist, null, REQUEST_SIZE_LIMIT, "artist")
 
 		val result = restTemplate.querySpotify<SpotifyArtistSearchResponse>(startingUrl)
 
-		val lowerName = artist.toLowerCase()
-		val matchingArtist = result.artists.items.find { it.name.toLowerCase() == lowerName }
-
-		return matchingArtist?.id
+		return result.artists.items
 	}
 
 	private fun createSpotifySearchUrl(artist: String, name: String?, limit: Int, searchType: String): String {

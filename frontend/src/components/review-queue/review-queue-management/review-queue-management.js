@@ -3,12 +3,10 @@ import {Modal} from "../../modal/modal";
 import {toast} from "react-toastify";
 import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {Api} from "../../../api";
-import {UserContext} from "../../../services/user-provider";
 import {ReviewQueueContext} from "../../../services/review-queue-provider";
 import {toTitleCaseFromSnakeCase} from "../../../formatters";
 
 function ReviewQueueManagementModal(props) {
-	const [modalOpen, setModalOpen] = useState(false);
 	const [loading, setLoading] = useState(true);
 
 	const reviewQueueContext = useContext(ReviewQueueContext);
@@ -38,7 +36,7 @@ function ReviewQueueManagementModal(props) {
 	return (
 		<div id="review-queue-management-modal" className="p-relative">
 			<LoadingSpinner visible={loading}/>
-			<h2 className="text-center">Review Queue Management</h2>
+			<h2 className="text-center ws-pre-line">Review Queue Management</h2>
 			<AddNewSourceModal/>
 			<table className="data-table full-width">
 				<thead>
@@ -77,7 +75,41 @@ function ReviewQueueManagementModal(props) {
 
 function AddNewSourceModal() {
 	const [modalOpen, setModalOpen] = useState(false);
-	const [selectedSourceType, setSelectedSourceType] = useState('2');
+	const [loading, setLoading] = useState(false);
+	const [selectedSourceType, setSelectedSourceType] = useState(ReviewSourceType.ARTIST);
+	const [reviewQueueInput, setReviewQueueInput] = useState('');
+
+	const subscribe = () => {
+		if (reviewQueueInput.trim().length === 0) {
+			return;
+		}
+
+		setLoading(true);
+
+		if (selectedSourceType === ReviewSourceType.ARTIST) {
+			Api.post('review-queue/subscribe/artist', { artistName: reviewQueueInput }).then(res => {
+				console.log('First');
+				setModalOpen(false);
+			}).catch(err => {
+				const error = JSON.parse(err);
+				if (error.status === 400) {
+					toast.error('You are already subscribed to this artist!');
+				} else if (error.possibleMatches) {
+					if (error.possibleMatches.length === 0) {
+						toast.error(`No artist named ${reviewQueueInput} found on Spotify`)
+					} else {
+						toast.error('Need to handle this');
+					}
+				} else {
+					toast.error('Uh oh');
+				}
+				setLoading(false);
+			})
+		} else {
+			setLoading(false);
+			throw 'Unsupported review source type!'
+		}
+	};
 
 	return (
 		<div id="add-new-source" className="text-center">
@@ -86,7 +118,8 @@ function AddNewSourceModal() {
 				isOpen={modalOpen}
 				closeFunction={() => { setModalOpen(false) }}
 			>
-				<div id="add-new-source-modal">
+				<div id="add-new-source-modal" className="p-relative">
+					<LoadingSpinner visible={loading}/>
 					<h2 className="text-center">Add Review Source</h2>
 					<div className="text-center">
 						<label>Source Type</label>
@@ -95,8 +128,8 @@ function AddNewSourceModal() {
 							value={selectedSourceType}
 							onChange={e => setSelectedSourceType(e.target.value)}
 						>
-							<option value="2">Artist</option>
-							<option value="1">YouTube Channel</option>
+							<option value={ReviewSourceType.ARTIST}>Artist</option>
+							<option value={ReviewSourceType.YOUTUBE_CHANNEL}>YouTube Channel</option>
 						</select>
 					</div>
 
@@ -104,17 +137,22 @@ function AddNewSourceModal() {
 
 					<div className="flex-between">
 						<label htmlFor="review-queue-input">
-							{ selectedSourceType === "2" ? 'Artist Name' : 'Channel or User URL' }
+							{ selectedSourceType === ReviewSourceType.ARTIST ? 'Artist Name' : 'Channel or User URL' }
 						</label>
 						<input
 							id="review-queue-input"
 							className="flex-grow"
-							placeholder={selectedSourceType === "2" ? 'Alestorm' : 'https://www.youtube.com/user/MrSuicideSheep'}
+							value={reviewQueueInput}
+							onChange={e => setReviewQueueInput(e.target.value)}
+							placeholder={selectedSourceType === ReviewSourceType.ARTIST
+								? 'Alestorm'
+								: 'https://www.youtube.com/user/MrSuicideSheep'
+							}
 						/>
 					</div>
 
 					<div className="text-center">
-						<button id="create-review-source-button">Create Review Source</button>
+						<button id="create-review-source-button" onClick={subscribe}>Create Review Source</button>
 					</div>
 				</div>
 			</Modal>
@@ -139,3 +177,9 @@ export default function ReviewQueueManagement() {
 		</div>
 	)
 }
+
+export const ReviewSourceType = Object.freeze({
+	USER_RECOMMEND: '0',
+	YOUTUBE_CHANNEL: '1',
+	ARTIST: '2'
+});

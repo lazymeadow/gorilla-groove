@@ -56,4 +56,4 @@ create table review_source_artist_download
 	downloaded_at timestamp null
 );
 
-
+CREATE UNIQUE INDEX review_source_artist_artist_name_uindex ON review_source_artist (artist_name);

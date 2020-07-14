@@ -2,13 +2,16 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.ReviewSource
 import com.example.groove.db.model.Track
-import com.example.groove.services.ReviewQueueService
-import com.example.groove.services.ReviewSourceYoutubeChannelService
+import com.example.groove.services.review.ReviewQueueService
+import com.example.groove.services.review.ReviewSourceYoutubeChannelService
 import com.example.groove.services.TrackService
+import com.example.groove.services.review.ReviewSourceArtistService
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 import org.springframework.web.bind.annotation.*
 
@@ -17,7 +20,8 @@ import org.springframework.web.bind.annotation.*
 class ReviewQueueController(
 		private val reviewQueueService: ReviewQueueService,
 		private val trackService: TrackService,
-		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService
+		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService,
+		private val reviewSourceArtistService: ReviewSourceArtistService
 ) {
 
 	@GetMapping("/track")
@@ -47,7 +51,7 @@ class ReviewQueueController(
 
 		val regex = Regex("^https://www.youtube.com/(channel|user)/.+\$")
 
-		require (regex.matches(channelUrl)) {
+		require(regex.matches(channelUrl)) {
 			"Invalid channel URL supplied! $channelUrl"
 		}
 
@@ -57,6 +61,23 @@ class ReviewQueueController(
 			reviewSourceYoutubeChannelService.subscribeToChannelId(searchTerm)
 		} else {
 			reviewSourceYoutubeChannelService.subscribeToUser(searchTerm)
+		}
+	}
+
+	@PostMapping("/subscribe/artist")
+	fun subscribeToArtist(@RequestBody body: ArtistSubscriptionDTO): ResponseEntity<Map<String, List<String>>> {
+		require(body.artistName.isNotBlank()) {
+			"Artist name must not be empty!"
+		}
+
+		val (success, possibleMatches) = reviewSourceArtistService.subscribeToArtist(body.artistName.trim())
+
+		return if (success) {
+			ResponseEntity.ok(emptyMap())
+		} else {
+			ResponseEntity
+					.status(HttpStatus.BAD_REQUEST)
+					.body(mapOf("possibleMatches" to possibleMatches))
 		}
 	}
 
@@ -81,6 +102,7 @@ class ReviewQueueController(
 	)
 
 	data class YouTubeChannelSubscriptionDTO(val channelUrl: String)
+	data class ArtistSubscriptionDTO(val artistName: String)
 
 	companion object {
 		val logger = logger()
