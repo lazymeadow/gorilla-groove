@@ -19,8 +19,11 @@ class ImageService(
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir!!)
 			.toAbsolutePath().normalize()
 
-	fun cropToSquare(imageFile: File): File {
-		val image = ImageIO.read(imageFile)
+	fun cropToSquare(imageFile: File): File? {
+		val image = ImageIO.read(imageFile) ?: run {
+			logger.error("Could not read in image file for cropping to a square!")
+			return null
+		}
 
 		val smallerEdge = min(image.width, image.height)
 

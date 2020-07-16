@@ -67,9 +67,10 @@ class YoutubeDownloadService(
 
 		if (newAlbumArt.exists()) {
 			if (youtubeDownloadDTO.cropArtToSquare) {
-				val croppedArt = imageService.cropToSquare(newAlbumArt)
-				fileStorageService.storeAlbumArt(croppedArt, track.id)
-				croppedArt.delete()
+				imageService.cropToSquare(newAlbumArt)?.let { croppedArt ->
+					fileStorageService.storeAlbumArt(croppedArt, track.id)
+					croppedArt.delete()
+				}
 			} else {
 				fileStorageService.storeAlbumArt(newAlbumArt, track.id)
 			}
