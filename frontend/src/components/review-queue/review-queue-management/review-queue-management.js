@@ -70,15 +70,6 @@ function ReviewQueueManagementModal() {
 				)}
 				</tbody>
 			</table>
-
-			<div className="flex-between confirm-modal-buttons">
-				<button type="button" onClick={() => {}}>
-					Yes
-				</button>
-				<button type="button" onClick={e => { e.stopPropagation() }}>
-					No
-				</button>
-			</div>
 		</div>
 	)
 }
@@ -102,9 +93,9 @@ function AddNewSourceModal() {
 			Api.post('review-queue/subscribe/artist', { artistName: reviewQueueInput }).then(() => {
 				reviewQueueContext.fetchReviewQueueSources().then(() => {
 					toast.success(`Successfully subscribed to ${reviewQueueInput}`);
-					setModalOpen(false);
 				}).catch(() => {
 					toast.info(`Successfully subscribed to ${reviewQueueInput} but could not fetch the new list!`);
+				}).finally(() => {
 					setModalOpen(false);
 				});
 			}).catch(err => {
@@ -127,9 +118,9 @@ function AddNewSourceModal() {
 			Api.post('review-queue/subscribe/youtube-channel', { channelUrl: reviewQueueInput }).then(channel => {
 				reviewQueueContext.fetchReviewQueueSources().then(() => {
 					toast.success(`Successfully subscribed to ${channel.channelName}`);
-					setModalOpen(false);
 				}).catch(() => {
 					toast.info(`Successfully subscribed to ${channel.channelName} but could not fetch new sources!`);
+				}).finally(() => {
 					setModalOpen(false);
 				});
 			}).catch(err => {
@@ -157,7 +148,12 @@ function AddNewSourceModal() {
 
 	return (
 		<div id="add-new-source" className="text-center">
-			<button id="add-review-source-button" onClick={() => { setModalOpen(true) }}>Add Review Source</button>
+			<button id="add-review-source-button" onClick={() => {
+				setSelectedSourceType(ReviewSourceType.ARTIST);
+				setReviewQueueInput('');
+				setLoading(false);
+				setModalOpen(true);
+			}}>Add Review Source</button>
 			<Modal
 				isOpen={modalOpen}
 				closeFunction={() => { setModalOpen(false) }}

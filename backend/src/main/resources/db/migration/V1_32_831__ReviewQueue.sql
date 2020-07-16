@@ -29,6 +29,8 @@ CREATE TABLE review_source_youtube_channel
     last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE UNIQUE INDEX review_source_youtube_channel_channel_id_uindex ON review_source_youtube_channel (channel_id);
+
 CREATE TABLE review_source_user_recommend
 (
     review_source_id INT PRIMARY KEY REFERENCES review_source(id),
@@ -48,6 +50,7 @@ create table review_source_artist_download
 	id int not null primary key AUTO_INCREMENT,
 	review_source_id int null,
 	track_name varchar(255) not null,
+	track_album_name varchar(255) not null,
 	track_length int not null,
 	track_release_year int not null,
 	track_art_url varchar(512) null,

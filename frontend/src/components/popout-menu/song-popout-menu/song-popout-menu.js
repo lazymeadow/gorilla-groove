@@ -13,6 +13,8 @@ import RemotePlay from "../../remote-play/modal/remote-play";
 import {RemotePlayType} from "../../remote-play/modal/remote-play-type";
 import SongDelete from "./song-delete/song-delete";
 import RecommendTo from "../../recommend-to/recommend-to";
+import {UserContext} from "../../../services/user-provider";
+import {PermissionType} from "../../../enums/permission-type";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -21,6 +23,7 @@ let lastY = -1;
 
 export default function SongPopoutMenu(props) {
 	const musicContext = useContext(MusicContext);
+	const userContext = useContext(UserContext);
 	const playlistContext = useContext(PlaylistContext);
 
 	const calculateMenuOptions = () => {
@@ -215,7 +218,8 @@ export default function SongPopoutMenu(props) {
 			}, {
 				component: <MetadataRequest getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
-				component: <RecommendTo getSelectedTracks={props.getSelectedTracks.bind(this)}/>
+				component: <RecommendTo getSelectedTracks={props.getSelectedTracks.bind(this)}/>,
+				shouldRender: userContext.hasPermission(PermissionType.EXPERIMENTAL)
 			}, {
 				component: <SongDelete getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}

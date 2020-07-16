@@ -53,7 +53,13 @@ class ReviewSourceYoutubeChannelService(
 
 			val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
 
-			newVideos.forEach { video ->
+			newVideos.forEach saveLoop@ { video ->
+				// Some channels will put out mixes every now and then. I don't really want to download mixes automatically as they could be huge, and don't really fit the GG spirit of adding individual songs
+				if (video.duration > MAX_VIDEO_LENGTH) {
+					logger.info("Video ${video.title} from ${video.channelTitle} has a duration of ${video.duration} which exceeds our max allowed duration of $MAX_VIDEO_LENGTH. It will be skipped")
+					return@saveLoop
+				}
+
 				val downloadDTO = YoutubeDownloadDTO(
 						url = video.videoUrl,
 						name = video.title,
@@ -82,34 +88,29 @@ class ReviewSourceYoutubeChannelService(
 
 	fun subscribeToUser(youtubeName: String) {
 		val ownUser = loadLoggedInUser()
-
-		// Check if someone is already subscribed to this channel
-		reviewSourceYoutubeChannelRepository.findByChannelName(youtubeName)?.let { reviewSource ->
-			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
-				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to $youtubeName!")
-			}
-			if (reviewSource.subscribedUsers.isEmpty()) {
-				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
-			}
-			reviewSource.subscribedUsers.add(ownUser)
-			return
-		}
+		logger.info("Subscribing ${ownUser.name} to channel $youtubeName")
 
 		val youtubeUserInfo = youtubeApiClient.getChannelInfoByUsername(youtubeName)
 				?: throw IllegalArgumentException("Unable to find YouTube channel with name $youtubeName!")
+
+		// Check if someone is already subscribed to this channel
+		// Need to grab ID first because name is unreliable
 
 		saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
 	}
 
 	fun subscribeToChannelId(channelId: String) {
 		val ownUser = loadLoggedInUser()
+		logger.info("Subscribing ${ownUser.name} to channel $channelId")
 
 		// Check if someone is already subscribed to this channel
 		reviewSourceYoutubeChannelRepository.findByChannelId(channelId)?.let { reviewSource ->
+			logger.info("$channelId (${reviewSource.channelName}) already exists")
 			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
 				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to ${reviewSource.channelName}!")
 			}
 			if (reviewSource.subscribedUsers.isEmpty()) {
+				logger.info("$channelId (${reviewSource.channelName}) already exists but has no users subscribed. Resetting its last searched")
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
 			}
 			reviewSource.subscribedUsers.add(ownUser)
@@ -123,6 +124,20 @@ class ReviewSourceYoutubeChannelService(
 	}
 
 	private fun saveAndSubscribeToChannel(channelInfo: YoutubeChannelInfo, user: User) {
+		reviewSourceYoutubeChannelRepository.findByChannelId(channelInfo.id)?.let { reviewSource ->
+			logger.info("${reviewSource.channelName} (${reviewSource.channelId}) already exists")
+			reviewSource.subscribedUsers.find { it.id == user.id }?.let {
+				throw IllegalArgumentException("User ${user.name} is already subscribed to ${reviewSource.channelName}! (${reviewSource.channelId})")
+			}
+			if (reviewSource.subscribedUsers.isEmpty()) {
+				logger.info("${reviewSource.channelName} already exists but has no users subscribed. Resetting its last searched")
+				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
+			}
+			reviewSource.subscribedUsers.add(user)
+			return
+		}
+
+		logger.info("Channel ${channelInfo.title} is new. Saving a new record")
 		ReviewSourceYoutubeChannel(channelId = channelInfo.id, channelName = channelInfo.title).also {
 			it.subscribedUsers.add(user)
 			reviewSourceYoutubeChannelRepository.save(it)
@@ -131,5 +146,7 @@ class ReviewSourceYoutubeChannelService(
 
 	companion object {
 		val logger = logger()
+
+		const val MAX_VIDEO_LENGTH = 15 * 60 // 15 minutes
 	}
 }

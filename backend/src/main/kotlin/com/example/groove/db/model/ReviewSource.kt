@@ -21,11 +21,11 @@ open class ReviewSource(
 				name = "review_source_user",
 				joinColumns = [JoinColumn(name = "review_source_id")],
 				inverseJoinColumns = [JoinColumn(name = "user_id")])
-		var subscribedUsers: MutableList<User> = mutableListOf(),
+		open var subscribedUsers: MutableList<User> = mutableListOf(),
 
 		@Column(name = "source_type")
-		val sourceType: ReviewSourceType,
+		open val sourceType: ReviewSourceType,
 
 		@Column(name = "created_at")
-		val createdAt: Timestamp = now()
+		open val createdAt: Timestamp = now()
 )
