@@ -200,7 +200,6 @@ class YoutubeApiClient(
 	data class RawYoutubeChannelResponse(val items: List<RawYoutubeChannelInfoItem>)
 	data class RawYoutubeChannelInfoItem(val id: String, val snippet: YoutubeChannelSnippet)
 	data class YoutubeChannelSnippet(val title: String)
-	data class YoutubeChannelInfo(val title: String, val id: String)
 
 	data class ItemId(val videoId: String)
 
@@ -250,3 +249,5 @@ class YoutubeApiClient(
 		val logger = logger()
 	}
 }
+
+data class YoutubeChannelInfo(val title: String, val id: String)

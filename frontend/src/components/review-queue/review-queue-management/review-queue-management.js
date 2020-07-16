@@ -79,6 +79,8 @@ function AddNewSourceModal() {
 	const [selectedSourceType, setSelectedSourceType] = useState(ReviewSourceType.ARTIST);
 	const [reviewQueueInput, setReviewQueueInput] = useState('');
 
+	const reviewQueueContext = useContext(ReviewQueueContext);
+
 	const subscribe = () => {
 		if (reviewQueueInput.trim().length === 0) {
 			return;
@@ -87,9 +89,14 @@ function AddNewSourceModal() {
 		setLoading(true);
 
 		if (selectedSourceType === ReviewSourceType.ARTIST) {
-			Api.post('review-queue/subscribe/artist', { artistName: reviewQueueInput }).then(res => {
-				console.log('First');
-				setModalOpen(false);
+			Api.post('review-queue/subscribe/artist', { artistName: reviewQueueInput }).then(() => {
+				reviewQueueContext.fetchReviewQueueSources().then(() => {
+					toast.success(`Successfully subscribed to ${reviewQueueInput}`);
+					setModalOpen(false);
+				}).catch(() => {
+					toast.info(`Successfully subscribed to ${reviewQueueInput} but could not fetch new sources!`);
+					setModalOpen(false);
+				});
 			}).catch(err => {
 				const error = JSON.parse(err);
 				if (error.status === 400) {
@@ -98,10 +105,37 @@ function AddNewSourceModal() {
 					if (error.possibleMatches.length === 0) {
 						toast.error(`No artist named ${reviewQueueInput} found on Spotify`)
 					} else {
-						toast.error('Need to handle this');
+						toast.error(`Failed to subscribe to artist! Closest matches:\n\n${error.possibleMatches.join('\n')}`);
 					}
 				} else {
-					toast.error('Uh oh');
+					console.error(error);
+					toast.error('Failed to subscribe to artist!');
+				}
+				setLoading(false);
+			})
+		} else if (selectedSourceType === ReviewSourceType.YOUTUBE_CHANNEL) {
+			Api.post('review-queue/subscribe/youtube-channel', { channelUrl: reviewQueueInput }).then(channel => {
+				reviewQueueContext.fetchReviewQueueSources().then(() => {
+					toast.success(`Successfully subscribed to ${channel.channelName}`);
+					setModalOpen(false);
+				}).catch(() => {
+					toast.info(`Successfully subscribed to ${channel.channelName} but could not fetch new sources!`);
+					setModalOpen(false);
+				});
+			}).catch(err => {
+				const error = JSON.parse(err);
+				if (error.status === 400) {
+					toast.error('You are already subscribed to this artist!');
+				} else if (error.possibleMatches) {
+					if (error.possibleMatches.length === 0) {
+						toast.error(`No artist named ${reviewQueueInput} found on Spotify`)
+					} else {
+						console.error(error);
+						toast.error('Failed to subscribe to artist!');
+					}
+				} else {
+					console.error(error);
+					toast.error('Failed to subscribe to artist!');
 				}
 				setLoading(false);
 			})
@@ -135,13 +169,13 @@ function AddNewSourceModal() {
 
 					<hr/>
 
-					<div className="flex-between">
+					<div>
 						<label htmlFor="review-queue-input">
 							{ selectedSourceType === ReviewSourceType.ARTIST ? 'Artist Name' : 'Channel or User URL' }
 						</label>
 						<input
 							id="review-queue-input"
-							className="flex-grow"
+							className="d-block full-width"
 							value={reviewQueueInput}
 							onChange={e => setReviewQueueInput(e.target.value)}
 							placeholder={selectedSourceType === ReviewSourceType.ARTIST

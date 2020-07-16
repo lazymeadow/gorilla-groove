@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface ReviewSourceYoutubeChannelRepository : CrudRepository<ReviewSourceYoutubeChannel, Long> {
 	fun findByChannelId(channelId: String): ReviewSourceYoutubeChannel?
+	fun findByChannelName(channelName: String): ReviewSourceYoutubeChannel?
 }

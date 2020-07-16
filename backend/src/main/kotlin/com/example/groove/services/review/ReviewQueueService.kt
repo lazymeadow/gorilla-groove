@@ -52,8 +52,7 @@ class ReviewQueueService(
 				?: ReviewSourceUserRecommend(user = currentUser).also { reviewSourceUserRecommendRepository.save(it) }
 
 		tracks.forEach { track ->
-			val reviewTrack = trackService.saveTrackForUserReview(targetUser, track!!, reviewSource)
-			fileStorageService.copyAlbumArt(track.id, reviewTrack.id)
+			trackService.saveTrackForUserReview(targetUser, track!!, reviewSource)
 		}
 	}
 

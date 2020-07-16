@@ -278,7 +278,7 @@ class TrackService(
 	}
 
 	// This track is being given to someone for review. Copy the track with the target user as
-	// the new owner. Save it, and the track review info
+	// the new owner. Save it, and copy the album art
 	fun saveTrackForUserReview(user: User, track: Track, reviewSource: ReviewSource): Track {
 		return track.copy(
 				id = 0,
@@ -292,7 +292,10 @@ class TrackService(
 				createdAt = now(),
 				playCount = 0,
 				lastPlayed = null
-		).also { trackRepository.save(it) }
+		).also { trackCopy ->
+			trackRepository.save(trackCopy)
+			fileStorageService.copyAlbumArt(track.id, trackCopy.id)
+		}
 	}
 
 	companion object {

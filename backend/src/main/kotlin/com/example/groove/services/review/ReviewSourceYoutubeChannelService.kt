@@ -2,11 +2,15 @@ package com.example.groove.services.review
 
 import com.example.groove.db.dao.ReviewSourceYoutubeChannelRepository
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.ReviewSourceYoutubeChannel
+import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeApiClient
+import com.example.groove.services.YoutubeChannelInfo
 import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -61,11 +65,9 @@ class ReviewSourceYoutubeChannelService(
 				track.lastReviewed = now()
 				trackRepository.save(track)
 
+
 				// The YT download service will save the Track for the user that downloads it.
-				// So for every other user just copy that DB entity and give it the user. It will
-				// point to the same S3 bucket for everything, however, we don't share album art
-				// right now so that will need to be copied!
-				// TODO album art copying
+				// So for every other user make a copy of that track
 				otherUsers.forEach { otherUser ->
 					trackService.saveTrackForUserReview(otherUser, track, source)
 				}
@@ -78,12 +80,47 @@ class ReviewSourceYoutubeChannelService(
 		logger.info("Review Source Youtube Channel Downloader complete")
 	}
 
-	fun subscribeToUser(user: String) {
+	fun subscribeToUser(youtubeName: String) {
+		val ownUser = loadLoggedInUser()
 
+		// Check if someone is already subscribed to this channel
+		reviewSourceYoutubeChannelRepository.findByChannelName(youtubeName)?.let { reviewSource ->
+			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
+				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to $youtubeName!")
+			}
+			reviewSource.subscribedUsers.add(ownUser)
+			return
+		}
+
+		val youtubeUserInfo = youtubeApiClient.getChannelInfoByUsername(youtubeName)
+				?: throw IllegalArgumentException("Unable to find YouTube channel with name $youtubeName!")
+
+		saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
 	}
 
 	fun subscribeToChannelId(channelId: String) {
-		val reviewSource = reviewSourceYoutubeChannelRepository.findByChannelId(channelId)
+		val ownUser = loadLoggedInUser()
+
+		// Check if someone is already subscribed to this channel
+		reviewSourceYoutubeChannelRepository.findByChannelId(channelId)?.let { reviewSource ->
+			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
+				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to ${reviewSource.channelName}!")
+			}
+			reviewSource.subscribedUsers.add(ownUser)
+			return
+		}
+
+		val youtubeUserInfo = youtubeApiClient.getChannelInfoByChannelId(channelId)
+				?: throw IllegalArgumentException("Unable to find YouTube channel with id $channelId!")
+
+		saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
+	}
+
+	private fun saveAndSubscribeToChannel(channelInfo: YoutubeChannelInfo, user: User) {
+		ReviewSourceYoutubeChannel(channelId = channelInfo.id, channelName = channelInfo.title).also {
+			it.subscribedUsers.add(user)
+			reviewSourceYoutubeChannelRepository.save(it)
+		}
 	}
 
 	companion object {

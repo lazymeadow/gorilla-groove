@@ -134,10 +134,7 @@ class ReviewSourceArtistService(
 			reviewSourceArtistDownloadRepository.save(song)
 
 			// The YT download service will save the Track for the user that downloads it.
-			// So for every other user just copy that DB entity and give it the user. It will
-			// point to the same S3 bucket for everything, however, we don't share album art
-			// right now so that will need to be copied!
-			// TODO album art copying
+			// So for every other user make a copy of that track
 			otherUsers.forEach { otherUser ->
 				trackService.saveTrackForUserReview(otherUser, track, source)
 			}
@@ -197,7 +194,7 @@ class ReviewSourceArtistService(
 		// fix any typos or things of that nature
 		val targetName = artistName.toLowerCase()
 		val foundArtist = artists.find { it.name.toLowerCase() == targetName }
-				?: return false to artists.map { it.name }
+				?: return false to artists.map { it.name }.take(5)
 
 		// Cool cool cool we found an artist in spotify. Now just save it.
 		// Hard-code "searchNewerThan" to now() until we are not throttled by YouTube and can search unlimited
