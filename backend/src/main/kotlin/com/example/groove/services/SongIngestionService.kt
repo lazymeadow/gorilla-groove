@@ -94,12 +94,12 @@ class SongIngestionService(
 
 		logger.info("Beginning album art crop for track ID: ${track.id}")
 		// Crop the image and save the cropped file
-		val croppedImage = imageService.cropToSquare(albumArt)
+		imageService.cropToSquare(albumArt)?.let { croppedImage ->
+			fileStorageService.storeAlbumArt(croppedImage, track.id)
+			logger.info("Cropped album art was stored for track ID: ${track.id}")
 
-		fileStorageService.storeAlbumArt(croppedImage, track.id)
-		logger.info("Cropped album art was stored for track ID: ${track.id}")
-
-		croppedImage.delete()
+			croppedImage.delete()
+		}
 	}
 
 	// It's important to rip the album art out PRIOR to running the song
