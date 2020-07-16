@@ -44,7 +44,8 @@ class SpotifyApiClient(
 	private inline fun<reified T> RestTemplate.querySpotify(url: String): T {
 		val headers = mapOf("Authorization" to authHeader).toHeaders()
 
-		println(headers)
+		// Can be nice to log this to play with the API in a rest client
+//		println(headers)
 
 		val rawResponse = try {
 			this.exchange(url, HttpMethod.GET, HttpEntity<String>(headers), String::class.java).body!!

@@ -5,5 +5,6 @@ package com.example.groove.db.model.enums
 enum class PermissionType {
 	WRITE_VERSION_HISTORY,
 	EXPERIMENTAL,
-	INVITE_USER
+	INVITE_USER,
+	RUN_REVIEW_QUEUES
 }

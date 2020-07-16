@@ -1,9 +1,12 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.ReviewSource
+import com.example.groove.db.model.enums.PermissionType
+import com.example.groove.services.UserService
 import com.example.groove.services.review.ReviewQueueService
 import com.example.groove.services.review.ReviewSourceYoutubeChannelService
 import com.example.groove.services.review.ReviewSourceArtistService
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,7 +18,8 @@ import org.springframework.web.bind.annotation.*
 class ReviewQueueController(
 		private val reviewQueueService: ReviewQueueService,
 		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService,
-		private val reviewSourceArtistService: ReviewSourceArtistService
+		private val reviewSourceArtistService: ReviewSourceArtistService,
+		private val userService: UserService
 ) {
 
 	@GetMapping
@@ -71,6 +75,17 @@ class ReviewQueueController(
 					.status(HttpStatus.BAD_REQUEST)
 					.body(mapOf("possibleMatches" to possibleMatches))
 		}
+	}
+
+	@PostMapping("/check-new-songs")
+	fun checkNewSongs() {
+		userService.assertPermission(loadLoggedInUser(), PermissionType.RUN_REVIEW_QUEUES)
+
+		logger.info("Running download jobs for all artist jobs...")
+		reviewSourceArtistService.downloadNewSongs()
+
+		logger.info("Running download jobs for all YouTube channel jobs...")
+		reviewSourceYoutubeChannelService.downloadNewSongs()
 	}
 
 	data class TrackRecommendDTO(

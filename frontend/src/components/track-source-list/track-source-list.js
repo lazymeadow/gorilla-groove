@@ -12,6 +12,7 @@ import {DeviceContext} from "../../services/device-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
 import RecommendTo from "../recommend-to/recommend-to";
 import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
+import {PermissionType} from "../../enums/permission-type";
 
 let pendingDeletePlaylist = {};
 
@@ -141,22 +142,26 @@ export default function TrackSourceList(props) {
 				<span>Remote Play</span>
 			</div>
 
-			<div
-				className={`secondary-option ${reviewQueueSelected}`}
-				onClick={() => {
-					props.setCenterView(CenterView.REVIEW_QUEUE);
-				}}
-			>
-				<div className="flex-between">
+			{
+				userContext.hasPermission(PermissionType.EXPERIMENTAL) ? (
+					<div
+						className={`secondary-option ${reviewQueueSelected}`}
+						onClick={() => {
+							props.setCenterView(CenterView.REVIEW_QUEUE);
+						}}
+					>
+						<div className="flex-between">
 					<span className="flex-grow hoverable">Review Queue
 						<span className="small-text">
 							{ reviewQueueContext.reviewQueueCount > 0 ? ` (${reviewQueueContext.reviewQueueCount})` : ''}
 						</span>
 					</span>
-					<ReviewQueueManagement/>
+							<ReviewQueueManagement/>
 
-				</div>
-			</div>
+						</div>
+					</div>
+				) : null
+			}
 
 			<div
 				className={`secondary-option ${globalSearchSelected} hoverable`}
