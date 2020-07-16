@@ -40,3 +40,10 @@ fun String.urlDecode(): String {
 			.replace("%22", "\"")
 }
 
+fun String.splitFirst(delimiter: String): Pair<String, String> {
+	val index = this.indexOf(delimiter)
+	val first = this.substring(0, index)
+	val second = this.substring(index + 1)
+
+	return first to second
+}

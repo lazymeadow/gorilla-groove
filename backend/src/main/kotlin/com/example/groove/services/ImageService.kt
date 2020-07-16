@@ -5,6 +5,8 @@ import com.example.groove.util.logger
 import org.springframework.stereotype.Service
 import java.awt.image.BufferedImage
 import java.io.File
+import java.io.IOException
+import java.net.URL
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
@@ -13,7 +15,8 @@ import kotlin.math.min
 
 @Service
 class ImageService(
-		fileStorageProperties: FileStorageProperties
+		fileStorageProperties: FileStorageProperties,
+		private val fileStorageService: FileStorageService
 ) {
 
 	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir!!)
@@ -48,6 +51,25 @@ class ImageService(
 		ImageIO.write(copyOfImage, "png", outputFile)
 
 		return outputFile
+	}
+
+	fun downloadFromUrl(url: String): File? {
+		return try {
+			val image = ImageIO.read(URL(url)) ?: run {
+				logger.error("Failed to read in image from URL $url!")
+				return null
+			}
+
+			val imageFile = fileStorageService.generateTmpFilePath().toFile()
+
+			// Might not be a PNG but...... it probably doesn't matter??
+			ImageIO.write(image, "png", imageFile)
+
+			imageFile
+		} catch (e: IOException) {
+			logger.error("Failed to read in image from URL $url!")
+			null
+		}
 	}
 
 	companion object {

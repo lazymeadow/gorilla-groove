@@ -87,13 +87,21 @@ export default function ReviewQueue() {
 		});
 	};
 
+	const getDisplayName = () => {
+		if (reviewTrack.artist) {
+			return reviewTrack.name + ' - ' + reviewTrack.artist;
+		} else {
+			return reviewTrack.name;
+		}
+	};
+
 	return <div id="review-queue" className="p-relative text-center">
 		<LoadingSpinner visible={loading}/>
 		{
 			reviewTrack !== null ? (
 				<div>
 					<img id="review-album-art" src={trackLinks.albumArtLink}/>
-					<div>{reviewTrack.name} - {reviewTrack.artist}</div>
+					<div>{getDisplayName(reviewTrack)}</div>
 					<div className="review-buttons">
 						<i className="fa fa-thumbs-up" title="Add to your library" onClick={reviewUp}/>
 						<i className="fa fa-redo" title="Skip and go to the next" onClick={reviewSkip}/>

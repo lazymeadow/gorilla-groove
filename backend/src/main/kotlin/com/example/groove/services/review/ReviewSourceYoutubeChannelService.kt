@@ -12,6 +12,7 @@ import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
+import com.example.groove.util.splitFirst
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -54,15 +55,18 @@ class ReviewSourceYoutubeChannelService(
 			val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
 
 			newVideos.forEach saveLoop@ { video ->
+				logger.info("Processing ${video.title}...")
 				// Some channels will put out mixes every now and then. I don't really want to download mixes automatically as they could be huge, and don't really fit the GG spirit of adding individual songs
 				if (video.duration > MAX_VIDEO_LENGTH) {
 					logger.info("Video ${video.title} from ${video.channelTitle} has a duration of ${video.duration} which exceeds our max allowed duration of $MAX_VIDEO_LENGTH. It will be skipped")
 					return@saveLoop
 				}
 
+				val (artist, name) = splitSongNameAndArtist(video.title)
 				val downloadDTO = YoutubeDownloadDTO(
 						url = video.videoUrl,
-						name = video.title,
+						name = name,
+						artist = artist,
 						cropArtToSquare = true
 				)
 				val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
@@ -77,6 +81,7 @@ class ReviewSourceYoutubeChannelService(
 				otherUsers.forEach { otherUser ->
 					trackService.saveTrackForUserReview(otherUser, track, source)
 				}
+				logger.info("Done with ${video.title}")
 			}
 
 			source.lastSearched = searchedTime
@@ -84,6 +89,31 @@ class ReviewSourceYoutubeChannelService(
 		}
 
 		logger.info("Review Source Youtube Channel Downloader complete")
+	}
+
+	fun splitSongNameAndArtist(songInfo: String): Pair<String, String> {
+		val (finalArtist, rawTitle) = if (songInfo.contains("-")) {
+			songInfo.splitFirst("-")
+		} else {
+			"" to songInfo
+		}
+
+		// These are bits of pointless noise in some of the channels I use this on.
+		// I'd like to make this be something users can customize on the fly to suit their channels
+		val thingsToStrip = setOf(
+				"(lyrics)",
+				"(lyric video)",
+				"[Monstercat Release]",
+				"[Monstercat Lyric Video]",
+				"(Official Video)"
+		)
+
+		var finalTitle = rawTitle
+		thingsToStrip.forEach { thingToStrip ->
+			finalTitle = finalTitle.replace(thingToStrip, "", ignoreCase = true)
+		}
+
+		return finalArtist.trim() to finalTitle.trim()
 	}
 
 	fun subscribeToUser(youtubeName: String) {

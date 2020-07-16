@@ -8,10 +8,7 @@ import com.example.groove.db.model.ReviewSourceArtistDownload
 import com.example.groove.db.model.User
 import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
-import com.example.groove.services.SpotifyApiClient
-import com.example.groove.services.TrackService
-import com.example.groove.services.YoutubeApiClient
-import com.example.groove.services.YoutubeDownloadService
+import com.example.groove.services.*
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
@@ -28,7 +25,9 @@ class ReviewSourceArtistService(
 		private val reviewSourceArtistDownloadRepository: ReviewSourceArtistDownloadRepository,
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val trackService: TrackService,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val imageService: ImageService,
+		private val fileStorageService: FileStorageService
 ) {
 	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
 //	@Scheduled(cron = "0 */5 * * * *") // 9 AM every day (UTC)
@@ -130,7 +129,7 @@ class ReviewSourceArtistService(
 					cropArtToSquare = true
 			)
 
-			val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
+			val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
 			track.reviewSource = source
 			track.inReview = true
 			track.lastReviewed = now()
@@ -140,6 +139,13 @@ class ReviewSourceArtistService(
 			artistDownload.downloadedAt = artistDownload.lastDownloadAttempt
 			reviewSourceArtistDownloadRepository.save(artistDownload)
 
+			// Because we started from Spotify, we have a URL to the actual album art.
+			// This is better than whatever it is we will get from the YT download, so
+			// grab the art and store it
+			imageService.downloadFromUrl(song.albumArtUrl!!)?.let { image ->
+				fileStorageService.storeAlbumArt(image, track.id)
+			}
+
 			// The YT download service will save the Track for the user that downloads it.
 			// So for every other user make a copy of that track
 			otherUsers.forEach { otherUser ->
@@ -147,6 +153,7 @@ class ReviewSourceArtistService(
 			}
 		}
 	}
+
 
 	private fun YoutubeApiClient.YoutubeVideo.isValidForSong(song: MetadataResponseDTO): Boolean {
 		val lowerTitle = this.title.toLowerCase()

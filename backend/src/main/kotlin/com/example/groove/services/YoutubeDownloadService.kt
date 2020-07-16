@@ -23,8 +23,10 @@ class YoutubeDownloadService(
 		private val imageService: ImageService
 ) {
 
+	// Currently an issue with downloading thumbnails from YT
+	// https://github.com/ytdl-org/youtube-dl/issues/25684
 	@Transactional
-	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO): Track {
+	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO, storeArt: Boolean = true): Track {
 		val url = youtubeDownloadDTO.url
 
 		val tmpFileName = UUID.randomUUID().toString()
@@ -64,6 +66,10 @@ class YoutubeDownloadService(
 		youtubeDownloadDTO.trackNumber?.let { track.trackNumber = it }
 		youtubeDownloadDTO.genre?.let { track.genre = it.trim() }
 		trackRepository.save(track)
+
+		if (!storeArt) {
+			newAlbumArt.delete()
+		}
 
 		if (newAlbumArt.exists()) {
 			if (youtubeDownloadDTO.cropArtToSquare) {

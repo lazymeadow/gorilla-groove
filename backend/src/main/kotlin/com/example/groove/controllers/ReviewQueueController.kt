@@ -85,7 +85,7 @@ class ReviewQueueController(
 		reviewSourceArtistService.downloadNewSongs()
 
 		logger.info("Running download jobs for all YouTube channel jobs...")
-		reviewSourceYoutubeChannelService.downloadNewSongs()
+//		reviewSourceYoutubeChannelService.downloadNewSongs()
 	}
 
 	data class TrackRecommendDTO(

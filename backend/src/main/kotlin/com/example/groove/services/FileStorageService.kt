@@ -119,7 +119,7 @@ abstract class FileStorageService(
 		return calendar.time
 	}
 
-	protected fun generateTmpFilePath(): Path {
+	fun generateTmpFilePath(): Path {
 		val tmpFileName = UUID.randomUUID().toString() + ".ogg"
 		return Paths.get(fileStorageProperties.tmpDir + tmpFileName)
 	}
