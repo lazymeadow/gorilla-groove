@@ -7,7 +7,6 @@ import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.ReviewSource
 import com.example.groove.db.model.ReviewSourceUserRecommend
 import com.example.groove.db.model.Track
-import com.example.groove.services.FileStorageService
 import com.example.groove.services.TrackService
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
@@ -24,7 +23,6 @@ class ReviewQueueService(
 		private val userRepository: UserRepository,
 		private val reviewSourceUserRecommendRepository: ReviewSourceUserRecommendRepository,
 		private val trackService: TrackService,
-		private val fileStorageService: FileStorageService,
 		private val reviewSourceRepository: ReviewSourceRepository
 ) {
 	@Transactional
@@ -56,10 +54,12 @@ class ReviewQueueService(
 		}
 	}
 
+	@Transactional
 	fun getTracksInReviewForCurrentUser(pageable: Pageable): Page<Track> {
 		return trackRepository.getTracksInReview(loadLoggedInUser().id, pageable)
 	}
 
+	@Transactional
 	fun addToLibrary(trackId: Long) {
 		val track = trackRepository.get(trackId)
 		track.assertValidReviewTrack(trackId)
@@ -71,6 +71,7 @@ class ReviewQueueService(
 		trackRepository.save(track)
 	}
 
+	@Transactional
 	fun skipTrack(trackId: Long) {
 		val track = trackRepository.get(trackId)
 		track.assertValidReviewTrack(trackId)
@@ -91,10 +92,27 @@ class ReviewQueueService(
 		}
 	}
 
+	@Transactional
 	fun getAllQueueSourcesForCurrentUser(): List<ReviewSource> {
 		val user = loadLoggedInUser()
 
 		return reviewSourceRepository.findBySubscribedUsers(user)
+	}
+
+	@Transactional
+	fun deleteReviewSource(sourceId: Long) {
+		val user = loadLoggedInUser()
+		val existingSource = reviewSourceRepository.get(sourceId)
+				?: throw IllegalArgumentException("No review source with ID $sourceId found")
+
+		val existingIndex = existingSource.subscribedUsers.indexOfFirst { it.id == user.id }
+		if (existingIndex == -1) {
+			throw IllegalArgumentException("No review source with ID $sourceId found")
+		}
+
+		existingSource.subscribedUsers.removeAt(existingIndex)
+
+		trackRepository.deleteTracksInReviewForSource(userId = user.id, reviewSourceId = existingSource.id)
 	}
 
 	companion object {

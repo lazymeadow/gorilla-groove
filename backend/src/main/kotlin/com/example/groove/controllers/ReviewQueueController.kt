@@ -1,16 +1,10 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.ReviewSource
-import com.example.groove.db.model.ReviewSourceYoutubeChannel
-import com.example.groove.db.model.Track
 import com.example.groove.services.review.ReviewQueueService
 import com.example.groove.services.review.ReviewSourceYoutubeChannelService
-import com.example.groove.services.TrackService
 import com.example.groove.services.review.ReviewSourceArtistService
-import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
@@ -20,21 +14,18 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("api/review-queue")
 class ReviewQueueController(
 		private val reviewQueueService: ReviewQueueService,
-		private val trackService: TrackService,
 		private val reviewSourceYoutubeChannelService: ReviewSourceYoutubeChannelService,
 		private val reviewSourceArtistService: ReviewSourceArtistService
 ) {
 
-	@GetMapping("/track")
-	fun getAllTracks(
-			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
-	): Page<Track> {
-		return reviewQueueService.getTracksInReviewForCurrentUser(pageable)
-	}
-
-	@GetMapping("/source")
+	@GetMapping
 	fun getAllQueueSources(): List<ReviewSource> {
 		return reviewQueueService.getAllQueueSourcesForCurrentUser()
+	}
+
+	@DeleteMapping("/{sourceId}")
+	fun deleteQueueSource(@PathVariable("sourceId") sourceId: Long) {
+		reviewQueueService.deleteReviewSource(sourceId)
 	}
 
 	@PostMapping("/recommend")
@@ -80,21 +71,6 @@ class ReviewQueueController(
 					.status(HttpStatus.BAD_REQUEST)
 					.body(mapOf("possibleMatches" to possibleMatches))
 		}
-	}
-
-	@PostMapping("/track/{trackId}/skip")
-	fun skipTrack(@PathVariable("trackId") trackId: Long) {
-		reviewQueueService.skipTrack(trackId)
-	}
-
-	@PostMapping("/track/{trackId}/approve")
-	fun changeTrack(@PathVariable("trackId") trackId: Long) {
-		reviewQueueService.addToLibrary(trackId)
-	}
-
-	@DeleteMapping("/track/{trackId}")
-	fun deleteTrack(@PathVariable("trackId") trackId: Long) {
-		trackService.deleteTracks(loadLoggedInUser(), listOf(trackId))
 	}
 
 	data class TrackRecommendDTO(

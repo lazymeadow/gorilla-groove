@@ -36,7 +36,7 @@ class ReviewSourceYoutubeChannelService(
 			val users = source.subscribedUsers
 
 			if (users.isEmpty()) {
-				logger.error("No users were set up for review source with ID: ${source.id}! It should be deleted!")
+				logger.info("No users were set up for review source with ID: ${source.channelName}. Skipping")
 				return@forEach
 			}
 
@@ -88,6 +88,9 @@ class ReviewSourceYoutubeChannelService(
 			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
 				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to $youtubeName!")
 			}
+			if (reviewSource.subscribedUsers.isEmpty()) {
+				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
+			}
 			reviewSource.subscribedUsers.add(ownUser)
 			return
 		}
@@ -105,6 +108,9 @@ class ReviewSourceYoutubeChannelService(
 		reviewSourceYoutubeChannelRepository.findByChannelId(channelId)?.let { reviewSource ->
 			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
 				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to ${reviewSource.channelName}!")
+			}
+			if (reviewSource.subscribedUsers.isEmpty()) {
+				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
 			}
 			reviewSource.subscribedUsers.add(ownUser)
 			return

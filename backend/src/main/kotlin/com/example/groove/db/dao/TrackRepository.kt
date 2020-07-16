@@ -55,6 +55,18 @@ interface TrackRepository : CrudRepository<Track, Long> {
 
 	@Modifying
 	@Query("""
+			DELETE FROM Track t
+			WHERE t.user.id = :userId
+			AND t.inReview = TRUE
+			AND t.reviewSource.id = :reviewSourceId
+		""")
+	fun deleteTracksInReviewForSource(
+			@Param("userId") userId: Long,
+			@Param("reviewSourceId") reviewSourceId: Long
+	)
+
+	@Modifying
+	@Query("""
 			UPDATE Track t
 			SET t.private = :isPrivate, t.updatedAt = now()
 			WHERE t.user.id = :userId

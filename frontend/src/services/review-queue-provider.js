@@ -31,7 +31,7 @@ export class ReviewQueueProvider extends React.Component {
 	};
 
 	fetchReviewQueueSources() {
-		return Api.get('review-queue/source').then(sources => {
+		return Api.get('review-queue').then(sources => {
 			this.setState({ reviewQueueSources: sources });
 
 			return sources

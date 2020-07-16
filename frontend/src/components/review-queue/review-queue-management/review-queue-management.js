@@ -6,7 +6,7 @@ import {Api} from "../../../api";
 import {ReviewQueueContext} from "../../../services/review-queue-provider";
 import {toTitleCaseFromSnakeCase} from "../../../formatters";
 
-function ReviewQueueManagementModal(props) {
+function ReviewQueueManagementModal() {
 	const [loading, setLoading] = useState(true);
 
 	const reviewQueueContext = useContext(ReviewQueueContext);
@@ -20,7 +20,7 @@ function ReviewQueueManagementModal(props) {
 		});
 	}, []);
 
-	const getSourceData = source => {
+	const extractSourceDisplayData = source => {
 		let sourceData = null;
 		if (source.sourceType === 'ARTIST') {
 			sourceData = source.artistName;
@@ -31,6 +31,18 @@ function ReviewQueueManagementModal(props) {
 		}
 
 		return sourceData;
+	};
+
+	const deleteReviewSource = source => {
+		Api.delete('review-queue/' + source.id).then(() => {
+			reviewQueueContext.fetchReviewQueueSources().then(() => {
+				toast.success(`Review source ${extractSourceDisplayData(source)} deleted successfully`)
+			}).catch(() => {
+				toast.info(`Review source ${extractSourceDisplayData(source)} deleted, but could not fetch the new list!`)
+			})
+		}).catch(() => {
+			toast.error(`Failed to delete ${extractSourceDisplayData(source)}`)
+		})
 	};
 
 	return (
@@ -50,11 +62,9 @@ function ReviewQueueManagementModal(props) {
 				{reviewQueueContext.reviewQueueSources.map(source =>
 					<tr key={source.id} className="">
 						<td>{toTitleCaseFromSnakeCase(source.sourceType)}</td>
-						<td>{getSourceData(source)}</td>
-						<td className="">
-							<i className="fas fa-times" title="Delete" onClick={() => {
-								console.log('delete');
-							}}/>
+						<td>{extractSourceDisplayData(source)}</td>
+						<td>
+							<i className="fas fa-times clickable" title="Delete" onClick={() => { deleteReviewSource(source) }}/>
 						</td>
 					</tr>
 				)}
@@ -94,7 +104,7 @@ function AddNewSourceModal() {
 					toast.success(`Successfully subscribed to ${reviewQueueInput}`);
 					setModalOpen(false);
 				}).catch(() => {
-					toast.info(`Successfully subscribed to ${reviewQueueInput} but could not fetch new sources!`);
+					toast.info(`Successfully subscribed to ${reviewQueueInput} but could not fetch the new list!`);
 					setModalOpen(false);
 				});
 			}).catch(err => {

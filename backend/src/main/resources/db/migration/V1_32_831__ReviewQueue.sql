@@ -57,3 +57,8 @@ create table review_source_artist_download
 );
 
 CREATE UNIQUE INDEX review_source_artist_artist_name_uindex ON review_source_artist (artist_name);
+
+ALTER TABLE track_link DROP FOREIGN KEY FK6ht8dsdjj5btmsi968hehjxit;
+ALTER TABLE track_link
+ADD CONSTRAINT FK6ht8dsdjj5btmsi968hehjxit
+FOREIGN KEY (track_id) REFERENCES track (id) ON DELETE CASCADE;

@@ -42,7 +42,7 @@ class ReviewSourceArtistService(
 			val users = source.subscribedUsers
 
 			if (users.isEmpty()) {
-				logger.error("No users were set up for review source with ID: ${source.id}! It should be deleted!")
+				logger.info("No users were set up for review source ${source.artistName}. Skipping")
 				return@forEach
 			}
 
