@@ -6,5 +6,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface ReviewSourceArtistDownloadRepository : CrudRepository<ReviewSourceArtistDownload, Long> {
 	fun findByReviewSource(reviewSource: ReviewSource): List<ReviewSourceArtistDownload>
-	fun findByReviewSourceAndDownloadedAtIsNull(reviewSource: ReviewSource): List<ReviewSourceArtistDownload>
+	fun findByReviewSourceAndTrackName(reviewSource: ReviewSource, trackName: String): ReviewSourceArtistDownload?
 }

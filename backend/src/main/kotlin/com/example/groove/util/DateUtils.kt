@@ -21,6 +21,12 @@ fun Timestamp.isNewerThan(timeUnit: ChronoUnit, timeAmount: Long): Boolean {
 	return this.after(comparison.toTimestamp())
 }
 
+fun Timestamp.minusWeeks(weeks: Int): Timestamp {
+	return this.toLocalDateTime()
+			.minusWeeks(weeks.toLong())
+			.toTimestamp()
+}
+
 fun LocalDateTime.toTimestamp(): Timestamp {
 	return Timestamp.valueOf(this)
 }

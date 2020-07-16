@@ -18,18 +18,6 @@ data class ReviewSourceArtistDownload(
 		@Column(name = "track_name")
 		val trackName: String,
 
-		@Column(name = "track_album_name")
-		val trackAlbumName: String,
-
-		@Column(name = "track_length")
-		val trackLength: Int,
-
-		@Column(name = "track_release_year")
-		val trackReleaseYear: Int,
-
-		@Column(name = "track_art_url")
-		val trackArtUrl: String,
-
 		@Column(name = "discovered_at")
 		val discoveredAt: Timestamp = now(),
 

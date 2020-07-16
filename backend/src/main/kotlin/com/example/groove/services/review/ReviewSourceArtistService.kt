@@ -6,6 +6,7 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.ReviewSourceArtist
 import com.example.groove.db.model.ReviewSourceArtistDownload
 import com.example.groove.db.model.User
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.SpotifyApiClient
 import com.example.groove.services.TrackService
@@ -14,7 +15,7 @@ import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.example.groove.util.toTimestamp
+import com.example.groove.util.minusWeeks
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -54,59 +55,64 @@ class ReviewSourceArtistService(
 			val searchNewerThan = source.searchNewerThan?.toLocalDateTime()?.toLocalDate()
 
 			val newSongs = spotifyApiClient.getSongsByArtist(source.artistName, source.artistId, searchNewerThan)
-			logger.info("Found ${newSongs.size} new songs for artist: ${source.artistName}")
+			logger.info("Found ${newSongs.size} 'new' songs for artist: ${source.artistName}")
 
 			// We are going to be searching over the same music every night. Nothing we can do about it really.
 			// Just have to play around the way the Spotify API works. So we have to keep track manually on what
 			// songs we've already seen by a given artist
 			val existingSongDiscoveries = reviewSourceArtistDownloadRepository.findByReviewSource(source)
-			val discoveredSongNames = existingSongDiscoveries.map { it.trackName }.toSet()
+			val discoveredSongNameToDownloadAttempt = existingSongDiscoveries.map {
+				it.trackName to it
+			}.toMap()
 
-			newSongs.forEach { newSong ->
-				if (!discoveredSongNames.contains(newSong.name)) {
-					val newDownload = ReviewSourceArtistDownload(
-							reviewSource = source,
-							trackName = newSong.name,
-							trackAlbumName = newSong.album,
-							trackLength = newSong.songLength,
-							trackReleaseYear = newSong.releaseYear,
-							trackArtUrl = newSong.albumArtUrl!!
-					)
-					reviewSourceArtistDownloadRepository.save(newDownload)
+			val oneWeekAgo = now().minusWeeks(1)
+			val songsToDownload = newSongs.filter { newSong ->
+				discoveredSongNameToDownloadAttempt[newSong.name]?.let { artistDownload ->
+					// If the download was successful a prior time, exclude it from the songs to download
+					if (artistDownload.downloadedAt != null) {
+						return@filter false
+					}
+
+					// Otherwise, we have attempted this download before and it failed. We should only retry
+					// once a week, as we have a limited quota and there's a good chance this was not a transient error
+					return@filter artistDownload.lastDownloadAttempt!!.before(oneWeekAgo)
 				}
-			}
 
-			attemptDownloadFromYoutube(source, users)
+				// Otherwise, this is a song we've never seen before. Add a record of it
+				ReviewSourceArtistDownload(
+						reviewSource = source,
+						trackName = newSong.name
+				).also { reviewSourceArtistDownloadRepository.save(it) }
+
+				return@filter true
+			}
+//
+			attemptDownloadFromYoutube(source, songsToDownload, users)
 		}
 
 		logger.info("Review Source Artist Downloader complete")
 	}
 
 	// Now we need to find a match on YouTube to download...
-	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, users: List<User>) {
-		val oneWeekAgo = now().toLocalDateTime().minusWeeks(1).toTimestamp()
-
-		// Don't keep retrying stuff that failed every day. We have a pretty limited quota so only retry every week
-		val songsToDownload = reviewSourceArtistDownloadRepository
-				.findByReviewSourceAndDownloadedAtIsNull(source)
-				.filter { it.lastDownloadAttempt == null || it.lastDownloadAttempt!!.before(oneWeekAgo) }
-
+	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, songsToDownload: List<MetadataResponseDTO>, users: List<User>) {
 		val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
 
 		songsToDownload.forEach { song ->
-			val videos = youtubeApiClient.findVideos("${source.artistName} ${song.trackName}").videos
+			val artistDownload = reviewSourceArtistDownloadRepository.findByReviewSourceAndTrackName(source, song.name)
+					?: throw IllegalStateException("Could not locate an artist download with review source ID: ${source.id} and song name ${song.name}!")
+			val videos = youtubeApiClient.findVideos("${song.artist} ${song.name}").videos
 
 			// There's a chance that our search yields no valid results, but youtube will pretty much always return
 			// us videos, even if they're a horrible match. Probably the best thing we can do is check the video title
 			// and duration to sanity check and make sure it is at least a decent match.
 			// Better to NOT find something than to find a video which isn't correct for something like this...
-			val validVideos = videos.filter { it.isValidForSong(source.artistName, song) }
+			val validVideos = videos.filter { it.isValidForSong(song) }
 
 			if (validVideos.isEmpty()) {
-				logger.warn("Could not find a valid YouTube download for ${source.artistName} - ${song.trackName}")
+				logger.warn("Could not find a valid YouTube download for ${song.artist} - ${song.name}")
 
-				song.lastDownloadAttempt = now()
-				reviewSourceArtistDownloadRepository.save(song)
+				artistDownload.lastDownloadAttempt = now()
+				reviewSourceArtistDownloadRepository.save(artistDownload)
 
 				return@forEach
 			}
@@ -117,10 +123,10 @@ class ReviewSourceArtistService(
 
 			val downloadDTO = YoutubeDownloadDTO(
 					url = video.videoUrl,
-					name = song.trackName,
-					artist = source.artistName,
-					album = song.trackAlbumName,
-					releaseYear = song.trackReleaseYear,
+					name = song.name,
+					artist = song.artist,
+					album = song.album,
+					releaseYear = song.releaseYear,
 					cropArtToSquare = true
 			)
 
@@ -130,8 +136,9 @@ class ReviewSourceArtistService(
 			track.lastReviewed = now()
 			trackRepository.save(track)
 
-			song.downloadedAt = now()
-			reviewSourceArtistDownloadRepository.save(song)
+			artistDownload.lastDownloadAttempt = now()
+			artistDownload.downloadedAt = artistDownload.lastDownloadAttempt
+			reviewSourceArtistDownloadRepository.save(artistDownload)
 
 			// The YT download service will save the Track for the user that downloads it.
 			// So for every other user make a copy of that track
@@ -141,17 +148,17 @@ class ReviewSourceArtistService(
 		}
 	}
 
-	private fun YoutubeApiClient.YoutubeVideo.isValidForSong(artist: String, song: ReviewSourceArtistDownload): Boolean {
+	private fun YoutubeApiClient.YoutubeVideo.isValidForSong(song: MetadataResponseDTO): Boolean {
 		val lowerTitle = this.title.toLowerCase()
 
 		// Make sure the artist is in the title somewhere. If it isn't that seems like a bad sign
-		if (!lowerTitle.contains(artist.toLowerCase())) {
+		if (!lowerTitle.contains(song.artist.toLowerCase())) {
 			return false
 		}
 
 		// If the duration doesn't match closely with Spotify's expected duration, that's a bad sign
-		if (this.duration < song.trackLength - SORT_LENGTH_IDENTIFICATION_TOLERANCE ||
-				this.duration > song.trackLength + SORT_LENGTH_IDENTIFICATION_TOLERANCE) {
+		if (this.duration < song.songLength - SORT_LENGTH_IDENTIFICATION_TOLERANCE ||
+				this.duration > song.songLength + SORT_LENGTH_IDENTIFICATION_TOLERANCE) {
 			return false
 		}
 
