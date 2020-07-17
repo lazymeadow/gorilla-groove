@@ -54,7 +54,7 @@ class ReviewSourceArtistService(
 			val searchNewerThan = source.searchNewerThan?.toLocalDateTime()?.toLocalDate()
 
 			val newSongs = spotifyApiClient.getSongsByArtist(source.artistName, source.artistId, searchNewerThan)
-			logger.info("Found ${newSongs.size} 'new' songs for artist: ${source.artistName}")
+			logger.info("Found ${newSongs.size} initial songs for artist: ${source.artistName}")
 
 			// We are going to be searching over the same music every night. Nothing we can do about it really.
 			// Just have to play around the way the Spotify API works. So we have to keep track manually on what
@@ -74,7 +74,7 @@ class ReviewSourceArtistService(
 
 					// Otherwise, we have attempted this download before and it failed. We should only retry
 					// once a week, as we have a limited quota and there's a good chance this was not a transient error
-					return@filter artistDownload.lastDownloadAttempt!!.before(oneWeekAgo)
+					return@filter artistDownload.lastDownloadAttempt?.before(oneWeekAgo) ?: true
 				}
 
 				// Otherwise, this is a song we've never seen before. Add a record of it
@@ -85,7 +85,8 @@ class ReviewSourceArtistService(
 
 				return@filter true
 			}
-//
+			logger.info("Attempting download on ${songsToDownload.size} ${source.artistName} songs")
+
 			attemptDownloadFromYoutube(source, songsToDownload, users)
 		}
 

@@ -97,9 +97,18 @@ export default function TrackSourceList(props) {
 
 		const isMobile = playingDevices.every(device => device.isMobile);
 
-		const displayText = playingDevices.map(device =>
-			`${device.trackData.name} - ${device.trackData.artist}\nDevice: ${device.deviceName}`
-		).join('\n\n');
+		const displayText = playingDevices.map(device => {
+			let infoString;
+			if (device.trackData.isPrivate) {
+				infoString = 'This track is private';
+			} else {
+				infoString = `${device.trackData.name} - ${device.trackData.artist}`;
+			}
+
+			let inReviewString = device.trackData.inReview ? '\nIn Review' : '';
+
+			return `${infoString}\nDevice: ${device.deviceName}${inReviewString}`;
+		}).join('\n\n');
 
 		return <span className="user-listening" title={displayText}>
 			{ isMobile ? <i className="fas fa-mobile"/> : <i className="fas fa-music"/> }
