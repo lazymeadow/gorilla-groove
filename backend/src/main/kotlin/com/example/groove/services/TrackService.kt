@@ -229,6 +229,7 @@ class TrackService(
 					user = user,
 					createdAt = now,
 					updatedAt = now,
+					addedToLibrary = now,
 					playCount = 0,
 					lastPlayed = null,
 					hidden = false
