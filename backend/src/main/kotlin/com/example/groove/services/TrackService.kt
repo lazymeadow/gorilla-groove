@@ -98,7 +98,7 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long, deviceId: String?, remoteIp: String?) {
+	fun markSongListenedTo(trackId: Long, deviceId: String, remoteIp: String?) {
 		val track = trackRepository.findById(trackId).unwrap()
 		val user = loadLoggedInUser()
 
@@ -112,16 +112,11 @@ class TrackService(
 		track.lastPlayed = now()
 		track.updatedAt = now()
 
-		val device = deviceId?.let { id ->
-			val savedDevice = deviceRepository.findByDeviceIdAndUser(id, user)
-			if (savedDevice == null) {
-				logger.error("No device found with ID $id for user ${user.name} when saving track history!")
-				return@let null
-			}
+		val savedDevice = deviceRepository.findByDeviceIdAndUser(deviceId, user)
+				?: throw IllegalArgumentException("No device found with ID $deviceId for user ${user.name} when saving track history!")
 
-			// Device we used might have been merged into another device. If it was, use the parent device
-			savedDevice.mergedDevice ?: savedDevice
-		}
+		// Device we used might have been merged into another device. If it was, use the parent device
+		val device = savedDevice.mergedDevice ?: savedDevice
 
 		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp, listenedInReview = track.inReview)
 		trackHistoryRepository.save(trackHistory)

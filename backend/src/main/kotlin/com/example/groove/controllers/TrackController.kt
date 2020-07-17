@@ -145,7 +145,7 @@ class TrackController(
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
-			val deviceId: String?
+			val deviceId: String
 	)
 
 	data class SetPrivateDTO(
