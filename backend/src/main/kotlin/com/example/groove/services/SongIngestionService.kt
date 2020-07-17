@@ -8,7 +8,6 @@ import com.example.groove.exception.FileStorageException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.*
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -260,6 +259,6 @@ class SongIngestionService(
 	}
 
 	companion object {
-        private val logger = LoggerFactory.getLogger(SongIngestionService::class.java)
+        private val logger = logger()
     }
 }

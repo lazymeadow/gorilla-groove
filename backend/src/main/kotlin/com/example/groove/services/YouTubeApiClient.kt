@@ -3,7 +3,9 @@ package com.example.groove.services
 import com.example.groove.properties.YouTubeApiProperties
 import com.example.groove.util.createMapper
 import com.example.groove.util.logger
+import com.example.groove.util.toUnencodedString
 import com.fasterxml.jackson.annotation.JsonValue
+import org.apache.http.client.utils.URIBuilder
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.sql.Timestamp
@@ -17,53 +19,54 @@ class YoutubeApiClient(
 
 	private val objectMapper = createMapper()
 
-	fun findVideos(searchTerm: String): YoutubeApiResponse {
+	fun findVideos(searchTerm: String? = null, channelId: String? = null): YoutubeApiResponse {
 		// YouTube doesn't return all the necessary data in its 'search' response. So we search and collect the IDS,
 		// then do a follow-up request with those IDs to get all the data we care about, while preserving video order.
-		val videoIds = searchYoutube(searchTerm)
+		val videoIds = searchYoutube(searchTerm, channelId)
 		val videoInfo = getVideoInformation(videoIds)
 
-		return YoutubeApiResponse(
-				videos = videoInfo.filter {
-					it.snippet.liveBroadcastContent == LiveBroadcastContent.NONE
-				}.map { YoutubeVideo(
-						title = it.snippet.title,
-						description = it.snippet.description,
-						channelTitle = it.snippet.channelTitle,
-						thumbnails = it.snippet.thumbnails,
-						publishedAt = it.snippet.publishedAt,
-						duration = it.contentDetails.duration.decodeIso8601(),
-						viewCount = it.statistics.viewCount,
-						likes = it.statistics.likeCount,
-						dislikes = it.statistics.dislikeCount,
-						videoUrl = VIDEO_URL + it.id,
-						embedUrl = EMBED_URL + it.id,
-						id = it.id
-				) }.take(6) // Take only the top 6. The extras we query for are used for providing better results
-		)
+		val videos = videoInfo.filter {
+			it.snippet.liveBroadcastContent == LiveBroadcastContent.NONE
+		}.map { YoutubeVideo(
+				title = it.snippet.title,
+				description = it.snippet.description,
+				channelTitle = it.snippet.channelTitle,
+				thumbnails = it.snippet.thumbnails,
+				publishedAt = it.snippet.publishedAt,
+				duration = it.contentDetails.duration.decodeIso8601(),
+				viewCount = it.statistics.viewCount,
+				likes = it.statistics.likeCount,
+				dislikes = it.statistics.dislikeCount,
+				videoUrl = VIDEO_URL + it.id,
+				embedUrl = EMBED_URL + it.id,
+				id = it.id
+		) }.take(6) // Take only the top 6. The extras we query for are used for providing better results
+
+		// If we have a search term, then we are searching using relevance. We will be doing additional stuff
+		// on our end later to improve relevance for music, so only take the top 6 for now
+		return if (searchTerm != null) {
+			YoutubeApiResponse(videos.take(6))
+		} else {
+			YoutubeApiResponse(videos)
+		}
 	}
 
 	// Return a list instead of a set, because the order we get them in is Youtube's relevance
-	private fun searchYoutube(searchTerm: String): List<String> {
-		val url = "$SEARCH_API_URL&q=$searchTerm".withApiKey()
+	private fun searchYoutube(searchTerm: String? = null, channelId: String? = null): List<String> {
+		val url = createSearchUrl(
+				"search",
+				searchTerm,
+				channelId,
+				mapOf(
+						"part" to "id",
+						"type" to "video",
+						"order" to if (searchTerm != null) "relevance" else "date"
+				)
+		)
 
-		val rawResponse = try {
-			restTemplate.getForObject(url, String::class.java)!!
-		} catch (e: Exception) {
-			logger.error("Failed to search YouTube with URL: $url")
+		val response = searchUrl<RawYoutubeSearchResponse>(url)
 
-			throw e
-		}
-
-		val parsedResponse: RawYoutubeSearchResponse = try {
-			objectMapper.readValue(rawResponse, RawYoutubeSearchResponse::class.java)
-		} catch (e: Exception) {
-			logger.error("Failed to deserialize YoutubeApiClient search response! $rawResponse")
-
-			throw e
-		}
-
-		return parsedResponse.items.map { it.id.videoId }
+		return response.items.map { it.id.videoId }
 	}
 
 	private fun getVideoInformation(videoIds: List<String>): List<RawYoutubeVideoInfoItem> {
@@ -72,25 +75,35 @@ class YoutubeApiClient(
 		}
 
 		val idString = videoIds.joinToString(",")
-		val url = "$LIST_VIDEOS_URL&id=$idString".withApiKey()
+		val url = createSearchUrl(
+				"videos",
+				null,
+				null,
+				mapOf("id" to idString, "part" to "snippet,contentDetails,statistics")
+		)
 
-		val rawResponse = try {
-			restTemplate.getForObject(url, String::class.java)!!
-		} catch (e: Exception) {
-			logger.error("Failed to get YouTube video information with URL: $url")
+		return searchUrl<RawYoutubeVideoInfoResponse>(url).items
+	}
 
-			throw e
-		}
+	private fun createSearchUrl(
+			route: String,
+			searchTerm: String? = null,
+			channelId: String? = null,
+			additionalParams: Map<String, String> = emptyMap()
+	): String {
+		val builder = URIBuilder()
+				.setScheme("https")
+				.setHost("www.googleapis.com")
+				.setPath("youtube/v3/$route")
+				.addParameter("maxResults", "10")
+				.addParameter("key", youTubeApiProperties.youtubeApiKey)
 
-		val parsedResponse = try {
-			objectMapper.readValue(rawResponse, RawYoutubeVideoInfoResponse::class.java)
-		} catch (e: Exception) {
-			logger.error("Failed to deserialize YoutubeApiClient video info response! $rawResponse")
+		searchTerm?.let { builder.addParameter("q", searchTerm) }
+		channelId?.let { builder.addParameter("channelId", channelId) }
 
-			throw e
-		}
+		additionalParams.forEach { (key, value) -> builder.addParameter(key, value) }
 
-		return parsedResponse.items
+		return builder.toUnencodedString()
 	}
 
 	// Comes back in ISO 8601 format, which looks something like "PT1H38M7S"
@@ -99,8 +112,49 @@ class YoutubeApiClient(
 		return duration.seconds
 	}
 
-	fun String.withApiKey(): String {
-		return this + "&key=${youTubeApiProperties.youtubeApiKey}"
+	fun getChannelInfoByChannelId(channelId: String): YoutubeChannelInfo? {
+		val url = "https://www.googleapis.com/youtube/v3/channels?part=snippet&id=$channelId&key=${youTubeApiProperties.youtubeApiKey}"
+
+		return getChannelResponse(url)
+	}
+
+	fun getChannelInfoByUsername(name: String): YoutubeChannelInfo? {
+		val url = "https://www.googleapis.com/youtube/v3/channels?part=snippet&forUsername=$name&key=${youTubeApiProperties.youtubeApiKey}"
+
+		return getChannelResponse(url)
+	}
+
+	private fun getChannelResponse(url: String): YoutubeChannelInfo? {
+		val response = searchUrl<RawYoutubeChannelResponse>(url)
+
+		if (response.items.isEmpty()) {
+			return null
+		}
+
+		val item = response.items.first()
+
+		return YoutubeChannelInfo(
+				title = item.snippet.title,
+				id = item.id
+		)
+	}
+
+	private inline fun<reified T> searchUrl(url: String): T {
+		val rawResponse = try {
+			restTemplate.getForObject(url, String::class.java)!!
+		} catch (e: Exception) {
+			logger.error("Failed to search YouTube with URL: $url")
+
+			throw e
+		}
+
+		return try {
+			objectMapper.readValue(rawResponse, T::class.java)
+		} catch (e: Exception) {
+			logger.error("Failed to deserialize YoutubeApiClient search response! $rawResponse")
+
+			throw e
+		}
 	}
 
 	data class YoutubeApiResponse(
@@ -142,6 +196,10 @@ class YoutubeApiClient(
 			val contentDetails: ItemContentDetails,
 			val statistics: ItemStatistics
 	)
+
+	data class RawYoutubeChannelResponse(val items: List<RawYoutubeChannelInfoItem>)
+	data class RawYoutubeChannelInfoItem(val id: String, val snippet: YoutubeChannelSnippet)
+	data class YoutubeChannelSnippet(val title: String)
 
 	data class ItemId(val videoId: String)
 
@@ -185,14 +243,11 @@ class YoutubeApiClient(
 	)
 
 	companion object {
-		private const val API_BASE = "https://www.googleapis.com/youtube/v3/"
-
-		const val SEARCH_API_URL = "${API_BASE}search?part=id&type=video&maxResults=10"
-		const val LIST_VIDEOS_URL = "${API_BASE}videos?part=snippet,contentDetails,statistics&maxResults=10"
-
 		const val VIDEO_URL = "https://www.youtube.com/watch?v="
 		const val EMBED_URL = "https://www.youtube.com/embed/"
 
 		val logger = logger()
 	}
 }
+
+data class YoutubeChannelInfo(val title: String, val id: String)

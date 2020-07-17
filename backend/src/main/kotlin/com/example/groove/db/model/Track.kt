@@ -1,6 +1,8 @@
 package com.example.groove.db.model
 
+import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.sql.Timestamp
 import javax.persistence.*
 
@@ -62,17 +64,37 @@ data class Track(
 		@Column(name = "last_played")
 		var lastPlayed: Timestamp? = null,
 
+		@JsonIgnore
 		@Column(name = "created_at")
-		override var createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
+		override var createdAt: Timestamp = now(),
 
-		@JsonIgnore // Currently breaks GG app to include this and offers no current benefit to be exposed
+		@JsonIgnore
 		@Column(name = "updated_at")
-		override var updatedAt: Timestamp = Timestamp(System.currentTimeMillis()),
+		override var updatedAt: Timestamp = now(),
+
+		// We originally used the createdAt property to mean "addedToLibrary" because for years that's what it was.
+		// With the introduction of the ReviewQueue stuff we now need to use a dedicated property for this.
+		// However, to avoid having to update all the API's consumers, keep the JsonProperty name the same as it was
+		@JsonProperty("createdAt")
+		@Column(name = "added_to_library")
+		var addedToLibrary: Timestamp? = null,
 
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")
 		override var deleted: Boolean = false,
 
 		@Column
-		var note: String? = null
+		var note: String? = null,
+
+		@JsonIgnore
+		@ManyToOne
+		@JoinColumn(name = "review_source_id")
+		var reviewSource: ReviewSource? = null,
+
+		@JsonIgnore
+		@Column(name = "last_reviewed")
+		var lastReviewed: Timestamp? = null,
+
+		@Column(columnDefinition = "BIT")
+		var inReview: Boolean = false
 ) : RemoteSyncable

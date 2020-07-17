@@ -11,8 +11,8 @@ import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.logger
 import com.example.groove.util.withNewExtension
-import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.File
@@ -118,6 +118,6 @@ class S3StorageService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(S3StorageService::class.java)!!
+		val logger = logger()
 	}
 }

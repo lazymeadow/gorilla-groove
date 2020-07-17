@@ -6,8 +6,8 @@ import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.example.groove.util.unwrap
-import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 
 import org.springframework.stereotype.Service
@@ -55,6 +55,6 @@ class TrackHistoryService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(TrackHistoryService::class.java)!!
+		val logger = logger()
 	}
 }

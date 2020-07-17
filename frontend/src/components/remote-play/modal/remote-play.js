@@ -1,8 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {Modal} from "../../modal/modal";
-import {Api} from "../../../api";
 import {toast} from "react-toastify";
-import {getDeviceIdentifier} from "../../../services/version";
 import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {RemotePlayType} from "./remote-play-type";
 import {SocketContext} from "../../../services/socket-provider";

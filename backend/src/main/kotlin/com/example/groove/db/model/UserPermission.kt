@@ -1,9 +1,9 @@
 package com.example.groove.db.model
 
 import com.example.groove.db.model.enums.PermissionType
+import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
-import java.util.*
 import javax.persistence.*
 
 @Entity
@@ -23,5 +23,5 @@ data class UserPermission(
 		val permissionType: PermissionType,
 
 		@Column(name = "created_at", nullable = false)
-		var createdAt: Timestamp = Timestamp(Date().time)
+		var createdAt: Timestamp = now()
 )

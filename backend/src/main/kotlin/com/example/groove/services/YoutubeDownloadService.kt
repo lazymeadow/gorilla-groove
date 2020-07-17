@@ -2,11 +2,11 @@ package com.example.groove.services
 
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
-import com.example.groove.util.loadLoggedInUser
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
@@ -23,8 +23,10 @@ class YoutubeDownloadService(
 		private val imageService: ImageService
 ) {
 
+	// Currently an issue with downloading thumbnails from YT
+	// https://github.com/ytdl-org/youtube-dl/issues/25684
 	@Transactional
-	fun downloadSong(youtubeDownloadDTO: YoutubeDownloadDTO): Track {
+	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO, storeArt: Boolean = true): Track {
 		val url = youtubeDownloadDTO.url
 
 		val tmpFileName = UUID.randomUUID().toString()
@@ -54,7 +56,7 @@ class YoutubeDownloadService(
 
 		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
 		// Slightly complicates finding the file after we save it, though
-		val track = songIngestionService.convertAndSaveTrackForUser(newSong, loadLoggedInUser(), url)
+		val track = songIngestionService.convertAndSaveTrackForUser(newSong, user, url)
 		// If the uploader provided any metadata, add it to the track and save it again
 		youtubeDownloadDTO.name?.let { track.name = it.trim() }
 		youtubeDownloadDTO.artist?.let { track.artist = it.trim() }
@@ -64,6 +66,10 @@ class YoutubeDownloadService(
 		youtubeDownloadDTO.trackNumber?.let { track.trackNumber = it }
 		youtubeDownloadDTO.genre?.let { track.genre = it.trim() }
 		trackRepository.save(track)
+
+		if (!storeArt) {
+			newAlbumArt.delete()
+		}
 
 		if (newAlbumArt.exists()) {
 			if (youtubeDownloadDTO.cropArtToSquare) {
@@ -86,7 +92,7 @@ class YoutubeDownloadService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(YoutubeDownloadService::class.java)!!
+		val logger = logger()
 	}
 }
 

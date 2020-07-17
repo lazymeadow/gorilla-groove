@@ -4,9 +4,10 @@ import com.example.groove.db.dao.*
 import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.exception.ResourceNotFoundException
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.example.groove.util.unwrap
-import org.slf4j.LoggerFactory
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -91,7 +92,7 @@ class DeviceService(
 		val deviceToUpdate = device.mergedDevice ?: device
 
 		deviceToUpdate.applicationVersion = version
-		deviceToUpdate.updatedAt = Timestamp(System.currentTimeMillis())
+		deviceToUpdate.updatedAt = now()
 		deviceToUpdate.additionalData = additionalData
 		ipAddress?.let { deviceToUpdate.lastIp = ipAddress }
 
@@ -194,6 +195,6 @@ class DeviceService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(DeviceService::class.java)!!
+		val logger = logger()
 	}
 }

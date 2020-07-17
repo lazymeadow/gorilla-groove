@@ -8,10 +8,12 @@ data class MetadataResponseDTO (
 		val name: String,
 		val artist: String,
 		val album: String,
-		val genre: String,
+		val genre: String? = null, // Not returned by Spotify
 		val releaseYear: Int,
 		val trackNumber: Int,
-		val albumArt: Image
+		val albumArt: Image? = null, // TODO Shouldn't be returned. Should do that further upstream
+		val albumArtUrl: String? = null, // TODO Should always be returned. Isn't yet b/c iTunes
+		val songLength: Int
 ) {
 	// Add an empty companion object so private extensions can be added
 	companion object

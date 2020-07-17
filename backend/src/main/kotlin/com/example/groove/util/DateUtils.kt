@@ -2,11 +2,9 @@ package com.example.groove.util
 
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 object DateUtils {
 	fun now(): Timestamp {
@@ -23,9 +21,16 @@ fun Timestamp.isNewerThan(timeUnit: ChronoUnit, timeAmount: Long): Boolean {
 	return this.after(comparison.toTimestamp())
 }
 
+fun Timestamp.minusWeeks(weeks: Int): Timestamp {
+	return this.toLocalDateTime()
+			.minusWeeks(weeks.toLong())
+			.toTimestamp()
+}
+
 fun LocalDateTime.toTimestamp(): Timestamp {
 	return Timestamp.valueOf(this)
 }
+
 fun Instant.toTimestamp(): Timestamp {
 	return Timestamp.from(this)
 }

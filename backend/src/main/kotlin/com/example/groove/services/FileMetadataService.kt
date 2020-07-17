@@ -2,10 +2,10 @@ package com.example.groove.services
 
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
+import com.example.groove.util.logger
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.datatype.Artwork
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.awt.image.BufferedImage
 import java.io.File
@@ -160,6 +160,6 @@ class FileMetadataService {
 	}
 
     companion object {
-        val logger = LoggerFactory.getLogger(FileMetadataService::class.java)!!
+        val logger = logger()
     }
 }

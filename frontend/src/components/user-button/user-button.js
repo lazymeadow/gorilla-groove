@@ -10,6 +10,7 @@ import {PermissionType} from "../../enums/permission-type";
 import {UserContext} from "../../services/user-provider";
 import TrackHistory from "../track-history/track-history";
 import DeviceManagement from "../device-management/device-management";
+import {toast} from "react-toastify";
 
 const originalTitle = document.title;
 
@@ -34,6 +35,14 @@ export default function UserButton() {
 		});
 	};
 
+	const runReviewQueues = () => {
+		Api.post('review-queue/check-new-songs').then(() => {
+			toast.success('New song downloads successful');
+		}).catch(() => {
+			toast.error('Failed to download new songs');
+		})
+	};
+
 	return (
 		<div className="user-menu">
 			<PopoutMenu
@@ -47,6 +56,7 @@ export default function UserButton() {
 					{ component: <TrackHistory/> },
 					{ component: <InviteUser/>, shouldRender: userContext.hasPermission(PermissionType.INVITE_USER)  },
 					{ component: <DraftRelease/>, shouldRender: userContext.hasPermission(PermissionType.WRITE_VERSION_HISTORY) },
+					{ text: "Run Review Queues", clickHandler: runReviewQueues, shouldRender: userContext.hasPermission(PermissionType.RUN_REVIEW_QUEUES)},
 					{ text: "Logout", clickHandler: logout }
 				]}
 			/>
