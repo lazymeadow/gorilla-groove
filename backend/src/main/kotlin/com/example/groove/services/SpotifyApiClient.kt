@@ -1,6 +1,7 @@
 package com.example.groove.services
 
 import com.example.groove.dto.MetadataResponseDTO
+import com.example.groove.properties.SpotifyApiProperties
 import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.http.client.utils.URIBuilder
@@ -22,10 +23,11 @@ private const val REQUEST_SIZE_LIMIT = 49
 
 @Service
 class SpotifyApiClient(
+		spotifyApiProperties: SpotifyApiProperties,
 		private val restTemplate: RestTemplate
 ) {
 
-	private val spotifyTokenManager: SpotifyTokenManager = SpotifyTokenManager(restTemplate)
+	private val spotifyTokenManager: SpotifyTokenManager = SpotifyTokenManager(spotifyApiProperties, restTemplate)
 
 	private val authHeader: String
 		get() = "Bearer ${spotifyTokenManager.authenticationToken}"
@@ -217,7 +219,10 @@ class SpotifyApiClient(
 	}
 }
 
-private class SpotifyTokenManager(private val restTemplate: RestTemplate) {
+private class SpotifyTokenManager(
+		private val spotifyApiProperties: SpotifyApiProperties,
+		private val restTemplate: RestTemplate
+) {
 	// Spotify, annoyingly, requires that we continually refresh the token that we are using.
 	// So we might not always have a valid token and might need to get ourselves another.
 	// Check for the property in a synchronized block and request a new token if the last one is gone.
@@ -245,7 +250,7 @@ private class SpotifyTokenManager(private val restTemplate: RestTemplate) {
 			val body = mapOf(
 					"grant_type" to "client_credentials",
 					"client_id" to CLIENT_ID,
-					"client_secret" to CLIENT_SECRET
+					"client_secret" to spotifyApiProperties.spotifyApiSecret
 			).toPostBody()
 
 			restTemplate.postForEntity(url, body, String::class.java).body!!
@@ -294,7 +299,6 @@ private class SpotifyTokenManager(private val restTemplate: RestTemplate) {
 
 	companion object {
 		private const val CLIENT_ID = "ea1ac3eb15084af1bd1f044a332d57ee"
-		private const val CLIENT_SECRET = "22c82116884844959a3e6968b865eb25"
 
 		val logger = logger()
 	}
