@@ -115,11 +115,11 @@ function AddNewSourceModal() {
 				setLoading(false);
 			})
 		} else if (selectedSourceType === ReviewSourceType.YOUTUBE_CHANNEL) {
-			Api.post('review-queue/subscribe/youtube-channel', { channelUrl: reviewQueueInput }).then(channel => {
+			Api.post('review-queue/subscribe/youtube-channel', { channelUrl: reviewQueueInput }).then(() => {
 				reviewQueueContext.fetchReviewQueueSources().then(() => {
-					toast.success(`Successfully subscribed to ${channel.channelName}`);
+					toast.success(`Successfully subscribed to channel`);
 				}).catch(() => {
-					toast.info(`Successfully subscribed to ${channel.channelName} but could not fetch new sources!`);
+					toast.info(`Successfully subscribed to channel but could not fetch new sources!`);
 				}).finally(() => {
 					setModalOpen(false);
 				});

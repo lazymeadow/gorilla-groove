@@ -144,6 +144,7 @@ class ReviewSourceYoutubeChannelService(
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
 			}
 			reviewSource.subscribedUsers.add(ownUser)
+			reviewSourceYoutubeChannelRepository.save(reviewSource)
 			return
 		}
 
@@ -164,6 +165,7 @@ class ReviewSourceYoutubeChannelService(
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
 			}
 			reviewSource.subscribedUsers.add(user)
+			reviewSourceYoutubeChannelRepository.save(reviewSource)
 			return
 		}
 
