@@ -6,7 +6,6 @@ import {Api} from "../../api";
 import {UserContext} from "../../services/user-provider";
 
 function RecommendToModal(props) {
-	const [modalOpen, setModalOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 
 	const userContext = useContext(UserContext);
@@ -27,9 +26,14 @@ function RecommendToModal(props) {
 			const track = tracks.length === 1 ? 'Track' : 'Tracks';
 			toast.success(`${track} recommended successfully`)
 		}).catch(e => {
-			console.error(e);
+			const error = JSON.parse(e);
+			if (error.message) {
+				toast.error(error.message);
+			} else {
+				console.error(e);
+				toast.error('Failed to recommend the selected songs');
+			}
 			setLoading(false);
-			toast.error('Failed to recommend the selected songs');
 		});
 	};
 

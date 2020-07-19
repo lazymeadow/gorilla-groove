@@ -44,6 +44,16 @@ class ReviewQueueService(
 			if (track == null || track.user.id != currentUser.id) {
 				throw IllegalArgumentException("No track found with ID: ${track?.id}!")
 			}
+
+			trackRepository.getTracksForUserWithOriginalTrack(targetUserId, track.id)
+					// If the track is inReview, then block it always. That way you can't re-recommend
+					// a track someone has already rejected. Otherwise, if the track isn't in review,
+					// check if it's been deleted. If it hasn't, then block as they already copied it
+					.firstOrNull { it.inReview || !it.deleted }
+					?.let {
+						logger.info("User ${currentUser.name} tried to recommend the song ${track.artist} - ${track.name} to ${targetUser.name} but it already existed")
+						throw IllegalArgumentException("${track.name} already exists in this user's library or was recommended before!")
+					}
 		}
 
 		val reviewSource = reviewSourceUserRecommendRepository.findByUser(currentUser)
@@ -55,7 +65,7 @@ class ReviewQueueService(
 		}
 
 		tracks.forEach { track ->
-			trackService.saveTrackForUserReview(targetUser, track!!, reviewSource)
+			trackService.saveTrackForUserReview(targetUser, track!!, reviewSource, setAsCopied = true)
 		}
 	}
 

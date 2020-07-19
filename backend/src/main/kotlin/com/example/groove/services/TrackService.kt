@@ -227,7 +227,8 @@ class TrackService(
 					addedToLibrary = now,
 					playCount = 0,
 					lastPlayed = null,
-					hidden = false
+					hidden = false,
+					originalTrack = track
 			)
 
 			trackRepository.save(forkedTrack)
@@ -275,7 +276,12 @@ class TrackService(
 
 	// This track is being given to someone for review. Copy the track with the target user as
 	// the new owner. Save it, and copy the album art
-	fun saveTrackForUserReview(user: User, track: Track, reviewSource: ReviewSource): Track {
+	fun saveTrackForUserReview(
+			user: User,
+			track: Track,
+			reviewSource: ReviewSource,
+			setAsCopied: Boolean = false
+	): Track {
 		return track.copy(
 				id = 0,
 				user = user,
@@ -287,7 +293,8 @@ class TrackService(
 				addedToLibrary = null,
 				createdAt = now(),
 				playCount = 0,
-				lastPlayed = null
+				lastPlayed = null,
+				originalTrack = if (setAsCopied) track else null
 		).also { trackCopy ->
 			trackRepository.save(trackCopy)
 			fileStorageService.copyAlbumArt(track.id, trackCopy.id)

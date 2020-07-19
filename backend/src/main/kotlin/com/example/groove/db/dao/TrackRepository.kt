@@ -103,6 +103,17 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Query("""
 			SELECT t
 			FROM Track t
+			WHERE t.user.id = :userId
+			AND t.originalTrack.id = :originalTrackId
+			""")
+	fun getTracksForUserWithOriginalTrack(
+			@Param("userId") userId: Long,
+			@Param("originalTrackId") originalTrackId: Long
+	): List<Track>
+
+	@Query("""
+			SELECT t
+			FROM Track t
 			WHERE t.updatedAt > :minimum
 			AND t.updatedAt < :maximum
 			AND t.user.id = :userId
