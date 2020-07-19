@@ -136,7 +136,7 @@ class ReviewSourceYoutubeChannelService(
 		// Check if someone is already subscribed to this channel
 		reviewSourceYoutubeChannelRepository.findByChannelId(channelId)?.let { reviewSource ->
 			logger.info("$channelId (${reviewSource.channelName}) already exists")
-			reviewSource.subscribedUsers.find { it.id == ownUser.id }?.let {
+			if (reviewSource.isUserSubscribed(ownUser)) {
 				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to ${reviewSource.channelName}!")
 			}
 			if (reviewSource.subscribedUsers.isEmpty()) {
@@ -157,7 +157,7 @@ class ReviewSourceYoutubeChannelService(
 	private fun saveAndSubscribeToChannel(channelInfo: YoutubeChannelInfo, user: User) {
 		reviewSourceYoutubeChannelRepository.findByChannelId(channelInfo.id)?.let { reviewSource ->
 			logger.info("${reviewSource.channelName} (${reviewSource.channelId}) already exists")
-			reviewSource.subscribedUsers.find { it.id == user.id }?.let {
+			if (reviewSource.isUserSubscribed(user)) {
 				throw IllegalArgumentException("User ${user.name} is already subscribed to ${reviewSource.channelName}! (${reviewSource.channelId})")
 			}
 			if (reviewSource.subscribedUsers.isEmpty()) {

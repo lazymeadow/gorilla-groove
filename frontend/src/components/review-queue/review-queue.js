@@ -5,6 +5,7 @@ import {PlaybackContext} from "../../services/playback-provider";
 import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
+import {ReviewSourceType} from "./review-queue-management/review-queue-management";
 
 export default function ReviewQueue() {
 	const [reviewTrack, setReviewTrack] = useState(null);
@@ -40,7 +41,13 @@ export default function ReviewQueue() {
 	};
 
 	useEffect(() => {
-		fetchReviewTracks().then(fetchLinksForTrack)
+		if (reviewQueueContext.queuesFetched) {
+			fetchReviewTracks().then(fetchLinksForTrack)
+		} else {
+			reviewQueueContext.fetchReviewQueueSources()
+				.then(fetchReviewTracks)
+				.then(fetchLinksForTrack);
+		}
 	}, []);
 
 	const loadNextTrack = () => {
@@ -95,6 +102,20 @@ export default function ReviewQueue() {
 		}
 	};
 
+	const getSourceDescription = () => {
+		const source = reviewQueueContext.reviewQueueSourceIdToSource[reviewTrack.reviewSourceId];
+		switch (source.sourceType) {
+			case ReviewSourceType.ARTIST:
+				return 'New release by artist: ' + source.displayName;
+			case ReviewSourceType.YOUTUBE_CHANNEL:
+				return 'From YouTube channel: ' + source.displayName;
+			case ReviewSourceType.USER_RECOMMEND:
+				return 'Recommended by user: ' + source.displayName;
+			default:
+				throw 'Unknown review source!'
+		}
+	};
+
 	return <div id="review-queue" className="p-relative text-center">
 		<LoadingSpinner visible={loading}/>
 		{
@@ -102,6 +123,7 @@ export default function ReviewQueue() {
 				<div>
 					<img id="review-album-art" src={trackLinks.albumArtLink}/>
 					<div>{getDisplayName(reviewTrack)}</div>
+					<div className="small-text">{getSourceDescription()}</div>
 					<div className="review-buttons">
 						<i className="fa fa-thumbs-up" title="Add to your library" onClick={reviewUp}/>
 						<i className="fa fa-redo" title="Skip and go to the next" onClick={reviewSkip}/>

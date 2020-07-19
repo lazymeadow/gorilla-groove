@@ -191,7 +191,7 @@ class ReviewSourceArtistService(
 
 		// First, check if the artist is already subscribed to by someone else
 		reviewSourceArtistRepository.findByArtistName(artistName)?.let { existing ->
-			existing.subscribedUsers.find { it.id == currentUser.id }?.run {
+			if (existing.isUserSubscribed(currentUser)) {
 				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
 			}
 			existing.subscribedUsers.add(currentUser)

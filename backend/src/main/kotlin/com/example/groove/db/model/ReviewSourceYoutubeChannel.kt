@@ -8,7 +8,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "review_source_youtube_channel")
 @PrimaryKeyJoinColumn(name = "review_source_id")
-data class ReviewSourceYoutubeChannel(
+class ReviewSourceYoutubeChannel(
 		@Column(name = "channel_id")
 		val channelId: String,
 
@@ -17,4 +17,7 @@ data class ReviewSourceYoutubeChannel(
 
 		@Column(name = "last_searched")
 		var lastSearched: Timestamp = now()
-) : ReviewSource(sourceType = ReviewSourceType.YOUTUBE_CHANNEL)
+) : ReviewSource(sourceType = ReviewSourceType.YOUTUBE_CHANNEL) {
+	override val displayName: String
+		get() = channelName
+}

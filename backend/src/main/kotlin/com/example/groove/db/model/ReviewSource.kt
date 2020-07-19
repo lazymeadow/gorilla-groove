@@ -9,11 +9,12 @@ import javax.persistence.*
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "review_source")
-open class ReviewSource(
+abstract class ReviewSource(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
-		val id: Long = 0,
+		@Access(AccessType.FIELD) // This (and the open modifier) let this ID be accessed lazily without fetching the entire entity
+		open val id: Long = 0,
 
 		@JsonIgnore
 		@ManyToMany
@@ -28,4 +29,10 @@ open class ReviewSource(
 
 		@Column(name = "created_at")
 		open val createdAt: Timestamp = now()
-)
+) {
+	abstract val displayName: String
+
+	fun isUserSubscribed(user: User): Boolean {
+		return subscribedUsers.find { it.id == user.id } != null
+	}
+}

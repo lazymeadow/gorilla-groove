@@ -1,5 +1,6 @@
 import React from "react";
 import {Api} from "../api";
+import {ReviewSourceType} from "../components/review-queue/review-queue-management/review-queue-management";
 
 export const ReviewQueueContext = React.createContext();
 
@@ -9,9 +10,10 @@ export class ReviewQueueProvider extends React.Component {
 
 		this.state = {
 			reviewQueueCount: 0,
+			queuesFetched: false,
 			reviewQueueTracks: [],
-			reviewQueueSources: [],
-
+			reviewQueueSources: [], // Does not contain USER_RECOMMEND types
+			reviewQueueSourceIdToSource: {},
 			fetchReviewTracks: (...args) => this.fetchReviewTracks(...args),
 			fetchReviewQueueSources: (...args) => this.fetchReviewQueueSources(...args)
 		}
@@ -31,8 +33,17 @@ export class ReviewQueueProvider extends React.Component {
 	};
 
 	fetchReviewQueueSources() {
+		this.setState({ queuesFetched: true });
+
 		return Api.get('review-queue').then(sources => {
-			this.setState({ reviewQueueSources: sources });
+			const sourceIdToSource = {};
+			sources.forEach(source => {
+				sourceIdToSource[source.id] = source;
+			});
+			this.setState({
+				reviewQueueSources: sources.filter(it => it.sourceType !== ReviewSourceType.USER_RECOMMEND),
+				reviewQueueSourceIdToSource: sourceIdToSource
+			});
 
 			return sources
 		})

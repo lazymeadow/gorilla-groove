@@ -49,6 +49,11 @@ class ReviewQueueService(
 		val reviewSource = reviewSourceUserRecommendRepository.findByUser(currentUser)
 				?: ReviewSourceUserRecommend(user = currentUser).also { reviewSourceUserRecommendRepository.save(it) }
 
+		if (!reviewSource.isUserSubscribed(targetUser)) {
+			reviewSource.subscribedUsers.add(targetUser)
+			reviewSourceUserRecommendRepository.save(reviewSource)
+		}
+
 		tracks.forEach { track ->
 			trackService.saveTrackForUserReview(targetUser, track!!, reviewSource)
 		}

@@ -20,28 +20,15 @@ function ReviewQueueManagementModal() {
 		});
 	}, []);
 
-	const extractSourceDisplayData = source => {
-		let sourceData = null;
-		if (source.sourceType === 'ARTIST') {
-			sourceData = source.artistName;
-		} else if (source.sourceType === 'YOUTUBE_CHANNEL') {
-			sourceData = source.channelName;
-		} else {
-			throw 'Unrecognized source type! ' + source.sourceType;
-		}
-
-		return sourceData;
-	};
-
 	const deleteReviewSource = source => {
 		Api.delete('review-queue/' + source.id).then(() => {
 			reviewQueueContext.fetchReviewQueueSources().then(() => {
-				toast.success(`Review source ${extractSourceDisplayData(source)} deleted successfully`)
+				toast.success(`Review source ${source.displayName} deleted successfully`)
 			}).catch(() => {
-				toast.info(`Review source ${extractSourceDisplayData(source)} deleted, but could not fetch the new list!`)
+				toast.info(`Review source ${source.displayName} deleted, but could not fetch the new list!`)
 			})
 		}).catch(() => {
-			toast.error(`Failed to delete ${extractSourceDisplayData(source)}`)
+			toast.error(`Failed to delete ${source.displayName}`)
 		})
 	};
 
@@ -62,7 +49,7 @@ function ReviewQueueManagementModal() {
 				{reviewQueueContext.reviewQueueSources.map(source =>
 					<tr key={source.id} className="">
 						<td>{toTitleCaseFromSnakeCase(source.sourceType)}</td>
-						<td>{extractSourceDisplayData(source)}</td>
+						<td>{source.displayName}</td>
 						<td>
 							<i className="fas fa-times clickable" title="Delete" onClick={() => { deleteReviewSource(source) }}/>
 						</td>
@@ -219,7 +206,7 @@ export default function ReviewQueueManagement() {
 }
 
 export const ReviewSourceType = Object.freeze({
-	USER_RECOMMEND: '0',
-	YOUTUBE_CHANNEL: '1',
-	ARTIST: '2'
+	USER_RECOMMEND: 'USER_RECOMMEND',
+	YOUTUBE_CHANNEL: 'YOUTUBE_CHANNEL',
+	ARTIST: 'ARTIST'
 });

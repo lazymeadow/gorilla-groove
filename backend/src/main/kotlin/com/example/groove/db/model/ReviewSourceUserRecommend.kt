@@ -7,8 +7,11 @@ import javax.persistence.*
 @Entity
 @Table(name = "review_source_user_recommend")
 @PrimaryKeyJoinColumn(name = "review_source_id")
-data class ReviewSourceUserRecommend(
+class ReviewSourceUserRecommend(
 		@JsonIgnore
 		@ManyToOne
 		val user: User
-) : ReviewSource(sourceType = ReviewSourceType.USER_RECOMMEND)
+) : ReviewSource(sourceType = ReviewSourceType.USER_RECOMMEND) {
+	override val displayName: String
+		get() = user.name
+}

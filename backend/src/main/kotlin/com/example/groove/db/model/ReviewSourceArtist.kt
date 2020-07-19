@@ -7,7 +7,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "review_source_artist")
 @PrimaryKeyJoinColumn(name = "review_source_id")
-data class ReviewSourceArtist(
+class ReviewSourceArtist(
 		@Column(name = "artist_id")
 		val artistId: String,
 
@@ -16,4 +16,7 @@ data class ReviewSourceArtist(
 
 		@Column(name = "search_newer_than")
 		val searchNewerThan: Timestamp? = null
-) : ReviewSource(sourceType = ReviewSourceType.ARTIST)
+) : ReviewSource(sourceType = ReviewSourceType.ARTIST) {
+	override val displayName: String
+		get() = artistName
+}

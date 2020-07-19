@@ -15,7 +15,7 @@ data class Track(
 		override val id: Long = 0,
 
 		@JsonIgnore
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "user_id", nullable = false)
 		val user: User,
 
@@ -87,7 +87,7 @@ data class Track(
 		var note: String? = null,
 
 		@JsonIgnore
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "review_source_id")
 		var reviewSource: ReviewSource? = null,
 
