@@ -34,7 +34,7 @@ function ReviewQueueManagementModal() {
 
 	return (
 		<div id="review-queue-management-modal" className="p-relative">
-			<LoadingSpinner visible={loading}/>
+			<LoadingSpinner visible={loading} small={true}/>
 			<h2 className="text-center ws-pre-line">Review Queue Management</h2>
 			<AddNewSourceModal/>
 			<table className="data-table full-width">
@@ -113,17 +113,10 @@ function AddNewSourceModal() {
 			}).catch(err => {
 				const error = JSON.parse(err);
 				if (error.status === 400) {
-					toast.error('You are already subscribed to this artist!');
-				} else if (error.possibleMatches) {
-					if (error.possibleMatches.length === 0) {
-						toast.error(`No artist named ${reviewQueueInput} found on Spotify`)
-					} else {
-						console.error(error);
-						toast.error('Failed to subscribe to artist!');
-					}
+					toast.error('You are already subscribed to this channel!');
 				} else {
 					console.error(error);
-					toast.error('Failed to subscribe to artist!');
+					toast.error('Failed to subscribe to channel!');
 				}
 				setLoading(false);
 			})
@@ -146,7 +139,7 @@ function AddNewSourceModal() {
 				closeFunction={() => { setModalOpen(false) }}
 			>
 				<div id="add-new-source-modal" className="p-relative">
-					<LoadingSpinner visible={loading}/>
+					<LoadingSpinner visible={loading} small={true}/>
 					<h2 className="text-center">Add Review Source</h2>
 					<div className="text-center">
 						<label>Source Type</label>

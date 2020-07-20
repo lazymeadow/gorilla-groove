@@ -61,9 +61,6 @@ export default function ReviewQueue() {
 			if (playbackContext.isPlaying) {
 				musicContext.playTracks([nextTrack]);
 			}
-			// const newTracks = tracksToReview.splice(0);
-			// newTracks.shift(); // Drop the track we just skipped. It'll get appropriately re-added on the end when our request finishes
-			// setTracksToReview(newTracks);
 		}
 
 		fetchReviewTracks();
@@ -116,7 +113,7 @@ export default function ReviewQueue() {
 		}
 	};
 
-	return <div id="review-queue" className="p-relative text-center">
+	return <div id="review-queue" className="p-relative text-center full-height">
 		<LoadingSpinner visible={loading}/>
 		{
 			reviewTrack !== null ? (
@@ -134,9 +131,7 @@ export default function ReviewQueue() {
 					</div>
 				</div>
 			) : (
-				<div>
-					You have no more tracks to review! Good job.
-				</div>
+				!loading ? <div>You have no more tracks to review! Good job.</div> : null
 			)
 		}
 	</div>
