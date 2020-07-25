@@ -218,8 +218,7 @@ export default function SongPopoutMenu(props) {
 			}, {
 				component: <MetadataRequest getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
-				component: <RecommendTo getSelectedTracks={props.getSelectedTracks.bind(this)}/>,
-				shouldRender: userContext.hasPermission(PermissionType.EXPERIMENTAL)
+				component: <RecommendTo getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
 				component: <SongDelete getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}

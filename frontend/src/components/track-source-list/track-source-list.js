@@ -152,24 +152,22 @@ export default function TrackSourceList(props) {
 			</div>
 
 			{
-				userContext.hasPermission(PermissionType.EXPERIMENTAL) ? (
-					<div
-						className={`secondary-option ${reviewQueueSelected}`}
-						onClick={() => {
-							props.setCenterView(CenterView.REVIEW_QUEUE);
-						}}
-					>
-						<div className="flex-between">
+				<div
+					className={`secondary-option ${reviewQueueSelected}`}
+					onClick={() => {
+						props.setCenterView(CenterView.REVIEW_QUEUE);
+					}}
+				>
+					<div className="flex-between">
 					<span className="flex-grow hoverable">Review Queue
 						<span className="small-text">
 							{ reviewQueueContext.reviewQueueCount > 0 ? ` (${reviewQueueContext.reviewQueueCount})` : ''}
 						</span>
 					</span>
-							<ReviewQueueManagement/>
+						<ReviewQueueManagement/>
 
-						</div>
 					</div>
-				) : null
+				</div>
 			}
 
 			<div

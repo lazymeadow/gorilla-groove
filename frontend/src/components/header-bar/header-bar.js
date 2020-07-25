@@ -14,7 +14,7 @@ export default function HeaderBar() {
 				<img src="./images/logo.png" width="50" height="50"/>
 				<div className="vertical-center">
 					<div>Gorilla Groove</div>
-					<div className="logo-text">Party Edition</div>
+					<div className="logo-text">Discover Edition</div>
 				</div>
 				<div className="song-acquisition-icons">
 					<SongUpload/>
