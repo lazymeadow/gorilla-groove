@@ -1,10 +1,14 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Api} from "..";
 import MiniPlayer from "../playback-controls/mini-player/mini-player";
+import {isLoggedIn} from "../../util";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 export default function SongLinkPlayer(props) {
 	const audioRef = useRef(null);
 
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 	const [trackData, setTrackData] = useState({});
 
 	const [volume, setVolume] = useState(1);
@@ -13,8 +17,19 @@ export default function SongLinkPlayer(props) {
 	const [timePlayed, setTimePlayed] = useState(false);
 
 	useEffect(() => {
-		Api.get('track/public/' + props.match.params.trackId).then(res => {
+		// If we are logged in, we can request a different endpoint that can link to expired tracks
+		const baseUrl = isLoggedIn() ? 'track/' : 'track/public/';
+		Api.get(baseUrl + props.match.params.trackId).then(res => {
 			setTrackData(res);
+		}).catch(e => {
+			if (e.status === 401) {
+				setError(<div>This track link has expired. <a href="/login">Log in</a> or re-request the link</div>);
+			} else {
+				setError(<div>An unknown error has occurred</div>);
+				console.error(e);
+			}
+		}).finally(() => {
+			setLoading(false);
 		});
 
 		const audio = audioRef.current;
@@ -26,8 +41,13 @@ export default function SongLinkPlayer(props) {
 		});
 	}, []);
 
+	if (error !== null) {
+		return <div id="song-link-player">{error}</div>
+	}
+
 	return (
-		<div id="song-link-player">
+		<div id="song-link-player" className="d-relative">
+			<LoadingSpinner visible={loading}/>
 			<audio ref={audioRef} src={trackData.trackLink}/>
 			<MiniPlayer
 				trackData={trackData}

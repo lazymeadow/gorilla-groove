@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
+// FUN FACT. If you are using an anonymously-available endpoint these are ignored and everything is a 401
 
 @ControllerAdvice
 class BadRequestExceptionHandler {

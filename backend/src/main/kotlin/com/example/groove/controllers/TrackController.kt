@@ -2,6 +2,7 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
 import com.example.groove.dto.*
+import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeDownloadService
@@ -139,8 +140,22 @@ class TrackController(
 	}
 
 	@GetMapping("/public/{trackId}")
-	fun getLinksForTrackAnonymous(@PathVariable trackId: Long): Map<String, Any?> {
-		return trackService.getPublicTrackInfo(trackId)
+	fun getInfoForTrackAnonymous(@PathVariable trackId: Long): Any {
+		// This track is available anonymously and breaks our normal "exception to status code" handling.
+		// Catch the exception and return the correct code as a "not found" is not impossible here
+		return try {
+			trackService.getPublicTrackInfo(trackId, true)
+		} catch (e: ResourceNotFoundException) {
+			ResponseEntity.notFound()
+		}
+	}
+
+	// It's real annoying that I have to have two endpoints for this, but I can't figure out
+	// how to make Spring try to authenticate user for a public endpoint. So instead, have one
+	// endpoint for authenticated users and one for not, and make the clients deal with it
+	@GetMapping("/{trackId}")
+	fun getInfoForTrack(@PathVariable trackId: Long): Map<String, Any?> {
+		return trackService.getPublicTrackInfo(trackId, false)
 	}
 
 	data class MarkTrackAsListenedToDTO(
