@@ -42,11 +42,6 @@ class DeviceService(
 		return device.mergedDevice ?: device
 	}
 
-	//    TODO KILL ME WHEN 1.3
-	fun <T> List<T>.tempRandom(): T {
-		return this[Random().nextInt(this.size)]
-	}
-
 	private fun generateDefaultName(): String {
 		val adjectivesByLetter = mapOf(
 				'A' to listOf("Arrogant", "Abiding", "Able", "Abrasive", "Absorbed", "Absurd", "Admiring", "Aerodynamic", "Affectionate", "Affluent", "Afraid", "Ageless"),
@@ -60,8 +55,8 @@ class DeviceService(
 		)
 		val characterNames = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
 
-		val characterName = characterNames.tempRandom()
-		val adjective = adjectivesByLetter[characterName.first().toUpperCase()]?.tempRandom() ?: ""
+		val characterName = characterNames.random()
+		val adjective = adjectivesByLetter[characterName.first().toUpperCase()]?.random() ?: ""
 
 		return "$adjective $characterName"
 	}
