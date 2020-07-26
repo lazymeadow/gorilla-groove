@@ -12,21 +12,7 @@ export class Api {
 	static get(url, params) {
 		let urlParameters = Api.encodeUriParamsFromObject(params);
 
-		return fetch(this.getBaseApiUrl() + url + urlParameters, {
-			method: 'get',
-			headers: new Headers({
-				'Content-Type': 'application/json'
-			}),
-			credentials: 'include'
-		}).then(res => {
-			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
-			// I don't like this behavior, since there was an issue. Throw an error so they fall into catch()
-			if (!res.ok) {
-				throw Error('Http error with status: ' + res.status);
-			}
-
-			return res.json()
-		})
+		return this.sendRequest('get', url + urlParameters);
 	}
 
 	static put(url, params) {
@@ -42,24 +28,29 @@ export class Api {
 	}
 
 	static sendRequest(requestType, url, params) {
-		let headers = { 'Content-Type': 'application/json' };
+		const headers = { 'Content-Type': 'application/json' };
 
-		return fetch(this.getBaseApiUrl() + url, {
+		const requestParams = {
 			method: requestType,
 			headers: new Headers(headers),
 			credentials: 'include',
-			body: JSON.stringify(params)
-		}).then(res => {
+		};
+
+		if (requestType !== 'get') {
+			requestParams.body = JSON.stringify(params);
+		}
+
+		return fetch(this.getBaseApiUrl() + url, requestParams).then(res => {
 			// The fetch API treats bad response codes like 4xx or 5xx as falling into the then() block
 			// I don't like this behavior, since there was an issue. Throw an error so they fall into catch()
 			if (!res.ok) {
 				return res.text().then(text => {
 					if (!text) {
-						throw ''
+						throw { error: res.statusText, status: res.status}
 					} else if (JSON.parse(text)) {
 						throw text
 					} else {
-						throw { error: text }
+						throw { error: text, status: res.status }
 					}
 				});
 			}
