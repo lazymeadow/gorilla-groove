@@ -7,7 +7,7 @@ import {Api} from "../../../api";
 import {TrimSong} from "../../trim-song/trim-song";
 import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
-import {copyToClipboard, getScreenHeight} from "../../../util";
+import {copyToClipboard, getScreenDimensions} from "../../../util";
 import PopoutMenu from "../popout-menu";
 import RemotePlay from "../../remote-play/modal/remote-play";
 import {RemotePlayType} from "../../remote-play/modal/remote-play-type";
@@ -22,6 +22,8 @@ let lastY = -1;
 export default function SongPopoutMenu(props) {
 	const musicContext = useContext(MusicContext);
 	const playlistContext = useContext(PlaylistContext);
+
+	const multipleSelected = props.selectionKeys.size > 1;
 
 	const calculateMenuOptions = () => {
 		if (!props.expanded) {
@@ -134,13 +136,13 @@ export default function SongPopoutMenu(props) {
 					mainItem={{ text: 'Download' }}
 					menuItems={[
 						{
-							text: 'MP3', clickHandler: e => {
+							text: 'MP3', clickHandler: () => {
 								const track = selectedTracks[0];
 
 								Api.download(`file/download/${track.id}`, { audioFormat: 'MP3' });
 							}
 						}, {
-							text: 'OGG', clickHandler: e => {
+							text: 'OGG', clickHandler: () => {
 								const track = selectedTracks[0];
 
 								Api.download(`file/download/${track.id}`, { audioFormat: 'OGG' });
@@ -305,7 +307,7 @@ export default function SongPopoutMenu(props) {
 	};
 
 	const getNowPlayingOptions = () => {
-		return [
+		const options = [
 			{
 				text: 'Remove', clickHandler: e => {
 					e.stopPropagation();
@@ -313,6 +315,17 @@ export default function SongPopoutMenu(props) {
 				}
 			}
 		];
+		if (!multipleSelected) {
+			options.push({
+					text: 'Remove Later Songs', clickHandler: e => {
+						e.stopPropagation();
+						musicContext.removeFromNowPlaying(props.selectionKeys);
+					}
+				}
+			)
+		}
+
+		return options
 	};
 
 	const getPlaylistAdditionOptions = () => {
@@ -370,12 +383,19 @@ export default function SongPopoutMenu(props) {
 	// isn't known until the child renders, and we don't know when that happens. So just do
 	// a hacky and dumb "guess" at the height based off the number of rows
 	const approximateMenuHeight = menuOptions.length * 17 + 10;
-	const screenHeight = getScreenHeight();
+
+	// Even more jank than the other estimate. This is wide enough for the widest thing that currently goes in it.
+	// Can't just check text because we can nest entire components, and they won't have appeared yet to properly measure.
+	const approximateMenuWidth = 151;
+	const { screenWidth, screenHeight } = getScreenDimensions();
 
 	let adjustedY = props.y === undefined ? 0 : props.y;
 	let adjustedX = props.x === undefined ? 0 : props.x;
 	if (props.y + approximateMenuHeight > screenHeight) {
 		adjustedY = screenHeight - approximateMenuHeight;
+	}
+	if (props.x + approximateMenuWidth > screenWidth) {
+		adjustedX = screenWidth - approximateMenuWidth;
 	}
 
 	return (
