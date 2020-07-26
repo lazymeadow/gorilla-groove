@@ -157,8 +157,7 @@ export class TrackList extends React.Component {
 
 				this.context.playFromTrackIndex(trackIndex, true);
 			} else {
-				const tracks = this.context.nowPlayingTracks.map(it => this.state.selected.has(it.selectionKey));
-				this.context.playTracks(tracks);
+				this.context.playTracks(this.getSelectedTracks());
 			}
 		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
 			if (this.state.lastSelectedIndex === null) {
@@ -171,10 +170,30 @@ export class TrackList extends React.Component {
 				return;
 			}
 
-			const selected = new Set();
-			selected.add(this.props.userTracks[newIndex].selectionKey);
+			// If shift is held, we have specific behavior we need to do more work on.
+			// If shift is not held, then we can clear our selections as we only need the new thing selected.
+			let newSelected = event.shiftKey ? this.state.selected : new Set();
 
-			this.setState({ selected: selected, lastSelectedIndex: newIndex });
+			// In either case, the row we go to needs to be selected
+			newSelected.add(this.props.userTracks[newIndex].selectionKey);
+
+			// Now, if shift is held, we need to figure out if we deselect the last row
+			if (event.shiftKey) {
+				const lastTrackKey = this.props.userTracks[this.state.lastSelectedIndex].selectionKey;
+				const downFromStart = this.state.firstSelectedIndex < this.state.lastSelectedIndex;
+				// If we are holding shift, we need to select more if we go further from where we started,
+				// and deselect when we come back. Never deselect the first thing selected
+				if (this.state.firstSelectedIndex !== this.state.lastSelectedIndex &&
+					((downFromStart && event.key === 'ArrowUp') || (!downFromStart && event.key === 'ArrowDown'))) {
+					newSelected.delete(lastTrackKey);
+				}
+			}
+
+			const newState = { selected: newSelected, lastSelectedIndex: newIndex };
+			if (!event.shiftKey) {
+				newState.firstSelectedIndex = newIndex;
+			}
+			this.setState(newState);
 
 			const trackList = document.getElementById('center-view');
 			const selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
