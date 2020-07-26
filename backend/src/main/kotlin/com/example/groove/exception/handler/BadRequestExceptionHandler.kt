@@ -4,7 +4,7 @@ package com.example.groove.exception.handler
 
 import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.exception.ResourceNotFoundException
-import org.apache.tomcat.util.http.fileupload.FileUploadBase
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -20,7 +20,7 @@ class BadRequestExceptionHandler {
 	// These exceptions should return a 400
 	@ExceptionHandler(
 			IllegalArgumentException::class,
-			FileUploadBase.FileSizeLimitExceededException::class,
+			FileSizeLimitExceededException::class,
 			MaxUploadSizeExceededException::class
 	)
 	protected fun handleIllegalArgument(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
