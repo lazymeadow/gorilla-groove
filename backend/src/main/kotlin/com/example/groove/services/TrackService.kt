@@ -8,6 +8,7 @@ import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.unwrap
@@ -208,7 +209,7 @@ class TrackService(
 		val user = loadLoggedInUser()
 
 		val tracksToImport = trackIds.map {
-			trackRepository.findById(it).unwrap()
+			trackRepository.get(it)
 		}
 		val invalidTracks = tracksToImport.filter { track ->
 			track == null || track.private || track.user.id == user.id
