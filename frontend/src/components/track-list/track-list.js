@@ -252,8 +252,12 @@ export class TrackList extends React.Component {
 			}
 		}
 
-		// The track we clicked needs to always be selected
-		selected.add(userTrack.selectionKey);
+		if (selected.has(userTrack.selectionKey) && event.ctrlKey) {
+			selected.delete(userTrack.selectionKey);
+		} else {
+			// The track we clicked needs to be selected in all other scenarios
+			selected.add(userTrack.selectionKey);
+		}
 
 		if (isLeftClick) {
 			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
