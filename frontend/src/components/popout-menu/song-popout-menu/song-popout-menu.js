@@ -133,12 +133,25 @@ export default function SongPopoutMenu(props) {
 					});
 				}
 			}, {
-				text: 'Download', clickHandler: e => {
-					e.stopPropagation();
-					const track = selectedTracks[0];
+				component: <PopoutMenu
+					mainItem={{ text: 'Download' }}
+					menuItems={[
+						{
+							text: 'MP3', clickHandler: e => {
+								const track = selectedTracks[0];
 
-					Api.download(`file/download/${track.id}`);
-				}
+								Api.download(`file/download/${track.id}`, { audioFormat: 'MP3' });
+							}
+						}, {
+							text: 'OGG', clickHandler: e => {
+								const track = selectedTracks[0];
+
+								Api.download(`file/download/${track.id}`, { audioFormat: 'OGG' });
+							}
+						},
+					]}
+					expansionOnHover={true}
+				/>
 			}
 			])
 		}

@@ -73,8 +73,10 @@ export class Api {
 		});
 	};
 
-	static download(url) {
-		const fullUrl = this.getBaseApiUrl() + url;
+	static download(url, params) {
+		let urlParameters = Api.encodeUriParamsFromObject(params);
+
+		const fullUrl = this.getBaseApiUrl() + url + urlParameters;
 
 		const a = document.createElement("a");
 		a.href = fullUrl;

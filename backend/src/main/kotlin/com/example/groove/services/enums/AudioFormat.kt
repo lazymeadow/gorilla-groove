@@ -4,8 +4,9 @@ package com.example.groove.services.enums
 // Use caution when editing the order, and only add new ones to the end
 enum class AudioFormat(
 		val extension: String,
-		val s3Directory: String
+		val s3Directory: String,
+		val contentType: String
 ) {
-	OGG(".ogg", "music"),
-	MP3(".mp3", "music-mp3")
+	OGG(".ogg", "music", "audio/ogg"),
+	MP3(".mp3", "music-mp3", "audio/mp3")
 }

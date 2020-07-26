@@ -50,9 +50,13 @@ class FileController(
     }
 
 	@GetMapping("/download/{trackId}")
-	fun getFile(@PathVariable trackId: Long, response: HttpServletResponse) {
-		val file = songIngestionService.createTrackFileWithMetadata(trackId)
-		response.contentType = "audio/ogg"
+	fun getFile(
+			@PathVariable trackId: Long,
+			@RequestParam audioFormat: AudioFormat = AudioFormat.OGG,
+			response: HttpServletResponse
+	) {
+		val file = songIngestionService.createTrackFileWithMetadata(trackId, audioFormat)
+		response.contentType = audioFormat.contentType
 		response.setHeader("Content-disposition", """attachment; filename="${file.name}"""")
 
 		val outStream = response.outputStream

@@ -131,7 +131,8 @@ class FileMetadataService {
 		tag.setField(FieldKey.TITLE, track.name)
 		tag.setField(FieldKey.ARTIST, track.artist)
 		tag.setField(FieldKey.ALBUM, track.album)
-		tag.setField(FieldKey.TRACK, track.trackNumber?.toString() ?: "")
+		// MP3s will flip out if you try to set an empty string for the track number. OGGs don't care
+		track.trackNumber?.toString()?.let { tag.setField(FieldKey.TRACK, it) }
 		tag.setField(FieldKey.YEAR, track.releaseYear?.toString() ?: "")
 		tag.setField(FieldKey.GENRE, track.genre ?: "")
 

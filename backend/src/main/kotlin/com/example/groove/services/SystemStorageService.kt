@@ -30,6 +30,9 @@ class SystemStorageService(
 
 		val destinationPath = generateTmpFilePath()
 
+		if (!sourceFile.exists()) {
+			throw IllegalStateException("Source file for track with ID: ${track.id} does not exist")
+		}
 		Files.copy(sourceFile.toPath(), destinationPath, StandardCopyOption.REPLACE_EXISTING)
 
 		return destinationPath.toFile()

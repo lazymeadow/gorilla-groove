@@ -233,18 +233,18 @@ class SongIngestionService(
 		}
 	}
 
-	fun createTrackFileWithMetadata(trackId: Long): File {
-		logger.info("About to create a downloadable track for track ID: $trackId")
+	fun createTrackFileWithMetadata(trackId: Long, audioFormat: AudioFormat): File {
+		logger.info("About to create a downloadable track for track ID: $trackId with format ${audioFormat.extension}")
 		val track = trackRepository.findById(trackId).unwrap()
 
 		if (track == null || (track.private && track.user != loadLoggedInUser())) {
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
-		val songFile = fileStorageService.loadSong(track, AudioFormat.OGG)
+		val songFile = fileStorageService.loadSong(track, audioFormat)
 		val songArtist = if (track.artist.isBlank()) "Unknown" else track.artist
 		val songName = if (track.name.isBlank()) "Unknown" else track.name
-		val newName = "$songArtist - $songName.ogg".withoutReservedFileSystemCharacters()
+		val newName = "$songArtist - $songName${audioFormat.extension}".withoutReservedFileSystemCharacters()
 
 		val artworkFile = fileStorageService.loadAlbumArt(trackId)
 
