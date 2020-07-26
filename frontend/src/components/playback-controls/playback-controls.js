@@ -5,7 +5,7 @@ import {formatTimeFromSeconds} from "../../formatters";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
 import {getDeviceIdentifier} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
-import {getVolumeIcon} from "../../util";
+import {getVolumeIcon, isSafari} from "../../util";
 import {PlaybackContext} from "../../services/playback-provider";
 
 const originalTitle = document.title;
@@ -67,7 +67,9 @@ export default function PlaybackControls(props) {
 
 		loadingTrackId = newTrack.id;
 
-		Api.get('file/link/' + newTrack.id).then(links => {
+		// Safari does not support the superior OGG format. Use MP3 instead for them
+		const audioFormat = isSafari() ? 'MP3' : 'OGG';
+		Api.get('file/link/' + newTrack.id, { audioFormat }).then(links => {
 			props.setAlbumArt(links.albumArtLink);
 
 			lastTime = 0;

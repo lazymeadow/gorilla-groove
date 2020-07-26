@@ -126,6 +126,8 @@ export default function SongPopoutMenu(props) {
 					const link = Api.getBaseUrl() + '/track-link/' + trackId;
 					copyToClipboard(link);
 
+					// Make a call to the API so that it generates an anonymous link for someone to consume.
+					// We don't actually care about the response
 					Api.get('file/link/' + trackId).then(() => {
 						toast.success('Link copied to clipboard');
 					});

@@ -175,3 +175,12 @@ export function numberWithCommas(number) {
 	// https://stackoverflow.com/a/2901298
 	return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
+let isSafariCache = null;
+export function isSafari() {
+	if (isSafariCache === null) {
+		isSafariCache = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+	}
+
+	return isSafariCache
+}
