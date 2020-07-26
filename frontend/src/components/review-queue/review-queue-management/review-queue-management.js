@@ -85,8 +85,7 @@ function AddNewSourceModal() {
 				}).finally(() => {
 					setModalOpen(false);
 				});
-			}).catch(err => {
-				const error = JSON.parse(err);
+			}).catch(error => {
 				if (error.status === 400) {
 					toast.error('You are already subscribed to this artist!');
 				} else if (error.possibleMatches) {
@@ -110,8 +109,7 @@ function AddNewSourceModal() {
 				}).finally(() => {
 					setModalOpen(false);
 				});
-			}).catch(err => {
-				const error = JSON.parse(err);
+			}).catch(error => {
 				if (error.status === 400) {
 					toast.error('You are already subscribed to this channel!');
 				} else {

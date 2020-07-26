@@ -24,6 +24,8 @@ export default function SongLinkPlayer(props) {
 		}).catch(e => {
 			if (e.status === 401) {
 				setError(<div>This track link has expired. <a href="/login">Log in</a> or re-request the link</div>);
+			} else if (e.status === 404) {
+				setError(<div>The track was not found</div>);
 			} else {
 				setError(<div>An unknown error has occurred</div>);
 				console.error(e);

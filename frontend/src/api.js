@@ -47,11 +47,16 @@ export class Api {
 				return res.text().then(text => {
 					if (!text) {
 						throw { error: res.statusText, status: res.status}
-					} else if (JSON.parse(text)) {
-						throw text
-					} else {
-						throw { error: text, status: res.status }
 					}
+
+					let json;
+					try {
+						json = JSON.parse(text);
+					} catch (e) {
+						throw { error: text, status: res.status };
+					}
+
+					throw json;
 				});
 			}
 

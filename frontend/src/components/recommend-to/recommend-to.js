@@ -25,8 +25,7 @@ function RecommendToModal(props) {
 			props.closeFunction();
 			const track = tracks.length === 1 ? 'Track' : 'Tracks';
 			toast.success(`${track} recommended successfully`)
-		}).catch(e => {
-			const error = JSON.parse(e);
+		}).catch(error => {
 			if (error.message) {
 				toast.error(error.message);
 			} else {
