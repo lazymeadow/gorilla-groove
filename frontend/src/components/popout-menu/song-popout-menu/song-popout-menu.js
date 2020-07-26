@@ -317,9 +317,16 @@ export default function SongPopoutMenu(props) {
 		];
 		if (!multipleSelected) {
 			options.push({
-					text: 'Remove Later Songs', clickHandler: e => {
-						e.stopPropagation();
-						musicContext.removeFromNowPlaying(props.selectionKeys);
+					text: 'Remove Later Songs', clickHandler: () => {
+						const selectedTrack = props.getSelectedTracks()[0];
+						const index = musicContext.nowPlayingTracks.findIndex(it => it.selectionKey === selectedTrack.selectionKey);
+						const idsToRemove = new Set();
+
+						musicContext.nowPlayingTracks.slice(index + 1).forEach(trackToRemove => {
+							idsToRemove.add(trackToRemove.selectionKey)
+						});
+
+						musicContext.removeFromNowPlaying(idsToRemove);
 					}
 				}
 			)
