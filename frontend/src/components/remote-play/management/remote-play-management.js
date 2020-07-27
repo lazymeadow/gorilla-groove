@@ -176,7 +176,7 @@ export default function RemotePlayManagement() {
 				// We might only get updates every ~20 seconds or so. Estimate the play time
 				// if the song is playing so the bar doesn't update so infrequently.
 				const timePlayed = getDeviceValue(device.id, listeningState, 'timePlayed');
-				const estimatedTimePlayed = listeningState.playing
+				const estimatedTimePlayed = listeningState.isPlaying
 					? timePlayed + (elapsedTime / 1000)
 					: timePlayed;
 
@@ -188,7 +188,7 @@ export default function RemotePlayManagement() {
 					key={device.id}
 					title={title}
 					trackData={listeningState.trackData || {}}
-					playing={getDeviceValue(device.id, listeningState, 'playing')}
+					playing={getDeviceValue(device.id, listeningState, 'isPlaying')}
 					volume={getDeviceValue(device.id, listeningState, 'volume')}
 					muted={getDeviceValue(device.id, listeningState, 'muted')}
 					shuffling={getDeviceValue(device.id, listeningState, 'shuffling')}
@@ -197,7 +197,7 @@ export default function RemotePlayManagement() {
 					onPauseChange={() => {
 						setOverride(device.id, 'playing', !getDeviceValue(device.id, listeningState, 'playing'));
 						socket.sendRemotePlayEvent(
-							listeningState.playing ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
+							listeningState.isPlaying ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
 							device.id
 						);
 					}}
