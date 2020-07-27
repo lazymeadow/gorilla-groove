@@ -15,6 +15,7 @@ let withinDoubleClick = false;
 let pendingEditableCell = null;
 
 let lastScroll = Date.now();
+let lastNowPlayingTrackId = null;
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -66,6 +67,14 @@ export class TrackList extends React.Component {
 
 	suppressContextMenu(event) {
 		event.preventDefault();
+	}
+
+	componentDidUpdate() {
+		if (!this.props.trackView && this.context.playedTrack && this.context.playedTrack.id !== lastNowPlayingTrackId) {
+			console.log('conditions met');
+			lastNowPlayingTrackId = this.context.playedTrack.id;
+			this.movePlayedSongIntoView();
+		}
 	}
 
 	enableResize() {
@@ -208,6 +217,18 @@ export class TrackList extends React.Component {
 					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
 				}
 			}
+		}
+	}
+
+	// Only intended to be used on NowPlayingList
+	movePlayedSongIntoView() {
+		const nowPlayingList = document.querySelector('.border-layout-east');
+		const selectedRow = nowPlayingList.querySelectorAll('.song-row')[this.context.playedTrackIndex];
+
+		if (selectedRow.offsetTop - nowPlayingList.offsetHeight + 80 > nowPlayingList.scrollTop) {
+			nowPlayingList.scrollTop = selectedRow.offsetTop - parseInt(nowPlayingList.offsetHeight / 2);
+		} else if (selectedRow.offsetTop - selectedRow.offsetHeight + 13 < nowPlayingList.scrollTop) {
+			nowPlayingList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
 		}
 	}
 
