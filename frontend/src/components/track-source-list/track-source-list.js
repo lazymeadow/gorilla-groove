@@ -13,6 +13,7 @@ import {ReviewQueueContext} from "../../services/review-queue-provider";
 import RecommendTo from "../recommend-to/recommend-to";
 import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
 import {PermissionType} from "../../enums/permission-type";
+import {PlaybackContext} from "../../services/playback-provider";
 
 let pendingDeletePlaylist = {};
 
@@ -23,6 +24,7 @@ export default function TrackSourceList(props) {
 
 	const userContext = useContext(UserContext);
 	const musicContext = useContext(MusicContext);
+	const playbackContext = useContext(PlaybackContext);
 	const deviceContext = useContext(DeviceContext);
 	const socketContext = useContext(SocketContext);
 	const playlistContext = useContext(PlaylistContext);
@@ -89,7 +91,7 @@ export default function TrackSourceList(props) {
 			return null;
 		}
 
-		const playingDevices = listeningDevices.filter(device => device.playing && device.trackData);
+		const playingDevices = listeningDevices.filter(device => device.isPlaying && device.trackData);
 
 		if (playingDevices.length === 0) {
 			return null;
@@ -110,7 +112,16 @@ export default function TrackSourceList(props) {
 			return `${infoString}\nDevice: ${device.deviceName}${inReviewString}`;
 		}).join('\n\n');
 
-		return <span className="user-listening" title={displayText}>
+		return <span className="user-listening hoverable" title={displayText} onClick={e => {
+			e.stopPropagation();
+			// They could be playing from more than one device, but such an edge case I don't want to deal with it right now
+			if (!playingDevices[0].trackData.isPrivate) {
+				const id = playingDevices[0].trackData.id;
+				musicContext.loadTrackById(id).then(() => {
+					playbackContext.setProviderState({ isPlaying: true });
+				});
+			}
+		}}>
 			{ isMobile ? <i className="fas fa-mobile"/> : <i className="fas fa-music"/> }
 		</span>
 	};
@@ -159,13 +170,12 @@ export default function TrackSourceList(props) {
 					}}
 				>
 					<div className="flex-between">
-					<span className="flex-grow hoverable">Review Queue
-						<span className="small-text">
-							{ reviewQueueContext.reviewQueueCount > 0 ? ` (${reviewQueueContext.reviewQueueCount})` : ''}
+						<span className="flex-grow hoverable">Review Queue
+							<span className="small-text">
+								{ reviewQueueContext.reviewQueueCount > 0 ? ` (${reviewQueueContext.reviewQueueCount})` : ''}
+							</span>
 						</span>
-					</span>
 						<ReviewQueueManagement/>
-
 					</div>
 				</div>
 			}

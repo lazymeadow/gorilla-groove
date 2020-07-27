@@ -41,6 +41,7 @@ export class MusicProvider extends React.Component {
 			loadSongsForUser: (...args) => this.loadSongsForUser(...args),
 			loadSongsForPlaylist: (...args) => this.loadSongsForPlaylist(...args),
 			loadMoreTracks: (...args) => this.loadMoreTracks(...args),
+			loadTrackById: (...args) => this.loadTrackById(...args),
 			reloadTracks: (...args) => this.reloadTracks(...args),
 			setSort: (...args) => this.setSort(...args),
 			addUploadToExistingLibraryView: (...args) => this.addUploadToExistingLibraryView(...args),
@@ -211,6 +212,12 @@ export class MusicProvider extends React.Component {
 		} else if (this.state.trackView === TrackView.PLAYLIST) {
 			return this.loadSongsForPlaylist(this.state.viewedEntityId, { page: page }, true);
 		}
+	}
+
+	loadTrackById(trackId) {
+		return Api.get('track/' + trackId).then(track => {
+			this.playTracks([track]);
+		})
 	}
 
 	reloadTracks() {

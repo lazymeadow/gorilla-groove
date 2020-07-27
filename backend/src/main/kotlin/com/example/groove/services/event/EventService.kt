@@ -87,7 +87,7 @@ data class SongListenResponse(
 )
 
 data class SongListenTrack(
-		val trackId: Int? = null,
+		val id: Long? = null,
 
 		val name: String? = null,
 		val artist: String? = null,

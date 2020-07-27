@@ -23,7 +23,7 @@ export default function SongLinkPlayer(props) {
 
 	useEffect(() => {
 		// If we are logged in, we can request a different endpoint that can link to expired tracks
-		const baseUrl = isLoggedIn() ? 'track/' : 'track/public/';
+		const baseUrl = isLoggedIn() ? 'track/preview/' : 'track/preview/public/';
 		Api.get(baseUrl + trackId).then(res => {
 			setTrackData(res);
 		}).catch(e => {

@@ -94,6 +94,7 @@ class NowPlayingService(
 		return when {
 			private -> SongListenTrack(isPrivate = true)
 			else -> SongListenTrack(
+					id = id,
 					name = name,
 					artist = artist,
 					album = album,

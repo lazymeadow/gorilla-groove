@@ -44,7 +44,7 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/api/user/public/**"), // Unauthenticated users need to be able to create their own accounts
 			AntPathRequestMatcher("/api/file/track-link/*"),
 			AntPathRequestMatcher("/api/file/download-apk**"),
-			AntPathRequestMatcher("/api/track/public/*"),
+			AntPathRequestMatcher("/api/track/preview/public/*"),
 			AntPathRequestMatcher("/api/version**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
 			AntPathRequestMatcher("/login"), // These are routes used in the frontend. Probably a better way to handle this

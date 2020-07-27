@@ -71,7 +71,6 @@ export class TrackList extends React.Component {
 
 	componentDidUpdate() {
 		if (!this.props.trackView && this.context.playedTrack && this.context.playedTrack.id !== lastNowPlayingTrackId) {
-			console.log('conditions met');
 			lastNowPlayingTrackId = this.context.playedTrack.id;
 			this.movePlayedSongIntoView();
 		}
