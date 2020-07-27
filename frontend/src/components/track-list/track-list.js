@@ -195,6 +195,10 @@ export class TrackList extends React.Component {
 					((downFromStart && event.key === 'ArrowUp') || (!downFromStart && event.key === 'ArrowDown'))) {
 					newSelected.delete(lastTrackKey);
 				}
+
+				// Finally, it's pretty easy for the default browser behavior of highlighting on shift arrow key
+				// to be ugly and in the way. So, brute force remove all selections when the user does this
+				document.getSelection().removeAllRanges();
 			}
 
 			const newState = { selected: newSelected, lastSelectedIndex: newIndex };
