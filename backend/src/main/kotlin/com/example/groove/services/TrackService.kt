@@ -5,6 +5,7 @@ import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.*
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.DateUtils.now
@@ -29,7 +30,8 @@ class TrackService(
 		private val trackHistoryRepository: TrackHistoryRepository,
 		private val deviceRepository: DeviceRepository,
 		private val fileStorageService: FileStorageService,
-		private val songIngestionService: SongIngestionService
+		private val songIngestionService: SongIngestionService,
+		private val youtubeDownloadService: YoutubeDownloadService
 ) {
 
 	@Transactional(readOnly = true)
@@ -299,6 +301,13 @@ class TrackService(
 		).also { trackCopy ->
 			trackRepository.save(trackCopy)
 			fileStorageService.copyAlbumArt(track.id, trackCopy.id)
+		}
+	}
+
+	fun saveFromYoutube(downloadDTO: YoutubeDownloadDTO): Track {
+		return youtubeDownloadService.downloadSong(loadLoggedInUser(), downloadDTO).also { newTrack ->
+			newTrack.addedToLibrary = newTrack.createdAt
+			trackRepository.save(newTrack)
 		}
 	}
 

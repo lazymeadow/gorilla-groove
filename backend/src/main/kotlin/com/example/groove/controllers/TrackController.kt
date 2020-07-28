@@ -2,10 +2,8 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
 import com.example.groove.dto.*
-import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
-import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -23,7 +21,6 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val youTubeDownloadService: YoutubeDownloadService,
 		private val metadataRequestService: MetadataRequestService
 ) {
 
@@ -110,7 +107,7 @@ class TrackController(
 			throw IllegalArgumentException("Playlist downloads are not allowed")
 		}
 
-		return youTubeDownloadService.downloadSong(loadLoggedInUser(), youTubeDownloadDTO)
+		return trackService.saveFromYoutube(youTubeDownloadDTO)
 	}
 
 	@PostMapping("/trim")

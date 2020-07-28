@@ -60,6 +60,8 @@ class SongIngestionService(
 		val tmpImageFile = ripAndSaveAlbumArt(tmpSongFile)
 
 		val track = convertAndSaveTrackForUser(tmpSongFile, user, songFile.originalFilename!!)
+		track.addedToLibrary = track.createdAt
+		trackRepository.save(track)
 
 		if (tmpImageFile != null) {
 			fileStorageService.storeAlbumArt(tmpImageFile, track.id)
