@@ -54,6 +54,7 @@ export class EditableDiv extends React.Component {
 			return (
 				<input
 					id={this.props.id}
+					className="editable-div-input full-width"
 					defaultValue={this.props.text}
 					onChange={(e) => this.setState({ newValue: e.target.value})}
 					onKeyDown={this.handleKeyPress.bind(this)}
