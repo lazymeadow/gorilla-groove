@@ -49,27 +49,31 @@ export class SongRow extends React.Component {
 			>
 				{this.props.columns.map((columnName, index) => {
 					const cellId = `${this.props.rowIndex}-${index}`;
+					const editable = SongRow.updatableColumns.has(columnName)
+						&& (this.context.trackView === TrackView.LIBRARY || this.context.trackView === TrackView.PLAYLIST);
+
 					return (
 						<td key={index}>
-							<div>
-								<EditableDiv
-									id={cellId}
-									editable={
-										SongRow.updatableColumns.has(columnName)
-										&& this.props.editableCell === cellId
-										&& (this.context.trackView === TrackView.LIBRARY || this.context.trackView === TrackView.PLAYLIST)
-									}
-									text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
-									stopEdit={this.props.stopCellEdits.bind(this)}
-									updateHandler={newValue => {
-										const newProperties = {};
-										newProperties[displayKeyToTrackKey(columnName)] = newValue;
+							<>
+								{ !editable ?
+									<div>
+										{this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
+									</div> :
+									<EditableDiv
+										id={cellId}
+										editable={this.props.editableCell === cellId}
+										text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
+										stopEdit={this.props.stopCellEdits.bind(this)}
+										updateHandler={newValue => {
+											const newProperties = {};
+											newProperties[displayKeyToTrackKey(columnName)] = newValue;
 
-										this.context.updateTracks([this.props.userTrack], null, newProperties);
-										this.forceUpdate();
-									}}
-								/>
-							</div>
+											this.context.updateTracks([this.props.userTrack], null, newProperties);
+											this.forceUpdate();
+										}}
+									/>
+								}
+							</>
 						</td>
 					)
 				})}

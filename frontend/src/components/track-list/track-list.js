@@ -14,8 +14,9 @@ let doubleClickTimeout = null;
 let withinDoubleClick = false;
 let pendingEditableCell = null;
 
-let lastScroll = Date.now();
 let lastNowPlayingTrackId = null;
+
+const ROW_HEIGHT = 18;
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -31,7 +32,11 @@ export class TrackList extends React.Component {
 				expanded: false,
 				x: 0,
 				y: 0
-			}
+			},
+			loadedStart: 0,
+			loadedEnd: 0,
+			topDisplayBuffer: 0,
+			bottomDisplayBuffer: 0
 		};
 	}
 
@@ -47,6 +52,8 @@ export class TrackList extends React.Component {
 			document.body.addEventListener('keydown', this.handleKeyPress.bind(this));
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', this.handleScroll.bind(this));
+
+			document.querySelector('.border-layout-center').scrollTop = 0;
 		}
 		tableBody.addEventListener('contextmenu', this.suppressContextMenu.bind(this));
 	}
@@ -69,10 +76,15 @@ export class TrackList extends React.Component {
 		event.preventDefault();
 	}
 
-	componentDidUpdate() {
+	componentDidUpdate(prevProps) {
 		if (!this.props.trackView && this.context.playedTrack && this.context.playedTrack.id !== lastNowPlayingTrackId) {
 			lastNowPlayingTrackId = this.context.playedTrack.id;
-			this.movePlayedSongIntoView();
+			// Need to tell the view how many songs there are FIRST, so that way the view is scrollable
+			this.setState({ loadedEnd: this.props.userTracks.length }, this.movePlayedSongIntoView);
+		}
+
+		if (this.props.trackView && prevProps.userTracks.length === 0 && this.props.userTracks.length > 0) {
+			this.calculateVisibleRows();
 		}
 	}
 
@@ -152,6 +164,40 @@ export class TrackList extends React.Component {
 		});
 	}
 
+	calculateVisibleRows() {
+		const extraToDisplay = 75;
+		const loadWithin = 10;
+
+		const container = this.props.trackView
+			? document.querySelector('.border-layout-center')
+			: document.querySelector('.border-layout-east');
+
+		const allTrackCount = this.props.trackView ? this.context.totalTracksToFetch : this.props.userTracks.length;
+
+		const visibleRowCount = Math.floor(container.offsetHeight / ROW_HEIGHT);
+		const visibleStart = Math.floor(container.scrollTop / ROW_HEIGHT);
+		const loadedStart = Math.max(visibleStart - extraToDisplay, 0);
+
+		const visibleEnd = visibleStart + visibleRowCount;
+		const loadedEnd = (allTrackCount - visibleEnd < extraToDisplay + 10)
+			? allTrackCount
+			: visibleEnd + extraToDisplay;
+
+		const topDisplayBuffer = loadedStart * ROW_HEIGHT;
+		const bottomDisplayBuffer = (allTrackCount - loadedEnd) * ROW_HEIGHT;
+
+		if (
+			(visibleStart - this.state.loadedStart < loadWithin && this.state.loadedStart !== 0) ||
+			(this.state.loadedEnd - visibleEnd < loadWithin && this.state.loadedEnd !== allTrackCount)
+		) {
+			this.setState({ topDisplayBuffer, loadedStart, loadedEnd, bottomDisplayBuffer });
+		}
+
+		// Return true / false based off whether or not we are close to running out of loaded tracks
+		return this.props.userTracks.length !== this.context.totalTracksToFetch &&
+			this.props.userTracks.length - visibleEnd < loadWithin * 2;
+	}
+
 	handleKeyPressInternal(event) {
 		// We are editing song data right now, so just ignore any other key actions
 		if (this.state.editableCell) {
@@ -226,30 +272,24 @@ export class TrackList extends React.Component {
 	// Only intended to be used on NowPlayingList
 	movePlayedSongIntoView() {
 		const nowPlayingList = document.querySelector('.border-layout-east');
-		const selectedRow = nowPlayingList.querySelectorAll('.song-row')[this.context.playedTrackIndex];
 
-		if (selectedRow.offsetTop - nowPlayingList.offsetHeight + 80 > nowPlayingList.scrollTop) {
-			nowPlayingList.scrollTop = selectedRow.offsetTop - parseInt(nowPlayingList.offsetHeight / 2);
-		} else if (selectedRow.offsetTop - selectedRow.offsetHeight + 13 < nowPlayingList.scrollTop) {
-			nowPlayingList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
+		const heightFromTop = this.context.playedTrackIndex * ROW_HEIGHT;
+
+		if (
+			(heightFromTop - nowPlayingList.offsetHeight + 80 > nowPlayingList.scrollTop) ||
+			(heightFromTop - ROW_HEIGHT + 13 < nowPlayingList.scrollTop)
+		) {
+			nowPlayingList.scrollTop = heightFromTop - parseInt(nowPlayingList.offsetHeight / 2) + ROW_HEIGHT * 3;
 		}
 	}
 
 	handleScroll() {
-		const scrollBuffer = 500; // Amount of space to scroll to in order to start loading more tracks
-
-		// Dumb hack to prevent too many scroll events from firing. Can't reliably use the context's loading
-		// to stop this because setState isn't instant
-		if (Date.now() - lastScroll < 500) {
+		const loadMore = this.calculateVisibleRows();
+		if (!loadMore) {
 			return
 		}
 
-		const container = document.getElementsByClassName('border-layout-center')[0];
-		if (!this.context.loadingTracks
-			&& container.scrollHeight < container.offsetHeight + container.scrollTop + scrollBuffer
-			&& this.context.viewedTracks.length < this.context.totalTracksToFetch) {
-
-			lastScroll = Date.now();
+		if (!this.context.loadingTracks) {
 			this.context.loadMoreTracks();
 		}
 	}
@@ -344,7 +384,7 @@ export class TrackList extends React.Component {
 				cellId = event.target.id;
 			} else {
 				const elements = event.target.querySelectorAll('[id]');
-				cellId = elements ? elements[0].id : null;
+				cellId = elements && elements[0] ? elements[0].id : null;
 			}
 
 			pendingEditableCell = cellId;
@@ -494,18 +534,21 @@ export class TrackList extends React.Component {
 					</tr>
 					</thead>
 					<tbody className="track-list-table-body">
-					{this.props.userTracks.map((userTrack, index) => {
+					<tr/>
+					<tr style={{ height: this.state.topDisplayBuffer }}/>
+					{this.props.userTracks.slice(this.state.loadedStart, this.state.loadedEnd).map((userTrack, visibleIndex) => {
 						let played;
+						const trueIndex = visibleIndex + this.state.loadedStart;
 						if (this.props.trackView) {
 							played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
 						} else {
-							played = this.context.playedTrackIndex === index;
+							played = this.context.playedTrackIndex === trueIndex;
 						}
 						return (
 							<SongRow
-								key={index}
+								key={userTrack.selectionKey}
 								columns={this.props.columns}
-								rowIndex={index}
+								rowIndex={trueIndex}
 								editableCell={this.props.trackView && this.state.editableCell}
 								played={played}
 								userTrack={userTrack}
@@ -515,6 +558,7 @@ export class TrackList extends React.Component {
 							/>
 						);
 					})}
+					<tr style={{ height: this.state.bottomDisplayBuffer }}/>
 					</tbody>
 				</table>
 				<LoadingSpinner

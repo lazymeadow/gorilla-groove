@@ -13,7 +13,7 @@ export class MusicProvider extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.pageSize = 75;
+		this.pageSize = 100;
 
 		this.state = {
 			viewedTracks: [],

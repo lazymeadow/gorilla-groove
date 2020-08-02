@@ -10,9 +10,7 @@ import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
 import {DeviceContext} from "../../services/device-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
-import RecommendTo from "../recommend-to/recommend-to";
 import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
-import {PermissionType} from "../../enums/permission-type";
 import {PlaybackContext} from "../../services/playback-provider";
 
 let pendingDeletePlaylist = {};
