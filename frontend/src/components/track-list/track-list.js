@@ -178,7 +178,7 @@ export class TrackList extends React.Component {
 
 	calculateVisibleRows() {
 		const extraToDisplay = 75;
-		const loadWithin = 15;
+		const loadWithin = 30;
 
 		const container = this.props.trackView
 			? document.querySelector('.border-layout-center')
