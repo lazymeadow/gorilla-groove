@@ -1,6 +1,5 @@
 import React from 'react';
 import ColumnResizer from 'column-resizer';
-import * as ReactDOM from "react-dom";
 import {SongRow} from "../song-row/song-row";
 import {MusicContext} from "../../services/music-provider";
 import SongPopoutMenu from "../popout-menu/song-popout-menu/song-popout-menu";
@@ -21,6 +20,8 @@ const ROW_HEIGHT = 18;
 export class TrackList extends React.Component {
 	constructor(props) {
 		super(props);
+
+		this.rootRef = React.createRef();
 
 		this.state = {
 			selected: new Set(),
@@ -69,8 +70,8 @@ export class TrackList extends React.Component {
 				.removeEventListener('scroll', this.handleScroll);
 		}
 
-		ReactDOM.findDOMNode(this).removeEventListener('mousedown', this.handleContextMenu.bind(this));
-		ReactDOM.findDOMNode(this).removeEventListener('contextmenu', this.suppressContextMenu.bind(this));
+		this.rootRef.current.removeEventListener('mousedown', this.handleContextMenu.bind(this));
+		this.rootRef.current.removeEventListener('contextmenu', this.suppressContextMenu.bind(this));
 	}
 
 	suppressContextMenu(event) {
@@ -121,7 +122,7 @@ export class TrackList extends React.Component {
 		};
 
 		if (!this.resizer) {
-			let tableElement = ReactDOM.findDOMNode(this).querySelector('#' + this.state.id);
+			let tableElement = this.rootRef.current.querySelector('#' + this.state.id);
 			this.resizer = new ColumnResizer(tableElement, options);
 		} else {
 			this.resizer.reset(options);
@@ -527,7 +528,7 @@ export class TrackList extends React.Component {
 	render() {
 		// noinspection HtmlUnknownTarget
 		return (
-			<div className="track-list">
+			<div ref={this.rootRef} className="track-list">
 				<div>
 					<SongPopoutMenu
 						closeContextMenu={this.closeContextMenu.bind(this)}

@@ -14,14 +14,13 @@ export class SongRow extends React.Component {
 	// This is currently causing issues with track-level updates (like updating play count)
 	// Because the value is updated directly on the track, this.props and nextProps already
 	// have the same value for the so we can't detect a change properly
-	/*
-	shouldComponentUpdate(nextProps) {
-		return this.props.selected !== nextProps.selected;
-		return this.props.selected !== nextProps.selected
-			|| this.props.played !== nextProps.played
-			|| this.props.userTrack.playCount !== nextProps.userTrack.playCount
-	}
-	*/
+	// shouldComponentUpdate(nextProps) {
+	// 	return false;
+		// return this.props.selected !== nextProps.selected;
+		// return this.props.selected !== nextProps.selected
+		// 	|| this.props.played !== nextProps.played
+		// 	|| this.props.userTrack.playCount !== nextProps.userTrack.playCount
+	// }
 
 	getUserTrackPropertyValue(property, userTrack, rowIndex) {
 		switch (property) {
@@ -55,11 +54,11 @@ export class SongRow extends React.Component {
 					return (
 						<td key={index}>
 							<>
-								{ !editable ?
-									<div>
+								{ !editable
+									? <div>
 										{this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
-									</div> :
-									<EditableDiv
+									</div>
+									: <EditableDiv
 										id={cellId}
 										editable={this.props.editableCell === cellId}
 										text={this.getUserTrackPropertyValue(columnName, this.props.userTrack, this.props.rowIndex)}
