@@ -53,6 +53,7 @@ export class TrackList extends React.Component {
 			document.getElementsByClassName('border-layout-center')[0]
 				.addEventListener('scroll', this.handleScroll.bind(this));
 
+			// Browser can remember that you've scrolled between refreshes apparently
 			document.querySelector('.border-layout-center').scrollTop = 0;
 		}
 		tableBody.addEventListener('contextmenu', this.suppressContextMenu.bind(this));
@@ -77,14 +78,25 @@ export class TrackList extends React.Component {
 	}
 
 	componentDidUpdate(prevProps) {
-		if (!this.props.trackView && this.context.playedTrack && this.context.playedTrack.id !== lastNowPlayingTrackId) {
-			lastNowPlayingTrackId = this.context.playedTrack.id;
-			// Need to tell the view how many songs there are FIRST, so that way the view is scrollable
-			this.setState({ loadedEnd: this.props.userTracks.length }, this.movePlayedSongIntoView);
+		if (!this.props.trackView) {
+			if (this.context.playedTrack && this.context.playedTrack.id !== lastNowPlayingTrackId) {
+				lastNowPlayingTrackId = this.context.playedTrack.id;
+				// Need to tell the view how many songs there are FIRST, so that way the view is scrollable
+				this.setState({loadedEnd: this.props.userTracks.length}, this.movePlayedSongIntoView);
+			} else if (prevProps.userTracks.length !== this.props.userTracks.length) {
+				this.setState({loadedEnd: this.props.userTracks.length}, this.movePlayedSongIntoView);
+			}
 		}
 
-		if (this.props.trackView && prevProps.userTracks.length === 0 && this.props.userTracks.length > 0) {
-			this.calculateVisibleRows();
+		if (this.props.trackView ) {
+			if (this.props.userTracks.length === 0) {
+				// If we just swapped views (like to a playlist) reset all the things
+				if (this.state.loadedEnd !== 0) {
+					this.setState({ topDisplayBuffer: 0, bottomDisplayBuffer: 0, loadedStart: 0, loadedEnd: 0 });
+				}
+			} else if (prevProps.userTracks.length === 0) {
+				this.calculateVisibleRows();
+			}
 		}
 	}
 
