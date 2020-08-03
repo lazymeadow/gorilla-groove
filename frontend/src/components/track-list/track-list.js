@@ -173,6 +173,7 @@ export class TrackList extends React.Component {
 			: document.querySelector('.border-layout-east');
 
 		const allTrackCount = this.props.trackView ? this.context.totalTracksToFetch : this.props.userTracks.length;
+		const currentTrackCount = this.props.userTracks.length;
 
 		const visibleRowCount = Math.floor(container.offsetHeight / ROW_HEIGHT);
 		const visibleStart = Math.floor(container.scrollTop / ROW_HEIGHT);
@@ -194,8 +195,7 @@ export class TrackList extends React.Component {
 		}
 
 		// Return true / false based off whether or not we are close to running out of loaded tracks
-		return this.props.userTracks.length !== this.context.totalTracksToFetch &&
-			this.props.userTracks.length - visibleEnd < loadWithin * 2;
+		return currentTrackCount !== allTrackCount && currentTrackCount - visibleEnd < loadWithin * 2;
 	}
 
 	handleKeyPressInternal(event) {
@@ -290,7 +290,14 @@ export class TrackList extends React.Component {
 		}
 
 		if (!this.context.loadingTracks) {
-			this.context.loadMoreTracks();
+			this.context.loadMoreTracks().then(() => {
+				// Put in timeout so it runs after all the setStates. It's dumb I know. Don't hate. This entire file is dumb.
+				setTimeout(() => {
+					if (this.state.loadedEnd > this.props.userTracks.length) {
+						this.handleScroll();
+					}
+				})
+			});
 		}
 	}
 
@@ -536,28 +543,37 @@ export class TrackList extends React.Component {
 					<tbody className="track-list-table-body">
 					<tr/>
 					<tr style={{ height: this.state.topDisplayBuffer }}/>
-					{this.props.userTracks.slice(this.state.loadedStart, this.state.loadedEnd).map((userTrack, visibleIndex) => {
-						let played;
-						const trueIndex = visibleIndex + this.state.loadedStart;
-						if (this.props.trackView) {
-							played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
-						} else {
-							played = this.context.playedTrackIndex === trueIndex;
-						}
-						return (
-							<SongRow
-								key={userTrack.selectionKey}
-								columns={this.props.columns}
-								rowIndex={trueIndex}
-								editableCell={this.props.trackView && this.state.editableCell}
-								played={played}
-								userTrack={userTrack}
-								selected={this.state.selected.has(userTrack.selectionKey)}
-								onClick={this.handleRowClick.bind(this)}
-								stopCellEdits={this.stopCellEdits.bind(this)}
-							/>
-						);
-					})}
+					{this.props.userTracks.slice(this.state.loadedStart, this.state.loadedEnd)
+						// Makes things a bit simpler (maybe) to have empty rows for tracks that should be displayed but aren't fetched from the server yet
+						.concat(Array(Math.max(this.state.loadedEnd - this.props.userTracks.length, 0)).fill(null))
+						.map((userTrack, visibleIndex) => {
+							let played;
+							const trueIndex = visibleIndex + this.state.loadedStart;
+							if (this.props.trackView) {
+								played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
+							} else {
+								played = this.context.playedTrackIndex === trueIndex;
+							}
+							if (userTrack !== null) {
+								return (
+									<SongRow
+										key={userTrack.selectionKey}
+										columns={this.props.columns}
+										rowIndex={trueIndex}
+										editableCell={this.props.trackView && this.state.editableCell}
+										played={played}
+										userTrack={userTrack}
+										selected={this.state.selected.has(userTrack.selectionKey)}
+										onClick={this.handleRowClick.bind(this)}
+										stopCellEdits={this.stopCellEdits.bind(this)}
+									/>
+								);
+							} else {
+								return (
+									<tr key={visibleIndex} style={{ height: ROW_HEIGHT }}/>
+								)
+							}
+						})}
 					<tr style={{ height: this.state.bottomDisplayBuffer }}/>
 					</tbody>
 				</table>
