@@ -88,14 +88,20 @@ export default function PlaybackControls(props) {
 			const audio = document.getElementById('audio');
 			audio.currentTime = 0;
 			audio.src = links.songLink;
-			const playPromise = audio.play();
-			playPromise.catch(e => {
-				// Code 20 is when the loading gets aborted. This happens all the time if you skip around.
-				// I'm sick of seeing them in the logs so ignore them
-				if (e.code !== 20) {
-					console.error(e);
-				}
-			})
+
+			// Somehow, and I have no idea why, React's experimental concurrent mode makes the audio NOT play.
+			// I wrapped it in a timeout of 300ms based off bad experimentation as that seemed to make it work reliably.
+			// Hopefully when it is not experimental this will be not a thing.
+			setTimeout(() => {
+				const playPromise = audio.play();
+				playPromise.catch(e => {
+					// Code 20 is when the loading gets aborted. This happens all the time if you skip around.
+					// I'm sick of seeing them in the logs so ignore them
+					if (e.code !== 20) {
+						console.error(e);
+					}
+				});
+			}, 300);
 		});
 	};
 
