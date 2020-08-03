@@ -553,7 +553,7 @@ export class TrackList extends React.Component {
 					</tr>
 					</thead>
 					<tbody className="track-list-table-body">
-					<tr/>
+					{ this.state.loadedStart % 2 === 1 ? <tr/> : null /* Keep the row color from changing as we scroll */ }
 					<tr style={{ height: this.state.topDisplayBuffer }}/>
 					{this.props.userTracks.slice(this.state.loadedStart, this.state.loadedEnd)
 						// Makes things a bit simpler (maybe) to have empty rows for tracks that should be displayed but aren't fetched from the server yet
