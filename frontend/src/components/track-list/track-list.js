@@ -562,7 +562,11 @@ export class TrackList extends React.Component {
 							let played;
 							const trueIndex = visibleIndex + this.state.loadedStart;
 							if (this.props.trackView) {
-								played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
+								if (userTrack !== null) {
+									played = this.context.playedTrack && this.context.playedTrack.id === userTrack.id;
+								} else {
+									played = false;
+								}
 							} else {
 								played = this.context.playedTrackIndex === trueIndex;
 							}
