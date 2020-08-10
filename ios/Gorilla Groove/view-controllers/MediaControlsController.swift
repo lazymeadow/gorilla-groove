@@ -433,7 +433,7 @@ extension UIImage {
         
         do {
             let data = try Data.init(contentsOf: url)
-            return UIImage(data: data)!
+            return UIImage(data: data)
         } catch {
             print(error)
         }
