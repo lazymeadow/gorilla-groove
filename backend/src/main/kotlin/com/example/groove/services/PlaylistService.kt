@@ -9,8 +9,8 @@ import com.example.groove.db.model.enums.OwnershipType
 import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.example.groove.util.unwrap
-import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
@@ -145,6 +145,6 @@ class PlaylistService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(PlaylistService::class.java)!!
+		val logger = logger()
 	}
 }

@@ -176,7 +176,7 @@ export default function RemotePlayManagement() {
 				// We might only get updates every ~20 seconds or so. Estimate the play time
 				// if the song is playing so the bar doesn't update so infrequently.
 				const timePlayed = getDeviceValue(device.id, listeningState, 'timePlayed');
-				const estimatedTimePlayed = listeningState.playing
+				const estimatedTimePlayed = listeningState.isPlaying
 					? timePlayed + (elapsedTime / 1000)
 					: timePlayed;
 
@@ -188,30 +188,30 @@ export default function RemotePlayManagement() {
 					key={device.id}
 					title={title}
 					trackData={listeningState.trackData || {}}
-					playing={getDeviceValue(device.id, listeningState, 'playing')}
+					playing={getDeviceValue(device.id, listeningState, 'isPlaying')}
 					volume={getDeviceValue(device.id, listeningState, 'volume')}
 					muted={getDeviceValue(device.id, listeningState, 'muted')}
-					shuffling={getDeviceValue(device.id, listeningState, 'shuffling')}
-					repeating={getDeviceValue(device.id, listeningState, 'repeating')}
+					shuffling={getDeviceValue(device.id, listeningState, 'isShuffling')}
+					repeating={getDeviceValue(device.id, listeningState, 'isRepeating')}
 					timePlayed={estimatedTimePlayed}
 					onPauseChange={() => {
-						setOverride(device.id, 'playing', !getDeviceValue(device.id, listeningState, 'playing'));
+						setOverride(device.id, 'isPlaying', !getDeviceValue(device.id, listeningState, 'isPlaying'));
 						socket.sendRemotePlayEvent(
-							listeningState.playing ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
+							listeningState.isPlaying ? RemotePlayType.PAUSE : RemotePlayType.PLAY,
 							device.id
 						);
 					}}
 					onShuffleChange={() => {
-						const currentState = getDeviceValue(device.id, listeningState, 'shuffling');
-						setOverride(device.id, 'shuffling', !currentState);
+						const currentState = getDeviceValue(device.id, listeningState, 'isShuffling');
+						setOverride(device.id, 'isShuffling', !currentState);
 						socket.sendRemotePlayEvent(
 							currentState ? RemotePlayType.SHUFFLE_DISABLE : RemotePlayType.SHUFFLE_ENABLE,
 							device.id
 						);
 					}}
 					onRepeatChange={() => {
-						const currentState = getDeviceValue(device.id, listeningState, 'repeating');
-						setOverride(device.id, 'repeating', !currentState);
+						const currentState = getDeviceValue(device.id, listeningState, 'isRepeating');
+						setOverride(device.id, 'isRepeating', !currentState);
 						socket.sendRemotePlayEvent(
 							currentState ? RemotePlayType.REPEAT_DISABLE : RemotePlayType.REPEAT_ENABLE,
 							device.id

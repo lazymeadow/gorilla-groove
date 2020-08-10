@@ -41,4 +41,11 @@ interface TrackLinkRepository : CrudRepository<TrackLink, Long> {
 	fun forceExpireLinksByTrackId(
 			@Param("trackId") trackId: Long
 	)
+
+	@Modifying
+	@Query("""
+		DELETE FROM TrackLink tl
+		WHERE tl.expiresAt < now()
+	""")
+	fun deleteExpiredTrackLinks()
 }

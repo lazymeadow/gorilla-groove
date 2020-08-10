@@ -7,11 +7,12 @@ import {Api} from "../../../api";
 import {TrimSong} from "../../trim-song/trim-song";
 import MetadataRequest from "../../metadata-request/metadata-request";
 import {PlaylistContext} from "../../../services/playlist-provider";
-import {copyToClipboard, getScreenHeight} from "../../../util";
+import {copyToClipboard, getScreenDimensions} from "../../../util";
 import PopoutMenu from "../popout-menu";
 import RemotePlay from "../../remote-play/modal/remote-play";
 import {RemotePlayType} from "../../remote-play/modal/remote-play-type";
 import SongDelete from "./song-delete/song-delete";
+import RecommendTo from "../../recommend-to/recommend-to";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -21,6 +22,8 @@ let lastY = -1;
 export default function SongPopoutMenu(props) {
 	const musicContext = useContext(MusicContext);
 	const playlistContext = useContext(PlaylistContext);
+
+	const multipleSelected = props.selectionKeys.size > 1;
 
 	const calculateMenuOptions = () => {
 		if (!props.expanded) {
@@ -122,17 +125,32 @@ export default function SongPopoutMenu(props) {
 					const link = Api.getBaseUrl() + '/track-link/' + trackId;
 					copyToClipboard(link);
 
+					// Make a call to the API so that it generates an anonymous link for someone to consume.
+					// We don't actually care about the response
 					Api.get('file/link/' + trackId).then(() => {
 						toast.success('Link copied to clipboard');
 					});
 				}
 			}, {
-				text: 'Download', clickHandler: e => {
-					e.stopPropagation();
-					const track = selectedTracks[0];
+				component: <PopoutMenu
+					mainItem={{ text: 'Download' }}
+					menuItems={[
+						{
+							text: 'MP3', clickHandler: () => {
+								const track = selectedTracks[0];
 
-					Api.download(`file/download/${track.id}`);
-				}
+								Api.download(`file/download/${track.id}`, { audioFormat: 'MP3' });
+							}
+						}, {
+							text: 'OGG', clickHandler: () => {
+								const track = selectedTracks[0];
+
+								Api.download(`file/download/${track.id}`, { audioFormat: 'OGG' });
+							}
+						},
+					]}
+					expansionOnHover={true}
+				/>
 			}
 			])
 		}
@@ -143,68 +161,78 @@ export default function SongPopoutMenu(props) {
 	const getOwnLibraryOptions = () => {
 		let ownLibraryOptions = [
 			{
-				text: 'Make Private', clickHandler: e => {
-					e.stopPropagation();
-					const tracks = props.getSelectedTracks();
-					musicContext.setPrivate(tracks, true).then(() => {
-						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was made private`);
-						} else {
-							toast.success(`${tracks.length} tracks were made private`);
+				component: <PopoutMenu
+					mainItem={{text: 'Song Visibility'}}
+					menuItems={[
+						{
+							text: 'Make Private', clickHandler: e => {
+								e.stopPropagation();
+								const tracks = props.getSelectedTracks();
+								musicContext.setPrivate(tracks, true).then(() => {
+									if (tracks.length === 1) {
+										toast.success(`'${tracks[0].name}' was made private`);
+									} else {
+										toast.success(`${tracks.length} tracks were made private`);
+									}
+								}).catch(error => {
+									console.error(error);
+									toast.error('Failed to make the selected tracks private');
+								});
+							}
+						}, {
+							text: 'Make Public', clickHandler: e => {
+								e.stopPropagation();
+								const tracks = props.getSelectedTracks();
+								musicContext.setPrivate(tracks, false).then(() => {
+									if (tracks.length === 1) {
+										toast.success(`'${tracks[0].name}' was made public`);
+									} else {
+										toast.success(`${tracks.length} tracks were made public`);
+									}
+								});
+							}
+						}, {
+							text: 'Hide in Library', clickHandler: e => {
+								e.stopPropagation();
+								const tracks = props.getSelectedTracks();
+								const propertyChange = { hidden: true };
+								musicContext.updateTracks(tracks, null, propertyChange).then(() => {
+									if (tracks.length === 1) {
+										toast.success(`'${tracks[0].name}' was hidden`);
+									} else {
+										toast.success(`${tracks.length} tracks were hidden`);
+									}
+									if (!musicContext.showHidden) {
+										musicContext.reloadTracks();
+									}
+								});
+							}
+						}, {
+							text: 'Show in Library', clickHandler: e => {
+								e.stopPropagation();
+								const tracks = props.getSelectedTracks();
+								const propertyChange = {hidden: false};
+								musicContext.updateTracks(tracks, null, propertyChange).then(() => {
+									if (tracks.length === 1) {
+										toast.success(`'${tracks[0].name}' was revealed again`);
+									} else {
+										toast.success(`${tracks.length} tracks were revealed again`);
+									}
+								}).catch(error => {
+									console.error(error);
+									toast.error('Failed to make the selected tracks visible');
+								});
+							}
 						}
-					}).catch(error => {
-						console.error(error);
-						toast.error('Failed to make the selected tracks private');
-					});
-				}
-			}, {
-				text: 'Make Public', clickHandler: e => {
-					e.stopPropagation();
-					const tracks = props.getSelectedTracks();
-					musicContext.setPrivate(tracks, false).then(() => {
-						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was made public`);
-						} else {
-							toast.success(`${tracks.length} tracks were made public`);
-						}
-					});
-				}
-			}, {
-				text: 'Hide in Library', clickHandler: e => {
-					e.stopPropagation();
-					const tracks = props.getSelectedTracks();
-					const propertyChange = { hidden: true };
-					musicContext.updateTracks(tracks, null, propertyChange).then(() => {
-						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was hidden`);
-						} else {
-							toast.success(`${tracks.length} tracks were hidden`);
-						}
-						if (!musicContext.showHidden) {
-							musicContext.reloadTracks();
-						}
-					});
-				}
-			}, {
-				text: 'Show in Library', clickHandler: e => {
-					e.stopPropagation();
-					const tracks = props.getSelectedTracks();
-					const propertyChange = { hidden: false };
-					musicContext.updateTracks(tracks, null, propertyChange).then(() => {
-						if (tracks.length === 1) {
-							toast.success(`'${tracks[0].name}' was revealed again`);
-						} else {
-							toast.success(`${tracks.length} tracks were revealed again`);
-						}
-					}).catch(error => {
-						console.error(error);
-						toast.error('Failed to make the selected tracks visible');
-					});
-				}
+					]}
+					expansionOnHover={true}
+				/>
 			}, {
 				component: <SongProperties getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
 				component: <MetadataRequest getSelectedTracks={props.getSelectedTracks.bind(this)}/>
+			}, {
+				component: <RecommendTo getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}, {
 				component: <SongDelete getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}
@@ -279,7 +307,7 @@ export default function SongPopoutMenu(props) {
 	};
 
 	const getNowPlayingOptions = () => {
-		return [
+		const options = [
 			{
 				text: 'Remove', clickHandler: e => {
 					e.stopPropagation();
@@ -287,6 +315,24 @@ export default function SongPopoutMenu(props) {
 				}
 			}
 		];
+		if (!multipleSelected) {
+			options.push({
+					text: 'Remove Later Songs', clickHandler: () => {
+						const selectedTrack = props.getSelectedTracks()[0];
+						const index = musicContext.nowPlayingTracks.findIndex(it => it.selectionKey === selectedTrack.selectionKey);
+						const idsToRemove = new Set();
+
+						musicContext.nowPlayingTracks.slice(index + 1).forEach(trackToRemove => {
+							idsToRemove.add(trackToRemove.selectionKey)
+						});
+
+						musicContext.removeFromNowPlaying(idsToRemove);
+					}
+				}
+			)
+		}
+
+		return options
 	};
 
 	const getPlaylistAdditionOptions = () => {
@@ -344,12 +390,19 @@ export default function SongPopoutMenu(props) {
 	// isn't known until the child renders, and we don't know when that happens. So just do
 	// a hacky and dumb "guess" at the height based off the number of rows
 	const approximateMenuHeight = menuOptions.length * 17 + 10;
-	const screenHeight = getScreenHeight();
+
+	// Even more jank than the other estimate. This is wide enough for the widest thing that currently goes in it.
+	// Can't just check text because we can nest entire components, and they won't have appeared yet to properly measure.
+	const approximateMenuWidth = 151;
+	const { screenWidth, screenHeight } = getScreenDimensions();
 
 	let adjustedY = props.y === undefined ? 0 : props.y;
 	let adjustedX = props.x === undefined ? 0 : props.x;
 	if (props.y + approximateMenuHeight > screenHeight) {
 		adjustedY = screenHeight - approximateMenuHeight;
+	}
+	if (props.x + approximateMenuWidth > screenWidth) {
+		adjustedX = screenWidth - approximateMenuWidth;
 	}
 
 	return (

@@ -8,7 +8,6 @@ import com.example.groove.exception.FileStorageException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.*
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -61,6 +60,8 @@ class SongIngestionService(
 		val tmpImageFile = ripAndSaveAlbumArt(tmpSongFile)
 
 		val track = convertAndSaveTrackForUser(tmpSongFile, user, songFile.originalFilename!!)
+		track.addedToLibrary = track.createdAt
+		trackRepository.save(track)
 
 		if (tmpImageFile != null) {
 			fileStorageService.storeAlbumArt(tmpImageFile, track.id)
@@ -95,12 +96,12 @@ class SongIngestionService(
 
 		logger.info("Beginning album art crop for track ID: ${track.id}")
 		// Crop the image and save the cropped file
-		val croppedImage = imageService.cropToSquare(albumArt)
+		imageService.cropToSquare(albumArt)?.let { croppedImage ->
+			fileStorageService.storeAlbumArt(croppedImage, track.id)
+			logger.info("Cropped album art was stored for track ID: ${track.id}")
 
-		fileStorageService.storeAlbumArt(croppedImage, track.id)
-		logger.info("Cropped album art was stored for track ID: ${track.id}")
-
-		croppedImage.delete()
+			croppedImage.delete()
+		}
 	}
 
 	// It's important to rip the album art out PRIOR to running the song
@@ -234,18 +235,18 @@ class SongIngestionService(
 		}
 	}
 
-	fun createTrackFileWithMetadata(trackId: Long): File {
-		logger.info("About to create a downloadable track for track ID: $trackId")
+	fun createTrackFileWithMetadata(trackId: Long, audioFormat: AudioFormat): File {
+		logger.info("About to create a downloadable track for track ID: $trackId with format ${audioFormat.extension}")
 		val track = trackRepository.findById(trackId).unwrap()
 
 		if (track == null || (track.private && track.user != loadLoggedInUser())) {
 			throw IllegalArgumentException("No track found by ID $trackId!")
 		}
 
-		val songFile = fileStorageService.loadSong(track, AudioFormat.OGG)
+		val songFile = fileStorageService.loadSong(track, audioFormat)
 		val songArtist = if (track.artist.isBlank()) "Unknown" else track.artist
 		val songName = if (track.name.isBlank()) "Unknown" else track.name
-		val newName = "$songArtist - $songName.ogg".withoutReservedFileSystemCharacters()
+		val newName = "$songArtist - $songName${audioFormat.extension}".withoutReservedFileSystemCharacters()
 
 		val artworkFile = fileStorageService.loadAlbumArt(trackId)
 
@@ -260,6 +261,6 @@ class SongIngestionService(
 	}
 
 	companion object {
-        private val logger = LoggerFactory.getLogger(SongIngestionService::class.java)
+        private val logger = logger()
     }
 }

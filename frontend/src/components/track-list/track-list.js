@@ -15,6 +15,7 @@ let withinDoubleClick = false;
 let pendingEditableCell = null;
 
 let lastScroll = Date.now();
+let lastNowPlayingTrackId = null;
 
 export class TrackList extends React.Component {
 	constructor(props) {
@@ -66,6 +67,13 @@ export class TrackList extends React.Component {
 
 	suppressContextMenu(event) {
 		event.preventDefault();
+	}
+
+	componentDidUpdate() {
+		if (!this.props.trackView && this.context.playedTrack && this.context.playedTrack.id !== lastNowPlayingTrackId) {
+			lastNowPlayingTrackId = this.context.playedTrack.id;
+			this.movePlayedSongIntoView();
+		}
 	}
 
 	enableResize() {
@@ -157,8 +165,7 @@ export class TrackList extends React.Component {
 
 				this.context.playFromTrackIndex(trackIndex, true);
 			} else {
-				const tracks = this.context.nowPlayingTracks.map(it => this.state.selected.has(it.selectionKey));
-				this.context.playTracks(tracks);
+				this.context.playTracks(this.getSelectedTracks());
 			}
 		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
 			if (this.state.lastSelectedIndex === null) {
@@ -171,10 +178,34 @@ export class TrackList extends React.Component {
 				return;
 			}
 
-			const selected = new Set();
-			selected.add(this.props.userTracks[newIndex].selectionKey);
+			// If shift is held, we have specific behavior we need to do more work on.
+			// If shift is not held, then we can clear our selections as we only need the new thing selected.
+			let newSelected = event.shiftKey ? this.state.selected : new Set();
 
-			this.setState({ selected: selected, lastSelectedIndex: newIndex });
+			// In either case, the row we go to needs to be selected
+			newSelected.add(this.props.userTracks[newIndex].selectionKey);
+
+			// Now, if shift is held, we need to figure out if we deselect the last row
+			if (event.shiftKey) {
+				const lastTrackKey = this.props.userTracks[this.state.lastSelectedIndex].selectionKey;
+				const downFromStart = this.state.firstSelectedIndex < this.state.lastSelectedIndex;
+				// If we are holding shift, we need to select more if we go further from where we started,
+				// and deselect when we come back. Never deselect the first thing selected
+				if (this.state.firstSelectedIndex !== this.state.lastSelectedIndex &&
+					((downFromStart && event.key === 'ArrowUp') || (!downFromStart && event.key === 'ArrowDown'))) {
+					newSelected.delete(lastTrackKey);
+				}
+
+				// Finally, it's pretty easy for the default browser behavior of highlighting on shift arrow key
+				// to be ugly and in the way. So, brute force remove all selections when the user does this
+				document.getSelection().removeAllRanges();
+			}
+
+			const newState = { selected: newSelected, lastSelectedIndex: newIndex };
+			if (!event.shiftKey) {
+				newState.firstSelectedIndex = newIndex;
+			}
+			this.setState(newState);
 
 			const trackList = document.getElementById('center-view');
 			const selectedRow = trackList.querySelectorAll('.song-row')[newIndex];
@@ -189,6 +220,18 @@ export class TrackList extends React.Component {
 					trackList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
 				}
 			}
+		}
+	}
+
+	// Only intended to be used on NowPlayingList
+	movePlayedSongIntoView() {
+		const nowPlayingList = document.querySelector('.border-layout-east');
+		const selectedRow = nowPlayingList.querySelectorAll('.song-row')[this.context.playedTrackIndex];
+
+		if (selectedRow.offsetTop - nowPlayingList.offsetHeight + 80 > nowPlayingList.scrollTop) {
+			nowPlayingList.scrollTop = selectedRow.offsetTop - parseInt(nowPlayingList.offsetHeight / 2);
+		} else if (selectedRow.offsetTop - selectedRow.offsetHeight + 13 < nowPlayingList.scrollTop) {
+			nowPlayingList.scrollTop = selectedRow.offsetTop - selectedRow.offsetHeight;
 		}
 	}
 
@@ -252,8 +295,12 @@ export class TrackList extends React.Component {
 			}
 		}
 
-		// The track we clicked needs to always be selected
-		selected.add(userTrack.selectionKey);
+		if (selected.has(userTrack.selectionKey) && event.ctrlKey) {
+			selected.delete(userTrack.selectionKey);
+		} else {
+			// The track we clicked needs to be selected in all other scenarios
+			selected.add(userTrack.selectionKey);
+		}
 
 		if (isLeftClick) {
 			// Whenever we start a new double click timer, make sure we cancel any old ones lingering about
@@ -376,7 +423,7 @@ export class TrackList extends React.Component {
 		}
 
 		this.setState({
-			selected: {},
+			selected: new Set(),
 			lastSelectedIndex: null
 		});
 

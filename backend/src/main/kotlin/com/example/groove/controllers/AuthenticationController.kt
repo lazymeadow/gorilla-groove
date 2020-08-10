@@ -3,7 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.security.UserAuthenticationService
 import com.example.groove.services.UserService
 import com.example.groove.util.loadLoggedInUser
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -63,6 +63,6 @@ class AuthenticationController(
 	)
 
 	companion object {
-		val logger = LoggerFactory.getLogger(AuthenticationController::class.java)!!
+		val logger = logger()
 	}
 }

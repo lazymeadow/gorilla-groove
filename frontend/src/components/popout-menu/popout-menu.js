@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {getScreenHeight} from "../../util";
+import {getScreenDimensions} from "../../util";
 
 export default function PopoutMenu(props) {
 	const [expanded, setExpanded] = useState(false);
@@ -24,9 +24,9 @@ export default function PopoutMenu(props) {
 	const setFromHover = newState => {
 		if (props.expansionOnHover) {
 			if (newState) {
-				const { x, y, width } = mainItem.current.getBoundingClientRect();
-				const { height } = childrenContainer.current.getBoundingClientRect();
-				const screenHeight = getScreenHeight();
+				const { x, y, width: parentWidth } = mainItem.current.getBoundingClientRect();
+				const { height, width } = childrenContainer.current.getBoundingClientRect();
+				const { screenWidth, screenHeight } = getScreenDimensions();
 
 				// Do some adjustments to the height to keep the popout menu in the screen as best as we can
 				let newY = y;
@@ -38,7 +38,12 @@ export default function PopoutMenu(props) {
 					}
 				}
 
-				setOverrideCoordinates({ left: x + width + 5, top: newY });
+				let newX = x + parentWidth + 5;
+				if (newX + width > screenWidth) {
+					newX = x - 5 - width;
+				}
+
+				setOverrideCoordinates({ left: newX, top: newY });
 			}
 			setExpanded(newState);
 		}

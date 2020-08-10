@@ -3,8 +3,12 @@ package com.example.groove.util
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.apache.http.client.utils.URIBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.CrudRepository
+import org.springframework.http.HttpHeaders
+import org.springframework.util.LinkedMultiValueMap
 import java.awt.Image
 import java.util.*
 import javax.imageio.ImageIO
@@ -17,42 +21,14 @@ import java.io.File
 // Here we extend Java's Optional type to return a Kotlin nullable type so it is easier to work with
 fun <T> Optional<T>.unwrap(): T? = orElse(null)
 
+// Screw the previous solution above this. Just add an extension function directly to CrudRepository.
+fun<T> CrudRepository<T, Long>.get(id: Long): T? {
+	return this.findById(id).unwrap()
+}
+
 fun createMapper(): ObjectMapper = ObjectMapper()
 		.registerKotlinModule()
 		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-
-fun String.blankAsNull(): String? {
-	return if (this.isBlank()) null else this
-}
-
-fun String.endWith(ending: String): String {
-	return if (this.endsWith(ending)) {
-		this
-	} else {
-		this + ending
-	}
-}
-
-fun String.withNewExtension(extension: String): String {
-	val extensionWithoutDot = if (extension.first() == '.') extension.substring(1) else extension
-	return this.split('.')
-			.dropLast(1)
-			.plus(extensionWithoutDot)
-			.joinToString(".")
-}
-
-fun String.withoutExtension(): String {
-	return this.split('.')
-			.dropLast(1)
-			.joinToString(".")
-}
-
-// Windows is the worst offending OS, so this is just the list of characters that Windows won't let you put in a file name
-val sensitiveCharacters = setOf('/', '\\', '<', '>', ':', '"', '|', '?', '*')
-fun String.withoutReservedFileSystemCharacters(): String {
-	return this.filter { !sensitiveCharacters.contains(it) }
-}
-
 fun Image.writeToFile(destination: File, imageType: String) {
 	val bufferedImage = BufferedImage(this.getWidth(null), this.getHeight(null), BufferedImage.TYPE_INT_RGB)
 	bufferedImage.graphics.drawImage(this, 0, 0, null)
@@ -62,4 +38,29 @@ fun Image.writeToFile(destination: File, imageType: String) {
 @Suppress("unused")
 inline fun <reified T> T.logger(): Logger {
 	return LoggerFactory.getLogger(T::class.java)
+}
+
+// Idk why RestTemplate doesn't work with normal maps. So swap to one of these instead
+fun<T, E> Map<T, E>.toPostBody(): LinkedMultiValueMap<T, E> {
+	val body = LinkedMultiValueMap<T, E>()
+	this.forEach { (k, v) ->
+		body.add(k, v)
+	}
+
+	return body
+}
+
+fun Map<String, String>.toHeaders(): HttpHeaders {
+	val headers = HttpHeaders()
+	this.forEach { (k, v) ->
+		headers.set(k, v)
+	}
+
+	return headers
+}
+
+// The combination of URIBuilder and RestTemplate seem to double-encode things and make things very upset.
+// I didn't see a way to disable one of them encoding... so just have a way to undo I guess
+fun URIBuilder.toUnencodedString(): String {
+	return this.toString().urlDecode()
 }

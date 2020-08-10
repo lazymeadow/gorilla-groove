@@ -8,7 +8,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "device")
-data class Device(
+class Device(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)

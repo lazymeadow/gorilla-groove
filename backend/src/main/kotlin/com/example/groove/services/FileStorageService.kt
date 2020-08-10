@@ -7,8 +7,8 @@ import com.example.groove.db.model.TrackLink
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
-import com.example.groove.util.unwrap
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
@@ -96,16 +96,16 @@ abstract class FileStorageService(
 	}
 
 	private fun loadAuthenticatedTrack(trackId: Long, anonymousAccess: Boolean): Track {
-		val track = trackRepository.findById(trackId).unwrap() ?: throw IllegalArgumentException("No track with ID $trackId found")
+		val track = trackRepository.get(trackId) ?: throw ResourceNotFoundException("No track with ID $trackId found")
 
 		if (anonymousAccess) {
 			if (track.private) {
-				throw IllegalArgumentException("Insufficient privileges to access trackId $trackId")
+				throw ResourceNotFoundException("No track with ID $trackId found")
 			}
 		} else {
 			val user = loadLoggedInUser()
 			if (track.private && user.id != track.user.id) {
-				throw IllegalArgumentException("Insufficient privileges to access trackId $trackId")
+				throw ResourceNotFoundException("No track with ID $trackId found")
 			}
 		}
 
@@ -119,7 +119,7 @@ abstract class FileStorageService(
 		return calendar.time
 	}
 
-	protected fun generateTmpFilePath(): Path {
+	fun generateTmpFilePath(): Path {
 		val tmpFileName = UUID.randomUUID().toString() + ".ogg"
 		return Paths.get(fileStorageProperties.tmpDir + tmpFileName)
 	}

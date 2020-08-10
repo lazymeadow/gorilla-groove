@@ -4,7 +4,7 @@ import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.dao.UserTokenRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.UserToken
-import org.slf4j.LoggerFactory
+import com.example.groove.util.logger
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
@@ -61,6 +61,6 @@ class UuidAuthenticationService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(UuidAuthenticationService::class.java)!!
+		val logger = logger()
 	}
 }

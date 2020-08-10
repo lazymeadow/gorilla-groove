@@ -4,14 +4,14 @@ import com.example.groove.db.dao.*
 import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.exception.ResourceNotFoundException
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.example.groove.util.unwrap
-import org.slf4j.LoggerFactory
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
-import java.util.*
 
 
 @Service
@@ -41,14 +41,23 @@ class DeviceService(
 		return device.mergedDevice ?: device
 	}
 
-	//    TODO KILL ME WHEN 1.3
-	fun <T> List<T>.tempRandom(): T {
-		return this[Random().nextInt(this.size)]
-	}
+	private fun generateDefaultName(): String {
+		val adjectivesByLetter = mapOf(
+				'A' to listOf("Arrogant", "Abiding", "Able", "Abrasive", "Absorbed", "Absurd", "Admiring", "Aerodynamic", "Affectionate", "Affluent", "Afraid", "Ageless"),
+				'B' to listOf("Backward", "Baggy", "Baseless", "Bashful", "Basic", "Beady", "Beautiful", "Benevolent", "Beguiling", "Bitter", "Blunt"),
+				'F' to listOf("Fabulous", "Fair", "Fat", "Faulty", "Fearful", "Fearless", "Fertile", "Fearsome", "Flaky", "Floppy"),
+				'G' to listOf("Gleeful", "Grumpy", "Gangly", "Garish", "Grand", "Great", "Gray", "Grave", "Glistening", "Godless", "Glutinous", "Gorgeous"),
+				'L' to listOf("Lacey", "Legendary", "Laughable", "Lavish", "Lawless", "Lazy", "Leafy", "Lewd", "Lengthy", "Livid", "Logical", "Loyal"),
+				'M' to listOf("Macho", "Mad", "Magical", "Majestic", "Male", "Malnourished", "Manly", "Masterful", "Meager", "Mean", "Meaty", "Meek", "Mellow", "Merciless", "Messy"),
+				'P' to listOf("Paranoid", "Paranormal", "Passable", "Passionate", "Passive", "Patient", "Pathetic", "Peaceful", "Peculiar", "Pedantic", "Perky", "Perplexing", "Petite"),
+				'S' to listOf("Sacred", "Sad", "Sadistic", "Salty", "Sane", "Sassy", "Satisfying", "Saucy", "Scandalous", "Skeptical", "Scholarly", "Scattered", "Secretive", "Seductive", "Sincere")
+		)
+		val characterNames = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
 
-	private fun setDefaultName(): String {
-		val list = listOf("Gollum", "Frodo", "Samwise", "Aragorn", "Legolas", "Gandolf", "Sauron", "Arwen", "Bilbo", "Gimli", "Boromir", "Faramir", "Merry", "Pippin")
-		return list.tempRandom()
+		val characterName = characterNames.random()
+		val adjective = adjectivesByLetter[characterName.first().toUpperCase()]?.random() ?: ""
+
+		return "$adjective $characterName"
 	}
 
 	@Transactional
@@ -66,7 +75,7 @@ class DeviceService(
 					Device(
 							user = user,
 							deviceId = deviceId,
-							deviceName = setDefaultName(),
+							deviceName = generateDefaultName(),
 							deviceType = deviceType,
 							applicationVersion = version,
 							lastIp = ipAddress ?: "0.0.0.0"
@@ -77,7 +86,7 @@ class DeviceService(
 		val deviceToUpdate = device.mergedDevice ?: device
 
 		deviceToUpdate.applicationVersion = version
-		deviceToUpdate.updatedAt = Timestamp(System.currentTimeMillis())
+		deviceToUpdate.updatedAt = now()
 		deviceToUpdate.additionalData = additionalData
 		ipAddress?.let { deviceToUpdate.lastIp = ipAddress }
 
@@ -180,6 +189,6 @@ class DeviceService(
 	}
 
 	companion object {
-		val logger = LoggerFactory.getLogger(DeviceService::class.java)!!
+		val logger = logger()
 	}
 }

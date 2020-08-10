@@ -4,7 +4,6 @@ import com.example.groove.db.model.Track
 import com.example.groove.dto.*
 import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
-import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -22,7 +21,6 @@ import javax.servlet.http.HttpServletRequest
 @RequestMapping("api/track")
 class TrackController(
 		private val trackService: TrackService,
-		private val youTubeDownloadService: YoutubeDownloadService,
 		private val metadataRequestService: MetadataRequestService
 ) {
 
@@ -62,9 +60,6 @@ class TrackController(
 			request: HttpServletRequest
 	): ResponseEntity<String> {
 		val ipAddress = request.getHeader("x-forwarded-for")
-		if (markSongAsReadDTO.deviceId == null) {
-			logger.warn("User ${loadLoggedInUser().name} listened to a song without the device included")
-		}
 		logger.info("User ${loadLoggedInUser().name} listened to track with ID: ${markSongAsReadDTO.trackId}")
 
 		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceId, ipAddress)
@@ -112,7 +107,7 @@ class TrackController(
 			throw IllegalArgumentException("Playlist downloads are not allowed")
 		}
 
-		return youTubeDownloadService.downloadSong(youTubeDownloadDTO)
+		return trackService.saveFromYoutube(youTubeDownloadDTO)
 	}
 
 	@PostMapping("/trim")
@@ -141,15 +136,27 @@ class TrackController(
 		)
 	}
 
-	@GetMapping("/public/{trackId}")
-	fun getLinksForTrackAnonymous(@PathVariable trackId: Long): Map<String, Any?> {
-		return trackService.getPublicTrackInfo(trackId)
+	@GetMapping("/{trackId}")
+	fun getTrack(@PathVariable trackId: Long): Track {
+		return trackService.getTracksByIds(setOf(trackId)).first()
+	}
+
+	@GetMapping("/preview/public/{trackId}")
+	fun getInfoForTrackAnonymous(@PathVariable trackId: Long): Any {
+		return trackService.getPublicTrackInfo(trackId, true)
+	}
+
+	// It's real annoying that I have to have two endpoints for this, but I can't figure out
+	// how to make Spring try to authenticate user for a public endpoint. So instead, have one
+	// endpoint for authenticated users and one for not, and make the clients deal with it
+	@GetMapping("/preview/{trackId}")
+	fun getInfoForTrack(@PathVariable trackId: Long): Map<String, Any?> {
+		return trackService.getPublicTrackInfo(trackId, false)
 	}
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
-			@Deprecated("'id' should not be null after clients are updated")
-			val deviceId: String?
+			val deviceId: String
 	)
 
 	data class SetPrivateDTO(

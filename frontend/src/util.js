@@ -143,10 +143,14 @@ export function copyToClipboard(text) {
 	});
 }
 
-export function getScreenHeight() {
-	// I had issues using window.screen.height / availHeight. The number seemed too large...
-	// Because we use 100vh for the body, getting the root height works great for this
-	return document.getElementById('root').offsetHeight;
+// I had issues using window.screen.height / availHeight. The number seemed too large...
+// Because we use 100vh for the body, getting the root height works great for this
+export function getScreenDimensions() {
+	const root = document.getElementById('root');
+	return {
+		screenWidth: root.offsetWidth,
+		screenHeight: root.offsetHeight
+	}
 }
 
 export function getVolumeIcon(volume, muted) {
@@ -174,4 +178,13 @@ export function numberWithCommas(number) {
 
 	// https://stackoverflow.com/a/2901298
 	return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+let isSafariCache = null;
+export function isSafari() {
+	if (isSafariCache === null) {
+		isSafariCache = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+	}
+
+	return isSafariCache
 }

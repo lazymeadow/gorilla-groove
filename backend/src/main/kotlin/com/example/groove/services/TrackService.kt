@@ -3,19 +3,21 @@ package com.example.groove.services
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackRepository
-import com.example.groove.db.model.Track
-import com.example.groove.db.model.TrackHistory
-import com.example.groove.db.model.User
+import com.example.groove.db.model.*
 import com.example.groove.dto.UpdateTrackDTO
+import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.enums.AudioFormat
-import com.example.groove.util.DateUtils
+import com.example.groove.util.DateUtils.now
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import com.example.groove.util.unwrap
-import org.slf4j.LoggerFactory
 
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -28,7 +30,8 @@ class TrackService(
 		private val trackHistoryRepository: TrackHistoryRepository,
 		private val deviceRepository: DeviceRepository,
 		private val fileStorageService: FileStorageService,
-		private val songIngestionService: SongIngestionService
+		private val songIngestionService: SongIngestionService,
+		private val youtubeDownloadService: YoutubeDownloadService
 ) {
 
 	@Transactional(readOnly = true)
@@ -45,6 +48,17 @@ class TrackService(
 		val idToLoad = userId ?: loggedInId
 		val loadPrivate = loggedInId == idToLoad
 
+		// The clients have an old name for the "addedToLibrary" key and
+		// we need to convert it if they are using it to sort
+		val newSort = pageable.sort.toString()
+				.split(",")
+				.map { sortKeyDir ->
+					val (key, dir) = sortKeyDir.split(": ")
+					val convertedKey = if (key == "createdAt") "addedToLibrary" else key
+					Sort.Order(Sort.Direction.fromString(dir), convertedKey)
+				}.toMutableList()
+
+		val page = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(newSort))
 		return trackRepository.getTracks(
 				name = name,
 				artist = artist,
@@ -53,7 +67,7 @@ class TrackService(
 				loadPrivate = loadPrivate,
 				loadHidden = showHidden,
 				searchTerm = searchTerm,
-				pageable = pageable
+				pageable = page
 		)
 	}
 
@@ -87,7 +101,7 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long, deviceId: String?, remoteIp: String?) {
+	fun markSongListenedTo(trackId: Long, deviceId: String, remoteIp: String?) {
 		val track = trackRepository.findById(trackId).unwrap()
 		val user = loadLoggedInUser()
 
@@ -98,21 +112,16 @@ class TrackService(
 		// May want to do some sanity checks / server side validation here to prevent this incrementing too often.
 		// We know the last played date of a track and can see if it's even possible to have listened to this song
 		track.playCount++
-		track.lastPlayed = Timestamp(System.currentTimeMillis())
-		track.updatedAt = Timestamp(System.currentTimeMillis())
+		track.lastPlayed = now()
+		track.updatedAt = now()
 
-		val device = deviceId?.let { id ->
-			val savedDevice = deviceRepository.findByDeviceIdAndUser(id, user)
-			if (savedDevice == null) {
-				logger.error("No device found with ID $id for user ${user.name} when saving track history!")
-				return@let null
-			}
+		val savedDevice = deviceRepository.findByDeviceIdAndUser(deviceId, user)
+				?: throw IllegalArgumentException("No device found with ID $deviceId for user ${user.name} when saving track history!")
 
-			// Device we used might have been merged into another device. If it was, use the parent device
-			savedDevice.mergedDevice ?: savedDevice
-		}
+		// Device we used might have been merged into another device. If it was, use the parent device
+		val device = savedDevice.mergedDevice ?: savedDevice
 
-		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp)
+		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp, listenedInReview = track.inReview)
 		trackHistoryRepository.save(trackHistory)
 	}
 
@@ -135,7 +144,7 @@ class TrackService(
 			updateTrackDTO.note?.let { track.note = it.trim() }
 			updateTrackDTO.genre?.let { track.genre = it.trim() }
 			updateTrackDTO.hidden?.let { track.hidden = it }
-			track.updatedAt = Timestamp(System.currentTimeMillis())
+			track.updatedAt = now()
 
 			if (albumArt != null) {
 				songIngestionService.storeAlbumArtForTrack(albumArt, track, updateTrackDTO.cropArtToSquare)
@@ -180,7 +189,7 @@ class TrackService(
 
 		tracks.forEach { track ->
 			track.deleted = true
-			track.updatedAt = Timestamp(System.currentTimeMillis())
+			track.updatedAt = now()
 			trackRepository.save(track)
 
 			deleteFileIfUnused(track.fileName)
@@ -202,7 +211,7 @@ class TrackService(
 		val user = loadLoggedInUser()
 
 		val tracksToImport = trackIds.map {
-			trackRepository.findById(it).unwrap()
+			trackRepository.get(it)
 		}
 		val invalidTracks = tracksToImport.filter { track ->
 			track == null || track.private || track.user.id == user.id
@@ -212,15 +221,17 @@ class TrackService(
 		}
 
 		return tracksToImport.map { track ->
-			val now = DateUtils.now()
+			val now = now()
 			val forkedTrack = track!!.copy(
 					id = 0,
 					user = user,
 					createdAt = now,
 					updatedAt = now,
+					addedToLibrary = now,
 					playCount = 0,
 					lastPlayed = null,
-					hidden = false
+					hidden = false,
+					originalTrack = track
 			)
 
 			trackRepository.save(forkedTrack)
@@ -231,11 +242,11 @@ class TrackService(
 		}
 	}
 
-	fun getPublicTrackInfo(trackId: Long): Map<String, Any?> {
+	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean): Map<String, Any?> {
 		// This will throw an exception if anonymous access is not allowed for this file
-		val trackLink = fileStorageService.getSongLink(trackId, true, AudioFormat.OGG)
+		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, AudioFormat.OGG)
 
-		val albumLink = fileStorageService.getAlbumArtLink(trackId, true)
+		val albumLink = fileStorageService.getAlbumArtLink(trackId, anonymousAccess)
 
 		val track = trackRepository.findById(trackId).unwrap()!!
 
@@ -260,13 +271,47 @@ class TrackService(
 		val newLength = songIngestionService.trimSong(track, startTime, duration)
 
 		track.length = newLength
-		track.updatedAt = Timestamp(System.currentTimeMillis())
+		track.updatedAt = now()
 		trackRepository.save(track)
 
 		return newLength
 	}
 
+	// This track is being given to someone for review. Copy the track with the target user as
+	// the new owner. Save it, and copy the album art
+	fun saveTrackForUserReview(
+			user: User,
+			track: Track,
+			reviewSource: ReviewSource,
+			setAsCopied: Boolean = false
+	): Track {
+		return track.copy(
+				id = 0,
+				user = user,
+				reviewSource = reviewSource,
+				lastReviewed = now(),
+				inReview = true,
+				private = false,
+				hidden = false,
+				addedToLibrary = null,
+				createdAt = now(),
+				playCount = 0,
+				lastPlayed = null,
+				originalTrack = if (setAsCopied) track else null
+		).also { trackCopy ->
+			trackRepository.save(trackCopy)
+			fileStorageService.copyAlbumArt(track.id, trackCopy.id)
+		}
+	}
+
+	fun saveFromYoutube(downloadDTO: YoutubeDownloadDTO): Track {
+		return youtubeDownloadService.downloadSong(loadLoggedInUser(), downloadDTO).also { newTrack ->
+			newTrack.addedToLibrary = newTrack.createdAt
+			trackRepository.save(newTrack)
+		}
+	}
+
 	companion object {
-		val logger = LoggerFactory.getLogger(TrackService::class.java)!!
+		val logger = logger()
 	}
 }

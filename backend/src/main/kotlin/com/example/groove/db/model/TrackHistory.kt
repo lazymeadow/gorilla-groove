@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.sql.Timestamp
 import javax.persistence.*
@@ -30,6 +31,9 @@ data class TrackHistory(
 		@Column(columnDefinition = "BIT")
 		var deleted: Boolean = false,
 
+		@Column(name = "listened_in_review", columnDefinition = "BIT")
+		var listenedInReview: Boolean = false,
+
 		@Column(name = "created_at")
-		val createdAt: Timestamp = Timestamp(System.currentTimeMillis())
+		val createdAt: Timestamp = now()
 )
