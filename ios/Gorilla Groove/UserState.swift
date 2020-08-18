@@ -2,62 +2,30 @@ import Foundation
 import CoreData
 
 class UserState {
-    private let coreDataManager: CoreDataManager
-    private let context: NSManagedObjectContext
     
-    func getOtherUsers() -> Array<User> {
+    static func getOwnUser() -> User {
         let ownId = FileState.read(LoginState.self)!.id
         
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
-        fetchRequest.predicate = NSPredicate(format: "id != \(ownId)")
-        fetchRequest.sortDescriptors = [
-            NSSortDescriptor(
-                key: "name",
-                ascending: true,
-                selector: #selector(NSString.caseInsensitiveCompare)
-            )
-        ]
-        let result = try! context.fetch(fetchRequest)
-        
-        return result as! Array<User>
-    }
-    
-    func getLastSentUserSync() -> User {
-        let ownId = FileState.read(LoginState.self)!.id
-        
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
-        fetchRequest.predicate = NSPredicate(format: "id == \(ownId)")
-        
-        let result = try! context.fetch(fetchRequest)
-        if (result.count > 0) {
-            return result[0] as! User
+        if let user = UserDao.findById(ownId) {
+            return user
         }
 
-        // Save a new one. This is our first log in
-        let entity = NSEntityDescription.entity(forEntityName: "User", in: context)
-        let newUser = NSManagedObject(entity: entity!, insertInto: context)
-        newUser.setValue(ownId, forKey: "id")
+        // Bit of an edge case here. Just put fake defaults in for everything but the ID. If we just created this user
+        // it means we're about to do our first sync and this will all get updated anyway
+        let newUser = User(id: ownId, name: "", lastLogin: Date(), createdAt: Date())
+        UserDao.save(newUser)
         
-        do {
-            try context.save()
-        } catch {
-            print("Failed to save new user sync!")
-            print(error)
-        }
-        
-        return newUser as! User
+        return newUser
     }
     
-    func updateUserSync(_ newSyncDate: NSDate) {
-        context.refreshAllObjects()
+    static func updateUserSync(_ newSyncDate: Date) {
+        var user = getOwnUser()
+        user.lastSync = newSyncDate
         
-        let user = getLastSentUserSync()
-        user.setValue(newSyncDate, forKey: "last_sync")
-        
-        try! context.save()
+        UserDao.save(user)
     }
     
-    func postCurrentDevice() {
+    static func postCurrentDevice() {
         let requestBody = PostSessionRequest(deviceId: FileState.read(DeviceState.self)!.deviceId)
         HttpRequester.put("device", EmptyResponse.self, requestBody) { _, responseCode, _ in
             if (responseCode < 200 || responseCode >= 300) {
@@ -66,11 +34,6 @@ class UserState {
                 print("Posted current device to server")
             }
         }
-    }
-    
-    init() {
-        coreDataManager = CoreDataManager()
-        context = coreDataManager.managedObjectContext
     }
     
     struct PostSessionRequest: Codable {

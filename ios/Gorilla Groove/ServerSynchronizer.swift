@@ -4,19 +4,18 @@ import CoreData
 class ServerSynchronizer {
     let coreDataManager: CoreDataManager
     let context: NSManagedObjectContext
-    let userSyncManager = UserState()
     
-    typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ entityType: AnyClass) -> Void
+    typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
     let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
     
     func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
         print("Initiating sync with server...")
         
-        let lastSync = userSyncManager.getLastSentUserSync().last_sync
+        let lastSync = UserState.getOwnUser().lastSync
         
         // API uses millis. Multiply by 1000
         let minimum = Int(lastSync?.timeIntervalSince1970 ?? 0) * 1000
-        let maximum = Int(NSDate().timeIntervalSince1970) * 1000
+        let maximum = Int(Date().timeIntervalSince1970) * 1000
         let ownId = FileState.read(LoginState.self)!.id
         
         // TODO can I have 1 semaphore start at -2 and just use it for all?
@@ -40,7 +39,7 @@ class ServerSynchronizer {
         }
 
         // Divide by 1000 to get back to seconds
-        let newDate = NSDate(timeIntervalSince1970: Double(maximum) / 1000.0)
+        let newDate = Date(timeIntervalSince1970: Double(maximum) / 1000.0)
         
         print("Saving sync results")
         try! self.context.save()
@@ -48,7 +47,7 @@ class ServerSynchronizer {
         print("Saving new user sync date")
         // The user sync was pulled out using a different context, so update / save it using that context
         // TODO make a context singleton maybe to avoid this tomfoolery
-        userSyncManager.updateUserSync(newDate)
+        UserState.updateUserSync(newDate)
         
         print("All up to date")
     }
@@ -68,7 +67,7 @@ class ServerSynchronizer {
         var pagesToGet = 0
         repeat {
             pagesToGet = savePageOfTrackChanges(url: url, page: currentPage, userId: ownId)
-            pageCompleteCallback?(currentPage, pagesToGet, Track.self)
+            pageCompleteCallback?(currentPage, pagesToGet, "track")
             currentPage += 1
         } while (currentPage < pagesToGet)
         
@@ -268,7 +267,7 @@ class ServerSynchronizer {
         var pagesToGet = 0
         repeat {
             pagesToGet = savePageOfPlaylistTrackChanges(url, currentPage)
-            pageCompleteCallback?(currentPage, pagesToGet, Playlist.self)
+            pageCompleteCallback?(currentPage, pagesToGet, "playlist")
             currentPage += 1
         } while (currentPage < pagesToGet)
         
@@ -358,7 +357,7 @@ class ServerSynchronizer {
          var pagesToGet = 0
          repeat {
              pagesToGet = savePageOfUserChanges(url, currentPage)
-             pageCompleteCallback?(currentPage, pagesToGet, User.self)
+             pageCompleteCallback?(currentPage, pagesToGet, "user")
              currentPage += 1
          } while (currentPage < pagesToGet)
          
@@ -379,67 +378,57 @@ class ServerSynchronizer {
                  
                  return
              }
-             
-             for newResponse in entityResponse!.content.new {
-                // When saving users, there is no guarantee we haven't seen this user before from a sync
-                // when signed into another user's profile. So there's always a risk it's already been saved
-                let existingUser = self.findEntityById(newResponse.id, User.self)
-                if (existingUser != nil) {
-                    print("Existing User found with id \(existingUser!.id)! Updating instead")
-                    self.setUserPropertiesFromResponse(existingUser!, newResponse)
-                    continue
-                }
-                 let entity = NSEntityDescription.entity(forEntityName: "User", in: self.context)
-                 
-                 let newUser = NSManagedObject(entity: entity!, insertInto: self.context)
-                 
-                 self.setUserPropertiesFromResponse(newUser, newResponse)
-                 
-                 print("Adding new User with ID: \((newUser as! User).id)")
-             }
-             
-             for modifiedResponse in entityResponse!.content.modified {
-                 let savedUser = self.findEntityById(modifiedResponse.id, User.self)
-                 if (savedUser == nil) {
-                     print("Could not find User to update with ID \(modifiedResponse.id)!")
-                     continue
-                 }
-                 
-                 self.setUserPropertiesFromResponse(savedUser!, modifiedResponse)
-                 
-                 print("Updating existing User with ID: \((savedUser!).id)")
-             }
-             
-             for deletedId in entityResponse!.content.removed {
-                 let savedUser = self.findEntityById(deletedId, User.self)
-                 if (savedUser == nil) {
-                     print("Could not find User to delete with ID \(deletedId)!")
-                     continue
-                 }
-                 
-                 self.context.delete(savedUser!)
-                 
-                 print("Deleting User with ID: \(deletedId)")
-             }
-             
-             pagesToFetch = entityResponse!.pageable.totalPages
-             semaphore.signal()
-         }
-         
-         semaphore.wait()
-         
-         return pagesToFetch
-     }
-     
-     private func setUserPropertiesFromResponse(
-         _ user: NSManagedObject,
-         _ response: UserResponse
-     ) {
-         user.setValue(response.id, forKey: "id")
-         user.setValue(response.name, forKey: "name")
-         user.setValue(response.lastLogin, forKey: "last_login")
-         user.setValue(response.createdAt, forKey: "created_at")
-     }
+            
+            for newResponse in entityResponse!.content.new {
+                let newUser = User(
+                    id: Int(newResponse.id),
+                    lastSync: Date(),
+                    name: newResponse.name,
+                    lastLogin: newResponse.lastLogin,
+                    createdAt: newResponse.createdAt
+                )
+                UserDao.save(newUser)
+                
+                print("Added new User with ID: \(newUser.id)")
+            }
+            
+            for modifiedResponse in entityResponse!.content.modified {
+                let updatedUser = User(
+                    id: Int(modifiedResponse.id),
+                    lastSync: Date(),
+                    name: modifiedResponse.name,
+                    lastLogin: modifiedResponse.lastLogin,
+                    createdAt: modifiedResponse.createdAt
+                )
+                UserDao.save(updatedUser)
+
+                print("Updated existing User with ID: \(updatedUser.id)")
+            }
+            
+            for deletedId in entityResponse!.content.removed {
+                UserDao.delete(Int(deletedId))
+                
+                print("Deleted User with ID: \(deletedId)")
+            }
+            
+            pagesToFetch = entityResponse!.pageable.totalPages
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        
+        return pagesToFetch
+    }
+    
+    private func setUserPropertiesFromResponse(
+        _ user: NSManagedObject,
+        _ response: UserResponse
+    ) {
+        user.setValue(response.id, forKey: "id")
+        user.setValue(response.name, forKey: "name")
+        user.setValue(response.lastLogin, forKey: "last_login")
+        user.setValue(response.createdAt, forKey: "created_at")
+    }
     
     init() {
         coreDataManager = CoreDataManager()

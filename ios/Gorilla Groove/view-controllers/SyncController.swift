@@ -137,7 +137,7 @@ class SyncController: UIViewController {
     }
     
     private func sync() {
-        ServerSynchronizer().syncWithServer() { completedPage, totalPages, classType in
+        ServerSynchronizer().syncWithServer() { completedPage, totalPages, type in
             DispatchQueue.main.async {
                 let percentDone: Float = {
                     if (totalPages == 1) {
@@ -146,13 +146,13 @@ class SyncController: UIViewController {
                         return Float(completedPage) / Float(totalPages - 1)
                     }
                 }()
-                                
+                
                 let syncSection: SyncSection = try! {
-                    if (classType == Track.self) {
+                    if (type == "track") {
                         return self.librarySection!
-                    } else if (classType == Playlist.self) {
+                    } else if (type == "playlist") {
                         return self.playlistSection!
-                    } else if (classType == User.self) {
+                    } else if (type == "user") {
                         return self.userSection!
                     } else {
                         throw "Unimplemented entity type was synced!"

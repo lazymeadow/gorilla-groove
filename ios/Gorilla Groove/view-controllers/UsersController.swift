@@ -4,7 +4,6 @@ import UIKit
 
 class UsersController : UITableViewController {
 
-    let userState = UserState()
     var users: Array<User> = []
     
     override func viewDidLoad() {
@@ -19,7 +18,7 @@ class UsersController : UITableViewController {
         // Remove extra table row lines that have no content
         view.tableFooterView = UIView(frame: .zero)
         
-        users = userState.getOtherUsers()
+        users = UserDao.getOtherUsers()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

@@ -37,9 +37,9 @@ class ViewController: UIViewController {
     
     private func presentLoggedInView() {
         // If this is the first time this user has logged in, we want to sync in their library
-        let userSync = UserState().getLastSentUserSync()
+        let user = UserState.getOwnUser()
         let newView: UIViewController = {
-            if (userSync.last_sync == nil) {
+            if (user.lastSync == nil) {
                 return SyncController()
             } else {
                 return RootNavigationController()
@@ -103,6 +103,7 @@ class ViewController: UIViewController {
         let task = session.dataTask(with: url, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
             let decodedData = try! JSONDecoder().decode(VersionResponse.self, from: data!)
             self.apiVersion.text = decodedData.version
+            print("Version retrieved: " + decodedData.version)
         })
         task.resume()
     }

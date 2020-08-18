@@ -16,7 +16,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         let token = FileState.read(LoginState.self)?.token
-        
+        Database.openDatabase()
+
         if (token != nil) {
             print("User logged was previously logged in")
             
@@ -27,8 +28,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 return true
             }
             
-            let userSync = UserState().getLastSentUserSync()
-            if (userSync.last_sync == nil) {
+            let user = UserState.getOwnUser()
+            if (user.lastSync == nil) {
                 print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
                 // TODO remove this when done devving this screen
 //                window!.rootViewController = SyncController()
