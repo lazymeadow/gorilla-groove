@@ -18,7 +18,7 @@ class Database {
     static func openDatabase() {
         let path = getDbPath().path
         
-        let openResult = sqlite3_open(path, &db)
+        let openResult = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_CREATE, nil)
         if openResult == SQLITE_OK {
             print("Successfully opened connection to database at \(path)")
             
@@ -32,7 +32,7 @@ class Database {
     static func execute(_ sql: String) -> Bool {
         var success: Bool = false
         var queryStatement: OpaquePointer?
-        if sqlite3_prepare_v2(db, sql, -1, &queryStatement, nil) == SQLITE_OK {
+        if sqlite3_prepare_v2(db, sql, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_CREATE, &queryStatement, nil) == SQLITE_OK {
             success = sqlite3_step(queryStatement) == SQLITE_DONE
         } else {
             let errorMessage = String(cString: sqlite3_errmsg(db))
@@ -56,8 +56,8 @@ class Database {
         return statement
     }
     
-    static func query(_ sql: String) -> [Dictionary<String, Any>] {
-        var result: [Dictionary<String, Any>] = []
+    static func query(_ sql: String) -> [Dictionary<String, Any?>] {
+        var result: [Dictionary<String, Any?>] = []
         
         guard let queryStatement = prepare(sql) else {
             return result
@@ -67,8 +67,9 @@ class Database {
             sqlite3_finalize(queryStatement)
         }
         
-        while sqlite3_step(queryStatement) == SQLITE_ROW {
-            var dictionary: Dictionary<String, Any> = [:]
+        var currentStep = sqlite3_step(queryStatement)
+        while currentStep == SQLITE_ROW {
+            var dictionary: Dictionary<String, Any?> = [:]
             
             for i in 0...sqlite3_column_count(queryStatement)-1 {
                 let column: String = String(cString: sqlite3_column_name(queryStatement, i))
@@ -79,16 +80,24 @@ class Database {
                 } else if type == SQLITE_INTEGER {
                     let result = sqlite3_column_int64(queryStatement, i) // This apparently can't be nil, but the text one can...?
                     dictionary[column] = Int(result)
+                } else if type == SQLITE_FLOAT {
+                    let result = sqlite3_column_double(queryStatement, i)
+                    dictionary[column] = Double(result)
                 } else {
                     dictionary[column] = nil
                 }
             }
             
             result.append(dictionary)
+            currentStep = sqlite3_step(queryStatement)
         }
         
-        guard sqlite3_step(queryStatement) == SQLITE_DONE else {
-            print("SQL execution did not end cleanly")
+        guard currentStep == SQLITE_DONE else {
+            if currentStep == SQLITE_MISUSE {
+                print("SQL execution was misused!")
+            } else {
+                print("SQL execution did not end cleanly with code: \(currentStep)")
+            }
             return result
         }
         
@@ -132,8 +141,7 @@ class Database {
             "is_private"    INTEGER NOT NULL,
             "is_hidden"    INTEGER NOT NULL,
             "created_at"    INTEGER NOT NULL,
-            "updated_at"    INTEGER NOT NULL,
-            "last_played"    INTEGER NOT NULL,
+            "last_played"    INTEGER,
             "note"    TEXT
         );
         """)

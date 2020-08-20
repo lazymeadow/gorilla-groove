@@ -6,9 +6,7 @@ import AVKit
 class ArtistViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var artists: Array<String> = []
     var visibleArtists: Array<String> = []
-    
-    var trackState: TrackState? = nil
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -61,28 +59,27 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
         cell.animateSelectionColor()
         
-        let albums = trackState!.getAlbums(artist: cell.artist!)
+        let ownId = FileState.read(LoginState.self)!.id
+
+        let albums = TrackDao.getAlbums(userId: ownId, artist: cell.artist!)
         
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {
             if (albums.count == 1) {
-                let tracks = self.trackState!.getTracks(album: albums.first!.name, artist: cell.artist!)
+                let tracks = TrackService.getTracks(album: albums.first!.name, artist: cell.artist!)
                 
                 return SongViewController(albums.first!.name, tracks)
             } else {
-                return AlbumViewController(cell.artist!, albums, cell.artist!, self.trackState!)
+                return AlbumViewController(cell.artist!, albums, cell.artist!)
             }
         }()
         
         self.navigationController!.pushViewController(view, animated: true)
     }
     
-    // It's stupid to pass in trackState. I just need to make it a singleton.
-    // When I don't do this, the tracks get garbage collected when you play a song and navigate away from this view
-    init(_ title: String, _ artists: Array<String>, _ trackState: TrackState) {
+    init(_ title: String, _ artists: Array<String>) {
         self.artists = artists
         self.visibleArtists = artists
-        self.trackState = trackState
         
         super.init(nibName: nil, bundle: nil)
 

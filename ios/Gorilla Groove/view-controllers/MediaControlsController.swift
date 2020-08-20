@@ -16,7 +16,7 @@ class MediaControlsController: UIViewController {
     // Kind of hacky. But the events we get when we change songs can be triggered in a weird way that makes
     // the slider kind of jump around, because the song changes, but the time that we are given by the media
     // controls hasn't yet changed back to 0. So do a little extra bookkeeping to keep this from happening
-    var playingTrackId: Int64? = nil
+    var playingTrackId: Int? = nil
     
     lazy var repeatIcon: UIView = {
         let icon = createIcon("repeat", weight: .bold)
@@ -333,7 +333,7 @@ class MediaControlsController: UIViewController {
         if (!self.listenedToCurrentSong && self.timeListened > self.targetListenTime) {
             self.listenedToCurrentSong = true
             self.trackListenSemaphore.signal()
-            TrackState().markTrackListenedTo(NowPlayingTracks.currentTrack!)
+            TrackService.markTrackListenedTo(NowPlayingTracks.currentTrack!)
         } else {
             self.trackListenSemaphore.signal()
         }

@@ -162,7 +162,7 @@ class AudioPlayer {
     }
     
     struct PlayEventRequest: Codable {
-        let trackId: Int64?
+        let trackId: Int?
         let deviceId: String
     }
 }

@@ -4,7 +4,6 @@ import CoreData
 
 class MyLibraryController: UITableViewController {
     let options = SongViewType.allCases
-    let trackState = TrackState()
     
     override func viewDidLoad() {
         print("Loaded my library")
@@ -99,23 +98,27 @@ class MyLibraryController: UITableViewController {
         _ sortOverrideKey: String? = nil,
         sortAscending: Bool = true
     ) {
-        let tracks = trackState.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
+        let tracks = TrackService.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
 
         let view = SongViewController(viewTitle, tracks)
         self.navigationController!.pushViewController(view, animated: true)
     }
     
     @objc private func loadArtistView() {
-        let artists = trackState.getArtists()
+        let ownId = FileState.read(LoginState.self)!.id
 
-        let view = ArtistViewController("Artist", artists, trackState)
+        let artists = TrackDao.getArtists(userId: ownId)
+
+        let view = ArtistViewController("Artist", artists)
         self.navigationController!.pushViewController(view, animated: true)
     }
     
     @objc private func loadAlbumView() {
-        let albums = trackState.getAlbums()
+        let ownId = FileState.read(LoginState.self)!.id
 
-        let view = AlbumViewController("Album", albums, nil, trackState)
+        let albums = TrackDao.getAlbums(userId: ownId)
+
+        let view = AlbumViewController("Album", albums, nil)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

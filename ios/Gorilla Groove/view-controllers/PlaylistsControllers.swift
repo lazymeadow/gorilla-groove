@@ -4,7 +4,6 @@ import UIKit
 
 class PlaylistsController : UITableViewController {
 
-    let trackState = TrackState()
     var playlists: Array<Playlist> = []
     
     override func viewDidLoad() {
@@ -18,7 +17,9 @@ class PlaylistsController : UITableViewController {
         // Remove extra table row lines that have no content
         view.tableFooterView = UIView(frame: .zero)
         
-        playlists = trackState.getPlaylists()
+        let ownId = FileState.read(LoginState.self)!.id
+
+        playlists = PlaylistDao.getPlaylists(userId: ownId)
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -44,7 +45,7 @@ class PlaylistsController : UITableViewController {
         
         let playlist = cell.data!
         
-        let tracks = trackState.getTracksForPlaylist(playlist.id)
+        let tracks = TrackDao.getTracksForPlaylist(playlist.id)
         
         let view = SongViewController(playlist.name, tracks)
         self.navigationController!.pushViewController(view, animated: true)

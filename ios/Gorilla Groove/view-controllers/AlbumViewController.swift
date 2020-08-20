@@ -10,9 +10,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
     var artist: String? = nil
     
     let albumTableView = UITableView()
-    
-    var trackState: TrackState? = nil
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -68,7 +66,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         let albumToLoad = cell.album!.viewAllAlbum ? nil : cell.album!.name
         let viewName = cell.album!.viewAllAlbum ? "All " + artist! : albumToLoad!
         
-        let tracks = trackState!.getTracks(album: albumToLoad, artist: artist)
+        let tracks = TrackService.getTracks(album: albumToLoad, artist: artist)
         
         let view = SongViewController(viewName, tracks)
         self.navigationController!.pushViewController(view, animated: true)
@@ -112,10 +110,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
-    // It's stupid to pass in trackState. I just need to make it a singleton.
-    // When I don't do this, the tracks get garbage collected when you play a song and navigate away from this view
-    init(_ title: String, _ albums: Array<Album>, _ artist: String?, _ trackState: TrackState) {
-        self.trackState = trackState
+    init(_ title: String, _ albums: Array<Album>, _ artist: String?) {
         self.artist = artist
         
         var displayedAlbums = albums

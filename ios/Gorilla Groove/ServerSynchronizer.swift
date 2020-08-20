@@ -2,8 +2,6 @@ import Foundation
 import CoreData
 
 class ServerSynchronizer {
-    let coreDataManager: CoreDataManager
-    let context: NSManagedObjectContext
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
     let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
@@ -41,12 +39,8 @@ class ServerSynchronizer {
         // Divide by 1000 to get back to seconds
         let newDate = Date(timeIntervalSince1970: Double(maximum) / 1000.0)
         
-        print("Saving sync results")
-        try! self.context.save()
-        
         print("Saving new user sync date")
-        // The user sync was pulled out using a different context, so update / save it using that context
-        // TODO make a context singleton maybe to avoid this tomfoolery
+
         UserState.updateUserSync(newDate)
         
         print("All up to date")
@@ -91,35 +85,19 @@ class ServerSynchronizer {
             }
             
             for newTrackResponse in entityResponse!.content.new {
-                let entity = NSEntityDescription.entity(forEntityName: "Track", in: self.context)
-                let newTrack = NSManagedObject(entity: entity!, insertInto: self.context)
-                newTrack.setValue(userId, forKey: "user_id")
-                
-                self.setTrackEntityPropertiesFromResponse(newTrack, newTrackResponse)
-                
-                print("Adding new track with ID: \((newTrack as! Track).id)")
+                TrackDao.save(newTrackResponse.asTrack(userId: userId))
+
+                print("Adding new track with ID: \(newTrackResponse.id)")
             }
             
             for modifiedTrackResponse in entityResponse!.content.modified {
-                let savedTrack = self.findEntityById(modifiedTrackResponse.id, Track.self)
-                if (savedTrack == nil) {
-                    print("Could not find Track to update with ID \(modifiedTrackResponse.id)!")
-                    continue
-                }
-                
-                self.setTrackEntityPropertiesFromResponse(savedTrack!, modifiedTrackResponse)
-                
-                print("Updating existing track with ID: \((savedTrack!).id)")
+                TrackDao.save(modifiedTrackResponse.asTrack(userId: userId))
+                                
+                print("Updating existing track with ID: \(modifiedTrackResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
-                let savedTrack = self.findEntityById(deletedId, Track.self)
-                if (savedTrack == nil) {
-                    print("Could not find Track to delete with ID \(deletedId)!")
-                    continue
-                }
-                
-                self.context.delete(savedTrack!)
+                TrackDao.delete(deletedId)
                 
                 print("Deleting track with ID: \(deletedId)")
             }
@@ -131,36 +109,6 @@ class ServerSynchronizer {
         semaphore.wait()
         
         return pagesToFetch
-    }
-    
-    private func findEntityById<T>(_ id: Int64, _ type: T.Type) -> T? {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: T.self))
-        fetchRequest.predicate = NSPredicate(format: "id == \(id)")
-        
-        let result = try? self.context.fetch(fetchRequest)
-        if (result == nil || result!.count == 0) {
-            return nil
-        }
-        
-        return result![0] as? T
-    }
-    
-    private func setTrackEntityPropertiesFromResponse(_ track: NSManagedObject, _ trackResponse: TrackResponse) {
-        track.setValue(trackResponse.id, forKey: "id")
-        track.setValue(trackResponse.name, forKey: "name")
-        track.setValue(trackResponse.album, forKey: "album")
-        track.setValue(trackResponse.artist, forKey: "artist")
-        track.setValue(trackResponse.featuring, forKey: "featuring")
-        track.setValue(trackResponse.genre, forKey: "genre")
-        track.setValue(trackResponse.note, forKey: "note")
-        track.setValue(trackResponse.createdAt, forKey: "created_at")
-        track.setValue(trackResponse.releaseYear, forKey: "release_year")
-        track.setValue(trackResponse.trackNumber, forKey: "track_number")
-        track.setValue(trackResponse.hidden, forKey: "is_hidden")
-        track.setValue(trackResponse.private, forKey: "is_private")
-        track.setValue(trackResponse.lastPlayed, forKey: "last_played")
-        track.setValue(trackResponse.length, forKey: "length")
-        track.setValue(trackResponse.playCount, forKey: "play_count")
     }
 
     // -- PLAYLISTS
@@ -197,39 +145,17 @@ class ServerSynchronizer {
             }
             
             for newPlaylistResponse in entityResponse!.content.new {
-                let entity = NSEntityDescription.entity(forEntityName: "Playlist", in: self.context)
-                
-                let newPlaylist = NSManagedObject(entity: entity!, insertInto: self.context)
-                
-                // TODO this WILL NOT WORK when shared playlists are more of a thing!
-                newPlaylist.setValue(userId, forKey: "user_id")
-                
-                self.setPlaylistPropertiesFromResponse(newPlaylist, newPlaylistResponse)
-                
-                print("Adding new Playlist with ID: \((newPlaylist as! Playlist).id)")
+                PlaylistDao.save(newPlaylistResponse.asPlaylist(userId: userId))
+                print("Adding new Playlist with ID: \(newPlaylistResponse.id)")
             }
             
             for modifiedPlaylistResponse in entityResponse!.content.modified {
-                let savedPlaylist = self.findEntityById(modifiedPlaylistResponse.id, Playlist.self)
-                if (savedPlaylist == nil) {
-                    print("Could not find Playlist to update with ID \(modifiedPlaylistResponse.id)!")
-                    continue
-                }
-                
-                self.setPlaylistPropertiesFromResponse(savedPlaylist!, modifiedPlaylistResponse)
-                
-                print("Updating existing Playlist with ID: \((savedPlaylist!).id)")
+                PlaylistDao.save(modifiedPlaylistResponse.asPlaylist(userId: userId))
+                print("Updating existing Playlist with ID: \(modifiedPlaylistResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
-                let savedPlaylist = self.findEntityById(deletedId, Playlist.self)
-                if (savedPlaylist == nil) {
-                    print("Could not find Playlist to delete with ID \(deletedId)!")
-                    continue
-                }
-                
-                self.context.delete(savedPlaylist!)
-                
+                PlaylistDao.delete(deletedId)
                 print("Deleting Playlist with ID: \(deletedId)")
             }
             
@@ -240,16 +166,6 @@ class ServerSynchronizer {
         semaphore.wait()
         
         return pagesToFetch
-    }
-    
-    private func setPlaylistPropertiesFromResponse(
-        _ playlist: NSManagedObject,
-        _ playlistResponse: PlaylistResponse
-    ) {
-        playlist.setValue(playlistResponse.id, forKey: "id")
-        playlist.setValue(playlistResponse.name, forKey: "name")
-        playlist.setValue(playlistResponse.createdAt, forKey: "created_at")
-        playlist.setValue(playlistResponse.updatedAt, forKey: "updated_at")
     }
     
     // -- PLAYLIST TRACKS
@@ -290,36 +206,17 @@ class ServerSynchronizer {
             }
             
             for newResponse in entityResponse!.content.new {
-                let entity = NSEntityDescription.entity(forEntityName: "PlaylistTrack", in: self.context)
-                
-                let newPlaylistTrack = NSManagedObject(entity: entity!, insertInto: self.context)
-                
-                self.setPlaylistTrackPropertiesFromResponse(newPlaylistTrack, newResponse)
-                
-                print("Adding new PlaylistTrack with ID: \((newPlaylistTrack as! PlaylistTrack).id)")
+                PlaylistTrackDao.save(newResponse.asPlaylistTrack())
+                print("Adding new PlaylistTrack with ID: \(newResponse.id)")
             }
             
             for modifiedResponse in entityResponse!.content.modified {
-                let savedPlaylistTrack = self.findEntityById(modifiedResponse.id, PlaylistTrack.self)
-                if (savedPlaylistTrack == nil) {
-                    print("Could not find PlaylistTrack to update with ID \(modifiedResponse.id)!")
-                    continue
-                }
-                
-                self.setPlaylistTrackPropertiesFromResponse(savedPlaylistTrack!, modifiedResponse)
-                
-                print("Updating existing PlaylistTrack with ID: \((savedPlaylistTrack!).id)")
+                PlaylistTrackDao.save(modifiedResponse.asPlaylistTrack())
+                print("Updating existing PlaylistTrack with ID: \(modifiedResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
-                let savedPlaylist = self.findEntityById(deletedId, PlaylistTrack.self)
-                if (savedPlaylist == nil) {
-                    print("Could not find PlaylistTrack to delete with ID \(deletedId)!")
-                    continue
-                }
-                
-                self.context.delete(savedPlaylist!)
-                
+                PlaylistTrackDao.delete(deletedId)
                 print("Deleting PlaylistTrack with ID: \(deletedId)")
             }
             
@@ -330,16 +227,6 @@ class ServerSynchronizer {
         semaphore.wait()
         
         return pagesToFetch
-    }
-    
-    private func setPlaylistTrackPropertiesFromResponse(
-        _ playlist: NSManagedObject,
-        _ response: PlaylistTrackResponse
-    ) {
-        playlist.setValue(response.id, forKey: "id")
-        playlist.setValue(response.playlistId, forKey: "playlist_id")
-        playlist.setValue(response.track.id, forKey: "track_id")
-        playlist.setValue(response.createdAt, forKey: "created_at")
     }
     
     // -- USERS
@@ -380,34 +267,17 @@ class ServerSynchronizer {
              }
             
             for newResponse in entityResponse!.content.new {
-                let newUser = User(
-                    id: Int(newResponse.id),
-                    lastSync: Date(),
-                    name: newResponse.name,
-                    lastLogin: newResponse.lastLogin,
-                    createdAt: newResponse.createdAt
-                )
-                UserDao.save(newUser)
-                
-                print("Added new User with ID: \(newUser.id)")
+                UserDao.save(newResponse.asUser())
+                print("Added new User with ID: \(newResponse.id)")
             }
             
             for modifiedResponse in entityResponse!.content.modified {
-                let updatedUser = User(
-                    id: Int(modifiedResponse.id),
-                    lastSync: Date(),
-                    name: modifiedResponse.name,
-                    lastLogin: modifiedResponse.lastLogin,
-                    createdAt: modifiedResponse.createdAt
-                )
-                UserDao.save(updatedUser)
-
-                print("Updated existing User with ID: \(updatedUser.id)")
+                UserDao.save(modifiedResponse.asUser())
+                print("Updated existing User with ID: \(modifiedResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
                 UserDao.delete(Int(deletedId))
-                
                 print("Deleted User with ID: \(deletedId)")
             }
             
@@ -420,23 +290,9 @@ class ServerSynchronizer {
         return pagesToFetch
     }
     
-    private func setUserPropertiesFromResponse(
-        _ user: NSManagedObject,
-        _ response: UserResponse
-    ) {
-        user.setValue(response.id, forKey: "id")
-        user.setValue(response.name, forKey: "name")
-        user.setValue(response.lastLogin, forKey: "last_login")
-        user.setValue(response.createdAt, forKey: "created_at")
-    }
-    
-    init() {
-        coreDataManager = CoreDataManager()
-        context = coreDataManager.managedObjectContext
-    }
     
     struct TrackResponse: Codable {
-        let id: Int64
+        let id: Int
         let name: String
         let artist: String
         let featuring: String
@@ -451,29 +307,79 @@ class ServerSynchronizer {
         let lastPlayed: Date?
         let createdAt: Date
         let note: String?
+        
+        func asTrack(userId: Int) -> Track {
+            return Track(
+                id: id,
+                album: album,
+                artist: artist,
+                createdAt: createdAt,
+                featuring: featuring,
+                genre: genre,
+                isHidden: hidden,
+                isPrivate: `private`,
+                lastPlayed: lastPlayed,
+                length: length,
+                name: name,
+                note: note,
+                playCount: playCount,
+                releaseYear: releaseYear,
+                trackNumber: trackNumber,
+                userId: userId
+            )
+        }
     }
     
     struct PlaylistResponse: Codable {
-        let id: Int64
+        let id: Int
         let name: String
         let createdAt: Date
         let updatedAt: Date
+        
+        func asPlaylist(userId: Int) -> Playlist {
+            return Playlist(
+                id: id,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                name: name,
+                userId: userId
+            )
+        }
     }
     
     struct PlaylistTrackResponse: Codable {
-        let id: Int64
+        let id: Int
         let track: TrackResponse
-        let playlistId: Int64
+        let playlistId: Int
         let createdAt: Date
         let updatedAt: Date
+        
+        func asPlaylistTrack() -> PlaylistTrack {
+            return PlaylistTrack(
+                id: id,
+                playlistId: playlistId,
+                createdAt: createdAt,
+                trackId: track.id
+            )
+        }
     }
     
     struct UserResponse: Codable {
-        let id: Int64
+        let id: Int
         let name: String
         let lastLogin: Date
         let createdAt: Date
         let updatedAt: Date
+        
+        func asUser() -> User {
+            return User(
+                id: id,
+                lastSync: Date(),
+                name: name,
+                lastLogin: lastLogin,
+                createdAt: createdAt
+            )
+        }
     }
     
     struct EntityChangeResponse<T: Codable>: Codable {
@@ -484,7 +390,7 @@ class ServerSynchronizer {
     struct EntityChangeContent<T: Codable>: Codable {
         let new: Array<T>
         let modified: Array<T>
-        let removed: Array<Int64>
+        let removed: Array<Int>
     }
     
     struct EntitySyncPagination: Codable {
