@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08723C2EE05003899B8 /* MyLibraryController.swift */; };
 		A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08A23C2FC4C003899B8 /* FileState.swift */; };
-		A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829ABF623C597E90034AD69 /* GroovePersistence.swift */; };
-		A829AC0223C804350034AD69 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0123C804350034AD69 /* CoreDataManager.swift */; };
 		A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0923CA57AD0034AD69 /* TrackState.swift */; };
 		A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */; };
 		A829AC1F23CBF8270034AD69 /* SongViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC1E23CBF8270034AD69 /* SongViewController.swift */; };
@@ -37,7 +35,6 @@
 		E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50E923E2736D00029D7C /* RootNavigationController.swift */; };
 		E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */; };
 		E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */; };
-		E86AFF1923E7E93F005B84EB /* Groove.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = A829ABF823C6CD950034AD69 /* Groove.xcdatamodeld */; };
 		E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1C23E9572A005B84EB /* UsersController.swift */; };
 		E86AFF1F23E963A8005B84EB /* TableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1E23E963A8005B84EB /* TableViewCell.swift */; };
 		E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67724EC9AA40066CB4E /* BaseDao.swift */; };
@@ -50,12 +47,8 @@
 /* Begin PBXFileReference section */
 		A815B08723C2EE05003899B8 /* MyLibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryController.swift; sourceTree = "<group>"; };
 		A815B08A23C2FC4C003899B8 /* FileState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileState.swift; sourceTree = "<group>"; };
-		A829ABF623C597E90034AD69 /* GroovePersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroovePersistence.swift; sourceTree = "<group>"; };
-		A829ABF923C6CD950034AD69 /* Groove.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Groove.xcdatamodel; sourceTree = "<group>"; };
-		A829AC0123C804350034AD69 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
 		A829AC0923CA57AD0034AD69 /* TrackState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackState.swift; sourceTree = "<group>"; };
 		A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpRequester.swift; sourceTree = "<group>"; };
-		A829AC1523CAC2810034AD69 /* Groove 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Groove 2.xcdatamodel"; sourceTree = "<group>"; };
 		A829AC1E23CBF8270034AD69 /* SongViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongViewController.swift; sourceTree = "<group>"; };
 		A829AC2323CC2C1D0034AD69 /* SongViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongViewCell.swift; sourceTree = "<group>"; };
 		A829AC2723D158E60034AD69 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
@@ -105,7 +98,6 @@
 		A829AC2023CC29B70034AD69 /* db */ = {
 			isa = PBXGroup;
 			children = (
-				A829ABF823C6CD950034AD69 /* Groove.xcdatamodeld */,
 				E83B012024CE82F600C2C5E4 /* Database.swift */,
 				E8C2ABE124E102A10050A01E /* User.swift */,
 				E86EB67724EC9AA40066CB4E /* BaseDao.swift */,
@@ -174,8 +166,6 @@
 				A89100F423BD339E00D6EA2D /* Assets.xcassets */,
 				A89100F923BD339E00D6EA2D /* Info.plist */,
 				A815B08A23C2FC4C003899B8 /* FileState.swift */,
-				A829ABF623C597E90034AD69 /* GroovePersistence.swift */,
-				A829AC0123C804350034AD69 /* CoreDataManager.swift */,
 				A829AC0923CA57AD0034AD69 /* TrackState.swift */,
 				A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */,
 				A829AC2723D158E60034AD69 /* AudioPlayer.swift */,
@@ -246,7 +236,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E86AFF1923E7E93F005B84EB /* Groove.xcdatamodeld in Resources */,
 				A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */,
 				A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */,
 				A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */,
@@ -286,12 +275,10 @@
 				A829AC2423CC2C1D0034AD69 /* SongViewCell.swift in Sources */,
 				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
 				E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */,
-				A829AC0223C804350034AD69 /* CoreDataManager.swift in Sources */,
 				E85966452423207B00AA8727 /* ArtistViewCell.swift in Sources */,
 				E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */,
 				E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */,
 				E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */,
-				A829ABF723C597E90034AD69 /* GroovePersistence.swift in Sources */,
 				A829AC1F23CBF8270034AD69 /* SongViewController.swift in Sources */,
 				E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */,
 			);
@@ -495,20 +482,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCVersionGroup section */
-		A829ABF823C6CD950034AD69 /* Groove.xcdatamodeld */ = {
-			isa = XCVersionGroup;
-			children = (
-				A829AC1523CAC2810034AD69 /* Groove 2.xcdatamodel */,
-				A829ABF923C6CD950034AD69 /* Groove.xcdatamodel */,
-			);
-			currentVersion = A829AC1523CAC2810034AD69 /* Groove 2.xcdatamodel */;
-			path = Groove.xcdatamodeld;
-			sourceTree = "<group>";
-			versionGroupType = wrapper.xcdatamodel;
-		};
-/* End XCVersionGroup section */
 	};
 	rootObject = A89100E223BD339C00D6EA2D /* Project object */;
 }

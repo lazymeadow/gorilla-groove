@@ -21,12 +21,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (token != nil) {
             print("User logged was previously logged in")
             
-            if (!CoreDataManager().restoredCleanly) {
-                print("User was logged in but Core Data was not initiated cleanly. Initiating sync to repair")
-                window!.rootViewController = SyncController()
-                
-                return true
-            }
+            // Keeping this around as an example of how to re-initiate a sync when a re-sync is needed for a migration
+//            if (!CoreDataManager().restoredCleanly) {
+//                print("User was logged in but Core Data was not initiated cleanly. Initiating sync to repair")
+//                window!.rootViewController = SyncController()
+//
+//                return true
+//            }
             
             let user = UserState.getOwnUser()
             if (user.lastSync == nil) {
