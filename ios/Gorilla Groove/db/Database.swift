@@ -106,6 +106,7 @@ class Database {
     
     static private func migrate() {
         let currentVersion = query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
+        let targetVersion = 2
         
         print("Existing DB is using version: \(currentVersion)")
         
@@ -188,10 +189,23 @@ class Database {
                 fatalError("Failed to create db_version table")
             }
             
-            success = execute("INSERT INTO db_version (version, created_at) VALUES (1, \(NSDate().timeIntervalSince1970))")
+            success = execute("INSERT INTO db_version (version, created_at) VALUES (1, \(Date().toEpochTime()))")
             if !success {
                 fatalError("Failed to update db_version!")
             }
+        }
+        
+        if currentVersion < 2 {
+            let success = execute("ALTER TABLE track ADD cached_at INT NULL;")
+            if !success {
+                fatalError("Failed to add cachedAt column!")
+            }
+        }
+        
+        
+        let success = execute("UPDATE db_version SET version = 2")
+        if !success {
+            fatalError("Failed to update db_version!")
         }
     }
 }

@@ -12,8 +12,10 @@ class ServerSynchronizer {
         let lastSync = UserState.getOwnUser().lastSync
         
         // API uses millis. Multiply by 1000
-        let minimum = Int(lastSync?.timeIntervalSince1970 ?? 0) * 1000
-        let maximum = Int(Date().timeIntervalSince1970) * 1000
+        let minimum = lastSync?.toEpochTime() ?? 0
+        let newDate = Date()
+        let maximum = newDate.toEpochTime()
+        
         let ownId = FileState.read(LoginState.self)!.id
         
         // TODO can I have 1 semaphore start at -2 and just use it for all?
@@ -35,9 +37,6 @@ class ServerSynchronizer {
         semaphores.forEach { semaphore in
             semaphore.wait()
         }
-
-        // Divide by 1000 to get back to seconds
-        let newDate = Date(timeIntervalSince1970: Double(maximum) / 1000.0)
         
         print("Saving new user sync date")
 

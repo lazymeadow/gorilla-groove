@@ -2,12 +2,14 @@ import AVFoundation
 import Foundation
 import MediaPlayer
 
-class AudioPlayer {
+class AudioPlayer : CachingPlayerItemDelegate {
     
     private static let player = AVPlayer()
     private static var registeredCallbacks: Array<(_ time: Double)->()> = []
     
     private static var lastSongPlayHeartbeatTime = 0.0;
+    
+    private static let audioPlayerCacheDelegate = AudioPlayerCacheDelegate()
     
     static var isPaused: Bool {
         get {
@@ -140,9 +142,21 @@ class AudioPlayer {
         sendPlayEvent(nil)
     }
     
-    static func playNewLink(_ link: String) {
-        let playerItem = AVPlayerItem(url: URL(string: link)!)
-        
+    // This will cache the song to disk while streaming it
+    static func playNewLink(_ link: String, trackId: Int) {
+        let playerItem = SongCachingPlayerItem(url: URL(string: link)!, trackId: trackId)
+        playerItem.delegate = audioPlayerCacheDelegate
+
+        playPlayerItem(playerItem)
+    }
+    
+    // This plays a song that is already downloaded
+    static func playSongData(_ songData: Data) {
+        let playerItem = CachingPlayerItem(data: songData, mimeType: "audio/mp3", fileExtension: "mp3")
+        playPlayerItem(playerItem)
+    }
+    
+    private static func playPlayerItem(_ playerItem: AVPlayerItem) {
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
         
@@ -164,5 +178,28 @@ class AudioPlayer {
     struct PlayEventRequest: Codable {
         let trackId: Int?
         let deviceId: String
+    }
+}
+
+class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
+    func playerItem(_ playerItem: CachingPlayerItem, didFinishDownloadingData data: Data) {
+        let songCacheItem = playerItem as! SongCachingPlayerItem
+        let trackId = songCacheItem.trackId
+
+        print("Track \(trackId) is downloaded and ready for storing")
+
+        Track.setCachedSongData(trackId: trackId, data: data)
+        
+        print("Track \(trackId) is saved")
+    }
+}
+
+class SongCachingPlayerItem : CachingPlayerItem {
+    let trackId: Int
+    
+    init(url: URL, trackId: Int) {
+        self.trackId = trackId
+
+        super.init(url: url, customFileExtension: nil)
     }
 }

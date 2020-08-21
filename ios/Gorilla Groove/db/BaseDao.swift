@@ -31,7 +31,7 @@ public class BaseDao<T: Entity> {
                 columnValues.append(String(intType))
             } else if value is Date {
                 let dateType = value as! Date
-                columnValues.append(String(Int(dateType.timeIntervalSince1970 * 1000)))
+                columnValues.append(String(dateType.toEpochTime()))
             } else {
                 // This is incredibly stupid, but optionals from Mirror seem batshit crazy. Have to check for nil like this.
                 // StackOverflow suggests not using Mirror and instead using the objc runtime because Mirror sucks.
@@ -59,7 +59,7 @@ public class BaseDao<T: Entity> {
         // DB names are stored snake_case because reasons. So convert them
         let tableName = String(describing: T.self).toSnakeCase()
         
-        let result = Database.query("SELECT * FROM \(tableName)")
+        let result = Database.query("SELECT * FROM \(tableName) WHERE id = \(id)")
         if result.isEmpty {
             return nil
         } else {
@@ -138,5 +138,15 @@ extension Int {
     
     func toDate() -> Date {
         return Date(timeIntervalSince1970: Double(self) / 1000.0)
+    }
+    
+    func toString() -> String {
+        return String(self)
+    }
+}
+
+extension Date {
+    func toEpochTime() -> Int {
+        return (Int(self.timeIntervalSince1970 * 1000))
     }
 }

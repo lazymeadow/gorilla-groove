@@ -17,6 +17,7 @@ public struct Track : Entity {
     public var releaseYear: Int?
     public var trackNumber: Int?
     public var userId: Int
+    public var cachedAt: Date?
     
     public static func fromDict(_ dict: [String : Any?]) -> Track {
         return Track(
@@ -35,7 +36,8 @@ public struct Track : Entity {
             playCount: dict["playCount"] as! Int,
             releaseYear: dict["releaseYear"] as? Int,
             trackNumber: dict["trackNumber"] as? Int,
-            userId: dict["userId"] as! Int
+            userId: dict["userId"] as! Int,
+            cachedAt: (dict["cachedAt"] as? Int)?.toDate()
         )
     }
 }
@@ -109,6 +111,13 @@ public class TrackDao : BaseDao<Track> {
         }
     }
 
+    static func setCachedAt(trackId: Int, cachedAt: Date?) {
+        let cacheString = cachedAt?.toEpochTime().toString() ?? "null"
+        
+        if !Database.execute("UPDATE track SET cached_at = \(cacheString) WHERE id = \(trackId)") {
+            fatalError("Failed to set cachedAt for track \(trackId)")
+        }
+    }
 }
 
 fileprivate extension Optional where Wrapped == String {
@@ -117,5 +126,23 @@ fileprivate extension Optional where Wrapped == String {
             return ""
         }
         return sql + " '\(string)'"
+    }
+}
+
+extension Track {
+    func getCachedSongData() -> Data? {
+        let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("\(id).mp3")
+        
+        return try? Data(contentsOf: path)
+    }
+    
+    static func setCachedSongData(trackId: Int, data: Data) {
+        let documentDirectoryPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("\(trackId).mp3")
+        
+        try! data.write(to: documentDirectoryPath)
+        
+        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date())
     }
 }

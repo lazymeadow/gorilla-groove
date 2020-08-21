@@ -39,16 +39,36 @@ class NowPlayingTracks {
         playTrack(currentTrack!)
     }
     
-    private static func playTrack(_ track: Track) {
+    private static func playTrack(_ originalTrack: Track) {
         AudioPlayer.pause()
         
+        // Make sure we've got the latest information. Song may have been cached since the last view retrieved it, or whatever
+        let track = TrackDao.findById(originalTrack.id)!
+        
+        // First check if this song is already cached so we don't have to fetch it
+        if track.cachedAt != nil {
+            let cachedSong = track.getCachedSongData()
+            if cachedSong == nil {
+                print("Failed to find cached song data, despite track thinking it had a cache! Clearing cache from DB for track \(track.id)")
+                TrackDao.setCachedAt(trackId: track.id, cachedAt: nil)
+            } else {
+                print("Track \(track.id) is already cached. Playing from offline storage")
+                AudioPlayer.playSongData(cachedSong!)
+                updatePlayingTrackInfo(track)
+                
+                notifyListeners()
+                return
+            }
+        }
+        
+        // If it is not cached, go out to the LIVE INTERNET To find it (and cache it while streaming it)
         HttpRequester.get("file/link/\(track.id)?audioFormat=MP3", TrackLinkResponse.self) { links, status , err in
             if (status < 200 || status >= 300 || links == nil) {
                 print("Failed to get track links!")
                 return
             }
             
-            AudioPlayer.playNewLink(links!.songLink)
+            AudioPlayer.playNewLink(links!.songLink, trackId: track.id)
             setNowPlayingAlbumArt(links!.albumArtLink)
             
             updatePlayingTrackInfo(track)
