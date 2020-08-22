@@ -17,6 +17,7 @@ import java.nio.file.Paths
 import java.sql.Timestamp
 import java.util.*
 
+@Suppress("SameParameterValue")
 abstract class FileStorageService(
 		private val trackRepository: TrackRepository,
 		private val trackLinkRepository: TrackLinkRepository,
@@ -24,7 +25,7 @@ abstract class FileStorageService(
 ) {
 	abstract fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat)
 	abstract fun loadSong(track: Track, audioFormat: AudioFormat): File
-	abstract fun storeAlbumArt(albumArt: File, trackId: Long)
+	abstract fun storeAlbumArt(albumArt: File, trackId: Long, artSize: ArtSize)
 	abstract fun loadAlbumArt(trackId: Long): File?
 	abstract fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
@@ -81,18 +82,6 @@ abstract class FileStorageService(
 		trackLinkRepository.save(trackLink)
 
 		return link
-	}
-
-	protected fun getTrackForAlbumArt(trackId: Long, anonymousAccess: Boolean): Track {
-		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
-
-		// If we are doing anonymous access, also make sure that the track is within its temporary access time
-		if (anonymousAccess) {
-			trackLinkRepository.findUnexpiredSongByTrackIdAndAudioFormat(track.id, null)
-					?: throw IllegalArgumentException("Album art for track ID: $trackId not available to anonymous users!")
-		}
-
-		return track
 	}
 
 	private fun loadAuthenticatedTrack(trackId: Long, anonymousAccess: Boolean): Track {

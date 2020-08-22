@@ -65,8 +65,11 @@ class S3StorageService(
 		return filePath.toFile()
 	}
 
-	override fun storeAlbumArt(albumArt: File, trackId: Long) {
-		s3Client.putObject(bucketName, "art/$trackId.png", albumArt)
+	override fun storeAlbumArt(albumArt: File, trackId: Long, artSize: ArtSize) {
+		when (artSize) {
+			ArtSize.LARGE -> s3Client.putObject(bucketName, "art/$trackId.png", albumArt)
+			ArtSize.SMALL -> s3Client.putObject(bucketName, "art-64x64/$trackId.png", albumArt)
+		}
 	}
 
 	override fun loadAlbumArt(trackId: Long): File? {

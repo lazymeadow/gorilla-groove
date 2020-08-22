@@ -27,7 +27,8 @@ class ReviewSourceArtistService(
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository,
 		private val imageService: ImageService,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val songIngestionService: SongIngestionService
 ) {
 	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
 	@Transactional
@@ -143,7 +144,7 @@ class ReviewSourceArtistService(
 			// This is better than whatever it is we will get from the YT download, so
 			// grab the art and store it
 			imageService.downloadFromUrl(song.albumArtUrl!!)?.let { image ->
-				fileStorageService.storeAlbumArt(image, track.id)
+				songIngestionService.storeAlbumArtForTrack(image, track, false)
 			}
 
 			// The YT download service will save the Track for the user that downloads it.

@@ -72,14 +72,7 @@ class YoutubeDownloadService(
 		}
 
 		if (newAlbumArt.exists()) {
-			if (youtubeDownloadDTO.cropArtToSquare) {
-				imageService.cropToSquare(newAlbumArt)?.let { croppedArt ->
-					fileStorageService.storeAlbumArt(croppedArt, track.id)
-					croppedArt.delete()
-				}
-			} else {
-				fileStorageService.storeAlbumArt(newAlbumArt, track.id)
-			}
+			songIngestionService.storeAlbumArtForTrack(newAlbumArt, track, youtubeDownloadDTO.cropArtToSquare)
 
 			newAlbumArt.delete()
 		} else {

@@ -64,7 +64,7 @@ class SongIngestionService(
 		trackRepository.save(track)
 
 		if (tmpImageFile != null) {
-			fileStorageService.storeAlbumArt(tmpImageFile, track.id)
+			storeAlbumArtForTrack(tmpImageFile, track, false)
 			// We have stored the songFile in its permanent home. We can delete this tmp songFile
 			tmpImageFile.delete()
 		}
@@ -88,19 +88,15 @@ class SongIngestionService(
 	}
 
 	fun storeAlbumArtForTrack(albumArt: File, track: Track, cropImageToSquare: Boolean) {
-		if (!cropImageToSquare) {
-			logger.info("Storing album art track ID: ${track.id} unaltered")
-			fileStorageService.storeAlbumArt(albumArt, track.id)
-			return
-		}
+		ArtSize.values().forEach { artSize ->
+			logger.info("Beginning album art storage for track ID: ${track.id} and art size of: $artSize")
 
-		logger.info("Beginning album art crop for track ID: ${track.id}")
-		// Crop the image and save the cropped file
-		imageService.cropToSquare(albumArt)?.let { croppedImage ->
-			fileStorageService.storeAlbumArt(croppedImage, track.id)
-			logger.info("Cropped album art was stored for track ID: ${track.id}")
+			val convertedArt = imageService.convertToStandardArtFile(albumArt, artSize, cropImageToSquare) ?: return
 
-			croppedImage.delete()
+			fileStorageService.storeAlbumArt(convertedArt, track.id, artSize)
+
+			convertedArt.delete()
+			logger.info("Finished album art storage for track ID: ${track.id} and art size of: $artSize")
 		}
 	}
 

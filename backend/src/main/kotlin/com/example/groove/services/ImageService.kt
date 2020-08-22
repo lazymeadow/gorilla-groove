@@ -1,33 +1,24 @@
 package com.example.groove.services
 
-import com.example.groove.properties.FileStorageProperties
+import com.example.groove.util.FileUtils
 import com.example.groove.util.logger
 import org.springframework.stereotype.Service
+import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
 import java.net.URL
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.min
 
 @Service
 class ImageService(
-		fileStorageProperties: FileStorageProperties,
-		private val fileStorageService: FileStorageService
+		private val fileStorageService: FileStorageService,
+		private val fileUtils: FileUtils
 ) {
 
-	private val fileStorageLocation: Path = Paths.get(fileStorageProperties.tmpDir!!)
-			.toAbsolutePath().normalize()
-
-	fun cropToSquare(imageFile: File): File? {
-		val image = ImageIO.read(imageFile) ?: run {
-			logger.error("Could not read in image file for cropping to a square!")
-			return null
-		}
-
+	private fun cropToSquare(image: BufferedImage): BufferedImage? {
+		logger.info("Converting image to square")
 		val smallerEdge = min(image.width, image.height)
 
 		// We want to crop equally from both sides.
@@ -46,11 +37,34 @@ class ImageService(
 
 		g.drawImage(subImage, 0, 0, null)
 
-		val tmpImageName = UUID.randomUUID().toString() + ".png"
-		val outputFile = fileStorageLocation.resolve(tmpImageName).toFile()
-		ImageIO.write(copyOfImage, "png", outputFile)
+		return copyOfImage
+	}
 
-		return outputFile
+	private fun resizeImage(image: BufferedImage, artSize: ArtSize): BufferedImage {
+		// Album art isn't always square, so we need to constrain EITHER the larger of the width or the height to the max,
+		// and then scale the smaller size by the same ratio to keep the image looking normal
+		val (targetWidth, targetHeight) = if (image.width > image.height) {
+			if (image.width > artSize.size) {
+				val shrinkRatio = image.width / artSize.size.toDouble()
+				artSize.size to (image.height / shrinkRatio).toInt()
+			} else {
+				image.width to image.height
+			}
+		} else {
+			if (image.height > artSize.size) {
+				val shrinkRatio = image.height / artSize.size.toDouble()
+				(image.width / shrinkRatio).toInt() to artSize.size
+			} else {
+				image.width to image.height
+			}
+		}
+
+		val resultingImage = image.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH)
+		val outputImage = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB)
+
+		outputImage.graphics.drawImage(resultingImage, 0, 0, null)
+
+		return outputImage
 	}
 
 	fun downloadFromUrl(url: String): File? {
@@ -72,7 +86,34 @@ class ImageService(
 		}
 	}
 
+	fun convertToStandardArtFile(imageFile: File, size: ArtSize, cropToSquare: Boolean): File? {
+		val image = try {
+			ImageIO.read(imageFile)
+		} catch (e: Exception) {
+			logger.error("Failed to read in album art for conversion!", e)
+			return null
+		}
+
+		val resizedImage = resizeImage(image, size)
+
+		val finalImage = if (cropToSquare) {
+			cropToSquare(resizedImage)
+		} else {
+			resizedImage
+		}
+
+		val outputFile = fileUtils.createTemporaryFile("png")
+		ImageIO.write(finalImage, "png", outputFile)
+
+		return outputFile
+	}
+
 	companion object {
 		val logger = logger()
 	}
+}
+
+enum class ArtSize(val size: Int) {
+	SMALL(64),
+	LARGE(500)
 }

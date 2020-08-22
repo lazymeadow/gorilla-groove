@@ -15,7 +15,8 @@ class MetadataRequestService(
 		private val trackRepository: TrackRepository,
 		private val iTunesMetadataService: ITunesMetadataService,
 		private val fileStorageService: FileStorageService,
-		private val fileUtils: FileUtils
+		private val fileUtils: FileUtils,
+		private val songIngestionService: SongIngestionService
 ) {
 
 	@Transactional
@@ -78,7 +79,7 @@ class MetadataRequestService(
 		val file = fileUtils.createTemporaryFile(".jpg")
 		newAlbumArt.writeToFile(file, "jpg")
 		logger.info("Writing new album art for track $track to storage...")
-		fileStorageService.storeAlbumArt(file, track.id)
+		songIngestionService.storeAlbumArtForTrack(file, track, false)
 		file.delete()
 	}
 
