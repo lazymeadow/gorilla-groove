@@ -6,6 +6,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
 
     var tracks: Array<Track> = []
     var visibleTracks: Array<Track> = []
+    let scrollPlayedTrackIntoView: Bool
        
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,6 +48,11 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
                 }
             }
         }
+        
+        if scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
+            let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
+            contactsTableView.scrollToRow(at: indexPath, at: .top, animated: false)
+        }
     }
  
     
@@ -83,9 +89,10 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         }
     }
     
-    init(_ title: String, _ tracks: Array<Track>) {
+    init(_ title: String, _ tracks: Array<Track>, scrollPlayedTrackIntoView: Bool = false) {
         self.tracks = tracks
         self.visibleTracks = tracks
+        self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
         
         super.init(nibName: nil, bundle: nil)
 
@@ -93,6 +100,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
     
     required init?(coder aDecoder: NSCoder) {
+        self.scrollPlayedTrackIntoView = false
         super.init(coder: aDecoder)
     }
 }

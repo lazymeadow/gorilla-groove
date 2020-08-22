@@ -11,7 +11,7 @@ class NowPlayingTracks {
     private static var playedShuffleIndexes: Array<Int> = []
     private static var indexesToShuffle: Array<Int> = []
     
-    private static var nowPlayingIndex: Int = -1
+    private(set) static var nowPlayingIndex: Int = -1
     static var shuffleOn: Bool = false {
         didSet {
             if (shuffleOn) {

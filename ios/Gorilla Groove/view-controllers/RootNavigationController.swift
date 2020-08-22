@@ -7,7 +7,7 @@ class RootNavigationController : UIViewController {
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
     func getNowPlayingSongController() -> SongViewController {
-        return SongViewController("Now Playing", NowPlayingTracks.nowPlayingTracks)
+        return SongViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
     }
     
     lazy var topView = UINavigationController()
