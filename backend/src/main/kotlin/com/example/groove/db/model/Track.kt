@@ -101,5 +101,11 @@ data class Track(
 		@JsonIgnore
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "original_track_id")
-		val originalTrack: Track? = null // When this track is copied / recommended from an existing GG track
+		val originalTrack: Track? = null, // When this track is copied / recommended from an existing GG track
+
+		@Column
+		var songUpdatedAt: Timestamp = now(),
+
+		@Column
+		var artUpdatedAt: Timestamp = now()
 ) : RemoteSyncable

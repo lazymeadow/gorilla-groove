@@ -148,6 +148,7 @@ class TrackService(
 
 			if (albumArt != null) {
 				songIngestionService.storeAlbumArtForTrack(albumArt, track, updateTrackDTO.cropArtToSquare)
+				track.artUpdatedAt = track.updatedAt
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
 				val art = fileStorageService.loadAlbumArt(trackId)
@@ -155,6 +156,7 @@ class TrackService(
 					logger.info("$trackId does not have album art to crop!")
 				} else {
 					songIngestionService.storeAlbumArtForTrack(art, track, true)
+					track.artUpdatedAt = track.updatedAt
 					art.delete()
 				}
 			}
@@ -272,6 +274,7 @@ class TrackService(
 
 		track.length = newLength
 		track.updatedAt = now()
+		track.songUpdatedAt = track.updatedAt
 		trackRepository.save(track)
 
 		return newLength
