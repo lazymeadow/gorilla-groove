@@ -6,15 +6,18 @@ class RootNavigationController : UIViewController {
     let libraryController = MyLibraryController()
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
+    func getNowPlayingSongController() -> SongViewController {
+        return SongViewController("Now Playing", NowPlayingTracks.nowPlayingTracks)
+    }
     
     lazy var topView = UINavigationController()
     lazy var activeButton: NavigationButton? = nil
     
-    lazy var myLibraryButton = NavigationButton("My Library", "music.house.fill", libraryController, handleButtonTap)
-    lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, handleButtonTap)
-    lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, handleButtonTap)
-    lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, handleButtonTap)
-    lazy var settingsButton = NavigationButton("Settings", "gear", nil, handleButtonTap)
+    lazy var myLibraryButton = NavigationButton("My Library", "music.house.fill", libraryController, nil, handleButtonTap)
+    lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, getNowPlayingSongController, handleButtonTap)
+    lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, nil, handleButtonTap)
+    lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, nil, handleButtonTap)
+    lazy var settingsButton = NavigationButton("Settings", "gear", nil, nil, handleButtonTap)
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
     
@@ -135,6 +138,7 @@ class RootNavigationController : UIViewController {
         var swapViewFunction: ((NavigationButton) -> ())? = nil
         var icon: UIImageView = UIImageView()
         var controllerToLoad: UIViewController? = nil
+        var controllerToLoadFunction: (() -> UIViewController)?
         
         override func viewDidLoad() {
             let stackView = UIStackView()
@@ -171,11 +175,13 @@ class RootNavigationController : UIViewController {
             _ labelText: String,
             _ iconName: String,
             _ controllerToLoad: UIViewController?,
+            _ controllerToLoadFunction: (() -> UIViewController)?,
             _ swapViewFunction: @escaping (NavigationButton) -> ()
         ) {
             self.label.text = labelText
-            self.controllerToLoad = controllerToLoad
+            self.controllerToLoad = controllerToLoad ?? controllerToLoadFunction?()
             self.swapViewFunction = swapViewFunction
+            self.controllerToLoadFunction = controllerToLoadFunction
             
             super.init(nibName: nil, bundle: nil)
             self.icon = createIcon(iconName)
@@ -192,6 +198,10 @@ class RootNavigationController : UIViewController {
         }
         
         @objc func switchToView(sender: UITapGestureRecognizer) {
+            if (controllerToLoadFunction != nil) {
+                controllerToLoad = controllerToLoadFunction!()
+            }
+            
             if (controllerToLoad != nil) {
                 swapViewFunction!(self)
             }

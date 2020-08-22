@@ -110,6 +110,11 @@ class Database {
         
         print("Existing DB is using version: \(currentVersion)")
         
+        if currentVersion == targetVersion {
+            print("Target DB version is: \(targetVersion). Skipping migrate")
+            return
+        }
+        
         if (currentVersion == 0) {
             print("Creating table user")
             var success = execute("""
@@ -196,6 +201,7 @@ class Database {
         }
         
         if currentVersion < 2 {
+            print("Adding cached_at column")
             let success = execute("ALTER TABLE track ADD cached_at INT NULL;")
             if !success {
                 fatalError("Failed to add cachedAt column!")
@@ -203,7 +209,7 @@ class Database {
         }
         
         
-        let success = execute("UPDATE db_version SET version = 2")
+        let success = execute("UPDATE db_version SET version = \(targetVersion)")
         if !success {
             fatalError("Failed to update db_version!")
         }
