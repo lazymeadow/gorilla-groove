@@ -238,7 +238,7 @@ class TrackService(
 
 			trackRepository.save(forkedTrack)
 
-			fileStorageService.copyAlbumArt(track.id, forkedTrack.id)
+			fileStorageService.copyAllAlbumArt(track.id, forkedTrack.id)
 
 			forkedTrack
 		}
@@ -248,7 +248,7 @@ class TrackService(
 		// This will throw an exception if anonymous access is not allowed for this file
 		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, AudioFormat.OGG)
 
-		val albumLink = fileStorageService.getAlbumArtLink(trackId, anonymousAccess)
+		val albumLink = fileStorageService.getAlbumArtLink(trackId, anonymousAccess, ArtSize.LARGE)
 
 		val track = trackRepository.findById(trackId).unwrap()!!
 
@@ -303,7 +303,7 @@ class TrackService(
 				originalTrack = if (setAsCopied) track else null
 		).also { trackCopy ->
 			trackRepository.save(trackCopy)
-			fileStorageService.copyAlbumArt(track.id, trackCopy.id)
+			fileStorageService.copyAllAlbumArt(track.id, trackCopy.id)
 		}
 	}
 

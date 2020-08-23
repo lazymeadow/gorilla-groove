@@ -77,18 +77,23 @@ class SystemStorageService(
 		return destinationPath.toFile()
 	}
 
-	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
+	override fun copyAllAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
 		val parentDirectory = trackSourceId / 1000
-		val sourceFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectory/$trackSourceId.png")
-
-		if (!sourceFile.exists()) {
-			return
-		}
-
 		val destinationDirectory = trackDestinationId / 1000
-		val destinationFile = File("${fileStorageProperties.albumArtDirectoryLocation}$destinationDirectory/$trackDestinationId.png")
 
-		sourceFile.copyTo(destinationFile, true)
+		ArtSize.values().forEach { artSize ->
+			logger.info("Copying album art for size $artSize and source track ID: $trackSourceId and destination ID: $trackDestinationId")
+
+			val sourceFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectory/$trackSourceId${artSize.systemFileExtension}")
+
+			if (!sourceFile.exists()) {
+				return
+			}
+
+			val destinationFile = File("${fileStorageProperties.albumArtDirectoryLocation}$destinationDirectory/$trackDestinationId${artSize.systemFileExtension}")
+
+			sourceFile.copyTo(destinationFile, true)
+		}
 	}
 
 	override fun deleteSong(fileName: String) {
@@ -114,10 +119,10 @@ class SystemStorageService(
 		}
 	}
 
-	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String? {
-		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true) {
+	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String? {
+		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true, artSize = artSize) {
 			val parentDir = trackId / 1000
-			"http://localhost:8080/album-art/$parentDir/$trackId.png"
+			"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}"
 		}
 	}
 

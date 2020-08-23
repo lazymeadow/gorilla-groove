@@ -113,7 +113,7 @@ class ImageService(
 	}
 }
 
-enum class ArtSize(val size: Int) {
-	SMALL(64),
-	LARGE(500)
+enum class ArtSize(val size: Int, val s3Directory: String, val systemFileExtension: String) {
+	SMALL(64, "art-64x64", "-64x64.png"),
+	LARGE(500, "art", ".png")
 }

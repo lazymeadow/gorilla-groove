@@ -27,10 +27,10 @@ abstract class FileStorageService(
 	abstract fun loadSong(track: Track, audioFormat: AudioFormat): File
 	abstract fun storeAlbumArt(albumArt: File, trackId: Long, artSize: ArtSize)
 	abstract fun loadAlbumArt(trackId: Long): File?
-	abstract fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long)
+	abstract fun copyAllAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
 	abstract fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String
-	abstract fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String?
+	abstract fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String?
 	abstract fun deleteSong(fileName: String)
 	abstract fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat)
 
@@ -41,13 +41,14 @@ abstract class FileStorageService(
 			anonymousAccess: Boolean,
 			audioFormat: AudioFormat = AudioFormat.MP3,
 			isArtLink: Boolean,
+			artSize: ArtSize = ArtSize.LARGE,
 			newLinkFun: (track: Track) -> String
 	): String {
 		val track = loadAuthenticatedTrack(trackId, anonymousAccess)
 
 		synchronized(this) {
 			val trackLink = if (isArtLink) {
-				trackLinkRepository.findUnexpiredArtByTrackId(track.id)
+				trackLinkRepository.findUnexpiredArtByTrackIdAndArtSize(track.id, artSize)
 			} else {
 				trackLinkRepository.findUnexpiredSongByTrackIdAndAudioFormat(track.id, audioFormat)
 			}
@@ -58,6 +59,7 @@ abstract class FileStorageService(
 						track = track,
 						audioFormat = audioFormat,
 						link = newLinkFun(track),
+						artSize = artSize,
 						isArt = isArtLink
 				)
 				else -> throw ResourceNotFoundException("No valid link found")
@@ -65,7 +67,7 @@ abstract class FileStorageService(
 		}
 	}
 
-	private fun cacheLink(track: Track, audioFormat: AudioFormat, link: String, isArt: Boolean): String {
+	private fun cacheLink(track: Track, audioFormat: AudioFormat, link: String, isArt: Boolean, artSize: ArtSize): String {
 		// Expire the link 1 minute earlier than 4 hours, so someone can't request the link and then
 		// have Amazon revoke it right before they get a chance to stream the data
 		val expirationMillis = expireHoursOut(4).time - 60_000
@@ -76,7 +78,8 @@ abstract class FileStorageService(
 				link = link,
 				audioFormat = audioFormat,
 				expiresAt = expiration,
-				isArt = isArt
+				isArt = isArt,
+				artSize = artSize
 		)
 
 		trackLinkRepository.save(trackLink)

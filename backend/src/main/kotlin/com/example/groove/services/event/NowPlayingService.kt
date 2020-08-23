@@ -4,6 +4,7 @@ import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
+import com.example.groove.services.ArtSize
 import com.example.groove.services.DeviceService
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
@@ -102,7 +103,7 @@ class NowPlayingService(
 					length = length,
 					isPrivate = false,
 					inReview = inReview,
-					albumArtLink = trackLinkRepository.findUnexpiredArtByTrackId(id)?.link
+					albumArtLink = trackLinkRepository.findUnexpiredArtByTrackIdAndArtSize(id, ArtSize.LARGE)?.link
 			)
 		}
 	}

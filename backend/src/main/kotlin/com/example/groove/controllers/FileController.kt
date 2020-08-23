@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
+import com.example.groove.services.ArtSize
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.services.enums.AudioFormat
@@ -100,13 +101,14 @@ class FileController(
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(
 			@PathVariable trackId: Long,
-			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
+			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat,
+			@RequestParam(defaultValue = "LARGE") artSize: ArtSize
 	): TrackLinks {
-		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().name}")
+		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().name} for audio format $audioFormat and art size $artSize")
 
 		return TrackLinks(
 				fileStorageService.getSongLink(trackId, false, audioFormat),
-				fileStorageService.getAlbumArtLink(trackId, false),
+				fileStorageService.getAlbumArtLink(trackId, false, artSize),
 				s3Properties.awsStoreInS3
 		)
 	}

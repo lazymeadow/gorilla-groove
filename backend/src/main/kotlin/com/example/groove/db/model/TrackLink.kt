@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.services.ArtSize
 import com.example.groove.services.enums.AudioFormat
 import java.sql.Timestamp
 import javax.persistence.*
@@ -24,6 +25,9 @@ data class TrackLink(
 
 		@Column(name = "is_art", columnDefinition = "BIT")
 		val isArt: Boolean,
+
+		@Enumerated
+		val artSize: ArtSize,
 
 		@Column(name = "expires_at")
 		val expiresAt: Timestamp

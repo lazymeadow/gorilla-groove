@@ -66,10 +66,7 @@ class S3StorageService(
 	}
 
 	override fun storeAlbumArt(albumArt: File, trackId: Long, artSize: ArtSize) {
-		when (artSize) {
-			ArtSize.LARGE -> s3Client.putObject(bucketName, "art/$trackId.png", albumArt)
-			ArtSize.SMALL -> s3Client.putObject(bucketName, "art-64x64/$trackId.png", albumArt)
-		}
+		s3Client.putObject(bucketName, "${artSize.s3Directory}/$trackId.png", albumArt)
 	}
 
 	override fun loadAlbumArt(trackId: Long): File? {
@@ -87,9 +84,16 @@ class S3StorageService(
 		return filePath.toFile()
 	}
 
-	override fun copyAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
-		if (s3Client.doesObjectExist(bucketName, "art/$trackSourceId.png")) {
-			s3Client.copyObject(bucketName, "art/$trackSourceId.png", bucketName, "art/$trackDestinationId.png")
+	override fun copyAllAlbumArt(trackSourceId: Long, trackDestinationId: Long) {
+		ArtSize.values().forEach { artSize ->
+			if (s3Client.doesObjectExist(bucketName, "${artSize.s3Directory}/$trackSourceId.png")) {
+				s3Client.copyObject(
+						bucketName,
+						"${artSize.s3Directory}/$trackSourceId.png",
+						bucketName,
+						"${artSize.s3Directory}/$trackDestinationId.png"
+				)
+			}
 		}
 	}
 
@@ -107,9 +111,9 @@ class S3StorageService(
 		}
 	}
 
-	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean): String? {
-		return getCachedTrackLink(trackId, anonymousAccess, isArtLink = true) { track ->
-			s3Client.generatePresignedUrl(bucketName, "art/${track.id}.png", expireHoursOut(4)).toString()
+	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String? {
+		return getCachedTrackLink(trackId, anonymousAccess, isArtLink = true, artSize = artSize) { track ->
+			s3Client.generatePresignedUrl(bucketName, "${artSize.s3Directory}/${track.id}.png", expireHoursOut(4)).toString()
 		}
 	}
 
