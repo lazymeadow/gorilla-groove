@@ -7,6 +7,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UINavigationBar.appearance().barTintColor = UIColor(named: "Navigation Background")
+        UINavigationBar.appearance().tintColor = Colors.primary
+        UINavigationBar.appearance().isTranslucent = false
         
         AudioPlayer.initialize()
         

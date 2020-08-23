@@ -79,6 +79,9 @@ class TableSearchAugmenter {
         func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
             controller.navigationItem.searchController!.isActive = false
             controller.navigationItem.searchController = nil
+            
+            // Need this or a little remnant view seems to get left behind after hiding an active search controller
+            controller.navigationController?.view.setNeedsLayout()
         }
         
         func search() {

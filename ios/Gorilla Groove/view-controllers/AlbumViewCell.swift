@@ -21,7 +21,7 @@ class AlbumViewCell: UITableViewCell {
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
-        label.textColor = Colors.grey2
+        label.textColor = UIColor(named: "Table Text")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

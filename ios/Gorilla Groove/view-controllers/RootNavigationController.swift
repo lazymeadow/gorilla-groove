@@ -45,7 +45,7 @@ class RootNavigationController : UIViewController {
         stackView.addArrangedSubview(middleBar)
         stackView.addArrangedSubview(navigationControls)
         
-        self.view.backgroundColor = Colors.primary
+        self.view.backgroundColor = UIColor(named: "Nav Controls")
         self.view.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(stackView)
@@ -81,7 +81,7 @@ class RootNavigationController : UIViewController {
         }
         
         view.addSubview(stackView)
-        view.backgroundColor = Colors.primary
+        view.backgroundColor = UIColor(named: "Nav Controls")
         
         NSLayoutConstraint.activate([
             stackView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 8),
@@ -96,7 +96,7 @@ class RootNavigationController : UIViewController {
     private func createMiddleBar() -> UIView {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = Colors.disabledWhite
+        view.backgroundColor = UIColor(named: "Nav Controls Divider")
         
         view.heightAnchor.constraint(equalToConstant: 1).isActive = true
         

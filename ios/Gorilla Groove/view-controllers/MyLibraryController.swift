@@ -59,7 +59,7 @@ class MyLibraryController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
         
         cell.textLabel!.text = "\(options[indexPath.row])".toTitleCase()
-        cell.textLabel!.textColor = #colorLiteral(red: 0.1764705926, green: 0.4980392158, blue: 0.7568627596, alpha: 1)
+        cell.textLabel!.textColor = UIColor(named: "Table Text")
         let tapGesture = UITapGestureRecognizer(
             target: self,
             action: #selector(handleTap(sender:))

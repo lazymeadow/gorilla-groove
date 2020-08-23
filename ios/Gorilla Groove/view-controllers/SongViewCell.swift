@@ -22,7 +22,7 @@ class SongViewCell: UITableViewCell {
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
-        label.textColor = Colors.grey2
+        label.textColor = UIColor(named: "Table Text")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -30,7 +30,7 @@ class SongViewCell: UITableViewCell {
     let artistLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 10)
-        label.textColor = Colors.grey3
+        label.textColor = UIColor(named: "Artist Display")
         label.clipsToBounds = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -39,7 +39,7 @@ class SongViewCell: UITableViewCell {
     let albumLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 14)
-        label.textColor = Colors.grey3
+        label.textColor = UIColor(named: "Song Display")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -47,7 +47,7 @@ class SongViewCell: UITableViewCell {
     let durationLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 12)
-        label.textColor = Colors.grey3
+        label.textColor = UIColor(named: "Artist Display")
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -57,12 +57,12 @@ class SongViewCell: UITableViewCell {
     func checkIfPlaying() {
         if (track != nil && track?.id == NowPlayingTracks.currentTrack?.id) {
             artistLabel.textColor = Colors.primary
-            nameLabel.textColor = Colors.primary
+            nameLabel.textColor = UIColor(named: "Playing Song Title")
             albumLabel.textColor = Colors.primary
         } else {
-            artistLabel.textColor = Colors.grey3
-            nameLabel.textColor = Colors.grey2
-            albumLabel.textColor = Colors.grey3
+            artistLabel.textColor = UIColor(named: "Song Display")
+            nameLabel.textColor = UIColor(named: "Table Text")
+            albumLabel.textColor = UIColor(named: "Song Display")
         }
     }
     
