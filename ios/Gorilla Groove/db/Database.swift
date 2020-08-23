@@ -106,7 +106,7 @@ class Database {
     
     static private func migrate() {
         let currentVersion = query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
-        let targetVersion = 2
+        let targetVersion = 4
         
         print("Existing DB is using version: \(currentVersion)")
         
@@ -208,11 +208,27 @@ class Database {
             }
         }
         
+        if currentVersion < 3 {
+            print("Renaming song cache column")
+            let success = execute("ALTER TABLE track RENAME cached_at TO song_cached_at;")
+            if !success {
+                fatalError("Failed to rename song cache column!")
+            }
+        }
+        
+        if currentVersion < 4 {
+            print("Adding art cache column")
+            let success = execute("ALTER TABLE track ADD art_cached_at INT NULL;")
+            if !success {
+                fatalError("Failed to rename art cache column!")
+            }
+        }
         
         let success = execute("UPDATE db_version SET version = \(targetVersion)")
         if !success {
             fatalError("Failed to update db_version!")
         }
+        print("Datbase was upgraded to version \(targetVersion)")
     }
 }
 

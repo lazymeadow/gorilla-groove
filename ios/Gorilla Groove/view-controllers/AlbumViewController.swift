@@ -77,22 +77,40 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         let album = visibleAlbums[indexPath.row]
         
-        if (album.imageLoadFired || album.linkRequestLink.isEmpty) {
+        if (album.imageLoadFired || album.trackIdForArt == 0) {
             return
         }
         
+        if album.artCached {
+            if let artData = CacheService.getCachedArtThumbnailData(album.trackIdForArt) {
+                let art = UIImage.init(data: artData)
+                album.art = art
+                albumViewCell.album = album
+                return
+            }
+            print("Had cached art but failed to load it! Wiping out bad cache and fetching live art")
+            TrackDao.setCachedAt(trackId: album.trackIdForArt, cachedAt: nil, isSongCache: false)
+        }
+        
         album.imageLoadFired = true
-                
+        
         DispatchQueue.global().async {
-            HttpRequester.get(
-                self.visibleAlbums[indexPath.row].linkRequestLink,
-                TrackLinkResponse.self
-            ) { response, status, err in
+            let linkRequestLink = "file/link/\(album.trackIdForArt)?artSize=SMALL"
+            HttpRequester.get(linkRequestLink, TrackLinkResponse.self) { response, status, err in
                 if (status < 200 || status >= 300) {
                     return
                 }
                 
-                let art = UIImage.fromUrl(response!.albumArtLink)
+                guard let art = UIImage.fromUrl(response!.albumArtLink) else {
+                    print("Failed to load art from URL despite a status code of \(status)!")
+                    return
+                }
+                guard let data = art.pngData() else {
+                    print("Failed to get PNG data from art!")
+                    return
+                }
+                
+                CacheService.setCachedArtThumbnailData(trackId: album.trackIdForArt, data: data)
                 DispatchQueue.main.async {
                     album.art = art
                     
@@ -117,10 +135,11 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         if (artist != nil && displayedAlbums.count > 1) {
             let viewAll = Album(
                 name: "View All",
-                linkRequestLink: "",
+                trackIdForArt: 0,
                 art: nil,
                 imageLoadFired: false,
-                viewAllAlbum: true
+                viewAllAlbum: true,
+                artCached: false
             )
             
             displayedAlbums.insert(viewAll, at: 0)
@@ -148,25 +167,28 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
 // async album fetching and filtering we do with the search bar
 class Album {
     let name: String
-    let linkRequestLink: String
+    let trackIdForArt: Int
     var art: UIImage?
     var imageLoadFired: Bool
     var viewAllAlbum: Bool
     var unfilteredIndex: Int
+    var artCached: Bool
     
     init(
         name: String,
-        linkRequestLink: String,
+        trackIdForArt: Int,
         art: UIImage? = nil,
         imageLoadFired: Bool = false,
         viewAllAlbum: Bool = false,
-        unfilteredIndex: Int = -1
+        unfilteredIndex: Int = -1,
+        artCached: Bool
     ) {
         self.name = name
-        self.linkRequestLink = linkRequestLink
+        self.trackIdForArt = trackIdForArt
         self.art = art
         self.imageLoadFired = imageLoadFired
         self.viewAllAlbum = viewAllAlbum
         self.unfilteredIndex = unfilteredIndex
+        self.artCached = artCached
     }
 }

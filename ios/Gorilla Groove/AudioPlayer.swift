@@ -188,7 +188,7 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
 
         print("Track \(trackId) is downloaded and ready for storing")
 
-        Track.setCachedSongData(trackId: trackId, data: data)
+        CacheService.setCachedSongData(trackId: trackId, data: data)
         
         print("Track \(trackId) is saved")
     }

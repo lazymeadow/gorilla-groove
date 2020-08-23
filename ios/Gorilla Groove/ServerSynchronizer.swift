@@ -90,7 +90,29 @@ class ServerSynchronizer {
             }
             
             for modifiedTrackResponse in entityResponse!.content.modified {
-                TrackDao.save(modifiedTrackResponse.asTrack(userId: userId))
+                let oldTrack = TrackDao.findById(modifiedTrackResponse.id)!
+                
+                // Check if our caches are invalidated for this track
+                var newSongCachedAt: Date? = nil
+                if let songCachedAt = oldTrack.songCachedAt, let songUpdatedAt = modifiedTrackResponse.songUpdatedAt {
+                    if songCachedAt > songUpdatedAt {
+                        newSongCachedAt = oldTrack.songCachedAt
+                    } else {
+                        CacheService.deleteCachedSong(oldTrack.id)
+                    }
+                }
+                
+                var newArtCachedAt: Date? = nil
+                if let artCachedAt = oldTrack.artCachedAt, let artUpdatedAt = modifiedTrackResponse.artUpdatedAt {
+                    if artCachedAt > artUpdatedAt {
+                        newArtCachedAt = oldTrack.artCachedAt
+                    } else {
+                        CacheService.deleteCachedArt(oldTrack.id)
+                    }
+                }
+                
+                let updatedTrack = modifiedTrackResponse.asTrack(userId: userId, songCachedAt: newSongCachedAt, artCachedAt: newArtCachedAt)
+                TrackDao.save(updatedTrack)
                 
                 print("Updating existing track with ID: \(modifiedTrackResponse.id)")
             }
@@ -306,8 +328,10 @@ class ServerSynchronizer {
         let lastPlayed: Date?
         let createdAt: Date
         let note: String?
+        let songUpdatedAt: Date?
+        let artUpdatedAt: Date?
         
-        func asTrack(userId: Int) -> Track {
+        func asTrack(userId: Int, songCachedAt: Date? = nil, artCachedAt: Date? = nil) -> Track {
             return Track(
                 id: id,
                 album: album,
@@ -324,7 +348,9 @@ class ServerSynchronizer {
                 playCount: playCount,
                 releaseYear: releaseYear,
                 trackNumber: trackNumber,
-                userId: userId
+                userId: userId,
+                songCachedAt: songCachedAt,
+                artCachedAt: artCachedAt
             )
         }
     }

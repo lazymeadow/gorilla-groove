@@ -17,7 +17,8 @@ public struct Track : Entity {
     public var releaseYear: Int?
     public var trackNumber: Int?
     public var userId: Int
-    public var cachedAt: Date?
+    public var songCachedAt: Date?
+    public var artCachedAt: Date?
     
     public static func fromDict(_ dict: [String : Any?]) -> Track {
         return Track(
@@ -37,7 +38,8 @@ public struct Track : Entity {
             releaseYear: dict["releaseYear"] as? Int,
             trackNumber: dict["trackNumber"] as? Int,
             userId: dict["userId"] as! Int,
-            cachedAt: (dict["cachedAt"] as? Int)?.toDate()
+            songCachedAt: (dict["songCachedAt"] as? Int)?.toDate(),
+            artCachedAt: (dict["artCachedAt"] as? Int)?.toDate()
         )
     }
 }
@@ -93,7 +95,7 @@ public class TrackDao : BaseDao<Track> {
     
     static func getAlbums(userId: Int, artist: String? = nil) -> Array<Album> {
         let artistRows = Database.query("""
-            SELECT id, album
+            SELECT id, album, art_cached_at
             FROM track
             WHERE user_id = \(userId)
             AND is_hidden = FALSE
@@ -106,15 +108,17 @@ public class TrackDao : BaseDao<Track> {
             // Doesn't matter what track ID we get. Just need one of them so we can get the album art for the track (and just assume it's all the same)
             Album(
                 name: $0["album"] as! String,
-                linkRequestLink: "file/link/\($0["id"] as! Int)?artSize=SMALL" // This is a stupid place to put a link, Ayrton
+                trackIdForArt: $0["id"] as! Int,
+                artCached: $0["art_cached_at"] != nil
             )
         }
     }
 
-    static func setCachedAt(trackId: Int, cachedAt: Date?) {
+    static func setCachedAt(trackId: Int, cachedAt: Date?, isSongCache: Bool) {
         let cacheString = cachedAt?.toEpochTime().toString() ?? "null"
+        let cacheColumn = isSongCache ? "song_cached_at" : "art_cached_at"
         
-        if !Database.execute("UPDATE track SET cached_at = \(cacheString) WHERE id = \(trackId)") {
+        if !Database.execute("UPDATE track SET \(cacheColumn) = \(cacheString) WHERE id = \(trackId)") {
             fatalError("Failed to set cachedAt for track \(trackId)")
         }
     }
@@ -125,24 +129,61 @@ fileprivate extension Optional where Wrapped == String {
         guard let string = self else {
             return ""
         }
-        return sql + " '\(string)'"
+        return sql + " '\(string.escaped())'"
     }
 }
 
-extension Track {
-    func getCachedSongData() -> Data? {
-        let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("\(id).mp3")
+class CacheService {
+    private static func baseDir() -> URL {
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+    
+    static func getCachedSongData(_ trackId: Int) -> Data? {
+        let path = baseDir().appendingPathComponent("\(trackId).mp3")
         
         return try? Data(contentsOf: path)
     }
     
     static func setCachedSongData(trackId: Int, data: Data) {
-        let documentDirectoryPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("\(trackId).mp3")
+        let path = baseDir().appendingPathComponent("\(trackId).mp3")
         
-        try! data.write(to: documentDirectoryPath)
+        try! data.write(to: path)
         
-        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date())
+        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), isSongCache: true)
+    }
+    
+    static func getCachedArtThumbnailData(_ trackId: Int) -> Data? {
+        let path = baseDir().appendingPathComponent("\(trackId)-small.png")
+        
+        return try? Data(contentsOf: path)
+    }
+    
+    static func setCachedArtThumbnailData(trackId: Int, data: Data) {
+        let path = baseDir().appendingPathComponent("\(trackId)-small.png")
+        
+        try! data.write(to: path)
+        
+        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), isSongCache: false)
+    }
+    
+    static func deleteCachedSong(_ trackId: Int) {
+        let path = baseDir().appendingPathComponent("\(trackId).mp3")
+
+        deleteAtPath(path, trackId, "song")
+    }
+    
+    static func deleteCachedArt(_ trackId: Int) {
+        let path = baseDir().appendingPathComponent("\(trackId)-small.png")
+
+        deleteAtPath(path, trackId, "art")
+    }
+    
+    private static func deleteAtPath(_ path: URL, _ trackId: Int, _ itemDescription: String) {
+        if FileManager.default.fileExists(atPath: path.absoluteString) {
+            print("Deleting cached \(itemDescription) for track ID: \(trackId)")
+            try! FileManager.default.removeItem(at: path)
+        } else {
+            print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found!")
+        }
     }
 }

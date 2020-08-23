@@ -24,8 +24,7 @@ public class BaseDao<T: Entity> {
                 columnValues.append(boolType ? "1" : "0")
             } else if value is String {
                 let stringType = value as! String
-                let escapedString = stringType.replacingOccurrences(of: "'", with: "''")
-                columnValues.append("'\(escapedString)'")
+                columnValues.append("'\(stringType.escaped())'")
             } else if value is Int {
                 let intType = value as! Int
                 columnValues.append(String(intType))
@@ -148,5 +147,11 @@ extension Int {
 extension Date {
     func toEpochTime() -> Int {
         return (Int(self.timeIntervalSince1970 * 1000))
+    }
+}
+
+extension String {
+    func escaped() -> String {
+        return self.replacingOccurrences(of: "'", with: "''")
     }
 }

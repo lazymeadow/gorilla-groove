@@ -46,11 +46,11 @@ class NowPlayingTracks {
         let track = TrackDao.findById(originalTrack.id)!
         
         // First check if this song is already cached so we don't have to fetch it
-        if track.cachedAt != nil {
-            let cachedSong = track.getCachedSongData()
+        if track.songCachedAt != nil {
+            let cachedSong = CacheService.getCachedSongData(track.id)
             if cachedSong == nil {
                 print("Failed to find cached song data, despite track thinking it had a cache! Clearing cache from DB for track \(track.id)")
-                TrackDao.setCachedAt(trackId: track.id, cachedAt: nil)
+                CacheService.deleteCachedSong(track.id)
             } else {
                 print("Track \(track.id) is already cached. Playing from offline storage")
                 AudioPlayer.playSongData(cachedSong!)
