@@ -91,7 +91,7 @@ class ServerSynchronizer {
             
             for modifiedTrackResponse in entityResponse!.content.modified {
                 TrackDao.save(modifiedTrackResponse.asTrack(userId: userId))
-                                
+                
                 print("Updating existing track with ID: \(modifiedTrackResponse.id)")
             }
             

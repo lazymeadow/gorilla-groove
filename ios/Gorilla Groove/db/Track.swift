@@ -106,7 +106,7 @@ public class TrackDao : BaseDao<Track> {
             // Doesn't matter what track ID we get. Just need one of them so we can get the album art for the track (and just assume it's all the same)
             Album(
                 name: $0["album"] as! String,
-                linkRequestLink: "file/link/\($0["id"] as! Int)"
+                linkRequestLink: "file/link/\($0["id"] as! Int)?artSize=SMALL" // This is a stupid place to put a link, Ayrton
             )
         }
     }
