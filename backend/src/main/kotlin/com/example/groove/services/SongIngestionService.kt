@@ -244,7 +244,7 @@ class SongIngestionService(
 		val songName = if (track.name.isBlank()) "Unknown" else track.name
 		val newName = "$songArtist - $songName${audioFormat.extension}".withoutReservedFileSystemCharacters()
 
-		val artworkFile = fileStorageService.loadAlbumArt(trackId)
+		val artworkFile = fileStorageService.loadAlbumArt(trackId, ArtSize.LARGE)
 
 		logger.info("Creating temporary track with name $newName")
 		val renamedFile = File("${songFile.parent}/$newName")

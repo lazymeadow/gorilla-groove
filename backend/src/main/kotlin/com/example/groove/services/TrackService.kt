@@ -151,7 +151,7 @@ class TrackService(
 				track.artUpdatedAt = track.updatedAt
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
-				val art = fileStorageService.loadAlbumArt(trackId)
+				val art = fileStorageService.loadAlbumArt(trackId, ArtSize.LARGE)
 				if (art == null) {
 					logger.info("$trackId does not have album art to crop!")
 				} else {

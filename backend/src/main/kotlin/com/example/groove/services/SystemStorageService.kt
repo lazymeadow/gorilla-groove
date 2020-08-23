@@ -62,9 +62,9 @@ class SystemStorageService(
 		albumArt.copyTo(destinationFile, true)
 	}
 
-	override fun loadAlbumArt(trackId: Long): File? {
+	override fun loadAlbumArt(trackId: Long, artSize: ArtSize): File? {
 		val parentDirectoryName = trackId / 1000 // Only put 1000 album art in a single directory for speed
-		val sourceFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId.png")
+		val sourceFile = File("${fileStorageProperties.albumArtDirectoryLocation}$parentDirectoryName/$trackId${artSize.systemFileExtension}")
 
 		if (!sourceFile.exists()) {
 			return null

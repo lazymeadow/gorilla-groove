@@ -69,8 +69,8 @@ class S3StorageService(
 		s3Client.putObject(bucketName, "${artSize.s3Directory}/$trackId.png", albumArt)
 	}
 
-	override fun loadAlbumArt(trackId: Long): File? {
-		val path = "art/$trackId.png"
+	override fun loadAlbumArt(trackId: Long, artSize: ArtSize): File? {
+		val path = "${artSize.s3Directory}/$trackId.png"
 
 		val exists = s3Client.doesObjectExist(bucketName, path)
 		if (!exists) {

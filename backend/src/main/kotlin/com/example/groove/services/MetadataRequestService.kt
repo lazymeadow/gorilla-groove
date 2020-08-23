@@ -69,7 +69,7 @@ class MetadataRequestService(
 		}
 
 		if (overrideType == MetadataOverrideType.IF_EMPTY) {
-			fileStorageService.loadAlbumArt(track.id)?.run {
+			fileStorageService.loadAlbumArt(track.id, ArtSize.LARGE)?.run {
 				logger.info("Updating album art conditionally and existing album art was found for track ID ${track.id}. " +
 						"Skipping album art save")
 				return
