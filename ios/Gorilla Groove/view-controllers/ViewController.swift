@@ -32,7 +32,7 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        getApiVersion()
+        self.apiVersion.text = AppDelegate.getAppVersion()
     }
     
     private func presentLoggedInView() {
@@ -94,18 +94,6 @@ class ViewController: UIViewController {
             }
         }
         dataTask.resume()
-    }
-    
-    func getApiVersion() {
-        print("Getting version")
-        let session = URLSession(configuration: .default, delegate: nil, delegateQueue: .main)
-        let url = URL(string: "https://gorillagroove.net/api/version")!
-        let task = session.dataTask(with: url, completionHandler: { (data: Data?, response: URLResponse?, error: Error?) -> Void in
-            let decodedData = try! JSONDecoder().decode(VersionResponse.self, from: data!)
-            self.apiVersion.text = decodedData.version
-            print("Version retrieved: " + decodedData.version)
-        })
-        task.resume()
     }
     
     func showAlert(_ message: String) {

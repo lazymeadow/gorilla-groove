@@ -26,7 +26,11 @@ class UserState {
     }
     
     static func postCurrentDevice() {
-        let requestBody = PostSessionRequest(deviceId: FileState.read(DeviceState.self)!.deviceId)
+        let requestBody = PostSessionRequest(
+            deviceId: FileState.read(DeviceState.self)!.deviceId,
+            version: AppDelegate.getAppVersion()
+        )
+        
         HttpRequester.put("device", EmptyResponse.self, requestBody) { _, responseCode, _ in
             if (responseCode < 200 || responseCode >= 300) {
                 print("Failed to inform the server of our current device!")
@@ -39,6 +43,6 @@ class UserState {
     struct PostSessionRequest: Codable {
         let deviceId: String
         let deviceType: String = "IPHONE"
-        let version: String = "0.1"
+        let version: String
     }
 }
