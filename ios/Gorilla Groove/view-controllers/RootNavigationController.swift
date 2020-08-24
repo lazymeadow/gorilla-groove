@@ -54,7 +54,8 @@ class RootNavigationController : UIViewController {
         topView.view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             stackView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
-            stackView.heightAnchor.constraint(equalTo: self.view.heightAnchor),
+            stackView.topAnchor.constraint(equalTo: self.view.topAnchor),
+            stackView.bottomAnchor.constraint(equalToSystemSpacingBelow: self.view.safeAreaLayoutGuide.bottomAnchor, multiplier: 1.0)
         ])
     }
     
@@ -86,7 +87,7 @@ class RootNavigationController : UIViewController {
         NSLayoutConstraint.activate([
             stackView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 8),
             stackView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -8),
-            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
+            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15),
             view.heightAnchor.constraint(equalToConstant: 70)
         ])
         
