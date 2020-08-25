@@ -2,7 +2,7 @@ import UIKit
 import Foundation
 import AVKit
 
-class SongViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     var tracks: Array<Track> = []
     var visibleTracks: Array<Track> = []
@@ -25,7 +25,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         
         contactsTableView.dataSource = self
         contactsTableView.delegate = self
-        contactsTableView.register(SongViewCell.self, forCellReuseIdentifier: "songCell")
+        contactsTableView.register(TrackViewCell.self, forCellReuseIdentifier: "songCell")
         
         // Remove extra table rows when we don't have a full screen of songs
         contactsTableView.tableFooterView = UIView(frame: .zero)
@@ -43,7 +43,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         NowPlayingTracks.addTrackChangeObserver { _ in
             DispatchQueue.main.async {
                 contactsTableView.visibleCells.forEach { cell in
-                    let songViewCell = cell as! SongViewCell
+                    let songViewCell = cell as! TrackViewCell
                     songViewCell.checkIfPlaying()
                 }
             }
@@ -61,7 +61,7 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "songCell", for: indexPath) as! SongViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "songCell", for: indexPath) as! TrackViewCell
         let track = visibleTracks[indexPath.row]
         
         cell.tableIndex = indexPath.row
@@ -69,17 +69,20 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
         cell.addGestureRecognizer(tapGesture)
-        	
+        
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(bringUpSongContextMenu(sender:)))
+        cell.addGestureRecognizer(longPressGesture)
+            
         return cell
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        let songViewCell = cell as! SongViewCell
+        let songViewCell = cell as! TrackViewCell
         songViewCell.checkIfPlaying()
     }
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
-        let cell = sender.view as! SongViewCell
+        let cell = sender.view as! TrackViewCell
         
         cell.animateSelectionColor()
         NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: cell.tableIndex)
@@ -87,6 +90,17 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
         if let search = self.navigationItem.searchController {
             search.searchBar.delegate!.searchBarTextDidEndEditing!(search.searchBar)
         }
+    }
+    
+    @objc private func bringUpSongContextMenu(sender: UITapGestureRecognizer) {
+        let cell = sender.view as! TrackViewCell
+        let track = visibleTracks[cell.tableIndex]
+
+        let alert = TrackContextMenu.createMenuForTrack(track)
+        
+        self.present(alert, animated: true, completion: {
+            print("completion block")
+        })
     }
     
     init(_ title: String, _ tracks: Array<Track>, scrollPlayedTrackIntoView: Bool = false) {
@@ -108,4 +122,9 @@ class SongViewController: UIViewController, UITableViewDataSource, UITableViewDe
 struct TrackLinkResponse: Codable {
     let songLink: String
     let albumArtLink: String
+}
+
+struct SetPrivateRequest: Codable {
+    let trackIds: Array<Int>
+    let isPrivate: Bool
 }

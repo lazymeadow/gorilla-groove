@@ -112,4 +112,10 @@ extension Encodable {
     }
 }
 
+extension Int {
+    func isSuccessful() -> Bool {
+        return self >= 200 && self < 300
+    }
+}
+
 struct EmptyResponse: Codable { }

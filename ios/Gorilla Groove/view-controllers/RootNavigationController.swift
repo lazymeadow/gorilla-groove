@@ -6,8 +6,8 @@ class RootNavigationController : UIViewController {
     let libraryController = MyLibraryController()
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
-    func getNowPlayingSongController() -> SongViewController {
-        return SongViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
+    func getNowPlayingSongController() -> TrackViewController {
+        return TrackViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
     }
     
     lazy var topView = UINavigationController()
@@ -65,7 +65,7 @@ class RootNavigationController : UIViewController {
 
             // No need to do this in a blocking way. It shouldn't be syncing all that much stuff.
             // If we block, there is a second delay or so before we can start using the app no matter what.
-            ServerSynchronizer().syncWithServer()
+            ServerSynchronizer.syncWithServer()
         }
     }
     

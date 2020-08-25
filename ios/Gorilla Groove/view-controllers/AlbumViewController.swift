@@ -68,7 +68,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         let tracks = TrackService.getTracks(album: albumToLoad, artist: artist)
         
-        let view = SongViewController(viewName, tracks)
+        let view = TrackViewController(viewName, tracks)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

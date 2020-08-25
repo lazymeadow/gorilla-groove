@@ -100,7 +100,7 @@ class MyLibraryController: UITableViewController {
     ) {
         let tracks = TrackService.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
 
-        let view = SongViewController(viewTitle, tracks)
+        let view = TrackViewController(viewTitle, tracks)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

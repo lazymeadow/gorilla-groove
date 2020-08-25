@@ -4,9 +4,9 @@ import CoreData
 class ServerSynchronizer {
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
-    let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
+    static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
     
-    func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
+    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
         print("Initiating sync with server...")
         
         let lastSync = UserState.getOwnUser().lastSync
@@ -47,7 +47,7 @@ class ServerSynchronizer {
     
     // -- TRACKS
     
-    private func saveTracks(
+    static private func saveTracks(
         _ minimum: Int,
         _ maximum: Int,
         _ ownId: Int,
@@ -68,7 +68,7 @@ class ServerSynchronizer {
         allDoneSemaphore.signal()
     }
     
-    private func savePageOfTrackChanges(url: String, page: Int, userId: Int) -> Int {
+    static private func savePageOfTrackChanges(url: String, page: Int, userId: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(
@@ -134,7 +134,7 @@ class ServerSynchronizer {
 
     // -- PLAYLISTS
     
-    private func savePlaylists(
+    static private func savePlaylists(
         _ minimum: Int,
         _ maximum: Int,
         _ ownId: Int
@@ -151,7 +151,7 @@ class ServerSynchronizer {
         print("Finished syncing playlists")
     }
     
-    private func savePageOfPlaylistChanges(url: String, page: Int, userId: Int) -> Int {
+    static private func savePageOfPlaylistChanges(url: String, page: Int, userId: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(
@@ -191,7 +191,7 @@ class ServerSynchronizer {
     
     // -- PLAYLIST TRACKS
     
-    private func savePlaylistTracks(
+    static private func savePlaylistTracks(
         _ minimum: Int,
         _ maximum: Int,
         _ ownId: Int,
@@ -212,7 +212,7 @@ class ServerSynchronizer {
         allDoneSemaphore.signal()
     }
     
-    private func savePageOfPlaylistTrackChanges(_ url: String, _ page: Int) -> Int {
+    static private func savePageOfPlaylistTrackChanges(_ url: String, _ page: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(
@@ -252,7 +252,7 @@ class ServerSynchronizer {
     
     // -- USERS
      
-     private func saveUsers(
+     static private func saveUsers(
          _ minimum: Int,
          _ maximum: Int,
          _ ownId: Int,
@@ -273,7 +273,7 @@ class ServerSynchronizer {
          allDoneSemaphore.signal()
      }
      
-     private func savePageOfUserChanges(_ url: String, _ page: Int) -> Int {
+     static private func savePageOfUserChanges(_ url: String, _ page: Int) -> Int {
          let semaphore = DispatchSemaphore(value: 0)
          var pagesToFetch = -1
          HttpRequester.get(

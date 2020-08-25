@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Track : Entity {
+public class Track : Entity {
     public var id: Int
     public var album: String
     public var artist: String
@@ -19,6 +19,46 @@ public struct Track : Entity {
     public var userId: Int
     public var songCachedAt: Date?
     public var artCachedAt: Date?
+    
+    public init(
+        id: Int,
+        album: String,
+        artist: String,
+        createdAt: Date,
+        featuring: String?,
+        genre: String?,
+        isHidden: Bool,
+        isPrivate: Bool,
+        lastPlayed: Date?,
+        length: Int,
+        name: String,
+        note: String?,
+        playCount: Int,
+        releaseYear: Int?,
+        trackNumber: Int?,
+        userId: Int,
+        songCachedAt: Date?,
+        artCachedAt: Date?
+    ) {
+        self.id = id
+        self.album = album
+        self.artist = artist
+        self.createdAt = createdAt
+        self.featuring = featuring
+        self.genre = genre
+        self.isHidden = isHidden
+        self.isPrivate = isPrivate
+        self.lastPlayed = lastPlayed
+        self.length = length
+        self.name = name
+        self.note = note
+        self.playCount = playCount
+        self.releaseYear = releaseYear
+        self.trackNumber = trackNumber
+        self.userId = userId
+        self.songCachedAt = songCachedAt
+        self.artCachedAt = artCachedAt
+    }
     
     public static func fromDict(_ dict: [String : Any?]) -> Track {
         return Track(

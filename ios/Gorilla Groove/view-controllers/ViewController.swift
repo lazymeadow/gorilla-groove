@@ -78,7 +78,7 @@ class ViewController: UIViewController {
                     ? "The login credentials are incorrect!"
                     : "Unable to contact Gorilla Groove. Try again in a minute."
                 DispatchQueue.main.async {
-                    self.showAlert(message)
+                    ViewUtil.showAlert(title: "Failed Login", message: message)
                     self.loginSpinner.isHidden = true
                 }
                 return
@@ -95,16 +95,4 @@ class ViewController: UIViewController {
         }
         dataTask.resume()
     }
-    
-    func showAlert(_ message: String) {
-        let alertController = UIAlertController(
-            title: "Failed Login",
-            message: message,
-            preferredStyle: .alert
-        )
-        alertController.addAction(UIAlertAction(title: "Dismiss", style: .default))
-        
-        self.present(alertController, animated: true, completion: nil)
-    }
-    
 }

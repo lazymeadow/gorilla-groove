@@ -1,7 +1,7 @@
 import UIKit
 import Foundation
 
-class SongViewCell: UITableViewCell {
+class TrackViewCell: UITableViewCell {
 
     var track: Track? {
         didSet {
