@@ -223,7 +223,7 @@ class CacheService {
             print("Deleting cached \(itemDescription) for track ID: \(trackId)")
             try! FileManager.default.removeItem(at: path)
         } else {
-            print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found!")
+            print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found")
         }
     }
 }

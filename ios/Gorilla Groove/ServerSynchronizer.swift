@@ -86,7 +86,7 @@ class ServerSynchronizer {
             for newTrackResponse in entityResponse!.content.new {
                 TrackDao.save(newTrackResponse.asTrack(userId: userId))
 
-                print("Adding new track with ID: \(newTrackResponse.id)")
+                print("Added new track with ID: \(newTrackResponse.id)")
             }
             
             for modifiedTrackResponse in entityResponse!.content.modified {
@@ -114,13 +114,14 @@ class ServerSynchronizer {
                 let updatedTrack = modifiedTrackResponse.asTrack(userId: userId, songCachedAt: newSongCachedAt, artCachedAt: newArtCachedAt)
                 TrackDao.save(updatedTrack)
                 
-                print("Updating existing track with ID: \(modifiedTrackResponse.id)")
+                print("Updated existing track with ID: \(modifiedTrackResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
                 TrackDao.delete(deletedId)
+                CacheService.deleteCachedSong(deletedId)
                 
-                print("Deleting track with ID: \(deletedId)")
+                print("Deleted track with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages

@@ -7,30 +7,30 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     var tracks: Array<Track> = []
     var visibleTracks: Array<Track> = []
     let scrollPlayedTrackIntoView: Bool
+    let showingHidden: Bool
+    let tableView = UITableView()
        
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let contactsTableView = UITableView()
-
-        view.addSubview(contactsTableView)
+        view.addSubview(tableView)
         
-        contactsTableView.translatesAutoresizingMaskIntoConstraints = false
-        contactsTableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
-        contactsTableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
-        contactsTableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
-        contactsTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
+        tableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
+        tableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
         
-        contactsTableView.keyboardDismissMode = .onDrag
+        tableView.keyboardDismissMode = .onDrag
         
-        contactsTableView.dataSource = self
-        contactsTableView.delegate = self
-        contactsTableView.register(TrackViewCell.self, forCellReuseIdentifier: "songCell")
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(TrackViewCell.self, forCellReuseIdentifier: "songCell")
         
         // Remove extra table rows when we don't have a full screen of songs
-        contactsTableView.tableFooterView = UIView(frame: .zero)
+        tableView.tableFooterView = UIView(frame: .zero)
         
-        TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: contactsTableView) { input in
+        TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: tableView) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
                 self.visibleTracks = self.tracks
@@ -42,7 +42,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         // viewDidLoad only seems to be called once. But I am wary of more than one of these being registered
         NowPlayingTracks.addTrackChangeObserver { _ in
             DispatchQueue.main.async {
-                contactsTableView.visibleCells.forEach { cell in
+                self.tableView.visibleCells.forEach { cell in
                     let songViewCell = cell as! TrackViewCell
                     songViewCell.checkIfPlaying()
                 }
@@ -51,7 +51,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         if scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
             let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
-            contactsTableView.scrollToRow(at: indexPath, at: .top, animated: false)
+            tableView.scrollToRow(at: indexPath, at: .top, animated: false)
         }
     }
  
@@ -93,20 +93,32 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     @objc private func bringUpSongContextMenu(sender: UITapGestureRecognizer) {
+        if sender.state != .began {
+            return
+        }
+        
         let cell = sender.view as! TrackViewCell
         let track = visibleTracks[cell.tableIndex]
 
-        let alert = TrackContextMenu.createMenuForTrack(track)
+        let alert = TrackContextMenu.createMenuForTrack(track) { newTrack in
+            print(track.isPrivate)
+            if newTrack == nil || (!self.showingHidden && newTrack!.isHidden) {
+                print("Hiding track")
+                self.visibleTracks.remove(at: cell.tableIndex)
+                DispatchQueue.main.async {
+                    self.tableView.deleteRows(at: [IndexPath(row: cell.tableIndex, section: 0)], with: .automatic)
+                }
+            }
+        }
         
-        self.present(alert, animated: true, completion: {
-            print("completion block")
-        })
+        ViewUtil.showAlert(alert)
     }
     
-    init(_ title: String, _ tracks: Array<Track>, scrollPlayedTrackIntoView: Bool = false) {
+    init(_ title: String, _ tracks: Array<Track>, scrollPlayedTrackIntoView: Bool = false, showingHidden: Bool = false) {
         self.tracks = tracks
         self.visibleTracks = tracks
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
+        self.showingHidden = showingHidden
         
         super.init(nibName: nil, bundle: nil)
 
@@ -115,6 +127,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     required init?(coder aDecoder: NSCoder) {
         self.scrollPlayedTrackIntoView = false
+        self.showingHidden = false
         super.init(coder: aDecoder)
     }
 }
@@ -122,9 +135,4 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
 struct TrackLinkResponse: Codable {
     let songLink: String
     let albumArtLink: String
-}
-
-struct SetPrivateRequest: Codable {
-    let trackIds: Array<Int>
-    let isPrivate: Bool
 }
