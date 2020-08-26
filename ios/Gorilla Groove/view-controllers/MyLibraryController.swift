@@ -49,6 +49,8 @@ class MyLibraryController: UITableViewController {
 //        vc.modalPresentationStyle = .fullScreen
 //        vc.modalTransitionStyle = .crossDissolve
 //        self.present(vc, animated: true)
+        
+        Database.close()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

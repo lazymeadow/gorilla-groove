@@ -17,12 +17,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (FileState.read(DeviceState.self) == nil) {
             FileState.save(DeviceState(deviceId: UUID().uuidString.lowercased()))
         }
-        
-        let token = FileState.read(LoginState.self)?.token
-        Database.openDatabase()
 
-        if (token != nil) {
-            print("User logged was previously logged in")
+        if let loginState = FileState.read(LoginState.self) {
+            print("User was previously logged in")
+            Database.openDatabase(userId: loginState.id)
             
             // Keeping this around as an example of how to re-initiate a sync when a re-sync is needed for a migration
 //            if (!CoreDataManager().restoredCleanly) {

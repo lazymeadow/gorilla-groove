@@ -9,14 +9,13 @@ class ServerSynchronizer {
     static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
         print("Initiating sync with server...")
         
-        let lastSync = UserState.getOwnUser().lastSync
-        
-        // API uses millis. Multiply by 1000
+        let ownUser = UserState.getOwnUser()
+        let lastSync = ownUser.lastSync
+        let ownId = ownUser.id
+
         let minimum = lastSync?.toEpochTime() ?? 0
         let newDate = Date()
         let maximum = newDate.toEpochTime()
-        
-        let ownId = FileState.read(LoginState.self)!.id
         
         // TODO can I have 1 semaphore start at -2 and just use it for all?
         let semaphores = [DispatchSemaphore(value: 0), DispatchSemaphore(value: 0), DispatchSemaphore(value: 0)]

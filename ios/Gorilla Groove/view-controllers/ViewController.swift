@@ -35,7 +35,9 @@ class ViewController: UIViewController {
         self.apiVersion.text = AppDelegate.getAppVersion()
     }
     
-    private func presentLoggedInView() {
+    private func presentLoggedInView(_ userId: Int) {
+        Database.openDatabase(userId: userId)
+
         // If this is the first time this user has logged in, we want to sync in their library
         let user = UserState.getOwnUser()
         let newView: UIViewController = {
@@ -90,7 +92,7 @@ class ViewController: UIViewController {
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
                 
-                self.presentLoggedInView()
+                self.presentLoggedInView(decodedData.id)
             }
         }
         dataTask.resume()

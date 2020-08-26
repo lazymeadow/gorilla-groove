@@ -4,19 +4,24 @@ import SQLite3
 class Database {
     static var db: OpaquePointer?
     
-    static func getDbPath() -> URL {
-        let fileManager = FileManager.default
-        let dbName = "Groove.sqlite"
+    private static func getDbPath(_ userId: Int) -> URL {
+        let dbName = "Groove-\(userId).sqlite"
         
-        let documentsDirectoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        
-        let persistentStoreURL = documentsDirectoryURL.appendingPathComponent(dbName)
-        
-        return persistentStoreURL
+        let basePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let oldDbPath = basePath.appendingPathComponent("Groove.sqlite")
+        let newDbPath = basePath.appendingPathComponent(dbName)
+
+        // Upgrading from 1.2.1 hits this path
+        if FileManager.exists(oldDbPath) && !FileManager.exists(newDbPath) {
+            print("Found old DB but did not find new DB. Migrating this user to the new DB structure")
+            FileManager.move(oldDbPath, newDbPath)
+        }
+
+        return newDbPath
     }
     
-    static func openDatabase() {
-        let path = getDbPath().path
+    static func openDatabase(userId: Int) {
+        let path = getDbPath(userId).path
         
         let openResult = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_CREATE, nil)
         if openResult == SQLITE_OK {
@@ -26,6 +31,10 @@ class Database {
         } else {
             print("Unable to open database. Got result code \(openResult)")
         }
+    }
+    
+    static func close() {
+        sqlite3_close(db)
     }
     
     // Getting the last insert ID isn't thread safe in this function. Unsure if it matters

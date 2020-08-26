@@ -219,11 +219,21 @@ class CacheService {
     }
     
     private static func deleteAtPath(_ path: URL, _ trackId: Int, _ itemDescription: String) {
-        if FileManager.default.fileExists(atPath: path.absoluteString) {
+        if FileManager.exists(path) {
             print("Deleting cached \(itemDescription) for track ID: \(trackId)")
             try! FileManager.default.removeItem(at: path)
         } else {
             print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found")
         }
+    }
+}
+
+extension FileManager {
+    static func exists(_ path: URL) -> Bool {
+        return FileManager.default.fileExists(atPath: path.path)
+    }
+    
+    static func move(_ oldPath: URL, _ newPath: URL) {
+        try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
     }
 }
