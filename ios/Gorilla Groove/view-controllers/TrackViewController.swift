@@ -98,15 +98,16 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
         
         let cell = sender.view as! TrackViewCell
-        let track = visibleTracks[cell.tableIndex]
+        let tableIndex = tableView.indexPath(for: cell)!
+        let track = visibleTracks[tableIndex.row]
 
         let alert = TrackContextMenu.createMenuForTrack(track) { newTrack in
             print(track.isPrivate)
             if newTrack == nil || (!self.showingHidden && newTrack!.isHidden) {
                 print("Hiding track")
-                self.visibleTracks.remove(at: cell.tableIndex)
+                self.visibleTracks.remove(at: tableIndex.row)
                 DispatchQueue.main.async {
-                    self.tableView.deleteRows(at: [IndexPath(row: cell.tableIndex, section: 0)], with: .automatic)
+                    self.tableView.deleteRows(at: [tableIndex], with: .automatic)
                 }
             }
         }

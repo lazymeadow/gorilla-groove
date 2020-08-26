@@ -8,16 +8,7 @@ class Database {
         let dbName = "Groove-\(userId).sqlite"
         
         let basePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let oldDbPath = basePath.appendingPathComponent("Groove.sqlite")
-        let newDbPath = basePath.appendingPathComponent(dbName)
-
-        // Upgrading from 1.2.1 hits this path
-        if FileManager.exists(oldDbPath) && !FileManager.exists(newDbPath) {
-            print("Found old DB but did not find new DB. Migrating this user to the new DB structure")
-            FileManager.move(oldDbPath, newDbPath)
-        }
-
-        return newDbPath
+        return basePath.appendingPathComponent(dbName)
     }
     
     static func openDatabase(userId: Int) {
@@ -144,7 +135,7 @@ class Database {
         CREATE TABLE "track" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "user_id"    INTEGER NOT NULL,
-            "name"    TEXT NOT NULL UNIQUE,
+            "name"    TEXT NOT NULL,
             "artist"    TEXT NOT NULL,
             "featuring"    TEXT NOT NULL,
             "album"    TEXT NOT NULL,
