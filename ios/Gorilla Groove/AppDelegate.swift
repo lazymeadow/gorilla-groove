@@ -22,19 +22,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print("User was previously logged in")
             Database.openDatabase(userId: loginState.id)
             
-            // Keeping this around as an example of how to re-initiate a sync when a re-sync is needed for a migration
-//            if (!CoreDataManager().restoredCleanly) {
-//                print("User was logged in but Core Data was not initiated cleanly. Initiating sync to repair")
-//                window!.rootViewController = SyncController()
-//
-//                return true
-//            }
-            
             let user = UserState.getOwnUser()
             if (user.lastSync == nil) {
-                print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
-                // TODO remove this when done devving this screen
-//                window!.rootViewController = SyncController()
+                if AppDelegate.getAppVersion() == "1.3.0.1" {
+                    print("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
+                    window!.rootViewController = SyncController()
+                } else {
+                    print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
+                }
             } else {
                 window!.rootViewController = RootNavigationController()
             }
