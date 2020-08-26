@@ -5,6 +5,7 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.FileUtils
 import com.example.groove.util.logger
 import com.example.groove.util.withNewExtension
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -14,12 +15,13 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 @Service
-@ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
+@ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "true")
 class SystemStorageService(
 		private val fileStorageProperties: FileStorageProperties,
 		trackRepository: TrackRepository,
-		trackLinkRepository: TrackLinkRepository
-) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
+		trackLinkRepository: TrackLinkRepository,
+		fileUtils: FileUtils
+) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties, fileUtils) {
 
 	override fun loadSong(track: Track, audioFormat: AudioFormat): File {
 		val fileName = when (audioFormat) {

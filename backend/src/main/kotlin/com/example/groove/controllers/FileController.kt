@@ -5,6 +5,7 @@ import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.ArtSize
 import com.example.groove.services.FileStorageService
+import com.example.groove.services.S3StorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
@@ -113,6 +114,7 @@ class FileController(
 		)
 	}
 
+
 	@GetMapping("/track-link/{trackId}")
 	fun getLinksForTrackAnonymous(@PathVariable trackId: Long): TrackLinks {
 		logger.info("Anonymous track links were requested for Track ID: $trackId")
@@ -133,4 +135,17 @@ class FileController(
 			val albumArtLink: String?,
 			val usingS3: Boolean
 	)
+}
+
+
+@RestController
+@RequestMapping("api/test")
+class TestController(
+		private val s3StorageService: S3StorageService
+) {
+
+	@GetMapping("/test")
+	fun test() {
+		s3StorageService.temporaryMigrationOfAlbumArt()
+	}
 }

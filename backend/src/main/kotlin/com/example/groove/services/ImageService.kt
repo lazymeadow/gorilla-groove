@@ -13,7 +13,6 @@ import kotlin.math.min
 
 @Service
 class ImageService(
-		private val fileStorageService: FileStorageService,
 		private val fileUtils: FileUtils
 ) {
 
@@ -74,7 +73,7 @@ class ImageService(
 				return null
 			}
 
-			val imageFile = fileStorageService.generateTmpFilePath().toFile()
+			val imageFile = fileUtils.createTemporaryFile()
 
 			// Might not be a PNG but...... it probably doesn't matter??
 			ImageIO.write(image, "png", imageFile)
@@ -91,6 +90,11 @@ class ImageService(
 			ImageIO.read(imageFile)
 		} catch (e: Exception) {
 			logger.error("Failed to read in album art for conversion!", e)
+			return null
+		}
+
+		if (image == null) {
+			println("------ Image was hella null! ------")
 			return null
 		}
 

@@ -7,6 +7,7 @@ import com.example.groove.db.model.TrackLink
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.FileUtils
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import org.springframework.transaction.annotation.Propagation
@@ -21,7 +22,8 @@ import java.util.*
 abstract class FileStorageService(
 		private val trackRepository: TrackRepository,
 		private val trackLinkRepository: TrackLinkRepository,
-		private val fileStorageProperties: FileStorageProperties
+		private val fileStorageProperties: FileStorageProperties,
+		private val fileUtils: FileUtils
 ) {
 	abstract fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat)
 	abstract fun loadSong(track: Track, audioFormat: AudioFormat): File

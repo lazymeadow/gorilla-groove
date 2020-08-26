@@ -5,12 +5,14 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.iterable.S3Objects
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.FileUtils
 import com.example.groove.util.logger
 import com.example.groove.util.withNewExtension
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -20,13 +22,15 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 @Service
-@ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "true")
+@ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
 class S3StorageService(
 		s3Properties: S3Properties,
 		trackRepository: TrackRepository,
 		trackLinkRepository: TrackLinkRepository,
-		fileStorageProperties: FileStorageProperties
-) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
+		fileStorageProperties: FileStorageProperties,
+		private val imageService: ImageService,
+		private val fileUtils: FileUtils
+) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties, fileUtils) {
 
 	private val s3Client: AmazonS3
 
@@ -40,6 +44,38 @@ class S3StorageService(
 				.withRegion(Regions.US_WEST_2)
 				.withCredentials(AWSStaticCredentialsProvider(awsCredentials))
 				.build()
+	}
+
+	fun temporaryMigrationOfAlbumArt() {
+		var backToNormal = false
+		S3Objects.withPrefix(s3Client, bucketName, "art/").forEach { objectSummary ->
+			// This happens once, because the directory containing the objects is returned from the query...
+			if (objectSummary.key == "art/") {
+				return@forEach
+			}
+			val trackId = objectSummary.key.split("/").last().split(".").first().toInt()
+			if (trackId == 7211) {
+				println("Back to normal")
+				backToNormal = true
+			}
+
+			if (!backToNormal) {
+				return@forEach
+			}
+
+			val largeArtStream = s3Client.getObject(bucketName, objectSummary.key).objectContent
+
+			println("Processing track ID $trackId")
+
+			val largeArt = fileUtils.createTemporaryFile(".png")
+			Files.copy(largeArtStream, largeArt.toPath(), StandardCopyOption.REPLACE_EXISTING)
+
+			val convertedLargeArt = imageService.convertToStandardArtFile(largeArt, ArtSize.LARGE, false) ?: return@forEach
+			val convertedSmallArt = imageService.convertToStandardArtFile(largeArt, ArtSize.SMALL, false) ?: return@forEach
+
+			storeAlbumArt(convertedLargeArt, trackId.toLong(), ArtSize.LARGE)
+			storeAlbumArt(convertedSmallArt, trackId.toLong(), ArtSize.SMALL)
+		}
 	}
 
 	override fun storeSong(song: File, trackId: Long, audioFormat: AudioFormat) {
