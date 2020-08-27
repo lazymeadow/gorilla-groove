@@ -92,6 +92,9 @@ class ImageService(
 		} catch (e: Exception) {
 			logger.error("Failed to read in album art for conversion!", e)
 			return null
+		} ?: run {
+			logger.warn("Album art was null when converting!")
+			return null
 		}
 
 		val resizedImage = resizeImage(image, size)
