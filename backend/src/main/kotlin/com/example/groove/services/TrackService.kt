@@ -115,7 +115,7 @@ class TrackService(
 		track.lastPlayed = now()
 		track.updatedAt = now()
 
-		val savedDevice = deviceRepository.findByDeviceIdAndUser(deviceId, user)
+		val savedDevice = deviceRepository.findByDeviceIdAndUser(deviceId, user.id)
 				?: throw IllegalArgumentException("No device found with ID $deviceId for user ${user.name} when saving track history!")
 
 		// Device we used might have been merged into another device. If it was, use the parent device

@@ -3,10 +3,11 @@ import {isLoggedIn} from "../util";
 import {Api} from "../api";
 import {getDeviceIdentifier} from "./version";
 import {RemotePlayType} from "../components/remote-play/modal/remote-play-type";
+import {getCookieValue} from "../cookie";
 
 export const SocketContext = React.createContext();
 
-let lastEventId = -1;
+let socket = null;
 
 export class SocketProvider extends React.Component {
 	constructor(props) {
@@ -23,22 +24,6 @@ export class SocketProvider extends React.Component {
 
 	componentDidMount() {
 		window.addEventListener('beforeunload', this.disconnectSocket.bind(this));
-	}
-
-	fetchLatestData() {
-		Api.get(`event/device-id/${getDeviceIdentifier()}`, { lastEventId }).then(result => {
-			lastEventId = result.lastEventId;
-
-			if (result.eventType === EventType.NOW_PLAYING) {
-				this.handleNowListeningMessage(result);
-			} else if (result.eventType === EventType.REMOTE_PLAY) {
-				this.handleRemotePlayMessage(result);
-			}
-
-			this.fetchLatestData();
-		}).catch(() => {
-			setTimeout(this.fetchLatestData.bind(this), 2000);
-		});
 	}
 
 	handleNowListeningMessage(message) {
@@ -90,9 +75,32 @@ export class SocketProvider extends React.Component {
 	connectToSocket() {
 		// Avoid sending a new connection on logout / login
 		// If our last update was not -1 then it means we're already looking for new data
-		if (!isLoggedIn() || lastEventId !== -1) {
+		if (!isLoggedIn()) {
 			return;
 		}
+
+		console.log('Opening socket');
+		const newSocket = new WebSocket(Api.getSocketUri());
+		newSocket.onmessage = res => {
+			const data = JSON.parse(res.data);
+			console.debug('Received socket data', data);
+
+			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
+			if (newNowListeningUsers[data.userId] === undefined) {
+				newNowListeningUsers[data.userId] = [];
+			}
+			newNowListeningUsers[data.userId][data.deviceId] = data;
+
+			this.setState({ nowListeningUsers: newNowListeningUsers })
+		};
+		newSocket.onclose = () => {
+			console.debug('WebSocket was closed. Reconnecting');
+			this.connectToSocket();
+		};
+		socket = newSocket;
+		this.setState({
+			nowListeningUsers: {}
+		});
 
 		this.fetchLatestData();
 	}
@@ -102,9 +110,15 @@ export class SocketProvider extends React.Component {
 	}
 
 	sendPlayEvent(data) {
+		if (!socket) {
+			console.debug("No socket defined. Not sending play event");
+			return;
+		}
+
 		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume',
 			'removeTrack', 'disconnected', 'muted'];
 		const payload = {
+			messageType: EventType.NOW_PLAYING,
 			deviceId: getDeviceIdentifier()
 		};
 
@@ -122,7 +136,16 @@ export class SocketProvider extends React.Component {
 			}
 		});
 
-		Api.post('event/NOW_PLAYING', payload);
+		console.log('socket data', data, payload);
+		const readyState = socket.readyState;
+		if (readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify(payload))
+		} else if (readyState === WebSocket.CONNECTING) {
+			console.info('Socket was still connecting. Ignoring socket send request');
+		} else {
+			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
+			this.connectToSocket();
+		}
 	}
 
 	sendRemotePlayEvent(eventType, targetDeviceId, optionalParams) {

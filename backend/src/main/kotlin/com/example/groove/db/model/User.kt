@@ -8,7 +8,7 @@ import java.sql.Timestamp
 import javax.persistence.*
 
 @Entity
-data class User(
+class User(
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		val id: Long = 0,

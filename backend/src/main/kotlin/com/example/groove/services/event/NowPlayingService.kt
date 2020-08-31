@@ -91,10 +91,10 @@ class NowPlayingService(
 	}
 
 	// Get a trimmed down version (that also includes an art link)
-	private fun Track.asListenTrack(): SongListenTrack? {
+	private fun Track.asListenTrack(): NowPlayingTrack? {
 		return when {
-			private -> SongListenTrack(isPrivate = true)
-			else -> SongListenTrack(
+			private -> NowPlayingTrack(isPrivate = true)
+			else -> NowPlayingTrack(
 					id = id,
 					name = name,
 					artist = artist,

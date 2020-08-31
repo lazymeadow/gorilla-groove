@@ -66,7 +66,7 @@ data class NowPlayingEventResponse(
 ) : EventResponse
 
 data class SongListenResponse(
-		val trackData: SongListenTrack?,
+		val trackData: NowPlayingTrack?,
 		val deviceName: String?,
 
 		// Damn Jackson stripping out the "is". No, I want it there
@@ -86,7 +86,7 @@ data class SongListenResponse(
 		val lastUpdate: Long // millis
 )
 
-data class SongListenTrack(
+data class NowPlayingTrack(
 		val id: Long? = null,
 
 		val name: String? = null,

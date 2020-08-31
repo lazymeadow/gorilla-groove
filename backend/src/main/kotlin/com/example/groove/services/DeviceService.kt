@@ -26,10 +26,12 @@ class DeviceService(
 		return deviceRepository.findByUser(user)
 	}
 
+	fun getDeviceById(deviceIdentifier: String) = getDeviceByIdAndUserId(deviceIdentifier, loadLoggedInUser().id)
+
 	@Transactional(readOnly = true)
-	fun getDeviceById(deviceIdentifier: String): Device {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, loadLoggedInUser())
-				?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier")
+	fun getDeviceByIdAndUserId(deviceIdentifier: String, userId: Long): Device {
+		val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, userId)
+				?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier and user ID: $userId")
 		return device.mergedDevice ?: device
 	}
 
@@ -69,7 +71,7 @@ class DeviceService(
 			ipAddress: String?,
 			additionalData: String?
 	) {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user)
+		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user.id)
 				?: run {
 					logger.info("First time seeing device $deviceId for user ${user.name}")
 					Device(
