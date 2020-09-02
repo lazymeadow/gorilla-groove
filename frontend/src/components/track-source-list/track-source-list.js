@@ -90,7 +90,6 @@ export default function TrackSourceList(props) {
 		}
 
 		const listeningDevices = Object.values(devicesForUser);
-		console.log(listeningDevices);
 
 		const playingDevices = listeningDevices.filter(device => device.isPlaying && device.trackData);
 

@@ -5,8 +5,8 @@ import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.Device
 import com.example.groove.services.DeviceService
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
-import com.example.groove.util.unwrap
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.ConcurrentHashMap
@@ -68,7 +68,7 @@ class EventServiceCoordinator(
 	fun getActiveDevices(excludingDeviceId: String?): List<Device> {
 		// Load the user in this transaction so we can load its partyDevices.
 		// If we try to access the devices otherwise we'll get a LazyInitializationException
-		val user = userRepository.findById(loadLoggedInUser().id).unwrap()!!
+		val user = userRepository.get(loadLoggedInUser().id)!!
 
 		// Grab all of our own active devices (including our current one) and then add in all
 		// devices we have access to via Party Mode
@@ -77,7 +77,7 @@ class EventServiceCoordinator(
 		val ownDevices = if (connectedDevices.containsKey(user.id)) {
 			connectedDevices.getValue(user.id)
 					.filterNot { (deviceId, _) -> deviceId == currentDevice?.id }
-					.map { deviceRepository.findById(it.key).unwrap()!! }
+					.map { deviceRepository.get(it.key)!! }
 		} else {
 			emptyList()
 		}

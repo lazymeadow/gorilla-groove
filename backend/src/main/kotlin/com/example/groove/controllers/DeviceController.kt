@@ -1,5 +1,6 @@
 package com.example.groove.controllers
 
+import com.example.groove.config.WebSocketConfig
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.services.DeviceService
@@ -16,7 +17,7 @@ import javax.servlet.http.HttpServletRequest
 class DeviceController(
 		private val deviceService: DeviceService,
 		private val userService: UserService,
-		private val eventServiceCoordinator: EventServiceCoordinator
+		private val webSocketConfig: WebSocketConfig
 ) {
 
 	@GetMapping
@@ -36,7 +37,7 @@ class DeviceController(
 	fun getActiveDevices(
 			@RequestParam("excluding-device") excludingDeviceId: String?
 	): List<DeviceResponseDTO> {
-		return eventServiceCoordinator.getActiveDevices(excludingDeviceId)
+		return webSocketConfig.getActiveDevices(excludingDeviceId)
 				.map { it.toResponseDTO() }
 	}
 

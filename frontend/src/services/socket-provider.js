@@ -79,8 +79,10 @@ export class SocketProvider extends React.Component {
 			return;
 		}
 
-		console.log('Opening socket');
-		const newSocket = new WebSocket(Api.getSocketUri());
+		console.debug('Opening socket');
+		const uri = Api.getSocketUri() + '?deviceIdentifier=' + getDeviceIdentifier();
+		const newSocket = new WebSocket(uri);
+
 		newSocket.onmessage = res => {
 			const data = JSON.parse(res.data);
 			console.debug('Received socket data', data);
@@ -101,8 +103,6 @@ export class SocketProvider extends React.Component {
 		this.setState({
 			nowListeningUsers: {}
 		});
-
-		this.fetchLatestData();
 	}
 
 	disconnectSocket() {
@@ -136,12 +136,12 @@ export class SocketProvider extends React.Component {
 			}
 		});
 
-		console.log('socket data', data, payload);
+		console.debug('Socket data', data, payload);
 		const readyState = socket.readyState;
 		if (readyState === WebSocket.OPEN) {
 			socket.send(JSON.stringify(payload))
 		} else if (readyState === WebSocket.CONNECTING) {
-			console.info('Socket was still connecting. Ignoring socket send request');
+			console.debug('Socket was still connecting. Ignoring socket send request');
 		} else {
 			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
 			this.connectToSocket();
