@@ -122,9 +122,9 @@ export default function ReviewQueue() {
 					<div>{getDisplayName(reviewTrack)}</div>
 					<div className="small-text">{getSourceDescription()}</div>
 					<div className="review-buttons">
-						<i className="fa fa-thumbs-up" title="Add to your library" onClick={reviewUp}/>
-						<i className="fa fa-redo" title="Skip and go to the next" onClick={reviewSkip}/>
 						<i className="fa fa-thumbs-down" title="Delete from your review queue" onClick={reviewDown}/>
+						<i className="fa fa-redo" title="Skip and go to the next" onClick={reviewSkip}/>
+						<i className="fa fa-thumbs-up" title="Add to your library" onClick={reviewUp}/>
 					</div>
 					<div>
 						<button onClick={() => playSong()}>Start Reviewing</button>
