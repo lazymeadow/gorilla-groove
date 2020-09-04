@@ -3,7 +3,6 @@ import {isLoggedIn} from "../util";
 import {Api} from "../api";
 import {getDeviceIdentifier} from "./version";
 import {RemotePlayType} from "../components/remote-play/modal/remote-play-type";
-import {getCookieValue} from "../cookie";
 
 export const SocketContext = React.createContext();
 
@@ -26,8 +25,14 @@ export class SocketProvider extends React.Component {
 		window.addEventListener('beforeunload', this.disconnectSocket.bind(this));
 	}
 
-	handleNowListeningMessage(message) {
-		this.setState({ nowListeningUsers: message.currentlyListeningUsers });
+	handleNowListeningMessage(data) {
+			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
+			if (newNowListeningUsers[data.userId] === undefined) {
+				newNowListeningUsers[data.userId] = [];
+			}
+			newNowListeningUsers[data.userId][data.deviceId] = data;
+
+			this.setState({ nowListeningUsers: newNowListeningUsers })
 	}
 
 	handleRemotePlayMessage(message) {
@@ -87,13 +92,10 @@ export class SocketProvider extends React.Component {
 			const data = JSON.parse(res.data);
 			console.debug('Received socket data', data);
 
-			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
-			if (newNowListeningUsers[data.userId] === undefined) {
-				newNowListeningUsers[data.userId] = [];
+			switch (data.messageType) {
+				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
+				case EventType.REMOTE_PLAY: return this.handleRemotePlayMessage(data);
 			}
-			newNowListeningUsers[data.userId][data.deviceId] = data;
-
-			this.setState({ nowListeningUsers: newNowListeningUsers })
 		};
 		newSocket.onclose = () => {
 			console.debug('WebSocket was closed. Reconnecting');
@@ -136,22 +138,14 @@ export class SocketProvider extends React.Component {
 			}
 		});
 
-		console.debug('Socket data', data, payload);
-		const readyState = socket.readyState;
-		if (readyState === WebSocket.OPEN) {
-			socket.send(JSON.stringify(payload))
-		} else if (readyState === WebSocket.CONNECTING) {
-			console.debug('Socket was still connecting. Ignoring socket send request');
-		} else {
-			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
-			this.connectToSocket();
-		}
+		this.sendSocketData(payload);
 	}
 
 	sendRemotePlayEvent(eventType, targetDeviceId, optionalParams) {
 		const data = optionalParams || {};
 
 		const payload = {
+			messageType: EventType.REMOTE_PLAY,
 			remotePlayAction: eventType,
 			deviceId: getDeviceIdentifier(),
 			targetDeviceId
@@ -164,7 +158,20 @@ export class SocketProvider extends React.Component {
 			payload.newFloatValue = data.newFloatValue;
 		}
 
-		return Api.post('event/REMOTE_PLAY', payload);
+		this.sendSocketData(payload);
+	}
+
+	sendSocketData(payload) {
+		console.debug('Socket data', payload);
+		const readyState = socket.readyState;
+		if (readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify(payload))
+		} else if (readyState === WebSocket.CONNECTING) {
+			console.debug('Socket was still connecting. Ignoring socket send request');
+		} else {
+			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
+			this.connectToSocket();
+		}
 	}
 
 	render() {

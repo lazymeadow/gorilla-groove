@@ -72,9 +72,7 @@ class TrackService(
 	}
 
 	@Transactional(readOnly = true)
-	fun getTracksByIds(ids: Set<Long>): List<Track> {
-		val user = loadLoggedInUser()
-
+	fun getTracksByIds(ids: Set<Long>, user: User = loadLoggedInUser()): List<Track> {
 		val tracks = trackRepository.findAllById(ids).toList()
 
 		// Make sure we found a track for every ID that was requested

@@ -71,9 +71,12 @@ export default function RemotePlayManagement() {
 	};
 
 	const deviceIdToListeningState = {};
-	Object.values(socket.nowListeningUsers).flat().forEach(listeningData => {
-		deviceIdToListeningState[listeningData.deviceId] = listeningData;
-	});
+	Object.values(socket.nowListeningUsers)
+		.map(it => Object.values(it))
+		.flat()
+		.forEach(listeningData => {
+			deviceIdToListeningState[listeningData.deviceId] = listeningData;
+		});
 
 	const setPartyMode = isSet => {
 		let msUntilExpiration = null;

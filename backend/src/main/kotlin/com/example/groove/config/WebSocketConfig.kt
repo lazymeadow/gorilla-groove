@@ -5,11 +5,14 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
+import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.security.SecurityConfiguration
 import com.example.groove.services.ArtSize
 import com.example.groove.services.DeviceService
+import com.example.groove.services.TrackService
 import com.example.groove.services.event.EventType
 import com.example.groove.services.event.NowPlayingTrack
+import com.example.groove.services.event.RemotePlayType
 import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -39,7 +42,8 @@ class WebSocketConfig(
 		val userRepository: UserRepository,
 		val trackLinkRepository: TrackLinkRepository,
 		val trackRepository: TrackRepository,
-		val deviceService: DeviceService
+		val deviceService: DeviceService,
+		val trackService: TrackService
 ) : WebSocketConfigurer {
 
 	private val objectMapper = createMapper()
@@ -152,6 +156,7 @@ class WebSocketConfig(
 
 			when (clientMessage) {
 				is NowListeningRequest -> handleNowListeningData(session, clientMessage)
+				is RemotePlayRequest -> handleRemotePlayData(session, clientMessage)
 				else -> throw IllegalArgumentException("Incorrect message type!")
 			}
 		}
@@ -168,14 +173,64 @@ class WebSocketConfig(
 			otherSessions.values.forEach { it.sendIfOpen(objectMapper.writeValueAsString(broadcastMessage)) }
 		}
 
+		private fun handleRemotePlayData(session: WebSocketSession, remotePlayRequest: RemotePlayRequest) {
+			val user = userRepository.get(session.userId)!!
+			val targetDeviceId = remotePlayRequest.targetDeviceId
+
+			val targetDevice = deviceService.getDeviceById(targetDeviceId)
+
+			if (!targetDevice.canBePlayedBy(user.id)) {
+				throw PermissionDeniedException("Not authorized to access device")
+			}
+
+			val trackIdToTrack = trackService
+					.getTracksByIds(remotePlayRequest.trackIds?.toSet() ?: emptySet(), user)
+					// Don't allow playing your own private songs to someone who isn't you. It won't load for them anyway
+					.map { it.id to it }
+					.toMap()
+
+			require(trackIdToTrack.values.all { !it.private || targetDevice.user.id == user.id }) {
+				"Private tracks may not be played remotely to another user"
+			}
+
+			// A user could, theoretically, tell us to play a single track ID more than once.
+			// So load all the unique tracks belonging to the IDs from the DB, and then iterate
+			// over the IDs we are given so we preserve any duplicate IDs
+			val tracksToPlay = remotePlayRequest.trackIds?.map { trackIdToTrack.getValue(it) }
+
+			val remotePlayResponse = RemotePlayResponse(
+					tracks = tracksToPlay,
+					newFloatValue = remotePlayRequest.newFloatValue,
+					remotePlayAction = remotePlayRequest.remotePlayAction
+			)
+
+			val targetSession = sessions.values.find { it.deviceIdentifier == targetDevice.deviceId }
+					?: throw IllegalStateException("No session exists with device identifier ${targetDevice.deviceId}!")
+
+			targetSession.sendIfOpen(objectMapper.writeValueAsString(remotePlayResponse))
+		}
+
+		private fun Device.canBePlayedBy(userId: Long): Boolean {
+			// If we are the user, then we're always good
+			if (userId == user.id) {
+				return true
+			}
+
+			// Check if we're in a valid party mode. If we aren't, then this isn't playable by other people
+			if (partyEnabledUntil == null || partyEnabledUntil!! < DateUtils.now()) {
+				return false
+			}
+
+			// We're in a valid party mode. Make sure the user who is controlling us is present in the list
+			return partyUsers.any { it.id == userId }
+		}
+
 		override fun afterConnectionEstablished(session: WebSocketSession) {
 			logger.info("New user with ID: ${session.userId} connected to socket with ID: ${session.id}")
 			sessions[session.id] = session
 
 			// Tell this new user about all the things being listened to
-			val timeForStaleListen = System.currentTimeMillis() - 30_000
 			currentSongListens.values
-					.filter { it.time > timeForStaleListen }
 					.map { objectMapper.writeValueAsString(it) }
 					.forEach { session.sendIfOpen(it) }
 		}
@@ -197,12 +252,12 @@ class WebSocketConfig(
 			sessions.values.forEach { it.sendIfOpen(message) }
 		}
 
-
 		private fun NowListeningRequest.toResponse(session: WebSocketSession): NowListeningResponse {
 			val userId = session.userId
+			val device = deviceService.getDeviceByIdAndUserId(session.deviceIdentifier, userId)
 			return NowListeningResponse(
-					deviceId = this.deviceId,
-					deviceName = deviceService.getDeviceByIdAndUserId(this.deviceId, userId).deviceName,
+					deviceId = device.id,
+					deviceName = device.deviceName,
 					userId = userId,
 					timePlayed = this.timePlayed,
 					isPlaying = this.isPlaying,
@@ -210,7 +265,8 @@ class WebSocketConfig(
 					isShuffling = this.isShuffling,
 					volume = this.volume,
 					muted = this.muted,
-					trackData = this.trackId?.let { trackRepository.get(it) }?.toListenTrack()
+					trackData = this.trackId?.let { trackRepository.get(it) }?.toListenTrack(),
+					lastTimeUpdate = if (this.timePlayed != null) { System.currentTimeMillis() } else { null }
 			)
 		}
 
@@ -245,7 +301,8 @@ class WebSocketConfig(
 		visible = true
 )
 @JsonSubTypes(
-		JsonSubTypes.Type(value = NowListeningRequest::class, name = "NOW_PLAYING")
+		JsonSubTypes.Type(value = NowListeningRequest::class, name = "NOW_PLAYING"),
+		JsonSubTypes.Type(value = RemotePlayRequest::class, name = "REMOTE_PLAY")
 )
 interface WebSocketMessage {
 	val messageType: EventType
@@ -253,7 +310,6 @@ interface WebSocketMessage {
 
 data class NowListeningRequest(
 		override val messageType: EventType,
-		val deviceId: String,
 		val timePlayed: Double?,
 		val trackId: Long?,
 		val isShuffling: Boolean?,
@@ -265,7 +321,7 @@ data class NowListeningRequest(
 
 data class NowListeningResponse(
 		override val messageType: EventType = EventType.NOW_PLAYING,
-		val deviceId: String,
+		val deviceId: Long,
 		val deviceName: String,
 		val userId: Long,
 		val timePlayed: Double?,
@@ -275,7 +331,23 @@ data class NowListeningResponse(
 		val isPlaying: Boolean?,
 		val volume: Double?,
 		val muted: Boolean?,
-		val time: Long = System.currentTimeMillis()
+		val lastTimeUpdate: Long? // millis
+) : WebSocketMessage
+
+data class RemotePlayRequest(
+		override val messageType: EventType,
+		val deviceId: String,
+		val targetDeviceId: Long,
+		val trackIds: List<Long>?,
+		val newFloatValue: Double?,
+		val remotePlayAction: RemotePlayType
+) : WebSocketMessage
+
+data class RemotePlayResponse(
+		override val messageType: EventType = EventType.REMOTE_PLAY,
+		val tracks: List<Track>?,
+		val newFloatValue: Double?,
+		val remotePlayAction: RemotePlayType
 ) : WebSocketMessage
 
 
