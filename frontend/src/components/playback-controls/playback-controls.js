@@ -202,15 +202,17 @@ export default function PlaybackControls(props) {
 		}
 
 		if (!initialStateSent) {
-			initialStateSent = true;
-			socketContext.sendPlayEvent({
-				removeTrack: true,
-				volume: audio.volume,
-				muted: audio.muted,
-				timePlayed: 0,
-				isShuffling: musicContext.shuffleSongs,
-				isRepeating: musicContext.repeatSongs
+			socketContext.addOnConnectedHandler(() => {
+				socketContext.sendPlayEvent({
+					removeTrack: true,
+					volume: audio.volume,
+					muted: audio.muted,
+					timePlayed: 0,
+					isShuffling: musicContext.shuffleSongs,
+					isRepeating: musicContext.repeatSongs
+				});
 			});
+			initialStateSent = true;
 		}
 
 		return () => {
@@ -236,8 +238,8 @@ export default function PlaybackControls(props) {
 
 	if (
 		audio !== null && // Can happen when logging out and back in temporarily
-		(!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
-		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
+		((!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
+		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter)) // Song changed
 	) {
 		lastSongPlayHeartbeatTime = Date.now();
 

@@ -14,10 +14,12 @@ export class SocketProvider extends React.Component {
 
 		this.state = {
 			nowListeningUsers: {},
+			onConnectedHandlers: [],
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args),
-			sendRemotePlayEvent: (...args) => this.sendRemotePlayEvent(...args)
+			sendRemotePlayEvent: (...args) => this.sendRemotePlayEvent(...args),
+			addOnConnectedHandler: (...args) => this.addOnConnectedHandler(...args)
 		}
 	}
 
@@ -101,6 +103,9 @@ export class SocketProvider extends React.Component {
 			console.debug('WebSocket was closed. Reconnecting');
 			this.connectToSocket();
 		};
+		newSocket.onopen = () => {
+			this.state.onConnectedHandlers.forEach(it => it())
+		};
 		socket = newSocket;
 		this.setState({
 			nowListeningUsers: {}
@@ -172,6 +177,12 @@ export class SocketProvider extends React.Component {
 			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
 			this.connectToSocket();
 		}
+	}
+
+	addOnConnectedHandler(onConnectedHandler) {
+		const newHandlers = this.state.onConnectedHandlers.slice(0);
+		newHandlers.push(onConnectedHandler);
+		this.setState({ onConnectedHandlers: newHandlers });
 	}
 
 	render() {

@@ -82,7 +82,9 @@ export default function RemotePlay(props) {
 	const [modalOpen, setModalOpen] = useState(false);
 
 	const closeFunction = e => {
-		e.stopPropagation();
+		if (e) {
+			e.stopPropagation();
+		}
 		setModalOpen(false)
 	};
 
