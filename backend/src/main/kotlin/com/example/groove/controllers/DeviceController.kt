@@ -1,11 +1,10 @@
 package com.example.groove.controllers
 
-import com.example.groove.config.WebSocketConfig
+import com.example.groove.services.socket.WebSocket
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.services.DeviceService
 import com.example.groove.services.UserService
-import com.example.groove.services.event.EventServiceCoordinator
 import com.example.groove.util.loadLoggedInUser
 
 import org.springframework.web.bind.annotation.*
@@ -17,7 +16,7 @@ import javax.servlet.http.HttpServletRequest
 class DeviceController(
 		private val deviceService: DeviceService,
 		private val userService: UserService,
-		private val webSocketConfig: WebSocketConfig
+		private val webSocket: WebSocket
 ) {
 
 	@GetMapping
@@ -37,7 +36,7 @@ class DeviceController(
 	fun getActiveDevices(
 			@RequestParam("excluding-device") excludingDeviceId: String?
 	): List<DeviceResponseDTO> {
-		return webSocketConfig.getActiveDevices(excludingDeviceId)
+		return webSocket.getActiveDevices(excludingDeviceId)
 				.map { it.toResponseDTO() }
 	}
 
