@@ -5,7 +5,6 @@ import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.Device
 import com.example.groove.security.SecurityConfiguration
 import com.example.groove.services.DeviceService
-import com.example.groove.services.event.EventType
 import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -163,6 +162,10 @@ interface WebSocketMessage {
 
 interface SocketHandler<T> {
 	fun handleMessage(session: WebSocketSession, data: T)
+}
+
+enum class EventType {
+	NOW_PLAYING, REMOTE_PLAY
 }
 
 inline fun <reified T : Any> T.merge(other: T?): T {

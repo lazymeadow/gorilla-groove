@@ -5,10 +5,9 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.services.ArtSize
 import com.example.groove.services.DeviceService
-import com.example.groove.services.event.EventType
-import com.example.groove.services.event.NowPlayingTrack
 import com.example.groove.util.createMapper
 import com.example.groove.util.get
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.WebSocketSession
@@ -123,3 +122,19 @@ data class NowListeningResponse(
 		val muted: Boolean?,
 		val lastTimeUpdate: Long? // millis
 ) : WebSocketMessage
+
+data class NowPlayingTrack(
+		val id: Long? = null,
+
+		val name: String? = null,
+		val artist: String? = null,
+		val album: String? = null,
+		val releaseYear: Int? = null,
+		val albumArtLink: String? = null,
+		val length: Int? = null,
+		val inReview: Boolean? = null,
+
+		@get:JsonProperty("isPrivate")
+		val isPrivate: Boolean = false
+)
+

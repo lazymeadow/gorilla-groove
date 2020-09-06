@@ -6,8 +6,6 @@ import com.example.groove.db.model.Track
 import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.services.DeviceService
 import com.example.groove.services.TrackService
-import com.example.groove.services.event.EventType
-import com.example.groove.services.event.RemotePlayType
 import com.example.groove.util.DateUtils
 import com.example.groove.util.createMapper
 import com.example.groove.util.get
@@ -94,3 +92,10 @@ data class RemotePlayResponse(
 		val newFloatValue: Double?,
 		val remotePlayAction: RemotePlayType
 ) : WebSocketMessage
+
+@Suppress("unused")
+enum class RemotePlayType {
+	PLAY_SET_SONGS, PLAY_NEXT, PLAY_PREVIOUS, ADD_SONGS_NEXT, ADD_SONGS_LAST,
+	PAUSE, PLAY, SEEK, SHUFFLE_ENABLE, SHUFFLE_DISABLE, REPEAT_ENABLE,
+	REPEAT_DISABLE, SET_VOLUME, MUTE, UNMUTE
+}
