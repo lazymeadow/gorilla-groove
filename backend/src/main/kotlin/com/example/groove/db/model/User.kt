@@ -43,7 +43,12 @@ data class User(
 
 		@JsonIgnore
 		@ManyToMany(mappedBy = "subscribedUsers")
-		var reviewSources: MutableList<ReviewSource> = mutableListOf()
+		var reviewSources: MutableList<ReviewSource> = mutableListOf(),
+
+		// Not a column. Kind of a hack to associate the user with their token when they are authenticated
+		// so that we can retrieve it at a later time
+		@Transient
+		var currentAuthToken: UserToken? = null
 
 ) : UserDetails {
 	override fun getAuthorities(): MutableCollection<out GrantedAuthority> {

@@ -47,3 +47,10 @@ fun String.splitFirst(delimiter: String): Pair<String, String> {
 
 	return first to second
 }
+
+fun String.isUuid(): Boolean {
+	val uuidRegex = Regex("([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})")
+
+	return uuidRegex.matches(this)
+}
+
