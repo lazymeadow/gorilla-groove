@@ -18,7 +18,7 @@ data class UserToken(
 
 		@ManyToOne
 		@JoinColumn(name = "device_id")
-		val device: Device?,
+		var device: Device?, // Should be non-null and be a VAL when we are done migrating users to the device-on-token system
 
 		@Column
 		val token: String = "",
