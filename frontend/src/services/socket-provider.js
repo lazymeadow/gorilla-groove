@@ -81,7 +81,6 @@ export class SocketProvider extends React.Component {
 
 	connectToSocket() {
 		// Avoid sending a new connection on logout / login
-		// If our last update was not -1 then it means we're already looking for new data
 		if (!isLoggedIn()) {
 			return;
 		}

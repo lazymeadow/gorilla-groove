@@ -62,20 +62,26 @@ class WebSocket(
 				})
 				.addInterceptors(object : HandshakeInterceptor {
 					override fun beforeHandshake(request: ServerHttpRequest, response: ServerHttpResponse, wsHandler: WebSocketHandler, attributes: MutableMap<String, Any>): Boolean {
-						// I think this is temporary. I'd like to save the deviceId with the logged in user's principal going forward, actually
-						val paramParts = request.uri.query?.split("=")
-						if (paramParts.isNullOrEmpty() || paramParts.size != 2) {
-							response.setStatusCode(HttpStatus.BAD_REQUEST)
-							return false
+						// New user logins will have the device ID associated to the principle and don't need to be passed in.
+						// Everything in the "run" is temporary and can be deleted in the future when all clients have adapted to the new model
+						val deviceIdentifier = loadLoggedInUser().currentAuthToken!!.device?.deviceId ?: run {
+							// I think this is temporary. I'd like to save the deviceId with the logged in user's principal going forward, actually
+							val paramParts = request.uri.query?.split("=")
+							if (paramParts.isNullOrEmpty() || paramParts.size != 2) {
+								response.setStatusCode(HttpStatus.BAD_REQUEST)
+								return false
+							}
+
+							val (paramKey, paramValue) = paramParts
+							if (paramKey != "deviceIdentifier") {
+								response.setStatusCode(HttpStatus.BAD_REQUEST)
+								return false
+							}
+
+							paramValue
 						}
 
-						val (paramKey, paramValue) = paramParts
-						if (paramKey != "deviceIdentifier") {
-							response.setStatusCode(HttpStatus.BAD_REQUEST)
-							return false
-						}
-
-						attributes["deviceIdentifier"] = paramValue
+						attributes["deviceIdentifier"] = deviceIdentifier
 						return true
 					}
 
