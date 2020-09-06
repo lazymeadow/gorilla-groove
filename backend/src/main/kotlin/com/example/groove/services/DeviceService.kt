@@ -70,7 +70,7 @@ class DeviceService(
 			version: String,
 			ipAddress: String?,
 			additionalData: String?
-	) {
+	): Device {
 		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user.id)
 				?: run {
 					logger.info("First time seeing device $deviceId for user ${user.name}")
@@ -93,6 +93,8 @@ class DeviceService(
 		ipAddress?.let { deviceToUpdate.lastIp = ipAddress }
 
 		deviceRepository.save(deviceToUpdate)
+
+		return deviceToUpdate
 	}
 
 	private fun findActiveDevice(id: Long): Device {
