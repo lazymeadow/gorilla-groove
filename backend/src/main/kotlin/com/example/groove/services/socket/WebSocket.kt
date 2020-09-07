@@ -81,7 +81,10 @@ class WebSocket(
 							paramValue
 						}
 
+						val activeDevice = deviceService.getDeviceById(deviceIdentifier)
+
 						attributes["deviceIdentifier"] = deviceIdentifier
+						attributes["deviceType"] = activeDevice.deviceType
 						return true
 					}
 

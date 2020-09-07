@@ -11,6 +11,7 @@ import com.example.groove.util.createMapper
 import com.example.groove.util.get
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.socket.WebSocketSession
 
 @Service
@@ -23,6 +24,7 @@ class RemotePlaySocketHandler(
 
 	private val objectMapper = createMapper()
 
+	@Transactional
 	override fun handleMessage(session: WebSocketSession, data: RemotePlayRequest) {
 		val user = userRepository.get(session.userId)!!
 		val targetDeviceId = data.targetDeviceId

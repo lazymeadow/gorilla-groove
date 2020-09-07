@@ -71,18 +71,17 @@ class DeviceService(
 			ipAddress: String?,
 			additionalData: String?
 	): Device {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user.id)
-				?: run {
-					logger.info("First time seeing device $deviceId for user ${user.name}")
-					Device(
-							user = user,
-							deviceId = deviceId,
-							deviceName = generateDefaultName(),
-							deviceType = deviceType,
-							applicationVersion = version,
-							lastIp = ipAddress ?: "0.0.0.0"
-					)
-				}
+		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user.id) ?: run {
+			logger.info("First time seeing device $deviceId for user ${user.name}")
+			Device(
+					user = user,
+					deviceId = deviceId,
+					deviceName = generateDefaultName(),
+					deviceType = deviceType,
+					applicationVersion = version,
+					lastIp = ipAddress ?: "0.0.0.0"
+			)
+		}
 
 		// If this device has been merged, we need to update the version of the parent
 		val deviceToUpdate = device.mergedDevice ?: device
