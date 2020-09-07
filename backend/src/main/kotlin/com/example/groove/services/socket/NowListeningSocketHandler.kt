@@ -5,7 +5,6 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.services.ArtSize
 import com.example.groove.services.DeviceService
-import com.example.groove.util.createMapper
 import com.example.groove.util.get
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.context.annotation.Lazy
@@ -21,7 +20,6 @@ class NowListeningSocketHandler(
 		private val trackLinkRepository: TrackLinkRepository
 ) : SocketHandler<NowListeningRequest> {
 
-	private val objectMapper = createMapper()
 	private val currentSongListens = ConcurrentHashMap<String, NowListeningResponse>()
 
 	override fun handleMessage(session: WebSocketSession, data: NowListeningRequest) {
@@ -33,13 +31,11 @@ class NowListeningSocketHandler(
 		currentSongListens[session.id] = broadcastMessage
 
 		val otherSessions = socket.sessions - session.id
-		otherSessions.values.forEach { it.sendIfOpen(objectMapper.writeValueAsString(broadcastMessage)) }
+		otherSessions.values.forEach { it.sendIfOpen(broadcastMessage) }
 	}
 
 	fun sendAllListensToSession(session: WebSocketSession) {
-		currentSongListens.values
-				.map { objectMapper.writeValueAsString(it) }
-				.forEach { session.sendIfOpen(it) }
+		currentSongListens.values.forEach { session.sendIfOpen(it) }
 	}
 
 	fun removeSession(session: WebSocketSession) {
@@ -52,8 +48,7 @@ class NowListeningSocketHandler(
 		}
 
 		val newUpdate = lastSentUpdate.copy(trackData = null)
-		val message = objectMapper.writeValueAsString(newUpdate)
-		socket.sessions.values.forEach { it.sendIfOpen(message) }
+		socket.sessions.values.forEach { it.sendIfOpen(newUpdate) }
 	}
 
 	private fun NowListeningRequest.toResponse(session: WebSocketSession): NowListeningResponse {

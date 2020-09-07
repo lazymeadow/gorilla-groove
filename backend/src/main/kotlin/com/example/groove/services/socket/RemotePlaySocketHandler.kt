@@ -7,7 +7,6 @@ import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.services.DeviceService
 import com.example.groove.services.TrackService
 import com.example.groove.util.DateUtils
-import com.example.groove.util.createMapper
 import com.example.groove.util.get
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
@@ -21,8 +20,6 @@ class RemotePlaySocketHandler(
 		private val deviceService: DeviceService,
 		private val trackService: TrackService
 ) : SocketHandler<RemotePlayRequest> {
-
-	private val objectMapper = createMapper()
 
 	@Transactional
 	override fun handleMessage(session: WebSocketSession, data: RemotePlayRequest) {
@@ -59,7 +56,7 @@ class RemotePlaySocketHandler(
 		val targetSession = socket.sessions.values.find { it.deviceIdentifier == targetDevice.deviceId }
 				?: throw IllegalStateException("No session exists with device identifier ${targetDevice.deviceId}!")
 
-		targetSession.sendIfOpen(objectMapper.writeValueAsString(remotePlayResponse))
+		targetSession.sendIfOpen(remotePlayResponse)
 	}
 
 	private fun Device.canBePlayedBy(userId: Long): Boolean {

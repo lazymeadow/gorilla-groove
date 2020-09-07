@@ -1,20 +1,23 @@
 package com.example.groove.services.socket
 
 import com.example.groove.db.model.enums.DeviceType
+import com.example.groove.util.createMapper
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 
+private val objectMapper = createMapper()
 
-fun WebSocketSession.sendIfOpen(message: String) {
-	sendIfOpen(TextMessage(message))
-}
+fun WebSocketSession.sendIfOpen(message: Any) {
+	val textMessage = TextMessage(objectMapper.writeValueAsString(message))
 
-fun WebSocketSession.sendIfOpen(message: TextMessage) {
-	WebSocket.logger.info("About to broadcast to user: $userId, session: $id, deviceIdentifier: $deviceIdentifier, '${message.payload}'")
-	if (isOpen) {
-		sendMessage(message)
-	} else {
-		WebSocket.logger.info("Could not send message to user: $userId, socket ID: $id: $message")
+	WebSocket.logger.info("About to broadcast to user: $userId, session: $id, deviceIdentifier: $deviceIdentifier, '${textMessage.payload}'")
+	// If two threads access the same session it's an error. "The remote endpoint was in state [TEXT_PARTIAL_WRITING]"
+	synchronized(this) {
+		if (isOpen) {
+			sendMessage(textMessage)
+		} else {
+			WebSocket.logger.info("Could not send message to user: $userId, socket ID: $id: $message")
+		}
 	}
 }
 

@@ -9,6 +9,7 @@ import com.example.groove.db.model.User
 import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.*
+import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
@@ -27,8 +28,8 @@ class ReviewSourceArtistService(
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository,
 		private val imageService: ImageService,
-		private val fileStorageService: FileStorageService,
-		private val songIngestionService: SongIngestionService
+		private val songIngestionService: SongIngestionService,
+		private val reviewQueueSocketHandler: ReviewQueueSocketHandler
 ) {
 	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
 	@Transactional
@@ -87,15 +88,22 @@ class ReviewSourceArtistService(
 			}
 			logger.info("Attempting download on ${songsToDownload.size} ${source.artistName} songs")
 
-			attemptDownloadFromYoutube(source, songsToDownload, users)
+			val downloadCount = attemptDownloadFromYoutube(source, songsToDownload, users)
+			if (downloadCount > 0) {
+				users.forEach { user ->
+					reviewQueueSocketHandler.broadcastNewReviewQueueContent(user.id, source, downloadCount)
+				}
+			}
 		}
 
 		logger.info("Review Source Artist Downloader complete")
 	}
 
 	// Now we need to find a match on YouTube to download...
-	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, songsToDownload: List<MetadataResponseDTO>, users: List<User>) {
+	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, songsToDownload: List<MetadataResponseDTO>, users: List<User>): Int {
 		val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
+
+		var downloadCount = 0
 
 		songsToDownload.forEach { song ->
 			val artistDownload = reviewSourceArtistDownloadRepository.findByReviewSourceAndTrackName(source, song.name)
@@ -152,7 +160,11 @@ class ReviewSourceArtistService(
 			otherUsers.forEach { otherUser ->
 				trackService.saveTrackForUserReview(otherUser, track, source)
 			}
+
+			downloadCount++
 		}
+
+		return downloadCount
 	}
 
 

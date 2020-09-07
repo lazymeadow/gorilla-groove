@@ -8,6 +8,7 @@ import com.example.groove.db.model.ReviewSource
 import com.example.groove.db.model.ReviewSourceUserRecommend
 import com.example.groove.db.model.Track
 import com.example.groove.services.TrackService
+import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
@@ -23,7 +24,8 @@ class ReviewQueueService(
 		private val userRepository: UserRepository,
 		private val reviewSourceUserRecommendRepository: ReviewSourceUserRecommendRepository,
 		private val trackService: TrackService,
-		private val reviewSourceRepository: ReviewSourceRepository
+		private val reviewSourceRepository: ReviewSourceRepository,
+		private val reviewQueueSocketHandler: ReviewQueueSocketHandler
 ) {
 	@Transactional
 	fun recommend(targetUserId: Long, recommendedTrackIds: List<Long>) {
@@ -66,6 +68,9 @@ class ReviewQueueService(
 
 		tracks.forEach { track ->
 			trackService.saveTrackForUserReview(targetUser, track!!, reviewSource, setAsCopied = true)
+		}
+		if (tracks.isNotEmpty()) {
+			reviewQueueSocketHandler.broadcastNewReviewQueueContent(targetUserId, reviewSource, tracks.size)
 		}
 	}
 

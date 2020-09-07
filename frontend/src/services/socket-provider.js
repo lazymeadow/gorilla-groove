@@ -3,6 +3,8 @@ import {isLoggedIn} from "../util";
 import {Api} from "../api";
 import {getDeviceIdentifier} from "./version";
 import {RemotePlayType} from "../components/remote-play/modal/remote-play-type";
+import {ReviewSourceType} from "../components/review-queue/review-queue-management/review-queue-management";
+import {toast} from "react-toastify";
 
 export const SocketContext = React.createContext();
 
@@ -79,6 +81,27 @@ export class SocketProvider extends React.Component {
 		}
 	}
 
+	handleReviewQueueMessage(message) {
+		this.props.reviewQueueContext.fetchReviewTracks();
+		let toastMessage;
+		switch (message.sourceType) {
+			case ReviewSourceType.USER_RECOMMEND:
+				const pluralTrack = message.count === 1 ? 'track' : 'tracks';
+				toastMessage = `User ${message.sourceDisplayName} recommended you ${message.count} new ${pluralTrack}`;
+				break;
+			case ReviewSourceType.YOUTUBE_CHANNEL:
+				const pluralVideo = message.count === 1 ? 'video' : 'videos';
+				toastMessage = `YouTube channel ${message.sourceDisplayName} uploaded ${message.count} new ${pluralVideo}`;
+				break;
+			case ReviewSourceType.ARTIST:
+				const pluralSong = message.count === 1 ? 'song' : 'songs';
+				toastMessage = `Artist ${message.sourceDisplayName} released ${message.count} new ${pluralSong}`;
+				break;
+		}
+
+		toast.info(toastMessage, { autoClose: 30000 });
+	}
+
 	connectToSocket() {
 		// Avoid sending a new connection on logout / login
 		if (!isLoggedIn()) {
@@ -96,6 +119,7 @@ export class SocketProvider extends React.Component {
 			switch (data.messageType) {
 				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
 				case EventType.REMOTE_PLAY: return this.handleRemotePlayMessage(data);
+				case EventType.REVIEW_QUEUE: return this.handleReviewQueueMessage(data);
 			}
 		};
 		newSocket.onclose = () => {
@@ -195,5 +219,6 @@ export class SocketProvider extends React.Component {
 
 const EventType = Object.freeze({
 	NOW_PLAYING: 'NOW_PLAYING',
-	REMOTE_PLAY: 'REMOTE_PLAY'
+	REMOTE_PLAY: 'REMOTE_PLAY',
+	REVIEW_QUEUE: 'REVIEW_QUEUE',
 });

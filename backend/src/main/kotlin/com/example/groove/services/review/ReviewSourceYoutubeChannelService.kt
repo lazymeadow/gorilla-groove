@@ -9,6 +9,7 @@ import com.example.groove.services.TrackService
 import com.example.groove.services.YoutubeApiClient
 import com.example.groove.services.YoutubeChannelInfo
 import com.example.groove.services.YoutubeDownloadService
+import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
@@ -23,7 +24,8 @@ class ReviewSourceYoutubeChannelService(
 		private val reviewSourceYoutubeChannelRepository: ReviewSourceYoutubeChannelRepository,
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val trackService: TrackService,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val reviewQueueSocketHandler: ReviewQueueSocketHandler
 ) {
 	@Scheduled(cron = "0 0 8 * * *") // 8 AM every day (UTC)
 	@Transactional
@@ -54,6 +56,7 @@ class ReviewSourceYoutubeChannelService(
 
 			val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
 
+			var addedVideos = 0
 			newVideos.forEach saveLoop@ { video ->
 				logger.info("Processing ${video.title}...")
 				// Some channels will put out mixes every now and then. I don't really want to download mixes automatically as they could be huge, and don't really fit the GG spirit of adding individual songs
@@ -81,11 +84,19 @@ class ReviewSourceYoutubeChannelService(
 				otherUsers.forEach { otherUser ->
 					trackService.saveTrackForUserReview(otherUser, track, source)
 				}
+
+				addedVideos++
 				logger.info("Done with ${video.title}")
 			}
 
 			source.lastSearched = searchedTime
 			reviewSourceYoutubeChannelRepository.save(source)
+
+			if (addedVideos > 0) {
+				users.forEach { user ->
+					reviewQueueSocketHandler.broadcastNewReviewQueueContent(user.id, source, addedVideos)
+				}
+			}
 		}
 
 		logger.info("Review Source Youtube Channel Downloader complete")

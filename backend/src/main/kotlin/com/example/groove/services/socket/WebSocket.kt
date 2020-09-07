@@ -3,6 +3,7 @@ package com.example.groove.services.socket
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.Device
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.security.SecurityConfiguration
 import com.example.groove.services.DeviceService
 import com.example.groove.util.*
@@ -150,6 +151,12 @@ class WebSocket(
 		}
 	}
 
+	fun sessionsFor(userId: Long?, deviceType: DeviceType?): List<WebSocketSession> {
+		return sessions.values
+				.filter { userId == null || it.userId == userId }
+				.filter { deviceType == null || it.deviceType == deviceType }
+	}
+
 	companion object {
 		val logger = logger()
 	}
@@ -174,7 +181,7 @@ interface SocketHandler<T> {
 }
 
 enum class EventType {
-	NOW_PLAYING, REMOTE_PLAY
+	NOW_PLAYING, REMOTE_PLAY, REVIEW_QUEUE
 }
 
 inline fun <reified T : Any> T.merge(other: T?): T {

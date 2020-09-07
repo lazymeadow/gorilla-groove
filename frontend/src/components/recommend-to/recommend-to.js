@@ -29,7 +29,7 @@ function RecommendToModal(props) {
 			if (error.message) {
 				toast.error(error.message);
 			} else {
-				console.error(e);
+				console.error(error);
 				toast.error('Failed to recommend the selected songs');
 			}
 			setLoading(false);
@@ -40,7 +40,7 @@ function RecommendToModal(props) {
 
 	return (
 		<div id="recommend-to-modal" className="p-relative">
-			<LoadingSpinner visible={loading}/>
+			<LoadingSpinner visible={loading} small={true}/>
 			<h2 className="text-center">Recommend Song</h2>
 			Add the selected { addText } to the following user's Review Queue?
 

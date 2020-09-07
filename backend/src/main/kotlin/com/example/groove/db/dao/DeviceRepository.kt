@@ -5,7 +5,6 @@ import com.example.groove.db.model.User
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
-import java.sql.Timestamp
 
 interface DeviceRepository : CrudRepository<Device, Long> {
 	fun findByUser(user: User): List<Device>

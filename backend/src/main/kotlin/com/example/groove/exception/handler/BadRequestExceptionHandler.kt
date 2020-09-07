@@ -24,18 +24,18 @@ class BadRequestExceptionHandler {
 			MaxUploadSizeExceededException::class
 	)
 	protected fun handleIllegalArgument(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
-		return resp.sendError(HttpStatus.BAD_REQUEST.value(), ex.message)
+		resp.sendError(HttpStatus.BAD_REQUEST.value(), ex.message)
 	}
 
 	// These exceptions should return a 404
 	@ExceptionHandler(ResourceNotFoundException::class)
 	protected fun handleNotFound(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
-		return resp.sendError(HttpStatus.NOT_FOUND.value(), ex.message)
+		resp.sendError(HttpStatus.NOT_FOUND.value(), ex.message)
 	}
 
 	// These exceptions should return a 403
 	@ExceptionHandler(PermissionDeniedException::class)
 	protected fun handleUnauthorized(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
-		return resp.sendError(HttpStatus.FORBIDDEN.value(), ex.message)
+		resp.sendError(HttpStatus.FORBIDDEN.value(), ex.message)
 	}
 }
