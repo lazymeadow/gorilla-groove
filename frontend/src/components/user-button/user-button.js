@@ -11,26 +11,27 @@ import {UserContext} from "../../services/user-provider";
 import TrackHistory from "../track-history/track-history";
 import DeviceManagement from "../device-management/device-management";
 import {toast} from "react-toastify";
+import {MusicContext} from "../../services/music-provider";
 
 const originalTitle = document.title;
 
 export default function UserButton() {
 	const userContext = useContext(UserContext);
+	const musicContext = useContext(MusicContext);
 	const history = useHistory();
 
 	const logout = event => {
 		document.title = originalTitle;
 
 		event.preventDefault();
-		Api.post('authentication/logout', {
-			token: sessionStorage.getItem('token')
-		}).catch(error => {
+		Api.post('authentication/logout').catch(error => {
 			console.error(error)
 		}).finally(() => {
 			sessionStorage.removeItem('token');
 			deleteCookie('cookieToken');
 			deleteCookie('loggedInEmail');
 
+			musicContext.resetSessionState();
 			history.push('/login'); // Redirect to the login page now that we logged out
 		});
 	};

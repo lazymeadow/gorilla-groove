@@ -43,17 +43,8 @@ class AuthenticationController(
 	}
 
 	@PostMapping("/logout")
-	fun logout(
-			@CookieValue("cookieToken") cookieToken: String?,
-			@RequestBody userLogoutDTO: UserLogoutDTO
-	): ResponseEntity<String> {
-		val token = when {
-			cookieToken != null -> cookieToken
-			userLogoutDTO.token != null -> userLogoutDTO.token
-			else -> throw IllegalArgumentException("No valid token found to log out with")
-		}
-
-		userAuthenticationService.logout(loadLoggedInUser(), token)
+	fun logout(): ResponseEntity<String> {
+		userAuthenticationService.logout(loadLoggedInUser())
 		return ResponseEntity.ok().build()
 	}
 

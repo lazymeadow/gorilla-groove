@@ -49,6 +49,7 @@ export default function SiteLayout(props) {
 		musicContext.loadSongsForUser();
 		playlistContext.loadPlaylists();
 		reviewQueueContext.fetchReviewTracks();
+		deviceContext.loadOtherDevices();
 
 		socketContext.connectToSocket();
 

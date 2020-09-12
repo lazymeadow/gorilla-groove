@@ -6,7 +6,7 @@ import com.example.groove.db.model.User
 interface UserAuthenticationService {
 	fun login(authDTO: UserAuthenticationDTO, ipAddress: String?): String
 
-	fun logout(user: User, token: String)
+	fun logout(user: User)
 
 	fun findByToken(token: String): User
 }
