@@ -30,7 +30,7 @@ export class SongRow extends React.Component {
 			case 'Length':
 				return formatTimeFromSeconds(userTrack.length);
 			case 'Added':
-				return formatDate(userTrack.createdAt, false);
+				return formatDate(userTrack.addedToLibrary, false);
 			case 'Last Played':
 				return formatDate(userTrack.lastPlayed, false);
 			default:

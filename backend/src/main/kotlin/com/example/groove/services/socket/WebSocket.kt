@@ -139,6 +139,9 @@ class WebSocket(
 			logger.info("New user with ID: ${session.userId} connected to socket with ID: ${session.id}")
 			sessions[session.id] = session
 
+			// This is mostly here for debugging. But it's a nice easter egg too if anyone finds it
+			session.sendIfOpen(ConnectionEstablishedResponse(message = connectionMessages.random()))
+
 			// Tell this new user about all the things being listened to
 			nowListeningSocketHandler.sendAllListensToSession(session)
 		}
@@ -181,7 +184,7 @@ interface SocketHandler<T> {
 }
 
 enum class EventType {
-	NOW_PLAYING, REMOTE_PLAY, REVIEW_QUEUE
+	NOW_PLAYING, REMOTE_PLAY, REVIEW_QUEUE, CONNECTION_ESTABLISHED
 }
 
 inline fun <reified T : Any> T.merge(other: T?): T {
@@ -199,3 +202,15 @@ inline fun <reified T : Any> T.merge(other: T?): T {
 	}
 	return primaryConstructor.callBy(args)
 }
+
+data class ConnectionEstablishedResponse(
+		override val messageType: EventType = EventType.CONNECTION_ESTABLISHED,
+		val message: String
+) : WebSocketMessage
+
+private val connectionMessages = setOf(
+		"Hey. Glad you're here",
+		"It's a good time to Groove",
+		"Whoa, you found me",
+		"Your sound card works perfectly"
+)

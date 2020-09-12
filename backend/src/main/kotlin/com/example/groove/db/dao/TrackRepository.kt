@@ -118,7 +118,6 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			AND t.updatedAt < :maximum
 			AND t.user.id = :userId
 			AND (t.deleted = FALSE OR t.createdAt < :minimum)
-			AND t.inReview = FALSE
 			ORDER BY t.id
 			""")
 	// Filter out things that were created AND deleted in the same time frame

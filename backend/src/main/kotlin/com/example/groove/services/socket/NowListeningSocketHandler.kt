@@ -3,6 +3,7 @@ package com.example.groove.services.socket
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.services.ArtSize
 import com.example.groove.services.DeviceService
 import com.example.groove.util.get
@@ -31,11 +32,11 @@ class NowListeningSocketHandler(
 		currentSongListens[session.id] = broadcastMessage
 
 		val otherSessions = socket.sessions - session.id
-		otherSessions.values.forEach { it.sendIfOpen(broadcastMessage) }
+		otherSessions.values.forEach { it.sendNowListening(broadcastMessage) }
 	}
 
 	fun sendAllListensToSession(session: WebSocketSession) {
-		currentSongListens.values.forEach { session.sendIfOpen(it) }
+		currentSongListens.values.forEach { session.sendNowListening(it) }
 	}
 
 	fun removeSession(session: WebSocketSession) {
@@ -48,7 +49,15 @@ class NowListeningSocketHandler(
 		}
 
 		val newUpdate = lastSentUpdate.copy(trackData = null)
-		socket.sessions.values.forEach { it.sendIfOpen(newUpdate) }
+		socket.sessions.values.forEach { it.sendNowListening(newUpdate) }
+	}
+
+	private fun WebSocketSession.sendNowListening(message: WebSocketMessage) {
+		// Right now only Web is set up to do anything with the now listening information.
+		// I don't know how this is going to work on mobile yet, so don't bombard those devices with useless data
+		if (this.deviceType == DeviceType.WEB) {
+			this.sendIfOpen(message)
+		}
 	}
 
 	private fun NowListeningRequest.toResponse(session: WebSocketSession): NowListeningResponse {
@@ -57,6 +66,7 @@ class NowListeningSocketHandler(
 		return NowListeningResponse(
 				deviceId = device.id,
 				deviceName = device.deviceName,
+				deviceType = device.deviceType,
 				userId = userId,
 				timePlayed = this.timePlayed,
 				isPlaying = this.isPlaying,
@@ -107,6 +117,7 @@ data class NowListeningResponse(
 		override val messageType: EventType = EventType.NOW_PLAYING,
 		val deviceId: Long,
 		val deviceName: String,
+		val deviceType: DeviceType,
 		val userId: Long,
 		val timePlayed: Double?,
 		val trackData: NowPlayingTrack?,

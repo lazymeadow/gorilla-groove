@@ -12,6 +12,7 @@ import {DeviceContext} from "../../services/device-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
 import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
 import {PlaybackContext} from "../../services/playback-provider";
+import {DeviceType} from "../../enums/device-type";
 
 let pendingDeletePlaylist = {};
 
@@ -97,7 +98,9 @@ export default function TrackSourceList(props) {
 			return null;
 		}
 
-		const isMobile = playingDevices.every(device => device.isMobile);
+		const isMobile = playingDevices.every(device => {
+			return device.deviceType === DeviceType.IPHONE || device.deviceType === DeviceType.ANDROID
+		});
 
 		const displayText = playingDevices.map(device => {
 			let infoString;

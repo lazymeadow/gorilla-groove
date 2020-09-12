@@ -9,6 +9,7 @@ import {toast} from "react-toastify";
 export const SocketContext = React.createContext();
 
 let socket = null;
+let forceDisconnect = false;
 
 export class SocketProvider extends React.Component {
 	constructor(props) {
@@ -108,6 +109,8 @@ export class SocketProvider extends React.Component {
 			return;
 		}
 
+		forceDisconnect = false;
+
 		console.debug('Opening socket');
 		const uri = Api.getSocketUri() + '?deviceIdentifier=' + getDeviceIdentifier();
 		const newSocket = new WebSocket(uri);
@@ -120,11 +123,14 @@ export class SocketProvider extends React.Component {
 				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
 				case EventType.REMOTE_PLAY: return this.handleRemotePlayMessage(data);
 				case EventType.REVIEW_QUEUE: return this.handleReviewQueueMessage(data);
+				case EventType.CONNECTION_ESTABLISHED: return console.info(data.message);
 			}
 		};
 		newSocket.onclose = () => {
-			console.debug('WebSocket was closed. Reconnecting');
-			this.connectToSocket();
+			if (!forceDisconnect) {
+				console.debug('WebSocket was closed. Reconnecting');
+				this.connectToSocket();
+			}
 		};
 		newSocket.onopen = () => {
 			this.state.onConnectedHandlers.forEach(it => it())
@@ -136,7 +142,12 @@ export class SocketProvider extends React.Component {
 	}
 
 	disconnectSocket() {
-		this.sendPlayEvent({ disconnected: true });
+		if (socket !== null) {
+			// We have the socket automatically reconnect whenever it gets disconnected.
+			// But in this case we want it to stay gone since we closed it explicitly
+			forceDisconnect = true;
+			socket.close();
+		}
 	}
 
 	sendPlayEvent(data) {
@@ -145,8 +156,7 @@ export class SocketProvider extends React.Component {
 			return;
 		}
 
-		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume',
-			'removeTrack', 'disconnected', 'muted'];
+		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume', 'removeTrack', 'muted'];
 		const payload = {
 			messageType: EventType.NOW_PLAYING,
 			deviceId: getDeviceIdentifier()
@@ -221,4 +231,5 @@ const EventType = Object.freeze({
 	NOW_PLAYING: 'NOW_PLAYING',
 	REMOTE_PLAY: 'REMOTE_PLAY',
 	REVIEW_QUEUE: 'REVIEW_QUEUE',
+	CONNECTION_ESTABLISHED: 'CONNECTION_ESTABLISHED'
 });

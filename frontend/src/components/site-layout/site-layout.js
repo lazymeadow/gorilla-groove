@@ -50,8 +50,7 @@ export default function SiteLayout(props) {
 		playlistContext.loadPlaylists();
 		reviewQueueContext.fetchReviewTracks();
 
-		// Let other things finish loading before we start hogging available network connections with long polling
-		setTimeout(socketContext.connectToSocket, 1000);
+		socketContext.connectToSocket();
 
 		// After we tell the server about our device load server side information about it
 		notifyVersion().then(deviceContext.loadOwnDevice);
