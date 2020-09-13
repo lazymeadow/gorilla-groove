@@ -4,7 +4,7 @@ import CoreData
 class ServerSynchronizer {
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
-    static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
+    static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=400&page="
     
     static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
         print("Initiating sync with server...")
@@ -89,7 +89,9 @@ class ServerSynchronizer {
             }
             
             for modifiedTrackResponse in entityResponse!.content.modified {
-                let oldTrack = TrackDao.findById(modifiedTrackResponse.id)!
+                let modifiedTrackId = modifiedTrackResponse.id
+                print("Modifying track with ID \(modifiedTrackId)")
+                let oldTrack = TrackDao.findById(modifiedTrackId)!
                 
                 // Check if our caches are invalidated for this track
                 var newSongCachedAt: Date? = nil
@@ -324,9 +326,10 @@ class ServerSynchronizer {
         let genre: String?
         let playCount: Int
         let `private`: Bool
+        let inReview: Bool
         let hidden: Bool
         let lastPlayed: Date?
-        let createdAt: Date
+        let addedToLibrary: Date?
         let note: String?
         let songUpdatedAt: Date?
         let artUpdatedAt: Date?
@@ -336,11 +339,12 @@ class ServerSynchronizer {
                 id: id,
                 album: album,
                 artist: artist,
-                createdAt: createdAt,
+                addedToLibrary: addedToLibrary,
                 featuring: featuring,
                 genre: genre,
                 isHidden: hidden,
                 isPrivate: `private`,
+                inReview: inReview,
                 lastPlayed: lastPlayed,
                 length: length,
                 name: name,

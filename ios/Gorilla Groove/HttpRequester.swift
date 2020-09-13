@@ -3,6 +3,7 @@ import Foundation
 class HttpRequester {
     
     static let baseUrl = "https://gorillagroove.net/api/"
+    static let wsUrl = "wss://gorillagroove.net/api/socket"
     
     typealias ResponseHandler<T> = (_ data: T?, _ status: Int, _ err: String?) -> Void
     
@@ -58,10 +59,11 @@ class HttpRequester {
         _ type: T.Type,
         _ body: Codable?,
         asMultipartData: Bool = false,
+        authenticated: Bool = true,
         callback: ResponseHandler<T>? = nil
     ) {
         let session = URLSession(configuration: .default)
-        let request = getBaseRequest("POST", url, body: body, asMultipartData: asMultipartData)
+        let request = getBaseRequest("POST", url, body: body, authenticated: authenticated, asMultipartData: asMultipartData)
         
         print("Network - POST " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
@@ -74,15 +76,19 @@ class HttpRequester {
         _ method: String,
         _ url: String,
         body: Codable? = nil,
+        authenticated: Bool = true,
         asMultipartData: Bool = false
     ) -> URLRequest {
-        let token = FileState.read(LoginState.self)!.token
         
         let url = URL(string: self.baseUrl + url)!
         var request : URLRequest = URLRequest(url: url)
         
+        if authenticated {
+            let token = FileState.read(LoginState.self)!.token
+            request.setValue(token, forHTTPHeaderField: "Authorization")
+        }
+        
         request.httpMethod = method
-        request.setValue(token, forHTTPHeaderField: "Authorization")
                 
         if let body = body {
             if asMultipartData {
@@ -114,7 +120,7 @@ class HttpRequester {
         }
         
         if (httpResponse.statusCode >= 300) {
-            let dataError = data != nil ? String(decoding: data!, as: UTF8.self) : ""
+            let dataError = data?.toString() ?? ""
             print("Non 2xx received! Code: \(httpResponse.statusCode). Error: \(dataError)")
             callback?(nil, httpResponse.statusCode, error as! String?)
             return
@@ -163,3 +169,9 @@ extension Int {
 }
 
 struct EmptyResponse: Codable { }
+
+extension Data {
+    func toString() -> String {
+        return String(decoding: self, as: UTF8.self)
+    }
+}

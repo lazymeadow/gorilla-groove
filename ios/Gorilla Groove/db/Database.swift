@@ -19,6 +19,11 @@ class Database {
             print("Successfully opened connection to database at \(path)")
             
             migrate()
+            
+            if (getDbVersion() == 4) {
+                print("User is on a flawed DB version and needs a forced migration")
+                reset(userId)
+            }
         } else {
             print("Unable to open database. Got result code \(openResult)")
         }
@@ -26,6 +31,11 @@ class Database {
     
     static func close() {
         sqlite3_close(db)
+    }
+    
+    static func reset(_ userId: Int) {
+        try! FileManager.default.removeItem(at: getDbPath(userId))
+        openDatabase(userId: userId)
     }
     
     // Getting the last insert ID isn't thread safe in this function. Unsure if it matters
@@ -104,9 +114,16 @@ class Database {
         return result
     }
     
+    static func getDbVersion() -> Int {
+        return query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
+    }
+    
     static private func migrate() {
-        let currentVersion = query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
-        let targetVersion = 4
+        let currentVersion = getDbVersion()
+        if (currentVersion == 4) {
+            return
+        }
+        let targetVersion = 5 // 5 and not 4 because 4 is a bugged version that needed a forced 1 time migration
         
         print("Existing DB is using version: \(currentVersion)")
         
@@ -146,8 +163,9 @@ class Database {
             "play_count"    INTEGER NOT NULL,
             "is_private"    INTEGER NOT NULL,
             "is_hidden"    INTEGER NOT NULL,
-            "created_at"    INTEGER NOT NULL,
+            "added_to_library"    INTEGER,
             "last_played"    INTEGER,
+            "in_review"    INTEGER NOT NULL,
             "note"    TEXT
         );
         """)
