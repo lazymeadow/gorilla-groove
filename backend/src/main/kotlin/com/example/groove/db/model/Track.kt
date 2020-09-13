@@ -2,6 +2,7 @@ package com.example.groove.db.model
 
 import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.sql.Timestamp
 import javax.persistence.*
@@ -75,7 +76,6 @@ data class Track(
 		// We originally used the createdAt property to mean "addedToLibrary" because for years that's what it was.
 		// With the introduction of the ReviewQueue stuff we now need to use a dedicated property for this.
 		// However, to avoid having to update all the API's consumers, keep the JsonProperty name the same as it was
-		@JsonProperty("createdAt")
 		@Column(name = "added_to_library")
 		var addedToLibrary: Timestamp? = null,
 
@@ -108,4 +108,10 @@ data class Track(
 
 		@Column
 		var artUpdatedAt: Timestamp = now()
-) : RemoteSyncable
+) : RemoteSyncable {
+
+	// TODO this is temporary until the clients update to use "addedToLibrary" instead!
+	@JsonProperty("createdAt")
+	@JsonInclude
+	fun fakeCreatedAt(): Timestamp? = addedToLibrary
+}

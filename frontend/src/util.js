@@ -100,7 +100,7 @@ const displayKeyToTrackKeyMap = {
 	'Play Count': 'playCount',
 	'Bit Rate': 'bitRate',
 	'Sample Rate': 'sampleRate',
-	'Added': 'createdAt',
+	'Added': 'addedToLibrary',
 	'Last Played': 'lastPlayed',
 	'Note' : 'note'
 };

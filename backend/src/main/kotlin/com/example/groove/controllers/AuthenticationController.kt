@@ -1,12 +1,15 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.security.UserAuthenticationService
 import com.example.groove.services.UserService
+import com.example.groove.util.isUuid
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import javax.servlet.http.HttpServletRequest
 
 @RestController
 @RequestMapping("api/authentication")
@@ -16,11 +19,20 @@ class AuthenticationController(
 ) {
 
 	@PostMapping("/login")
-	fun login(@RequestBody userAuthenticationDTO: UserAuthenticationDTO): ResponseEntity<AuthResponseDTO> {
-		val token = userAuthenticationService.login(userAuthenticationDTO.email, userAuthenticationDTO.password)
+	fun login(
+			@RequestBody userAuthenticationDTO: UserAuthenticationDTO,
+			request: HttpServletRequest
+	): ResponseEntity<AuthResponseDTO> {
+		val ipAddress = request.getHeader("x-forwarded-for")
+
+		val token = userAuthenticationService.login(userAuthenticationDTO, ipAddress)
 		val user = userService.getUserByEmail(userAuthenticationDTO.email)!!
 
 		logger.info(userAuthenticationDTO.email + " logged in")
+
+		userAuthenticationDTO.deviceId?.let {
+			require(it.isUuid()) { "Client device ID must be in a UUID format!" }
+		}
 
 		return ResponseEntity.ok(AuthResponseDTO(
 				id = user.id,
@@ -31,21 +43,12 @@ class AuthenticationController(
 	}
 
 	@PostMapping("/logout")
-	fun logout(
-			@CookieValue("cookieToken") cookieToken: String?,
-			@RequestBody userLogoutDTO: UserLogoutDTO
-	): ResponseEntity<String> {
-		val token = when {
-			cookieToken != null -> cookieToken
-			userLogoutDTO.token != null -> userLogoutDTO.token
-			else -> throw IllegalArgumentException("No valid token found to log out with")
-		}
-
-		userAuthenticationService.logout(loadLoggedInUser(), token)
+	fun logout(): ResponseEntity<String> {
+		userAuthenticationService.logout(loadLoggedInUser())
 		return ResponseEntity.ok().build()
 	}
 
-	@Deprecated("Use the cookie token instead. Leaving this around for Android compatibility")
+	// Web doesn't use this as it uses the cookie I think. But web clients don't use the cookie
 	data class UserLogoutDTO(
 			val token: String?
 	)
@@ -57,12 +60,15 @@ class AuthenticationController(
 			val username: String
 	)
 
-	data class UserAuthenticationDTO(
-			val email: String,
-			val password: String
-	)
-
 	companion object {
 		val logger = logger()
 	}
 }
+
+data class UserAuthenticationDTO(
+		val email: String,
+		val password: String,
+		val deviceId: String?, // This and other device stuff SHOULD be mandatory going forward. But all clients need to update
+		val version: String?,
+		val deviceType: DeviceType?
+)

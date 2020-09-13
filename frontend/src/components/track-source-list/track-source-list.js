@@ -10,10 +10,9 @@ import {UserContext} from "../../services/user-provider";
 import {PlaylistContext} from "../../services/playlist-provider";
 import {DeviceContext} from "../../services/device-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
-import RecommendTo from "../recommend-to/recommend-to";
 import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
-import {PermissionType} from "../../enums/permission-type";
 import {PlaybackContext} from "../../services/playback-provider";
+import {DeviceType} from "../../enums/device-type";
 
 let pendingDeletePlaylist = {};
 
@@ -86,10 +85,12 @@ export default function TrackSourceList(props) {
 	};
 
 	const getNowPlayingElement = entry => {
-		const listeningDevices = socketContext.nowListeningUsers[entry.id];
-		if (!listeningDevices) {
+		const devicesForUser = socketContext.nowListeningUsers[entry.id];
+		if (!devicesForUser) {
 			return null;
 		}
+
+		const listeningDevices = Object.values(devicesForUser);
 
 		const playingDevices = listeningDevices.filter(device => device.isPlaying && device.trackData);
 
@@ -97,7 +98,9 @@ export default function TrackSourceList(props) {
 			return null;
 		}
 
-		const isMobile = playingDevices.every(device => device.isMobile);
+		const isMobile = playingDevices.every(device => {
+			return device.deviceType === DeviceType.IPHONE || device.deviceType === DeviceType.ANDROID
+		});
 
 		const displayText = playingDevices.map(device => {
 			let infoString;

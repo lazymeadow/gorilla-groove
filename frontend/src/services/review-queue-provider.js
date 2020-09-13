@@ -24,7 +24,7 @@ export class ReviewQueueProvider extends React.Component {
 			const tracks = res.content;
 
 			this.setState({
-				reviewQueueCount: res.numberOfElements,
+				reviewQueueCount: res.totalElements,
 				reviewQueueTracks: tracks
 			});
 

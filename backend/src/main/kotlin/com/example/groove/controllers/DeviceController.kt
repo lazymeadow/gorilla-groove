@@ -1,11 +1,13 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.dao.UserTokenRepository
+import com.example.groove.services.socket.WebSocket
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.services.DeviceService
 import com.example.groove.services.UserService
-import com.example.groove.services.event.EventServiceCoordinator
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 
 import org.springframework.web.bind.annotation.*
 import java.sql.Timestamp
@@ -16,7 +18,8 @@ import javax.servlet.http.HttpServletRequest
 class DeviceController(
 		private val deviceService: DeviceService,
 		private val userService: UserService,
-		private val eventServiceCoordinator: EventServiceCoordinator
+		private val webSocket: WebSocket,
+		private val userTokenRepository: UserTokenRepository
 ) {
 
 	@GetMapping
@@ -36,7 +39,7 @@ class DeviceController(
 	fun getActiveDevices(
 			@RequestParam("excluding-device") excludingDeviceId: String?
 	): List<DeviceResponseDTO> {
-		return eventServiceCoordinator.getActiveDevices(excludingDeviceId)
+		return webSocket.getActiveDevices(excludingDeviceId)
 				.map { it.toResponseDTO() }
 	}
 
@@ -98,15 +101,25 @@ class DeviceController(
 			request: HttpServletRequest
 	) {
 		val ipAddress = request.getHeader("x-forwarded-for")
+		val user = loadLoggedInUser()
 
 		deviceService.createOrUpdateDevice(
-				user = loadLoggedInUser(),
+				user = user,
 				deviceId = body.deviceId,
 				deviceType = body.deviceType,
 				version = body.version,
 				ipAddress = ipAddress,
 				additionalData = body.additionalData
 		)
+
+		// This is TEMPORARY as a migration effort to associate the user's device to their login session so it doesn't
+		// have to get passed in everywhere anymore
+		if (user.currentAuthToken!!.device == null) {
+			user.currentAuthToken!!.device = deviceService.getDeviceById(body.deviceId)
+			logger.info("User ${user.name} did not have a device associated with their token of ${user.currentAuthToken!!.token}. " +
+					"Setting it to be ${user.currentAuthToken!!.device}")
+			userTokenRepository.save(user.currentAuthToken!!)
+		}
 
 		// This basically is a "log in". Update our last login time here
 		userService.updateOwnLastLogin()
@@ -164,4 +177,8 @@ class DeviceController(
 			createdAt = createdAt,
 			updatedAt = updatedAt
 	)
+
+	companion object {
+		val logger = logger()
+	}
 }

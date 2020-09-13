@@ -3,10 +3,13 @@ import {isLoggedIn} from "../util";
 import {Api} from "../api";
 import {getDeviceIdentifier} from "./version";
 import {RemotePlayType} from "../components/remote-play/modal/remote-play-type";
+import {ReviewSourceType} from "../components/review-queue/review-queue-management/review-queue-management";
+import {toast} from "react-toastify";
 
 export const SocketContext = React.createContext();
 
-let lastEventId = -1;
+let socket = null;
+let forceDisconnect = false;
 
 export class SocketProvider extends React.Component {
 	constructor(props) {
@@ -14,10 +17,12 @@ export class SocketProvider extends React.Component {
 
 		this.state = {
 			nowListeningUsers: {},
+			onConnectedHandlers: [],
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args),
-			sendRemotePlayEvent: (...args) => this.sendRemotePlayEvent(...args)
+			sendRemotePlayEvent: (...args) => this.sendRemotePlayEvent(...args),
+			addOnConnectedHandler: (...args) => this.addOnConnectedHandler(...args)
 		}
 	}
 
@@ -25,24 +30,14 @@ export class SocketProvider extends React.Component {
 		window.addEventListener('beforeunload', this.disconnectSocket.bind(this));
 	}
 
-	fetchLatestData() {
-		Api.get(`event/device-id/${getDeviceIdentifier()}`, { lastEventId }).then(result => {
-			lastEventId = result.lastEventId;
-
-			if (result.eventType === EventType.NOW_PLAYING) {
-				this.handleNowListeningMessage(result);
-			} else if (result.eventType === EventType.REMOTE_PLAY) {
-				this.handleRemotePlayMessage(result);
+	handleNowListeningMessage(data) {
+			const newNowListeningUsers = Object.assign({}, this.state.nowListeningUsers);
+			if (newNowListeningUsers[data.userId] === undefined) {
+				newNowListeningUsers[data.userId] = [];
 			}
+			newNowListeningUsers[data.userId][data.deviceId] = data;
 
-			this.fetchLatestData();
-		}).catch(() => {
-			setTimeout(this.fetchLatestData.bind(this), 2000);
-		});
-	}
-
-	handleNowListeningMessage(message) {
-		this.setState({ nowListeningUsers: message.currentlyListeningUsers });
+			this.setState({ nowListeningUsers: newNowListeningUsers })
 	}
 
 	handleRemotePlayMessage(message) {
@@ -87,24 +82,83 @@ export class SocketProvider extends React.Component {
 		}
 	}
 
+	handleReviewQueueMessage(message) {
+		this.props.reviewQueueContext.fetchReviewTracks();
+		let toastMessage;
+		switch (message.sourceType) {
+			case ReviewSourceType.USER_RECOMMEND:
+				const pluralTrack = message.count === 1 ? 'track' : 'tracks';
+				toastMessage = `User ${message.sourceDisplayName} recommended you ${message.count} new ${pluralTrack}`;
+				break;
+			case ReviewSourceType.YOUTUBE_CHANNEL:
+				const pluralVideo = message.count === 1 ? 'video' : 'videos';
+				toastMessage = `YouTube channel ${message.sourceDisplayName} uploaded ${message.count} new ${pluralVideo}`;
+				break;
+			case ReviewSourceType.ARTIST:
+				const pluralSong = message.count === 1 ? 'song' : 'songs';
+				toastMessage = `Artist ${message.sourceDisplayName} released ${message.count} new ${pluralSong}`;
+				break;
+		}
+
+		toast.info(toastMessage, { autoClose: 30000 });
+	}
+
 	connectToSocket() {
 		// Avoid sending a new connection on logout / login
-		// If our last update was not -1 then it means we're already looking for new data
-		if (!isLoggedIn() || lastEventId !== -1) {
+		if (!isLoggedIn()) {
 			return;
 		}
 
-		this.fetchLatestData();
+		forceDisconnect = false;
+
+		console.debug('Opening socket');
+		const uri = Api.getSocketUri() + '?deviceIdentifier=' + getDeviceIdentifier();
+		const newSocket = new WebSocket(uri);
+
+		newSocket.onmessage = res => {
+			const data = JSON.parse(res.data);
+			console.debug('Received socket data', data);
+
+			switch (data.messageType) {
+				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
+				case EventType.REMOTE_PLAY: return this.handleRemotePlayMessage(data);
+				case EventType.REVIEW_QUEUE: return this.handleReviewQueueMessage(data);
+				case EventType.CONNECTION_ESTABLISHED: return console.info(data.message);
+			}
+		};
+		newSocket.onclose = () => {
+			if (!forceDisconnect) {
+				console.debug('WebSocket was closed. Reconnecting');
+				this.connectToSocket();
+			}
+		};
+		newSocket.onopen = () => {
+			this.state.onConnectedHandlers.forEach(it => it())
+		};
+		socket = newSocket;
+		this.setState({
+			nowListeningUsers: {}
+		});
 	}
 
 	disconnectSocket() {
-		this.sendPlayEvent({ disconnected: true });
+		if (socket !== null) {
+			// We have the socket automatically reconnect whenever it gets disconnected.
+			// But in this case we want it to stay gone since we closed it explicitly
+			forceDisconnect = true;
+			socket.close();
+		}
 	}
 
 	sendPlayEvent(data) {
-		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume',
-			'removeTrack', 'disconnected', 'muted'];
+		if (!socket) {
+			console.debug("No socket defined. Not sending play event");
+			return;
+		}
+
+		const optionalKeys = ['isShuffling', 'isRepeating', 'timePlayed', 'isPlaying', 'volume', 'removeTrack', 'muted'];
 		const payload = {
+			messageType: EventType.NOW_PLAYING,
 			deviceId: getDeviceIdentifier()
 		};
 
@@ -122,13 +176,14 @@ export class SocketProvider extends React.Component {
 			}
 		});
 
-		Api.post('event/NOW_PLAYING', payload);
+		this.sendSocketData(payload);
 	}
 
 	sendRemotePlayEvent(eventType, targetDeviceId, optionalParams) {
 		const data = optionalParams || {};
 
 		const payload = {
+			messageType: EventType.REMOTE_PLAY,
 			remotePlayAction: eventType,
 			deviceId: getDeviceIdentifier(),
 			targetDeviceId
@@ -141,7 +196,26 @@ export class SocketProvider extends React.Component {
 			payload.newFloatValue = data.newFloatValue;
 		}
 
-		return Api.post('event/REMOTE_PLAY', payload);
+		this.sendSocketData(payload);
+	}
+
+	sendSocketData(payload) {
+		console.debug('Socket data', payload);
+		const readyState = socket.readyState;
+		if (readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify(payload))
+		} else if (readyState === WebSocket.CONNECTING) {
+			console.debug('Socket was still connecting. Ignoring socket send request');
+		} else {
+			console.info('Socket is in a state of ' + readyState + '. Creating a new socket and ignoring this send request');
+			this.connectToSocket();
+		}
+	}
+
+	addOnConnectedHandler(onConnectedHandler) {
+		const newHandlers = this.state.onConnectedHandlers.slice(0);
+		newHandlers.push(onConnectedHandler);
+		this.setState({ onConnectedHandlers: newHandlers });
 	}
 
 	render() {
@@ -155,5 +229,7 @@ export class SocketProvider extends React.Component {
 
 const EventType = Object.freeze({
 	NOW_PLAYING: 'NOW_PLAYING',
-	REMOTE_PLAY: 'REMOTE_PLAY'
+	REMOTE_PLAY: 'REMOTE_PLAY',
+	REVIEW_QUEUE: 'REVIEW_QUEUE',
+	CONNECTION_ESTABLISHED: 'CONNECTION_ESTABLISHED'
 });

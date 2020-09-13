@@ -31,7 +31,7 @@ function RemotePlayModal(props) {
 		}
 	};
 
-	const sendRemoteAction = () => {
+	const sendRemoteAction = e => {
 		const selectEl = document.getElementById('remote-play-selection');
 		const targetId = selectEl.options[selectEl.selectedIndex].value;
 
@@ -39,10 +39,10 @@ function RemotePlayModal(props) {
 			props.playType,
 			targetId,
 			{ trackIds: props.getSelectedTracks().map(track => track.id) }
-		).then(() => {
-			toast.success('Remote play action sent');
-			props.closeFunction();
-		});
+		);
+
+		toast.success('Remote play action sent');
+		props.closeFunction(e);
 	};
 
 	return (
@@ -81,7 +81,12 @@ function RemotePlayModal(props) {
 export default function RemotePlay(props) {
 	const [modalOpen, setModalOpen] = useState(false);
 
-	const closeFunction = () => setModalOpen(false);
+	const closeFunction = e => {
+		if (e) {
+			e.stopPropagation();
+		}
+		setModalOpen(false)
+	};
 
 	return (
 		<div id="remote-play" onClick={() => setModalOpen(true)}>

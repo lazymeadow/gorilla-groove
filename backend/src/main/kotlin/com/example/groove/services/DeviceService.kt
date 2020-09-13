@@ -26,10 +26,12 @@ class DeviceService(
 		return deviceRepository.findByUser(user)
 	}
 
+	fun getDeviceById(deviceIdentifier: String) = getDeviceByIdAndUserId(deviceIdentifier, loadLoggedInUser().id)
+
 	@Transactional(readOnly = true)
-	fun getDeviceById(deviceIdentifier: String): Device {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, loadLoggedInUser())
-				?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier")
+	fun getDeviceByIdAndUserId(deviceIdentifier: String, userId: Long): Device {
+		val device = deviceRepository.findByDeviceIdAndUser(deviceIdentifier, userId)
+				?: throw ResourceNotFoundException("No device found with identifier $deviceIdentifier and user ID: $userId")
 		return device.mergedDevice ?: device
 	}
 
@@ -68,19 +70,18 @@ class DeviceService(
 			version: String,
 			ipAddress: String?,
 			additionalData: String?
-	) {
-		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user)
-				?: run {
-					logger.info("First time seeing device $deviceId for user ${user.name}")
-					Device(
-							user = user,
-							deviceId = deviceId,
-							deviceName = generateDefaultName(),
-							deviceType = deviceType,
-							applicationVersion = version,
-							lastIp = ipAddress ?: "0.0.0.0"
-					)
-				}
+	): Device {
+		val device = deviceRepository.findByDeviceIdAndUser(deviceId, user.id) ?: run {
+			logger.info("First time seeing device $deviceId for user ${user.name}")
+			Device(
+					user = user,
+					deviceId = deviceId,
+					deviceName = generateDefaultName(),
+					deviceType = deviceType,
+					applicationVersion = version,
+					lastIp = ipAddress ?: "0.0.0.0"
+			)
+		}
 
 		// If this device has been merged, we need to update the version of the parent
 		val deviceToUpdate = device.mergedDevice ?: device
@@ -91,6 +92,8 @@ class DeviceService(
 		ipAddress?.let { deviceToUpdate.lastIp = ipAddress }
 
 		deviceRepository.save(deviceToUpdate)
+
+		return deviceToUpdate
 	}
 
 	private fun findActiveDevice(id: Long): Device {

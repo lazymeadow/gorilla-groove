@@ -13,12 +13,16 @@ data class UserToken(
 		val id: Long = 0,
 
 		@ManyToOne
-		@JoinColumn(name = "user_id", nullable = false)
+		@JoinColumn(name = "user_id")
 		val user: User,
 
-		@Column(nullable = false)
+		@ManyToOne
+		@JoinColumn(name = "device_id")
+		var device: Device?, // Should be non-null and be a VAL when we are done migrating users to the device-on-token system
+
+		@Column
 		val token: String = "",
 
-		@Column(name = "created_at", nullable = false)
+		@Column(name = "created_at")
 		val createdAt: Timestamp = now()
 )

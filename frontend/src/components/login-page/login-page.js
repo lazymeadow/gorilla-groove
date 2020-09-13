@@ -3,6 +3,8 @@ import {withRouter} from "react-router-dom";
 import {toast} from "react-toastify";
 import {Api} from "../../api";
 import {addCookie} from "../../cookie";
+import {getDeviceIdentifier} from "../../services/version";
+import {DeviceType} from "../../enums/device-type";
 
 class LoginPageInternal extends React.Component {
 	constructor(props) {
@@ -15,6 +17,9 @@ class LoginPageInternal extends React.Component {
 		let params = {
 			email: document.getElementById('email').value,
 			password: document.getElementById('password').value,
+			deviceId: getDeviceIdentifier(),
+			version: __VERSION__,
+			deviceType: DeviceType.WEB
 		};
 
 		Api.post('authentication/login', params)

@@ -59,10 +59,15 @@ class TrackController(
 			@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO,
 			request: HttpServletRequest
 	): ResponseEntity<String> {
+		val user = loadLoggedInUser()
 		val ipAddress = request.getHeader("x-forwarded-for")
-		logger.info("User ${loadLoggedInUser().name} listened to track with ID: ${markSongAsReadDTO.trackId}")
+		logger.info("User ${user.name} listened to track with ID: ${markSongAsReadDTO.trackId}")
 
-		trackService.markSongListenedTo(markSongAsReadDTO.trackId, markSongAsReadDTO.deviceId, ipAddress)
+		val deviceId = markSongAsReadDTO.deviceId
+				?: user.currentAuthToken!!.device?.deviceId
+				?: throw IllegalArgumentException("A device must be specified on either the request, or the logged in user's current token!")
+
+		trackService.markSongListenedTo(markSongAsReadDTO.trackId, deviceId, ipAddress)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -118,8 +123,12 @@ class TrackController(
 
 		val regex = Regex("^[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?\$")
 
-		trackTrimDTO.startTime?.let { regex.matches(it) }
-		trackTrimDTO.duration?.let { regex.matches(it) }
+		trackTrimDTO.startTime?.let {
+			require(regex.matches(it)) { "Invalid startTime format!" }
+		}
+		trackTrimDTO.duration?.let {
+			require(regex.matches(it)) { "Invalid endTime format!" }
+		}
 
 		val newLength = trackService.trimTrack(trackTrimDTO.trackId, trackTrimDTO.startTime, trackTrimDTO.duration)
 
@@ -156,7 +165,8 @@ class TrackController(
 
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
-			val deviceId: String
+			@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
+			val deviceId: String?
 	)
 
 	data class SetPrivateDTO(

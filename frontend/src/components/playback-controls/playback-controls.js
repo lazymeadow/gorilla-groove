@@ -193,16 +193,26 @@ export default function PlaybackControls(props) {
 		audio.volume = playbackContext.volume;
 		audio.muted = playbackContext.isMuted;
 
+		// Can happen if someone logs out and back in that we need to reset the state
+		// that we don't render on. This was probably a terrible optimization strategy
+		if (currentSessionPlayCounter === 0) {
+			previousCurrentSessionPlayCounter = 0;
+			previousPlaying = 0;
+			initialStateSent = false;
+		}
+
 		if (!initialStateSent) {
-			initialStateSent = true;
-			socketContext.sendPlayEvent({
-				removeTrack: true,
-				volume: audio.volume,
-				muted: audio.muted,
-				timePlayed: 0,
-				isShuffling: musicContext.shuffleSongs,
-				isRepeating: musicContext.repeatSongs
+			socketContext.addOnConnectedHandler(() => {
+				socketContext.sendPlayEvent({
+					removeTrack: true,
+					volume: audio.volume,
+					muted: audio.muted,
+					timePlayed: 0,
+					isShuffling: musicContext.shuffleSongs,
+					isRepeating: musicContext.repeatSongs
+				});
 			});
+			initialStateSent = true;
 		}
 
 		return () => {
@@ -227,8 +237,9 @@ export default function PlaybackControls(props) {
 	const audio = document.getElementById('audio');
 
 	if (
-		(!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
-		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter) // Song changed
+		audio !== null && // Can happen when logging out and back in temporarily
+		((!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
+		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter)) // Song changed
 	) {
 		lastSongPlayHeartbeatTime = Date.now();
 

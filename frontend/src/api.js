@@ -9,6 +9,11 @@ export class Api {
 		return this.getBaseUrl() + '/api/'
 	}
 
+	static getSocketUri() {
+		const protocol = isLocalEnvironment() ? 'ws' : 'wss';
+		return protocol + '://' + window.location.host + '/api/socket'
+	}
+
 	static get(url, params) {
 		let urlParameters = Api.encodeUriParamsFromObject(params);
 

@@ -1,6 +1,7 @@
 import React from "react";
 import {Api} from "../api";
 import {getDeviceIdentifier} from "./version";
+import {isLoggedIn} from "../util";
 
 export const DeviceContext = React.createContext();
 
@@ -25,7 +26,6 @@ export class DeviceProvider extends React.Component {
 	componentDidMount() {
 		const oneMinute = 60 * 1000;
 		updateIntervalId = setInterval(this.loadOtherDevices.bind(this), oneMinute);
-		this.loadOtherDevices();
 	}
 
 	componentWillUnmount() {
@@ -35,6 +35,9 @@ export class DeviceProvider extends React.Component {
 	}
 
 	loadOtherDevices() {
+		if (!isLoggedIn()) {
+			return
+		}
 		return Api.get(`device/active?excluding-device=${getDeviceIdentifier()}`).then(devices => {
 			this.setState({ otherDevices: devices });
 		});
