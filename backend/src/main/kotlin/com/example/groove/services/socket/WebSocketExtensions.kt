@@ -10,13 +10,13 @@ private val objectMapper = createMapper()
 fun WebSocketSession.sendIfOpen(message: Any) {
 	val textMessage = TextMessage(objectMapper.writeValueAsString(message))
 
-	WebSocket.logger.info("About to broadcast to user: $userId, session: $id, deviceIdentifier: $deviceIdentifier, '${textMessage.payload}'")
+	WebSocket.logger.debug("About to broadcast to user: $userId, session: $id, deviceIdentifier: $deviceIdentifier, '${textMessage.payload}'")
 	// If two threads access the same session it's an error. "The remote endpoint was in state [TEXT_PARTIAL_WRITING]"
 	synchronized(this) {
 		if (isOpen) {
 			sendMessage(textMessage)
 		} else {
-			WebSocket.logger.info("Could not send message to user: $userId, socket ID: $id: $message")
+			WebSocket.logger.warn("Could not send message to user: $userId, socket ID: $id: $message")
 		}
 	}
 }

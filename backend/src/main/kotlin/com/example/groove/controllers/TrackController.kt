@@ -117,11 +117,13 @@ class TrackController(
 
 	@PostMapping("/trim")
 	fun trimSong(@RequestBody trackTrimDTO: TrackTrimDTO): Map<String, Int> {
+		logger.info("User ${loadLoggedInUser().username} is attempting to trim a track: $trackTrimDTO")
+
 		if (trackTrimDTO.startTime == null && trackTrimDTO.duration == null) {
 			throw IllegalArgumentException("No trimming parameters were passed")
 		}
 
-		val regex = Regex("^[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?\$")
+		val regex = Regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?\$")
 
 		trackTrimDTO.startTime?.let {
 			require(regex.matches(it)) { "Invalid startTime format!" }
