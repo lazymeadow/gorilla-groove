@@ -4,7 +4,15 @@ import MediaPlayer
 
 class AudioPlayer : CachingPlayerItemDelegate {
     
-    private static let player = AVPlayer()
+    private static var player: AVPlayer = {
+        // I ran into an exc_bad_access code=1 error once and this answer on SO suggested splitting up the initialization
+        // from the declaration. I don't know why this would matter, but I have tried it and hopefully we don't see it again.
+        // (I think this crash has happened several times before, very intermittently)
+        // Because this is a static class I am trying this with a lazy initialization block instead of a constructor call.
+        // https://stackoverflow.com/a/57829394/13175115
+        AVPlayer()
+    }()
+    
     private static var registeredCallbacks: Array<(_ time: Double)->()> = []
     
     private static var lastSongPlayHeartbeatTime = 0.0;
