@@ -9,6 +9,9 @@ struct VersionResponse: Codable {
 struct LoginRequest: Codable {
     let email: String
     let password: String
+    let deviceId: String
+    let deviceType: String = "IPHONE"
+    let version: String = AppDelegate.getAppVersion()
 }
 
 class ViewController: UIViewController {    
@@ -35,7 +38,9 @@ class ViewController: UIViewController {
         self.apiVersion.text = AppDelegate.getAppVersion()
     }
     
-    private func presentLoggedInView() {
+    private func presentLoggedInView(_ userId: Int) {
+        Database.openDatabase(userId: userId)
+
         // If this is the first time this user has logged in, we want to sync in their library
         let user = UserState.getOwnUser()
         let newView: UIViewController = {
@@ -56,55 +61,29 @@ class ViewController: UIViewController {
         // TODO check for empty inputs here maybe?
         // Might be able to use the "show()" function for a simple error message
         
-        let session = URLSession(configuration: .default)
-        let url = URL(string: "https://gorillagroove.net/api/authentication/login")
-        var request : URLRequest = URLRequest(url: url!)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let deviceId = FileState.read(DeviceState.self)!.deviceId
+        let requestBody = LoginRequest(email: emailField.text!, password: passwordField.text!, deviceId: deviceId)
         
-        let requestBody = LoginRequest(email: emailField.text!, password: passwordField.text!)
-        let requestJson = try! JSONEncoder().encode(requestBody)
-        
-        request.httpBody = requestJson
         loginSpinner.isHidden = false
-        let dataTask = session.dataTask(with: request) { data, response, error in
-            guard let httpResponse = response as? HTTPURLResponse
-                else {
-                    print("error: not a valid http response")
-                    return
-            }
-            if (httpResponse.statusCode != 200) {
-                let message = httpResponse.statusCode == 403
+        HttpRequester.post("authentication/login", LoginState.self, requestBody, authenticated: false) { response, statusCode, _ in
+            if (statusCode != 200) {
+                let message = statusCode == 403
                     ? "The login credentials are incorrect!"
-                    : "Unable to contact Gorilla Groove. Try again in a minute."
+                    : "Unable to contact Gorilla Groove. Try again in about a minute."
                 DispatchQueue.main.async {
-                    self.showAlert(message)
+                    ViewUtil.showAlert(title: "Failed Login", message: message)
                     self.loginSpinner.isHidden = true
                 }
                 return
             }
             
-            let decodedData = try! JSONDecoder().decode(LoginState.self, from: data!)
-            FileState.save(decodedData)
+            FileState.save(response!)
 
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
                 
-                self.presentLoggedInView()
+                self.presentLoggedInView(response!.id)
             }
         }
-        dataTask.resume()
     }
-    
-    func showAlert(_ message: String) {
-        let alertController = UIAlertController(
-            title: "Failed Login",
-            message: message,
-            preferredStyle: .alert
-        )
-        alertController.addAction(UIAlertAction(title: "Dismiss", style: .default))
-        
-        self.present(alertController, animated: true, completion: nil)
-    }
-    
 }

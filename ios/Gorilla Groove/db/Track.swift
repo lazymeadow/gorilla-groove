@@ -1,14 +1,15 @@
 import Foundation
 
-public struct Track : Entity {
+public class Track : Entity {
     public var id: Int
     public var album: String
     public var artist: String
-    public var createdAt: Date
+    public var addedToLibrary: Date?
     public var featuring: String?
     public var genre: String?
     public var isHidden: Bool
     public var isPrivate: Bool
+    public var inReview: Bool
     public var lastPlayed: Date?
     public var length: Int
     public var name: String
@@ -20,16 +21,59 @@ public struct Track : Entity {
     public var songCachedAt: Date?
     public var artCachedAt: Date?
     
+    public init(
+        id: Int,
+        album: String,
+        artist: String,
+        addedToLibrary: Date?,
+        featuring: String?,
+        genre: String?,
+        isHidden: Bool,
+        isPrivate: Bool,
+        inReview: Bool,
+        lastPlayed: Date?,
+        length: Int,
+        name: String,
+        note: String?,
+        playCount: Int,
+        releaseYear: Int?,
+        trackNumber: Int?,
+        userId: Int,
+        songCachedAt: Date?,
+        artCachedAt: Date?
+    ) {
+        self.id = id
+        self.album = album
+        self.artist = artist
+        self.addedToLibrary = addedToLibrary
+        self.featuring = featuring
+        self.genre = genre
+        self.isHidden = isHidden
+        self.isPrivate = isPrivate
+        self.inReview = inReview
+        self.lastPlayed = lastPlayed
+        self.length = length
+        self.name = name
+        self.note = note
+        self.playCount = playCount
+        self.releaseYear = releaseYear
+        self.trackNumber = trackNumber
+        self.userId = userId
+        self.songCachedAt = songCachedAt
+        self.artCachedAt = artCachedAt
+    }
+    
     public static func fromDict(_ dict: [String : Any?]) -> Track {
         return Track(
             id: dict["id"] as! Int,
             album: dict["album"] as! String,
             artist: dict["artist"] as! String,
-            createdAt: (dict["createdAt"] as! Int).toDate(),
+            addedToLibrary: (dict["addedToLibrary"] as? Int)?.toDate(),
             featuring: dict["featuring"] as! String?,
             genre: dict["genre"] as? String,
             isHidden: (dict["isHidden"] as! Int).toBool(),
             isPrivate: (dict["isPrivate"] as! Int).toBool(),
+            inReview: (dict["inReview"] as! Int).toBool(),
             lastPlayed: (dict["lastPlayed"] as? Int)?.toDate(),
             length: dict["length"] as! Int,
             name: dict["name"] as! String,
@@ -49,17 +93,19 @@ public class TrackDao : BaseDao<Track> {
         userId: Int,
         album: String? = nil,
         artist: String? = nil,
+        inReview: Bool = false,
         sorts: Array<(String, Bool, Bool)> = []
     ) -> Array<Track> {
         let sortString = sorts.map { (key, isAscending, isNoCase) in
             key + (isNoCase ? " COLLATE NOCASE" : "") + (isAscending ? " ASC " : " DESC ")
         }.joined(separator: ",")
-            
+        
         let query = """
             SELECT *
             FROM track t
             WHERE user_id = \(userId)
             AND is_hidden = FALSE
+            AND in_review = \(inReview)
             \(artist.asSqlParam("AND artist ="))
             \(album.asSqlParam("AND album ="))
             \(sortString.isEmpty ? "" : ("ORDER BY \(sortString)"))
@@ -179,11 +225,21 @@ class CacheService {
     }
     
     private static func deleteAtPath(_ path: URL, _ trackId: Int, _ itemDescription: String) {
-        if FileManager.default.fileExists(atPath: path.absoluteString) {
+        if FileManager.exists(path) {
             print("Deleting cached \(itemDescription) for track ID: \(trackId)")
             try! FileManager.default.removeItem(at: path)
         } else {
-            print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found!")
+            print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found")
         }
+    }
+}
+
+extension FileManager {
+    static func exists(_ path: URL) -> Bool {
+        return FileManager.default.fileExists(atPath: path.path)
+    }
+    
+    static func move(_ oldPath: URL, _ newPath: URL) {
+        try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
     }
 }

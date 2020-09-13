@@ -47,7 +47,7 @@ class PlaylistsController : UITableViewController {
         
         let tracks = TrackDao.getTracksForPlaylist(playlist.id)
         
-        let view = SongViewController(playlist.name, tracks)
+        let view = TrackViewController(playlist.name, tracks, showingHidden: true)
         self.navigationController!.pushViewController(view, animated: true)
     }
 }

@@ -35,7 +35,13 @@ class MyLibraryController: UITableViewController {
         AudioPlayer.stop()
 
         // TODO actually send the logout command to the API
+        HttpRequester.post("authentication/logout", EmptyResponse.self, nil) { _, statusCode, _ in
+            if (statusCode == 200) {
+                print("Logout token deleted")
+            }
+        }
         FileState.clear(LoginState.self)
+        WebSocket.disconnect()
         
         // Until we ditch the storyboard, have to navigate to the login view this way
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -49,6 +55,8 @@ class MyLibraryController: UITableViewController {
 //        vc.modalPresentationStyle = .fullScreen
 //        vc.modalTransitionStyle = .crossDissolve
 //        self.present(vc, animated: true)
+        
+        Database.close()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -89,7 +97,7 @@ class MyLibraryController: UITableViewController {
         case .PLAY_COUNT:
             loadTitleView(viewText, "play_count", sortAscending: false)
         case .DATE_ADDED:
-            loadTitleView(viewText, "created_at", sortAscending: false)
+            loadTitleView(viewText, "added_to_library", sortAscending: false)
         }
     }
     
@@ -100,7 +108,7 @@ class MyLibraryController: UITableViewController {
     ) {
         let tracks = TrackService.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
 
-        let view = SongViewController(viewTitle, tracks)
+        let view = TrackViewController(viewTitle, tracks)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

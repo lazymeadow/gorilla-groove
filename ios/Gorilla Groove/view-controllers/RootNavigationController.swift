@@ -6,9 +6,10 @@ class RootNavigationController : UIViewController {
     let libraryController = MyLibraryController()
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
-    func getNowPlayingSongController() -> SongViewController {
-        return SongViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
+    func getNowPlayingSongController() -> TrackViewController {
+        return TrackViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
     }
+    let settingsController = SettingsController()
     
     lazy var topView = UINavigationController()
     lazy var activeButton: NavigationButton? = nil
@@ -17,7 +18,7 @@ class RootNavigationController : UIViewController {
     lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, getNowPlayingSongController, handleButtonTap)
     lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, nil, handleButtonTap)
     lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, nil, handleButtonTap)
-    lazy var settingsButton = NavigationButton("Settings", "gear", nil, nil, handleButtonTap)
+    lazy var settingsButton = NavigationButton("Settings", "gear", settingsController, nil, handleButtonTap)
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
     
@@ -25,6 +26,7 @@ class RootNavigationController : UIViewController {
     override func viewDidLoad() {
         print("Loaded root navigation")
         super.viewDidLoad()
+        
         topView.pushViewController(libraryController, animated: false)
         
         activeButton = myLibraryButton
@@ -65,7 +67,7 @@ class RootNavigationController : UIViewController {
 
             // No need to do this in a blocking way. It shouldn't be syncing all that much stuff.
             // If we block, there is a second delay or so before we can start using the app no matter what.
-            ServerSynchronizer().syncWithServer()
+            ServerSynchronizer.syncWithServer()
         }
     }
     

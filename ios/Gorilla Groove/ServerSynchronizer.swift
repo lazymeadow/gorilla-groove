@@ -4,19 +4,18 @@ import CoreData
 class ServerSynchronizer {
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
-    let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=200&page="
+    static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=400&page="
     
-    func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
+    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
         print("Initiating sync with server...")
         
-        let lastSync = UserState.getOwnUser().lastSync
-        
-        // API uses millis. Multiply by 1000
+        let ownUser = UserState.getOwnUser()
+        let lastSync = ownUser.lastSync
+        let ownId = ownUser.id
+
         let minimum = lastSync?.toEpochTime() ?? 0
         let newDate = Date()
         let maximum = newDate.toEpochTime()
-        
-        let ownId = FileState.read(LoginState.self)!.id
         
         // TODO can I have 1 semaphore start at -2 and just use it for all?
         let semaphores = [DispatchSemaphore(value: 0), DispatchSemaphore(value: 0), DispatchSemaphore(value: 0)]
@@ -47,7 +46,7 @@ class ServerSynchronizer {
     
     // -- TRACKS
     
-    private func saveTracks(
+    static private func saveTracks(
         _ minimum: Int,
         _ maximum: Int,
         _ ownId: Int,
@@ -68,7 +67,7 @@ class ServerSynchronizer {
         allDoneSemaphore.signal()
     }
     
-    private func savePageOfTrackChanges(url: String, page: Int, userId: Int) -> Int {
+    static private func savePageOfTrackChanges(url: String, page: Int, userId: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(
@@ -86,11 +85,13 @@ class ServerSynchronizer {
             for newTrackResponse in entityResponse!.content.new {
                 TrackDao.save(newTrackResponse.asTrack(userId: userId))
 
-                print("Adding new track with ID: \(newTrackResponse.id)")
+                print("Added new track with ID: \(newTrackResponse.id)")
             }
             
             for modifiedTrackResponse in entityResponse!.content.modified {
-                let oldTrack = TrackDao.findById(modifiedTrackResponse.id)!
+                let modifiedTrackId = modifiedTrackResponse.id
+                print("Modifying track with ID \(modifiedTrackId)")
+                let oldTrack = TrackDao.findById(modifiedTrackId)!
                 
                 // Check if our caches are invalidated for this track
                 var newSongCachedAt: Date? = nil
@@ -114,13 +115,14 @@ class ServerSynchronizer {
                 let updatedTrack = modifiedTrackResponse.asTrack(userId: userId, songCachedAt: newSongCachedAt, artCachedAt: newArtCachedAt)
                 TrackDao.save(updatedTrack)
                 
-                print("Updating existing track with ID: \(modifiedTrackResponse.id)")
+                print("Updated existing track with ID: \(modifiedTrackResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
                 TrackDao.delete(deletedId)
+                CacheService.deleteCachedSong(deletedId)
                 
-                print("Deleting track with ID: \(deletedId)")
+                print("Deleted track with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages
@@ -134,7 +136,7 @@ class ServerSynchronizer {
 
     // -- PLAYLISTS
     
-    private func savePlaylists(
+    static private func savePlaylists(
         _ minimum: Int,
         _ maximum: Int,
         _ ownId: Int
@@ -151,7 +153,7 @@ class ServerSynchronizer {
         print("Finished syncing playlists")
     }
     
-    private func savePageOfPlaylistChanges(url: String, page: Int, userId: Int) -> Int {
+    static private func savePageOfPlaylistChanges(url: String, page: Int, userId: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(
@@ -191,7 +193,7 @@ class ServerSynchronizer {
     
     // -- PLAYLIST TRACKS
     
-    private func savePlaylistTracks(
+    static private func savePlaylistTracks(
         _ minimum: Int,
         _ maximum: Int,
         _ ownId: Int,
@@ -212,7 +214,7 @@ class ServerSynchronizer {
         allDoneSemaphore.signal()
     }
     
-    private func savePageOfPlaylistTrackChanges(_ url: String, _ page: Int) -> Int {
+    static private func savePageOfPlaylistTrackChanges(_ url: String, _ page: Int) -> Int {
         let semaphore = DispatchSemaphore(value: 0)
         var pagesToFetch = -1
         HttpRequester.get(
@@ -252,7 +254,7 @@ class ServerSynchronizer {
     
     // -- USERS
      
-     private func saveUsers(
+     static private func saveUsers(
          _ minimum: Int,
          _ maximum: Int,
          _ ownId: Int,
@@ -273,7 +275,7 @@ class ServerSynchronizer {
          allDoneSemaphore.signal()
      }
      
-     private func savePageOfUserChanges(_ url: String, _ page: Int) -> Int {
+     static private func savePageOfUserChanges(_ url: String, _ page: Int) -> Int {
          let semaphore = DispatchSemaphore(value: 0)
          var pagesToFetch = -1
          HttpRequester.get(
@@ -324,9 +326,10 @@ class ServerSynchronizer {
         let genre: String?
         let playCount: Int
         let `private`: Bool
+        let inReview: Bool
         let hidden: Bool
         let lastPlayed: Date?
-        let createdAt: Date
+        let addedToLibrary: Date?
         let note: String?
         let songUpdatedAt: Date?
         let artUpdatedAt: Date?
@@ -336,11 +339,12 @@ class ServerSynchronizer {
                 id: id,
                 album: album,
                 artist: artist,
-                createdAt: createdAt,
+                addedToLibrary: addedToLibrary,
                 featuring: featuring,
                 genre: genre,
                 isHidden: hidden,
                 isPrivate: `private`,
+                inReview: inReview,
                 lastPlayed: lastPlayed,
                 length: length,
                 name: name,

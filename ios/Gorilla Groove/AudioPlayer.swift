@@ -164,20 +164,21 @@ class AudioPlayer : CachingPlayerItemDelegate {
     }
     
     private static func sendPlayEvent(_ track: Track?) {
-        let deviceId = FileState.read(DeviceState.self)!.deviceId
-
-        let request = PlayEventRequest(trackId: track?.id, deviceId: deviceId)
+        let request = PlayEventRequest(trackId: track?.id, isPlaying: track != nil)
         
         if (track != nil) {
             lastSongPlayHeartbeatTime = CACurrentMediaTime()
+            WebSocket.connect()
+            WebSocket.sendMessage(request)
+        } else {
+            WebSocket.disconnect()
         }
-        
-        HttpRequester.post("currently-listening", EmptyResponse.self, request)
     }
     
     struct PlayEventRequest: Codable {
         let trackId: Int?
-        let deviceId: String
+        let isPlaying: Bool?
+        let messageType: String = "NOW_PLAYING"
     }
 }
 

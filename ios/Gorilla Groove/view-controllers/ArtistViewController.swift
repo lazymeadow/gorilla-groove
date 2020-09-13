@@ -68,7 +68,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
             if (albums.count == 1) {
                 let tracks = TrackService.getTracks(album: albums.first!.name, artist: cell.artist!)
                 
-                return SongViewController(albums.first!.name, tracks)
+                return TrackViewController(albums.first!.name, tracks)
             } else {
                 return AlbumViewController(cell.artist!, albums, cell.artist!)
             }

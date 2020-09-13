@@ -4,28 +4,38 @@ import SQLite3
 class Database {
     static var db: OpaquePointer?
     
-    static func getDbPath() -> URL {
-        let fileManager = FileManager.default
-        let dbName = "Groove.sqlite"
+    private static func getDbPath(_ userId: Int) -> URL {
+        let dbName = "Groove-\(userId).sqlite"
         
-        let documentsDirectoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        
-        let persistentStoreURL = documentsDirectoryURL.appendingPathComponent(dbName)
-        
-        return persistentStoreURL
+        let basePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return basePath.appendingPathComponent(dbName)
     }
     
-    static func openDatabase() {
-        let path = getDbPath().path
+    static func openDatabase(userId: Int) {
+        let path = getDbPath(userId).path
         
         let openResult = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_CREATE, nil)
         if openResult == SQLITE_OK {
             print("Successfully opened connection to database at \(path)")
             
             migrate()
+            
+            if (getDbVersion() == 4) {
+                print("User is on a flawed DB version and needs a forced migration")
+                reset(userId)
+            }
         } else {
             print("Unable to open database. Got result code \(openResult)")
         }
+    }
+    
+    static func close() {
+        sqlite3_close(db)
+    }
+    
+    static func reset(_ userId: Int) {
+        try! FileManager.default.removeItem(at: getDbPath(userId))
+        openDatabase(userId: userId)
     }
     
     // Getting the last insert ID isn't thread safe in this function. Unsure if it matters
@@ -104,9 +114,16 @@ class Database {
         return result
     }
     
+    static func getDbVersion() -> Int {
+        return query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
+    }
+    
     static private func migrate() {
-        let currentVersion = query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
-        let targetVersion = 4
+        let currentVersion = getDbVersion()
+        if (currentVersion == 4) {
+            return
+        }
+        let targetVersion = 5 // 5 and not 4 because 4 is a bugged version that needed a forced 1 time migration
         
         print("Existing DB is using version: \(currentVersion)")
         
@@ -135,7 +152,7 @@ class Database {
         CREATE TABLE "track" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "user_id"    INTEGER NOT NULL,
-            "name"    TEXT NOT NULL UNIQUE,
+            "name"    TEXT NOT NULL,
             "artist"    TEXT NOT NULL,
             "featuring"    TEXT NOT NULL,
             "album"    TEXT NOT NULL,
@@ -146,8 +163,9 @@ class Database {
             "play_count"    INTEGER NOT NULL,
             "is_private"    INTEGER NOT NULL,
             "is_hidden"    INTEGER NOT NULL,
-            "created_at"    INTEGER NOT NULL,
+            "added_to_library"    INTEGER,
             "last_played"    INTEGER,
+            "in_review"    INTEGER NOT NULL,
             "note"    TEXT
         );
         """)

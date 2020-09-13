@@ -17,26 +17,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if (FileState.read(DeviceState.self) == nil) {
             FileState.save(DeviceState(deviceId: UUID().uuidString.lowercased()))
         }
-        
-        let token = FileState.read(LoginState.self)?.token
-        Database.openDatabase()
 
-        if (token != nil) {
-            print("User logged was previously logged in")
-            
-            // Keeping this around as an example of how to re-initiate a sync when a re-sync is needed for a migration
-//            if (!CoreDataManager().restoredCleanly) {
-//                print("User was logged in but Core Data was not initiated cleanly. Initiating sync to repair")
-//                window!.rootViewController = SyncController()
-//
-//                return true
-//            }
+        if let loginState = FileState.read(LoginState.self) {
+            print("User was previously logged in")
+            Database.openDatabase(userId: loginState.id)
             
             let user = UserState.getOwnUser()
             if (user.lastSync == nil) {
-                print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
-                // TODO remove this when done devving this screen
-//                window!.rootViewController = SyncController()
+                if AppDelegate.getAppVersion() == "1.3.1.1" {
+                    print("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
+                    window!.rootViewController = SyncController()
+                } else {
+                    print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
+                }
             } else {
                 window!.rootViewController = RootNavigationController()
             }
@@ -51,12 +44,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        print("App is now in the background")
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
-        // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+        print("App is now in the foreground")
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -64,7 +56,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        print("Application will terminate")
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
     }

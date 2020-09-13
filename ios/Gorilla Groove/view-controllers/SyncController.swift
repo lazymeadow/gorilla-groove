@@ -137,7 +137,7 @@ class SyncController: UIViewController {
     }
     
     private func sync() {
-        ServerSynchronizer().syncWithServer() { completedPage, totalPages, type in
+        ServerSynchronizer.syncWithServer() { completedPage, totalPages, type in
             DispatchQueue.main.async {
                 let percentDone: Float = {
                     if (totalPages == 1) {
