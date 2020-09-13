@@ -1,5 +1,4 @@
 import UIKit
-import SwiftUI
 import Foundation
 import CoreMedia
 
@@ -27,14 +26,14 @@ class MediaControlsController: UIViewController {
         return icon
     }()
     
-    var backIcon: UIView {
+    lazy var backIcon: UIView = {
         let icon = createIcon("backward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
             action: #selector(playPrevious(tapGestureRecognizer:))
         ))
         return icon
-    }
+    }()
     
     lazy var playIcon: UIView = {
         let icon = createIcon("play.fill", scale: .large)
@@ -55,14 +54,14 @@ class MediaControlsController: UIViewController {
         return icon
     }()
     
-    var forwardIcon: UIView {
+    lazy var forwardIcon: UIView = {
         let icon = createIcon("forward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
             action: #selector(playNext(tapGestureRecognizer:))
         ))
         return icon
-    }
+    }()
     
     lazy var shuffleIcon: UIView = {
         let icon = createIcon("shuffle", weight: .bold)
@@ -141,7 +140,7 @@ class MediaControlsController: UIViewController {
         content.addArrangedSubview(songTextView)
         content.addArrangedSubview(bottomElements)
         
-        content.setCustomSpacing(8.0, after: topButtons)
+        content.setCustomSpacing(-2.0, after: topButtons)
         content.setCustomSpacing(8.0, after: songTextView)
         
         self.view.addSubview(content)
@@ -241,23 +240,30 @@ class MediaControlsController: UIViewController {
         let image = UIImage(systemName: name, withConfiguration: config)!
         let icon = UIImageView(image: image)
         
-        // Add a wrapper element that just hugs the icon with some padding for easier clicking
+        let horizontalWrap = wrapView(icon, isWidth: true)
+        let wrapper = wrapView(horizontalWrap, isWidth: false)
+        wrapper.tintColor = .white
+                
+        return wrapper
+    }
+    
+    // Because UIEdgeInsets doesn't actually work no matter what I try, do this hacky nonsense instead
+    private func wrapView(_ view: UIView, isWidth: Bool) -> UIView {
         let wrapper = UIStackView()
-        wrapper.axis = .vertical
+        wrapper.axis = isWidth ? .vertical : .horizontal
         wrapper.alignment = .center
         wrapper.distribution = .equalCentering
         wrapper.translatesAutoresizingMaskIntoConstraints = false
 
-        wrapper.addArrangedSubview(icon)
+        wrapper.addArrangedSubview(view)
 
         wrapper.isUserInteractionEnabled = true
-        wrapper.tintColor = .white
         
-        wrapper.widthAnchor.constraint(equalTo: icon.widthAnchor, constant: 10).isActive = true
-        
-        let heightConstraint = wrapper.heightAnchor.constraint(equalTo: icon.heightAnchor, constant: 10)
-        heightConstraint.priority = UILayoutPriority(1000) // FIXME This creates a constraint warning. Need to figure it out
-        heightConstraint.isActive = true
+        if isWidth {
+            wrapper.widthAnchor.constraint(equalTo: view.widthAnchor, constant: 20).isActive = true
+        } else {
+            wrapper.heightAnchor.constraint(equalTo: view.heightAnchor, constant: 20).isActive = true
+        }
         
         return wrapper
     }
@@ -343,6 +349,7 @@ class MediaControlsController: UIViewController {
         AudioPlayer.pause()
         self.pauseIcon.isHidden = true
         self.playIcon.isHidden = false
+        self.playIcon.animateTint(color: Colors.secondary)
     }
     
     @objc func playMusic(tapGestureRecognizer: UITapGestureRecognizer) {
@@ -353,13 +360,16 @@ class MediaControlsController: UIViewController {
         AudioPlayer.play()
         self.pauseIcon.isHidden = false
         self.playIcon.isHidden = true
+        self.pauseIcon.animateTint(color: Colors.secondary)
     }
     
     @objc func playNext(tapGestureRecognizer: UITapGestureRecognizer) {
+        forwardIcon.animateTint(color: Colors.secondary)
         NowPlayingTracks.playNext()
     }
     
     @objc func playPrevious(tapGestureRecognizer: UITapGestureRecognizer) {
+        backIcon.animateTint(color: Colors.secondary)
         NowPlayingTracks.playPrevious()
     }
     

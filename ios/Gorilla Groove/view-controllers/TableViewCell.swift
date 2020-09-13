@@ -29,3 +29,17 @@ extension UITableViewCell {
         }
     }
 }
+
+extension UIView {
+    func animateTint(color: UIColor, timeInterval: Double = 0.12) {
+        self.tintAdjustmentMode = .normal
+        let startingColor = self.tintColor
+        UIView.animate(withDuration: timeInterval, animations: {
+            self.tintColor = color
+        }) { (finished) in
+            UIView.animate(withDuration: timeInterval, animations: {
+                self.tintColor = startingColor
+            })
+        }
+    }
+}
