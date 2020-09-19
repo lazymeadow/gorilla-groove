@@ -120,7 +120,7 @@ class WebSocket(
 	inner class SocketTextHandler : TextWebSocketHandler() {
 
 		override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
-			logger.info("Received message from user ${session.userId} session ${session.id}")
+			logger.debug("Received message from user ${session.userId} session ${session.id}")
 			val clientMessage = try {
 				objectMapper.readValue(message.payload, WebSocketMessage::class.java)
 			} catch (e: Exception) {
@@ -136,7 +136,7 @@ class WebSocket(
 		}
 
 		override fun afterConnectionEstablished(session: WebSocketSession) {
-			logger.info("New user with ID: ${session.userId} connected to socket with ID: ${session.id}")
+			logger.debug("New user with ID: ${session.userId} connected to socket with ID: ${session.id}")
 			sessions[session.id] = session
 
 			// This is mostly here for debugging. But it's a nice easter egg too if anyone finds it
@@ -147,7 +147,7 @@ class WebSocket(
 		}
 
 		override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
-			logger.info("User with ID: ${session.userId} disconnected from socket with ID: ${session.id}")
+			logger.debug("User with ID: ${session.userId} disconnected from socket with ID: ${session.id}")
 
 			sessions.remove(session.id)
 			nowListeningSocketHandler.removeSession(session)

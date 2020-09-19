@@ -111,13 +111,11 @@ export class SocketProvider extends React.Component {
 
 		forceDisconnect = false;
 
-		console.debug('Opening socket');
 		const uri = Api.getSocketUri() + '?deviceIdentifier=' + getDeviceIdentifier();
 		const newSocket = new WebSocket(uri);
 
 		newSocket.onmessage = res => {
 			const data = JSON.parse(res.data);
-			console.debug('Received socket data', data);
 
 			switch (data.messageType) {
 				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
@@ -128,7 +126,6 @@ export class SocketProvider extends React.Component {
 		};
 		newSocket.onclose = () => {
 			if (!forceDisconnect) {
-				console.debug('WebSocket was closed. Reconnecting');
 				this.connectToSocket();
 			}
 		};
@@ -200,7 +197,6 @@ export class SocketProvider extends React.Component {
 	}
 
 	sendSocketData(payload) {
-		console.debug('Socket data', payload);
 		const readyState = socket.readyState;
 		if (readyState === WebSocket.OPEN) {
 			socket.send(JSON.stringify(payload))
