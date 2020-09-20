@@ -206,10 +206,10 @@ class SpotifyApiClient(
 
 	private fun String.toDate(): LocalDate {
 		val sections = this.split("-")
-		return when {
-			sections.size == 1 -> Year.parse(this).atMonth(0).atDay(0)
-			sections.size == 2 -> YearMonth.parse(this).atDay(0)
-			sections.size == 3 -> LocalDate.parse(this)
+		return when (sections.size) {
+			1 -> Year.parse(this).atMonth(1).atDay(1)
+			2 -> YearMonth.parse(this).atDay(1)
+			3 -> LocalDate.parse(this)
 			else -> throw IllegalArgumentException("Weird date encountered on track! $this")
 		}
 	}
