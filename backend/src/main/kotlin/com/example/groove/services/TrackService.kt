@@ -12,7 +12,6 @@ import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.example.groove.util.unwrap
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -31,7 +30,8 @@ class TrackService(
 		private val deviceRepository: DeviceRepository,
 		private val fileStorageService: FileStorageService,
 		private val songIngestionService: SongIngestionService,
-		private val youtubeDownloadService: YoutubeDownloadService
+		private val youtubeDownloadService: YoutubeDownloadService,
+		private val playlistService: PlaylistService
 ) {
 
 	@Transactional(readOnly = true)
@@ -42,6 +42,7 @@ class TrackService(
 			userId: Long?,
 			searchTerm: String?,
 			showHidden: Boolean,
+			excludedPlaylistId: Long?,
 			pageable: Pageable
 	): Page<Track> {
 		val loggedInId = loadLoggedInUser().id
@@ -59,6 +60,15 @@ class TrackService(
 				}.toMutableList()
 
 		val page = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(newSort))
+
+		// The user can provide an ID of a playlist they DON'T want to see tracks from.
+		// This makes it easier to add tracks to an existing playlist when you aren't sure if the tracks are already added
+		val excludedTrackIds = excludedPlaylistId?.let { playlistId ->
+			playlistService.getTracks(playlistId = playlistId)
+					.content
+					.map { it.track.id }
+		}
+
 		return trackRepository.getTracks(
 				name = name,
 				artist = artist,
@@ -67,6 +77,7 @@ class TrackService(
 				loadPrivate = loadPrivate,
 				loadHidden = showHidden,
 				searchTerm = searchTerm,
+				excludedTrackIds = excludedTrackIds,
 				pageable = page
 		)
 	}
@@ -100,7 +111,7 @@ class TrackService(
 
 	@Transactional
 	fun markSongListenedTo(trackId: Long, deviceId: String, remoteIp: String?) {
-		val track = trackRepository.findById(trackId).unwrap()
+		val track = trackRepository.get(trackId)
 		val user = loadLoggedInUser()
 
 		if (track == null || track.user.id != user.id) {
@@ -126,7 +137,7 @@ class TrackService(
 	@Transactional
 	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?) {
 		updateTrackDTO.trackIds.forEach { trackId ->
-			val track = trackRepository.findById(trackId).unwrap()
+			val track = trackRepository.get(trackId)
 			val user = loadLoggedInUser()
 
 			if (track == null || track.user.id != user.id) {
@@ -248,7 +259,7 @@ class TrackService(
 
 		val albumLink = fileStorageService.getAlbumArtLink(trackId, anonymousAccess, ArtSize.LARGE)
 
-		val track = trackRepository.findById(trackId).unwrap()!!
+		val track = trackRepository.get(trackId)!!
 
 		return mapOf(
 				"trackLink" to trackLink,
@@ -262,7 +273,7 @@ class TrackService(
 	}
 
 	fun trimTrack(trackId: Long, startTime: String?, duration: String?): Int {
-		val track = trackRepository.findById(trackId).unwrap()
+		val track = trackRepository.get(trackId)
 
 		if (track == null || track.user.id != loadLoggedInUser().id) {
 			throw IllegalArgumentException("No track found by ID $trackId!")

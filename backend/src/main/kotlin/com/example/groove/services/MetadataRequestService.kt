@@ -87,7 +87,7 @@ class MetadataRequestService(
 		val currentUser = loadLoggedInUser()
 
 		val validTracks = trackIds
-				.map { trackRepository.findById(it).unwrap() }
+				.map { trackRepository.get(it) }
 				.filterNot { track ->
 					track == null
 							|| track.user.id != currentUser.id

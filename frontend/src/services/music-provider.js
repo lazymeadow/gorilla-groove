@@ -31,6 +31,7 @@ export class MusicProvider extends React.Component {
 			playedTrackIndex: null,
 			songIndexesToShuffle: [],
 			shuffledSongIndexes: [],
+			excludedPlaylistId: -1,
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
 			shuffleChaos: LocalStorage.getNumber('shuffleChaos', 1),
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
@@ -113,6 +114,10 @@ export class MusicProvider extends React.Component {
 			params.searchTerm = searchTerm;
 		}
 		params.showHidden = params.showHidden !== undefined ? params.showHidden : this.props.filterContext.showHidden;
+
+		if (this.state.excludedPlaylistId !== -1) {
+			params.excludedPlaylistId = this.state.excludedPlaylistId;
+		}
 	}
 
 	loadSongsForUser(userId, params, append) {

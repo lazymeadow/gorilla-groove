@@ -8,9 +8,9 @@ import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.OwnershipType
 import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.example.groove.util.unwrap
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
@@ -33,7 +33,7 @@ class PlaylistService(
 
 	@Transactional
 	fun renamePlaylist(user: User, playlistId: Long, name: String): Playlist {
-		val playlist = playlistRepository.findById(playlistId).unwrap()
+		val playlist = playlistRepository.get(playlistId)
 				?: throw IllegalArgumentException("No playlist with ID: $playlistId found")
 
 		if (userCanEditPlaylist(user, playlist)) {
@@ -63,7 +63,7 @@ class PlaylistService(
 	fun deletePlaylist(user: User, playlistId: Long) {
 		logger.info("${user.email} is attempting to delete playlist $playlistId")
 
-		val playlist = playlistRepository.findById(playlistId).unwrap()
+		val playlist = playlistRepository.get(playlistId)
 				?: throw IllegalArgumentException("Playlist not found with ID $playlistId")
 		val playlistUser = playlist.users.find { it.user.id == user.id }
 				?: throw IllegalArgumentException("Playlist not found with ID $playlistId")
@@ -78,14 +78,14 @@ class PlaylistService(
 
 	@Transactional(readOnly = true)
 	fun getTracks(
-			name: String?,
-			artist: String?,
-			album: String?,
+			name: String? = null,
+			artist: String? = null,
+			album: String? = null,
 			playlistId: Long,
-			searchTerm: String?,
-			pageable: Pageable
+			searchTerm: String? = null,
+			pageable: Pageable = Pageable.unpaged()
 	): Page<PlaylistTrack> {
-		val playlist = playlistRepository.findById(playlistId).unwrap()
+		val playlist = playlistRepository.get(playlistId)
 				?: throw IllegalArgumentException("No playlist with ID: $playlistId found")
 		playlistUserRepository.findByUserAndPlaylist(loadLoggedInUser(), playlist)
 				?: throw PermissionDeniedException("User has insufficient privileges to view playlist with ID: $playlistId")
@@ -96,15 +96,15 @@ class PlaylistService(
 	@Transactional
 	fun addTracksToPlaylist(playlistId: Long, trackIds: List<Long>) {
 		val user = loadLoggedInUser()
-		val playlist = playlistRepository.findById(playlistId)
-				.orElseThrow { IllegalArgumentException("Playlist ID: $playlistId not found") }
+		val playlist = playlistRepository.get(playlistId)
+				?: throw IllegalArgumentException("Playlist ID: $playlistId not found")
 
 		val tracks = trackIds.map {
-			trackRepository.findById(it)
-					.orElseThrow { IllegalArgumentException("Track ID: $it not found") }
+			trackRepository.get(it)
+					?: throw IllegalArgumentException("Track ID: $it not found")
 		}
 
-		if (playlist == null || !userCanEditPlaylist(user, playlist, tracks)) {
+		if (!userCanEditPlaylist(user, playlist, tracks)) {
 			logger.warn("User of ID ${user.id} tried to add tracks to the playlist of ID ${playlist.id} but did not have the permission to do so")
 			throw PermissionDeniedException("Insufficient privileges to add the selected tracks to the playlist")
 		}
@@ -119,8 +119,7 @@ class PlaylistService(
 		val user = loadLoggedInUser()
 
 		val playlistTracks = playlistTrackIds.map {
-			playlistTrackRepository.findById(it)
-					.orElseThrow { IllegalArgumentException("Track ID: $it not found") }
+			playlistTrackRepository.get(it) ?: throw IllegalArgumentException("Track ID: $it not found")
 		}
 
 		playlistTracks.forEach { playlistTrack ->

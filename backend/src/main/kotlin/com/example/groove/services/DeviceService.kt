@@ -5,9 +5,9 @@ import com.example.groove.db.model.*
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.example.groove.util.unwrap
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -37,7 +37,7 @@ class DeviceService(
 
 	@Transactional(readOnly = true)
 	fun getDeviceById(deviceId: Long): Device {
-		val device = deviceRepository.findById(deviceId).unwrap()
+		val device = deviceRepository.get(deviceId)
 				?: throw ResourceNotFoundException("No device found with id $deviceId")
 
 		return device.mergedDevice ?: device
@@ -97,7 +97,7 @@ class DeviceService(
 	}
 
 	private fun findActiveDevice(id: Long): Device {
-		val device = deviceRepository.findById(id).unwrap()
+		val device = deviceRepository.get(id)
 		if (device == null || device.user.id != loadLoggedInUser().id) {
 			throw ResourceNotFoundException("No device found with ID $id")
 		}
@@ -164,7 +164,7 @@ class DeviceService(
 		currentDevice.partyEnabledUntil = partyUntil
 		currentDevice.partyUsers.removeAll { true }
 		partyUserIds.forEach { userId ->
-			val user = userRepository.findById(userId).unwrap()
+			val user = userRepository.get(userId)
 					?: throw ResourceNotFoundException("No user found with ID $userId!")
 
 			require(currentDevice.user.id != userId) {

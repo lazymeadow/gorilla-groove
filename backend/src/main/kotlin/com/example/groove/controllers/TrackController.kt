@@ -33,6 +33,7 @@ class TrackController(
 			@RequestParam("album") album: String?,
 			@RequestParam("searchTerm") searchTerm: String?,
 			@RequestParam("showHidden") showHidden: Boolean?,
+			@RequestParam("excludedPlaylistId") excludedPlaylistId: Long?,
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
 		return trackService.getTracks(
@@ -42,6 +43,7 @@ class TrackController(
 				userId = userId,
 				searchTerm = searchTerm,
 				showHidden = showHidden ?: false,
+				excludedPlaylistId = excludedPlaylistId,
 				pageable = pageable
 		)
 	}

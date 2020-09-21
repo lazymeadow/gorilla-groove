@@ -233,7 +233,7 @@ class SongIngestionService(
 
 	fun createTrackFileWithMetadata(trackId: Long, audioFormat: AudioFormat): File {
 		logger.info("About to create a downloadable track for track ID: $trackId with format ${audioFormat.extension}")
-		val track = trackRepository.findById(trackId).unwrap()
+		val track = trackRepository.get(trackId)
 
 		if (track == null || (track.private && track.user != loadLoggedInUser())) {
 			throw IllegalArgumentException("No track found by ID $trackId!")

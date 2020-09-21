@@ -21,6 +21,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			AND (:name IS NULL OR t.name LIKE %:name%)
 			AND (:artist IS NULL OR t.artist LIKE %:artist%)
 			AND (:album IS NULL OR t.album LIKE %:album%)
+			AND (COALESCE(:excludedTrackIds) IS NULL OR t.id NOT IN :excludedTrackIds)
 			AND (:searchTerm IS NULL
 				OR t.name LIKE %:searchTerm%
 				OR t.artist LIKE %:searchTerm%
@@ -37,6 +38,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("loadPrivate") loadPrivate: Boolean = false,
 			@Param("loadHidden") loadHidden: Boolean = false,
 			@Param("searchTerm") searchTerm: String? = null,
+			@Param("excludedTrackIds") excludedTrackIds: List<Long>? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
 

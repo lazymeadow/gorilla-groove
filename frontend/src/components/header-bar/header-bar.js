@@ -4,10 +4,12 @@ import SearchBar from "../search-bar/search-bar";
 import {UserContext} from "../../services/user-provider";
 import UserButton from "../user-button/user-button";
 import {SongUpload} from "..";
+import Filter from "./filter/filter";
 
 export default function HeaderBar() {
 	const userContext = useContext(UserContext);
 
+	// noinspection HtmlUnknownTarget
 	return (
 		<div className="header-bar">
 			<div className="d-flex">
@@ -22,7 +24,11 @@ export default function HeaderBar() {
 				</div>
 			</div>
 
-			<SearchBar/>
+			<div className="search-content">
+				<SearchBar/>
+				<Filter/>
+			</div>
+
 			<div className="user-button-wrapper">
 				{userContext.ownUser.username}
 				<UserButton/>
