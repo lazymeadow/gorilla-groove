@@ -57,7 +57,8 @@ interface TrackRepository : CrudRepository<Track, Long> {
 
 	@Modifying
 	@Query("""
-			DELETE FROM Track t
+			UPDATE Track t
+			SET t.deleted = TRUE, t.updatedAt = now()
 			WHERE t.user.id = :userId
 			AND t.inReview = TRUE
 			AND t.reviewSource.id = :reviewSourceId

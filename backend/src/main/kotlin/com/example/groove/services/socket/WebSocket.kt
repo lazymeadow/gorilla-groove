@@ -25,6 +25,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 import org.springframework.web.socket.server.HandshakeInterceptor
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler
 import java.security.Principal
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -39,7 +40,7 @@ class WebSocket(
 ) : WebSocketConfigurer {
 
 	private val objectMapper = createMapper()
-	val sessions = mutableMapOf<String, WebSocketSession>()
+	val sessions = ConcurrentHashMap<String, WebSocketSession>()
 
 	override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
 		registry
