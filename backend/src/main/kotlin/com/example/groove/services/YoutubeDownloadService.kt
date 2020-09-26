@@ -18,9 +18,7 @@ class YoutubeDownloadService(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageProperties: FileStorageProperties,
 		private val trackRepository: TrackRepository,
-		private val youTubeDlProperties: YouTubeDlProperties,
-		private val fileStorageService: FileStorageService,
-		private val imageService: ImageService
+		private val youTubeDlProperties: YouTubeDlProperties
 ) {
 
 	// Currently an issue with downloading thumbnails from YT
@@ -41,7 +39,7 @@ class YoutubeDownloadService(
 				"-o",
 				"$destination.ogg",
 				"--no-cache-dir", // Ran into issues with YT giving us 403s unless we cleared cache often, so just ignore cache
-				"--write-thumbnail" // Seems to plop things out as .pngs in my testing. May need to convert it if not always PNGs
+				"--write-thumbnail" // this started to plop things out as .webp. No way to pick the format right now and webp breaks image format conversion currently
 		)
 		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
 		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -49,7 +47,7 @@ class YoutubeDownloadService(
 		p.waitFor()
 
 		val newSong = File("$destination.ogg")
-		val newAlbumArt = File("$destination.jpg")
+		val newAlbumArt = findArt(destination)
 		if (!newSong.exists()) {
 			throw YouTubeDownloadException("Failed to download song from URL: $url")
 		}
@@ -68,12 +66,9 @@ class YoutubeDownloadService(
 		trackRepository.save(track)
 
 		if (!storeArt) {
-			newAlbumArt.delete()
-		}
-
-		if (newAlbumArt.exists()) {
+			newAlbumArt?.delete()
+		} else if (newAlbumArt != null) {
 			songIngestionService.storeAlbumArtForTrack(newAlbumArt, track, youtubeDownloadDTO.cropArtToSquare)
-
 			newAlbumArt.delete()
 		} else {
 			logger.error("Failed to download album art for song at URL: $url.")
@@ -82,6 +77,17 @@ class YoutubeDownloadService(
 		newSong.delete()
 
 		return track
+	}
+
+	private fun findArt(fileDestinationWithoutExtension: String): File? {
+		listOf("webp", "jpg").forEach { extension ->
+			val newAlbumArt = File("$fileDestinationWithoutExtension.$extension")
+			if (newAlbumArt.exists()) {
+				return newAlbumArt
+			}
+		}
+
+		return null
 	}
 
 	companion object {

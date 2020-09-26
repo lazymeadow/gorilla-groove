@@ -86,6 +86,7 @@ class ImageService(
 		}
 	}
 
+	// Need this to handle webp formats
 	fun convertToStandardArtFile(imageFile: File, size: ArtSize, cropToSquare: Boolean): File? {
 		val image = try {
 			ImageIO.read(imageFile)
