@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ReviewSourceArtistService(
-		private val youtubeApiClient: YoutubeApiClient,
 		private val spotifyApiClient: SpotifyApiClient,
 		private val reviewSourceArtistRepository: ReviewSourceArtistRepository,
 		private val reviewSourceArtistDownloadRepository: ReviewSourceArtistDownloadRepository,
@@ -108,7 +107,7 @@ class ReviewSourceArtistService(
 		songsToDownload.forEach { song ->
 			val artistDownload = reviewSourceArtistDownloadRepository.findByReviewSourceAndTrackName(source, song.name)
 					?: throw IllegalStateException("Could not locate an artist download with review source ID: ${source.id} and song name ${song.name}!")
-			val videos = youtubeApiClient.findVideos("${song.artist} ${song.name}").videos
+			val videos = youtubeDownloadService.searchYouTube("${song.artist} ${song.name}")
 
 			// There's a chance that our search yields no valid results, but youtube will pretty much always return
 			// us videos, even if they're a horrible match. Probably the best thing we can do is check the video title
@@ -168,7 +167,7 @@ class ReviewSourceArtistService(
 	}
 
 
-	private fun YoutubeApiClient.YoutubeVideo.isValidForSong(song: MetadataResponseDTO): Boolean {
+	private fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponseDTO): Boolean {
 		val lowerTitle = this.title.toLowerCase()
 
 		// Make sure the artist is in the title somewhere. If it isn't that seems like a bad sign

@@ -90,6 +90,67 @@ class YoutubeDownloadService(
 		return null
 	}
 
+	fun searchYouTube(searchTerm: String): List<VideoProperties> {
+		logger.info("Searching YouTube for the term: '$searchTerm'")
+		val videosToSearch = 5
+		// This combination of arguments will have Youtube-DL not actually download the videos, but instead write the following
+		// 3 flags to standard out, video ID, duration, and name. We redirect standard out to a file to process it after, in
+		// order to read in this information and find the video we want to actually download
+		val pb = ProcessBuilder(
+				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
+				"ytsearch$videosToSearch:$searchTerm",
+				"--skip-download",
+				"--get-id", // The order of these 3 "get-x" args matter for output into the file
+				"--get-duration",
+				"--get-title",
+				"--no-cache-dir"
+		)
+
+		val tmpFileName = UUID.randomUUID().toString()
+		val destination = fileStorageProperties.tmpDir + tmpFileName
+
+		val outputFile = File(destination)
+		pb.redirectOutput(outputFile)
+		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
+		val p = pb.start()
+		p.waitFor()
+
+		val fileContent = outputFile.useLines { it.toList() }
+
+		val videoProperties = mutableListOf<VideoProperties>()
+		// These come back in groups of 3 per video downloaded. I don't know why it picks this order. Hopefully it doesn't change
+		// First line is the video title
+		// Second line is the ID of the video
+		// Third line is the video duration
+		for (i in fileContent.indices step 3) {
+			val durationString = fileContent[i + 2] // Looks like "2:23" or "1:10:45:41" // Yes I have seen videos with DAYS for a duration before on normal YouTube searches
+			val durationParts = durationString.split(":")
+
+			// Lol is there a better way to do this? Surely there is and I'm being dumb, right?
+			val (days, hours, minutes, seconds) = when (durationParts.size) {
+				4 -> durationParts.map { it.toInt() }
+				3 -> listOf(0, durationParts[0].toInt(), durationParts[1].toInt(), durationParts[2].toInt())
+				2 -> listOf(0, 0, durationParts[0].toInt(), durationParts[1].toInt())
+				1 -> listOf(0, 0, 0, durationParts[0].toInt())
+				else -> throw YouTubeDownloadException("Funky download duration encountered! $durationString")
+			}
+
+			val duration = (days * 86_400) + (hours * 3600) + (minutes * 60) + seconds
+
+			val properties = VideoProperties(
+					id = fileContent[i + 1],
+					videoUrl = "https://www.youtube.com/watch?v=${fileContent[i + 1]}",
+					duration = duration,
+					title = fileContent[i]
+			)
+			videoProperties.add(properties)
+		}
+
+		return videoProperties
+	}
+
+	data class VideoProperties(val id: String, val videoUrl: String, val duration: Int, val title: String)
+
 	companion object {
 		val logger = logger()
 	}
