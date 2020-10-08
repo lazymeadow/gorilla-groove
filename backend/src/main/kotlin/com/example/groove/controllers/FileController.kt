@@ -22,7 +22,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.File
 import java.nio.file.Paths
-import kotlin.concurrent.thread
 
 
 @RestController
@@ -107,17 +106,11 @@ class FileController(
 	): TrackLinks {
 		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().name} for audio format $audioFormat and art size $artSize")
 
-		// Fetch the links in parallel. Could use coroutines here if I swapped to using async s3Client APIs I think
-		var albumArtLink: String? = null
-		val artThread = thread {
-			albumArtLink = fileStorageService.getAlbumArtLink(trackId, false, artSize)
-		}
-
-		val songLink = fileStorageService.getSongLink(trackId, false, audioFormat)
-
-		artThread.join(10_000)
-
-		return TrackLinks(songLink, albumArtLink, s3Properties.awsStoreInS3)
+		return TrackLinks(
+				fileStorageService.getSongLink(trackId, false, audioFormat),
+				fileStorageService.getAlbumArtLink(trackId, false, artSize),
+				s3Properties.awsStoreInS3
+		)
 	}
 
 	@GetMapping("/track-link/{trackId}")
