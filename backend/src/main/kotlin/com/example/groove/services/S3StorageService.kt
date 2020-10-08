@@ -107,13 +107,19 @@ class S3StorageService(
 	override fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String {
 		return getCachedTrackLink(trackId, anonymousAccess, audioFormat, false) { track ->
 			val key = "${audioFormat.s3Directory}/${track.fileName.withNewExtension(audioFormat.extension)}"
-			s3Client.generatePresignedUrl(bucketName, key, expireHoursOut(4)).toString()
+			logger.info("About to generate presigned URL for song link")
+			val url = s3Client.generatePresignedUrl(bucketName, key, expireHoursOut(4)).toString()
+			logger.info("Done generating presigned URL for song link")
+			url
 		}
 	}
 
 	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String? {
 		return getCachedTrackLink(trackId, anonymousAccess, isArtLink = true, artSize = artSize) { track ->
-			s3Client.generatePresignedUrl(bucketName, "${artSize.s3Directory}/${track.id}.png", expireHoursOut(4)).toString()
+			logger.info("About to generate presigned URL for album link")
+			val url = s3Client.generatePresignedUrl(bucketName, "${artSize.s3Directory}/${track.id}.png", expireHoursOut(4)).toString()
+			logger.info("Done generating presigned URL for album link")
+			url
 		}
 	}
 

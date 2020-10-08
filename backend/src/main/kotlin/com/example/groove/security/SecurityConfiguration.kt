@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.AnonymousAuthenticationFi
 
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.security.config.http.SessionCreationPolicy.STATELESS
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.HttpStatusEntryPoint
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher
@@ -37,6 +38,10 @@ class SecurityConfiguration(
 		private val dataSource: DataSource,
 		s3Properties: S3Properties
 ) : WebSecurityConfigurerAdapter() {
+
+	init {
+		SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL)
+	}
 
 	private val publicUrls = OrRequestMatcher(
 			AntPathRequestMatcher("/api/authentication/login**"),
