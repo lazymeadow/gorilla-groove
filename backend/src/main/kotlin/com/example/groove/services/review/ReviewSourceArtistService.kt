@@ -41,8 +41,13 @@ class ReviewSourceArtistService(
 			logger.info("Checking for new songs for artist: ${source.artistName} ...")
 			val users = source.subscribedUsers
 
+			if (source.deleted) {
+				logger.info("Review source ${source.artistName} was deleted. Skipping")
+				return@forEach
+			}
+
 			if (users.isEmpty()) {
-				logger.info("No users were set up for review source ${source.artistName}. Skipping")
+				logger.error("No users were set up for review source ${source.artistName}. Skipping")
 				return@forEach
 			}
 
@@ -219,6 +224,14 @@ class ReviewSourceArtistService(
 			if (existing.isUserSubscribed(currentUser)) {
 				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
 			}
+
+			// If this source was previously deleted, re-enable it and update the time to search from to now
+			if (existing.deleted) {
+				existing.deleted = false
+				existing.updatedAt = now()
+				existing.searchNewerThan = now()
+			}
+
 			existing.subscribedUsers.add(currentUser)
 			reviewSourceArtistRepository.save(existing)
 			return true to emptyList()

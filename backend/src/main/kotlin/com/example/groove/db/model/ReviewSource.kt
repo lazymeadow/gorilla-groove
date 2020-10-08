@@ -14,7 +14,7 @@ abstract class ReviewSource(
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		@Access(AccessType.FIELD) // This (and the open modifier) let this ID be accessed lazily without fetching the entire entity
-		open val id: Long = 0,
+		override val id: Long = 0,
 
 		@JsonIgnore
 		@ManyToMany
@@ -28,8 +28,16 @@ abstract class ReviewSource(
 		open val sourceType: ReviewSourceType,
 
 		@Column(name = "created_at")
-		open val createdAt: Timestamp = now()
-) {
+		override val createdAt: Timestamp = now(),
+
+		@JsonIgnore
+		@Column(name = "updated_at")
+		override var updatedAt: Timestamp = now(),
+
+		@JsonIgnore
+		@Column(columnDefinition = "BIT")
+		override var deleted: Boolean = false
+): RemoteSyncable {
 	abstract val displayName: String
 
 	fun isUserSubscribed(user: User): Boolean {

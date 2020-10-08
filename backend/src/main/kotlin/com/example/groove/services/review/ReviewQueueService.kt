@@ -131,6 +131,12 @@ class ReviewQueueService(
 		}
 
 		existingSource.subscribedUsers.removeAt(existingIndex)
+		if (existingSource.subscribedUsers.isEmpty()) {
+			existingSource.deleted = true
+			existingSource.updatedAt = now()
+		}
+
+		reviewSourceRepository.save(existingSource)
 
 		trackRepository.deleteTracksInReviewForSource(userId = user.id, reviewSourceId = existingSource.id)
 	}
