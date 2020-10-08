@@ -6,7 +6,9 @@ import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
+import com.example.groove.util.createMapper
 import com.example.groove.util.logger
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
@@ -20,6 +22,8 @@ class YoutubeDownloadService(
 		private val trackRepository: TrackRepository,
 		private val youTubeDlProperties: YouTubeDlProperties
 ) {
+
+	val mapper = createMapper()
 
 	// Currently an issue with downloading thumbnails from YT
 	// https://github.com/ytdl-org/youtube-dl/issues/25684
@@ -100,9 +104,7 @@ class YoutubeDownloadService(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
 				"ytsearch$videosToSearch:$searchTerm",
 				"--skip-download",
-				"--get-id", // The order of these 3 "get-x" args matter for output into the file
-				"--get-duration",
-				"--get-title",
+				"--dump-json",
 				"--no-cache-dir"
 		)
 
@@ -117,39 +119,19 @@ class YoutubeDownloadService(
 
 		val fileContent = outputFile.useLines { it.toList() }
 
-		val videoProperties = mutableListOf<VideoProperties>()
-		// These come back in groups of 3 per video downloaded. I don't know why it picks this order. Hopefully it doesn't change
-		// First line is the video title
-		// Second line is the ID of the video
-		// Third line is the video duration
-		for (i in fileContent.indices step 3) {
-			val durationString = fileContent[i + 2] // Looks like "2:23" or "1:10:45:41" // Yes I have seen videos with DAYS for a duration before on normal YouTube searches
-			val durationParts = durationString.split(":")
-
-			// Lol is there a better way to do this? Surely there is and I'm being dumb, right?
-			val (days, hours, minutes, seconds) = when (durationParts.size) {
-				4 -> durationParts.map { it.toInt() }
-				3 -> listOf(0, durationParts[0].toInt(), durationParts[1].toInt(), durationParts[2].toInt())
-				2 -> listOf(0, 0, durationParts[0].toInt(), durationParts[1].toInt())
-				1 -> listOf(0, 0, 0, durationParts[0].toInt())
-				else -> throw YouTubeDownloadException("Funky download duration encountered! $durationString")
-			}
-
-			val duration = (days * 86_400) + (hours * 3600) + (minutes * 60) + seconds
-
-			val properties = VideoProperties(
-					id = fileContent[i + 1],
-					videoUrl = "https://www.youtube.com/watch?v=${fileContent[i + 1]}",
-					duration = duration,
-					title = fileContent[i]
-			)
-			videoProperties.add(properties)
+		return fileContent.map { videoJson ->
+			mapper.readValue(videoJson, VideoProperties::class.java)
 		}
-
-		return videoProperties
 	}
 
-	data class VideoProperties(val id: String, val videoUrl: String, val duration: Int, val title: String)
+	data class VideoProperties(
+			@JsonProperty("webpage_url")
+			val videoUrl: String,
+			val duration: Int,
+			val title: String,
+			@JsonProperty("uploader")
+			val channelName: String = ""
+	)
 
 	companion object {
 		val logger = logger()

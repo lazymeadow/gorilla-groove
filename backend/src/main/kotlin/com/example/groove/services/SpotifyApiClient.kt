@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import java.lang.RuntimeException
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
@@ -210,7 +211,7 @@ class SpotifyApiClient(
 			1 -> Year.parse(this).atMonth(1).atDay(1)
 			2 -> YearMonth.parse(this).atDay(1)
 			3 -> LocalDate.parse(this)
-			else -> throw IllegalArgumentException("Weird date encountered on track! $this")
+			else -> throw RuntimeException("Weird date encountered on track! $this")
 		}
 	}
 

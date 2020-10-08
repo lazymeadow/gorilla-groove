@@ -128,6 +128,7 @@ class ReviewSourceArtistService(
 			// Might be better to try to exclude music videos and stuff later, though the time checking might help already.
 			val video = validVideos.first()
 
+			logger.info("Found a valid match. YouTube video title: ${video.title}")
 			val downloadDTO = YoutubeDownloadDTO(
 					url = video.videoUrl,
 					name = song.name,
@@ -137,7 +138,18 @@ class ReviewSourceArtistService(
 					cropArtToSquare = true
 			)
 
-			val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
+			// Sometimes YoutubeDL can have issues. Don't cascade fail all downloads because of it
+			val track = try {
+				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
+			} catch (e: Exception) {
+				logger.error("Failed to download from YouTube for ${song.artist} - ${song.name}!", e)
+
+				artistDownload.lastDownloadAttempt = now()
+				reviewSourceArtistDownloadRepository.save(artistDownload)
+
+				return@forEach
+			}
+
 			track.reviewSource = source
 			track.inReview = true
 			track.lastReviewed = now()
@@ -169,9 +181,10 @@ class ReviewSourceArtistService(
 
 	private fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponseDTO): Boolean {
 		val lowerTitle = this.title.toLowerCase()
+		val artist = song.artist.toLowerCase()
 
-		// Make sure the artist is in the title somewhere. If it isn't that seems like a bad sign
-		if (!lowerTitle.contains(song.artist.toLowerCase())) {
+		// Make sure the artist is in the title somewhere OR the channel name. If it isn't that seems like a bad sign
+		if (!lowerTitle.contains(artist) && !this.channelName.toLowerCase().contains(artist)) {
 			return false
 		}
 
