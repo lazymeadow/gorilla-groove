@@ -307,6 +307,7 @@ class TrackService(
 				hidden = false,
 				addedToLibrary = null,
 				createdAt = now(),
+				updatedAt = now(),
 				playCount = 0,
 				lastPlayed = null,
 				originalTrack = if (setAsCopied) track else null
