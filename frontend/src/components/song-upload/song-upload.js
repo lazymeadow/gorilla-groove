@@ -141,6 +141,7 @@ export class SongUpload extends React.Component {
 						id="file-upload"
 						className="display-none"
 						onChange={this.handleUploadStart.bind(this)}
+						accept="audio/*"
 						multiple
 					/>
 
