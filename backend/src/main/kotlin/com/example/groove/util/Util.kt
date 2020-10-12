@@ -25,6 +25,7 @@ fun<T> CrudRepository<T, Long>.get(id: Long): T? {
 fun createMapper(): ObjectMapper = ObjectMapper()
 		.registerKotlinModule()
 		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
 fun Image.writeToFile(destination: File, imageType: String) {
 	val bufferedImage = BufferedImage(this.getWidth(null), this.getHeight(null), BufferedImage.TYPE_INT_RGB)
 	bufferedImage.graphics.drawImage(this, 0, 0, null)

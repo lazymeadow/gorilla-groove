@@ -33,16 +33,16 @@ class SpotifyApiClient(
 	private val authHeader: String
 		get() = "Bearer ${spotifyTokenManager.authenticationToken}"
 
-//	fun getMetadataByTrackArtistAndName(artist: String, name: String, album: String?): MetadataResponseDTO? {
-//		println(spotifyTokenManager.authenticationToken)
-//
-//		val url = createSpotifySearchUrl(artist, name, 1, "track")
-//		val result = restTemplate.querySpotify(url)
-//
-//		// Assume spotify has good relevance on its search and just grab the first result
-//		// (we already limited ourselves to 1 in the query parameter anyway)
-//		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
-//	}
+	fun getMetadataByTrackArtistAndName(artist: String, name: String): MetadataResponseDTO? {
+		println(spotifyTokenManager.authenticationToken)
+
+		val url = createSpotifySearchUrl(artist, name, 1, "track")
+		val result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
+
+		// Assume spotify has good relevance on its search and just grab the first result
+		// (we already limited ourselves to 1 in the query parameter anyway)
+		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
+	}
 
 	private inline fun<reified T> RestTemplate.querySpotify(url: String): T {
 		val headers = mapOf("Authorization" to authHeader).toHeaders()
@@ -86,7 +86,7 @@ class SpotifyApiClient(
 		return filteredTracks.map { it.toMetadataResponseDTO() }
 	}
 
-	fun getSpotifyArtistId(artist: String): String? {
+	private fun getSpotifyArtistId(artist: String): String? {
 		val lowerName = artist.toLowerCase()
 		val matchingArtist = searchArtistsByName(artist).find { it.name.toLowerCase() == lowerName }
 
@@ -117,12 +117,14 @@ class SpotifyApiClient(
 				.toUnencodedString()
 	}
 
-	data class SpotifyArtistSearchResponse(val artists: SpotifySearchItems)
-	data class SpotifySearchItems(val items: List<SpotifyArtist>, val next: String?)
+	data class SpotifyArtistSearchResponse(val artists: SpotifySearchItems<SpotifyArtist>)
+	data class SpotifySearchItems<T>(val items: List<T>, val next: String?)
 	data class SpotifyArtist(val name: String, val id: String)
 	data class SpotifyAlbumImage(val height: Int, val width: Int, val url: String)
 	data class SpotifyAlbumResponse(val items: List<SpotifyAlbum>)
 	data class SpotifyAlbumBulkResponse(val albums: List<SpotifyAlbum>)
+
+	data class SpotifyTrackSearchResponse(val tracks: SpotifySearchItems<SpotifyTrack>)
 
 	data class SpotifyAlbum(
 			val name: String,

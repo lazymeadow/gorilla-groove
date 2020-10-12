@@ -1,5 +1,6 @@
 package com.example.groove.services
 
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.dto.MetadataResponseDTO
@@ -8,15 +9,18 @@ import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.awt.Image
+import java.io.IOException
+import java.net.URL
+import javax.imageio.ImageIO
 
 @Service
 class MetadataRequestService(
 		private val trackRepository: TrackRepository,
-		private val iTunesMetadataService: ITunesMetadataService,
+		private val spotifyApiClient: SpotifyApiClient,
 		private val fileStorageService: FileStorageService,
 		private val fileUtils: FileUtils,
-		private val songIngestionService: SongIngestionService
+		private val songIngestionService: SongIngestionService,
+		private val trackLinkRepository: TrackLinkRepository
 ) {
 
 	@Transactional
@@ -39,7 +43,7 @@ class MetadataRequestService(
 				if (track.trackNumber.shouldBeUpdated(request.changeTrackNumber)) {
 					track.trackNumber = metadataResponse.trackNumber
 				}
-				saveAlbumArt(track, metadataResponse.albumArt!!, request.changeAlbumArt)
+				saveAlbumArt(track, metadataResponse.albumArtUrl, request.changeAlbumArt)
 			}
 
 			trackRepository.save(track)
@@ -63,7 +67,7 @@ class MetadataRequestService(
 		}
 	}
 
-	private fun saveAlbumArt(track: Track, newAlbumArt: Image, overrideType: MetadataOverrideType) {
+	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType) {
 		if (overrideType == MetadataOverrideType.NEVER) {
 			return
 		}
@@ -76,11 +80,20 @@ class MetadataRequestService(
 			}
 		}
 
-		val file = fileUtils.createTemporaryFile(".jpg")
-		newAlbumArt.writeToFile(file, "jpg")
+		val artImage = try {
+			ImageIO.read(URL(newAlbumArtUrl))
+		} catch (e: IOException) {
+			logger.error("Failed to read in image URL! $newAlbumArtUrl")
+			return
+		}
+
+		val file = fileUtils.createTemporaryFile(".png")
+		artImage.writeToFile(file, "png")
 		logger.info("Writing new album art for track $track to storage...")
 		songIngestionService.storeAlbumArtForTrack(file, track, false)
 		file.delete()
+
+		trackLinkRepository.forceExpireLinksByTrackId(track.id)
 	}
 
 	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataResponseDTO>> {
@@ -97,10 +110,9 @@ class MetadataRequestService(
 
 		return validTracks
 				.map {
-					val metadataResponse = iTunesMetadataService.getMetadataByTrackArtistAndName(
+					val metadataResponse = spotifyApiClient.getMetadataByTrackArtistAndName(
 							artist = it!!.artist,
-							name = it.name,
-							album = it.album.blankAsNull()
+							name = it.name
 					)
 					Pair(it, metadataResponse)
 				}.filter { (_, metadataResponse) -> metadataResponse != null }

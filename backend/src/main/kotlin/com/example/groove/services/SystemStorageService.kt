@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.*
 
 @Service
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "false")
@@ -114,15 +115,18 @@ class SystemStorageService(
 				AudioFormat.MP3 -> track.fileName.withNewExtension(AudioFormat.MP3.extension)
 			}
 
+			// The random key makes it possible to cache-bust the frontend while testing link invalidation locally
+			val randomKey = UUID.randomUUID()
 			// This is pretty jank. But it is only intended for use in local development right now
-			"http://localhost:8080/music/$fileName"
+			"http://localhost:8080/music/$fileName?key=$randomKey"
 		}
 	}
 
 	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String? {
 		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true, artSize = artSize) {
 			val parentDir = trackId / 1000
-			"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}"
+			val randomKey = UUID.randomUUID()
+			"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}?key=$randomKey"
 		}
 	}
 

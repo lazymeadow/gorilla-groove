@@ -102,6 +102,7 @@ dependencies {
 	runtime('com.h2database:h2')
 	testCompile('org.springframework.boot:spring-boot-starter-test') {
 		exclude module: 'junit'
+        exclude module: 'junit-vintage-engine'
 	}
 	testImplementation('org.junit.jupiter:junit-jupiter-api')
 	testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine')

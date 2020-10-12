@@ -77,7 +77,7 @@ class TrackRepositoryTest(
 		entityManager.clear() // Clear the cache so the track we grab is the updated one
 
 		val recoveredTrack = trackRepository.get(track.id)
-		assertThat(recoveredTrack.private).isTrue()
+		assertThat(recoveredTrack!!.private).isTrue()
 	}
 
 	private fun createPersistedTrack(
