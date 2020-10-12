@@ -5,7 +5,7 @@ export default function AddPlaylistButton() {
 	const playlistContext = useContext(PlaylistContext);
 
 	return (
-		<i className="fas fa-plus add-playlist-button" onMouseDown={(e) => {
+		<i className="fas fa-plus add-playlist-button" onClick={(e) => {
 			e.stopPropagation();
 			playlistContext.createPlaylist(e)
 		}}/>
