@@ -48,11 +48,6 @@ class AuthenticationController(
 		return ResponseEntity.ok().build()
 	}
 
-	// Web doesn't use this as it uses the cookie I think. But web clients don't use the cookie
-	data class UserLogoutDTO(
-			val token: String?
-	)
-
 	data class AuthResponseDTO(
 			val id: Long,
 			val token: String,

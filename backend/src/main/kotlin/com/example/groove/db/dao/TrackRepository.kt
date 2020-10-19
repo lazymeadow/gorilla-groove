@@ -48,10 +48,12 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			WHERE t.user.id = :userId
 			AND t.inReview = TRUE
 			AND t.deleted = FALSE
+			AND (:reviewSourceId IS NULL OR t.reviewSource.id = :reviewSourceId)
 			ORDER BY t.lastReviewed ASC
 		""")
 	fun getTracksInReview(
 			@Param("userId") userId: Long,
+			@Param("reviewSourceId") reviewSourceId: Long? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
 
@@ -131,4 +133,16 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("maximum") maximum: Timestamp,
 			pageable: Pageable
 	): Page<Track>
+
+	@Query("""
+			SELECT t.reviewSource.id, count(t)
+			FROM Track t
+			WHERE t.deleted = FALSE
+			AND t.inReview = TRUE
+			AND t.reviewSource.id IN :reviewSourceIds
+			GROUP BY t.reviewSource.id
+			""")
+	fun getTrackCountsForReviewSources(
+			@Param("reviewSourceIds") reviewSourceIds: List<Long>
+	): List<Array<Long>>
 }

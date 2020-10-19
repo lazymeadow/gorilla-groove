@@ -52,7 +52,7 @@ class MetadataRequestService(
 		val successfulIds = updatedSuccessTracks.map { it.id }.toSet()
 		val failedIds = trackIds - successfulIds
 
-		return Pair(updatedSuccessTracks, failedIds)
+		return updatedSuccessTracks to failedIds
 	}
 
 	private fun Any?.shouldBeUpdated(metadataOverrideType: MetadataOverrideType): Boolean {
@@ -114,9 +114,9 @@ class MetadataRequestService(
 							artist = it!!.artist,
 							name = it.name
 					)
-					Pair(it, metadataResponse)
+					it to metadataResponse
 				}.filter { (_, metadataResponse) -> metadataResponse != null }
-				.map { Pair(it.first, it.second!!)}
+				.map { it.first to it.second!! }
 	}
 
 	companion object {

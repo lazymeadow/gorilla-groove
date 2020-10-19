@@ -7,6 +7,8 @@ import {MusicContext} from "../../services/music-provider";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
 import {ReviewSourceType} from "./review-queue-management/review-queue-management";
 
+let lastReviewSourceId = undefined;
+
 export default function ReviewQueue() {
 	const [reviewTrack, setReviewTrack] = useState(null);
 	const [trackLinks, setTrackLinks] = useState({});
@@ -17,13 +19,18 @@ export default function ReviewQueue() {
 	const playbackContext = useContext(PlaybackContext);
 
 	const fetchReviewTracks = () => {
-		return reviewQueueContext.fetchReviewTracks().then(tracks => {
+		lastReviewSourceId = reviewQueueContext.viewedReviewSourceId;
+
+		return reviewQueueContext.fetchReviewTracks(reviewQueueContext.viewedReviewSourceId).then(tracks => {
 			if (tracks.length === 0) {
 				setReviewTrack(null);
+				setLoading(false);
 				return null;
 			}
 
+			console.log('set track', tracks[0]);
 			setReviewTrack(tracks[0]);
+			fetchLinksForTrack(tracks[0]);
 
 			return tracks[0]
 		})
@@ -41,17 +48,11 @@ export default function ReviewQueue() {
 	};
 
 	useEffect(() => {
-		if (reviewQueueContext.queuesFetched) {
-			fetchReviewTracks().then(fetchLinksForTrack)
-		} else {
-			reviewQueueContext.fetchReviewQueueSources()
-				.then(fetchReviewTracks)
-				.then(fetchLinksForTrack);
-		}
+		fetchReviewTracks();
 	}, []);
 
 	const loadNextTrack = () => {
-		if (reviewQueueContext.reviewQueueCount > 1) {
+		if (reviewQueueContext.reviewQueueTracks.length > 1) {
 			const nextTrack = reviewQueueContext.reviewQueueTracks[1];
 			setReviewTrack(nextTrack);
 			fetchLinksForTrack(nextTrack);
@@ -62,6 +63,9 @@ export default function ReviewQueue() {
 				musicContext.playTracks([nextTrack]);
 			}
 		}
+
+		// Fetch the sources, just to make sure we keep up-to-date counts on all the queues
+		reviewQueueContext.fetchReviewQueueSources();
 
 		fetchReviewTracks();
 	};
@@ -112,6 +116,10 @@ export default function ReviewQueue() {
 				throw 'Unknown review source!'
 		}
 	};
+
+	if (reviewQueueContext.viewedReviewSourceId !== lastReviewSourceId) {
+		fetchReviewTracks();
+	}
 
 	return <div id="review-queue" className="p-relative text-center full-height">
 		<LoadingSpinner visible={loading}/>

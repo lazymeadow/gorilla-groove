@@ -75,8 +75,8 @@ class ReviewQueueService(
 	}
 
 	@Transactional
-	fun getTracksInReviewForCurrentUser(pageable: Pageable): Page<Track> {
-		return trackRepository.getTracksInReview(loadLoggedInUser().id, pageable)
+	fun getTracksInReviewForCurrentUser(reviewSourceId: Long? = null, pageable: Pageable): Page<Track> {
+		return trackRepository.getTracksInReview(loadLoggedInUser().id, reviewSourceId, pageable)
 	}
 
 	@Transactional
@@ -113,10 +113,16 @@ class ReviewQueueService(
 	}
 
 	@Transactional
-	fun getAllQueueSourcesForCurrentUser(): List<ReviewSource> {
+	fun getAllQueueSourcesForCurrentUser(): List<ReviewSourceWithCount> {
 		val user = loadLoggedInUser()
 
-		return reviewSourceRepository.findBySubscribedUsers(user)
+		val sources =  reviewSourceRepository.findBySubscribedUsers(user)
+		val sourceIds = sources.map { it.id }
+		val test = trackRepository.getTrackCountsForReviewSources(sourceIds)
+
+		val sourceIdToCount = test.map { it.first() to it.last() }.toMap()
+
+		return sources.map { ReviewSourceWithCount(it, sourceIdToCount[it.id] ?: 0) }
 	}
 
 	@Transactional
@@ -145,3 +151,10 @@ class ReviewQueueService(
 		val logger = logger()
 	}
 }
+
+class ReviewSourceWithCount(
+		val reviewSource: ReviewSource,
+
+		@Suppress("unused")
+		val trackCount: Long
+)

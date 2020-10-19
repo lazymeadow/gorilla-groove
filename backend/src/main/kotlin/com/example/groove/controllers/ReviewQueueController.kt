@@ -6,6 +6,7 @@ import com.example.groove.services.UserService
 import com.example.groove.services.review.ReviewQueueService
 import com.example.groove.services.review.ReviewSourceYoutubeChannelService
 import com.example.groove.services.review.ReviewSourceArtistService
+import com.example.groove.services.review.ReviewSourceWithCount
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.http.HttpStatus
@@ -23,7 +24,7 @@ class ReviewQueueController(
 ) {
 
 	@GetMapping
-	fun getAllQueueSources(): List<ReviewSource> {
+	fun getAllQueueSources(): List<ReviewSourceWithCount> {
 		return reviewQueueService.getAllQueueSourcesForCurrentUser()
 	}
 

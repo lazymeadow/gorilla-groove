@@ -83,7 +83,7 @@ export class SocketProvider extends React.Component {
 	}
 
 	handleReviewQueueMessage(message) {
-		this.props.reviewQueueContext.fetchReviewTracks();
+		this.props.reviewQueueContext.fetchReviewQueueSources();
 		let toastMessage;
 		switch (message.sourceType) {
 			case ReviewSourceType.USER_RECOMMEND:

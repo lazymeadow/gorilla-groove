@@ -48,7 +48,7 @@ export default function SiteLayout(props) {
 		});
 		musicContext.loadSongsForUser();
 		playlistContext.loadPlaylists();
-		reviewQueueContext.fetchReviewTracks();
+		reviewQueueContext.fetchReviewQueueSources();
 		deviceContext.loadOtherDevices();
 
 		socketContext.connectToSocket();
