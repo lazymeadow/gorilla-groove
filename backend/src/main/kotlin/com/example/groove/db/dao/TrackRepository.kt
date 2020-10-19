@@ -137,12 +137,14 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Query("""
 			SELECT t.reviewSource.id, count(t)
 			FROM Track t
-			WHERE t.deleted = FALSE
+			WHERE t.user.id = :userId
+			AND t.deleted = FALSE
 			AND t.inReview = TRUE
 			AND t.reviewSource.id IN :reviewSourceIds
 			GROUP BY t.reviewSource.id
 			""")
 	fun getTrackCountsForReviewSources(
+			@Param("userId") userId: Long,
 			@Param("reviewSourceIds") reviewSourceIds: List<Long>
 	): List<Array<Long>>
 }

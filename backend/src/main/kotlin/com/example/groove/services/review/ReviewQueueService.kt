@@ -118,7 +118,7 @@ class ReviewQueueService(
 
 		val sources =  reviewSourceRepository.findBySubscribedUsers(user)
 		val sourceIds = sources.map { it.id }
-		val test = trackRepository.getTrackCountsForReviewSources(sourceIds)
+		val test = trackRepository.getTrackCountsForReviewSources(user.id, sourceIds)
 
 		val sourceIdToCount = test.map { it.first() to it.last() }.toMap()
 

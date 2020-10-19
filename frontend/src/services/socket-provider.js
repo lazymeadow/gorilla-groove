@@ -111,8 +111,7 @@ export class SocketProvider extends React.Component {
 
 		forceDisconnect = false;
 
-		const uri = Api.getSocketUri() + '?deviceIdentifier=' + getDeviceIdentifier();
-		const newSocket = new WebSocket(uri);
+		const newSocket = new WebSocket(Api.getSocketUri());
 
 		newSocket.onmessage = res => {
 			const data = JSON.parse(res.data);
