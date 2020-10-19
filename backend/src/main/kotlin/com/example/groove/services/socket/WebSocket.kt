@@ -63,7 +63,10 @@ class WebSocket(
 				})
 				.addInterceptors(object : HandshakeInterceptor {
 					override fun beforeHandshake(request: ServerHttpRequest, response: ServerHttpResponse, wsHandler: WebSocketHandler, attributes: MutableMap<String, Any>): Boolean {
-						val deviceIdentifier = loadLoggedInUser().currentAuthToken!!.device?.deviceId!!
+						val deviceIdentifier = loadLoggedInUser().currentAuthToken?.device?.deviceId ?: run {
+							logger.error("No device ID associated to logged in user! User: ${loadLoggedInUser().name}, token: ${loadLoggedInUser().currentAuthToken}")
+							throw IllegalArgumentException("No device ID associated to logged in user!")
+						}
 
 						val activeDevice = deviceService.getDeviceById(deviceIdentifier)
 
