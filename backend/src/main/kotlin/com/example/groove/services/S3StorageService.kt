@@ -113,7 +113,17 @@ class S3StorageService(
 
 	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String? {
 		return getCachedTrackLink(trackId, anonymousAccess, isArtLink = true, artSize = artSize) { track ->
-			s3Client.generatePresignedUrl(bucketName, "${artSize.s3Directory}/${track.id}.png", expireHoursOut(4)).toString()
+			val key = "${artSize.s3Directory}/${track.id}.png"
+			// TODO The database SHOULD really be aware of whether or not art exists.
+			// But it isn't right now, so we have to make two trips to S3.
+			val artExists = s3Client.doesObjectExist(bucketName, key)
+			if (artExists) {
+				s3Client.generatePresignedUrl(bucketName, key, expireHoursOut(4)).toString()
+			} else {
+				// This is stored in the DB and the column and property are non-null.
+				// So cache an empty string as that's clearly an invalid link anyway
+				""
+			}
 		}
 	}
 

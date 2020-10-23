@@ -126,7 +126,13 @@ class SystemStorageService(
 		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true, artSize = artSize) {
 			val parentDir = trackId / 1000
 			val randomKey = UUID.randomUUID()
-			"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}?key=$randomKey"
+
+			val artFile = loadAlbumArt(trackId, artSize)
+			if (artFile == null) {
+				""
+			} else {
+				"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}?key=$randomKey"
+			}
 		}
 	}
 
