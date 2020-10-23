@@ -122,16 +122,19 @@ class SystemStorageService(
 		}
 	}
 
-	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String? {
-		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true, artSize = artSize) {
+	override fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String {
+		return getCachedTrackLink(trackId, anonymousAccess, isArtLink =  true, artSize = artSize) { track ->
 			val parentDir = trackId / 1000
 			val randomKey = UUID.randomUUID()
 
-			val artFile = loadAlbumArt(trackId, artSize)
-			if (artFile == null) {
-				""
-			} else {
+			if (track.hasArt == null) {
+				 track.hasArt = loadAlbumArt(trackId, artSize) != null
+			}
+
+			if (track.hasArt == true) {
 				"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}?key=$randomKey"
+			} else {
+				""
 			}
 		}
 	}

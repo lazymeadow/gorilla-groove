@@ -1,6 +1,7 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.ArtSize
@@ -104,11 +105,27 @@ class FileController(
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat,
 			@RequestParam(defaultValue = "LARGE") artSize: ArtSize
 	): TrackLinks {
-		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().name} for audio format $audioFormat and art size $artSize")
+		val user = loadLoggedInUser()
+		logger.info("Track links requested for Track ID: $trackId from user ${user.username} for audio format $audioFormat and art size $artSize")
+
+		val artLink = fileStorageService.getAlbumArtLink(trackId, false, artSize)
+
+		val returnedArtLink = if (artLink.isEmpty()) {
+			// FIXME Need to update iOS to be able to handle empty / null album art
+			if (user.currentAuthToken!!.device!!.deviceType == DeviceType.IPHONE) {
+				"https://gorillagroove.net/api/somethingfake"
+			} else {
+				// We get back an empty string if it's invalid for laziness reasons.
+				// But we want to return null to consumers as it's the right thing to do.
+				null
+			}
+		} else {
+			artLink
+		}
 
 		return TrackLinks(
 				fileStorageService.getSongLink(trackId, false, audioFormat),
-				fileStorageService.getAlbumArtLink(trackId, false, artSize),
+				returnedArtLink,
 				s3Properties.awsStoreInS3
 		)
 	}
