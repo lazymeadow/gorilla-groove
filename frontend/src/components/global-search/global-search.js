@@ -5,6 +5,7 @@ import {MusicFilterContext} from "../../services/music-filter-provider";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {toast} from "react-toastify";
 import {PlaybackContext} from "../../services/playback-provider";
+import SpotifySearch from "./spotify-search/spotify-search";
 
 export default function GlobalSearch() {
 	const [videos, setVideos] = useState([]);
@@ -30,7 +31,7 @@ export default function GlobalSearch() {
 		// The way Youtube's custom controls have to work requires injecting a script. It's weird.
 		// But we only need to do it once, and only once we visit this page. So check that it isn't already there.
 		if (!window.YT) {
-			initializeYoutubeApi();
+			// initializeYoutubeApi();
 		}
 
 		if (musicFilterContext.searchTerm.length > 0) {
@@ -79,6 +80,10 @@ export default function GlobalSearch() {
 	}
 
 	return <div id="global-search">
+		<div>
+			<SpotifySearch/>
+		</div>
+
 		<LoadingSpinner visible={loading || (videos.length && !apiInitialized)}/>
 		{ getDisplayedText() }
 		<div id="global-search-container">

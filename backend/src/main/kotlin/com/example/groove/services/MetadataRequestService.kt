@@ -43,7 +43,7 @@ class MetadataRequestService(
 				if (track.trackNumber.shouldBeUpdated(request.changeTrackNumber)) {
 					track.trackNumber = metadataResponse.trackNumber
 				}
-				saveAlbumArt(track, metadataResponse.albumArtUrl, request.changeAlbumArt)
+				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt)
 			}
 
 			trackRepository.save(track)
@@ -112,8 +112,10 @@ class MetadataRequestService(
 				.map {
 					val metadataResponse = spotifyApiClient.getMetadataByTrackArtistAndName(
 							artist = it!!.artist,
-							name = it.name
-					)
+							name = it.name,
+							limit = 1
+					).firstOrNull()
+
 					it to metadataResponse
 				}.filter { (_, metadataResponse) -> metadataResponse != null }
 				.map { it.first to it.second!! }

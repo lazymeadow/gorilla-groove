@@ -5,14 +5,16 @@ import com.example.groove.services.enums.MetadataOverrideType
 import java.awt.Image
 
 data class MetadataResponseDTO (
+		val sourceId: String,
 		val name: String,
 		val artist: String,
 		val album: String,
-		val genre: String? = null, // Not returned by Spotify
+		val genre: String? = null, // TODO remove this and also remove from the frontend - this is not returned by Spotify
 		val releaseYear: Int,
 		val trackNumber: Int,
-		val albumArtUrl: String,
-		val songLength: Int
+		val albumArtLink: String,
+		val songLength: Int,
+		val previewUrl: String? // API docs state that this can be null
 ) {
 	// Add an empty companion object so private extensions can be added
 	companion object

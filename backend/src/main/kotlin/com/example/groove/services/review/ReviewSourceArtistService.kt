@@ -167,7 +167,7 @@ class ReviewSourceArtistService(
 			// Because we started from Spotify, we have a URL to the actual album art.
 			// This is better than whatever it is we will get from the YT download, so
 			// grab the art and store it
-			imageService.downloadFromUrl(song.albumArtUrl!!)?.let { image ->
+			imageService.downloadFromUrl(song.albumArtLink!!)?.let { image ->
 				songIngestionService.storeAlbumArtForTrack(image, track, false)
 			}
 

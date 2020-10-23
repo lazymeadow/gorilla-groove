@@ -33,15 +33,13 @@ class SpotifyApiClient(
 	private val authHeader: String
 		get() = "Bearer ${spotifyTokenManager.authenticationToken}"
 
-	fun getMetadataByTrackArtistAndName(artist: String, name: String): MetadataResponseDTO? {
-		println(spotifyTokenManager.authenticationToken)
-
-		val url = createSpotifySearchUrl(artist, name, 1, "track")
+	fun getMetadataByTrackArtistAndName(artist: String, name: String?, limit: Int): List<MetadataResponseDTO> {
+		val url = createSpotifySearchUrl(artist, name, limit, "track")
 		val result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
 
 		// Assume spotify has good relevance on its search and just grab the first result
 		// (we already limited ourselves to 1 in the query parameter anyway)
-		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
+		return result.tracks.items.map { it.toMetadataResponseDTO() }
 	}
 
 	private inline fun<reified T> RestTemplate.querySpotify(url: String): T {
@@ -151,6 +149,9 @@ class SpotifyApiClient(
 			val artists: List<SpotifyArtist>,
 			var album: SpotifyAlbum? = null, // Not always here depending on the endpoint
 			val href: String,
+
+			@JsonProperty("preview_url")
+			val previewUrl: String?,
 			val id: String,
 			val name: String
 	)
@@ -159,13 +160,15 @@ class SpotifyApiClient(
 		val biggestImageUrl = this.album!!.images.maxBy { it.height }!!.url
 
 		return MetadataResponseDTO(
+				sourceId = this.id,
 				name = this.name,
 				artist = this.artists.first().name,
 				album = this.album!!.name,
 				releaseYear = this.album!!.releaseYear,
 				trackNumber = this.trackNumber,
-				albumArtUrl = biggestImageUrl,
-				songLength = (this.durationMs / 1000).toInt()
+				albumArtLink = biggestImageUrl,
+				songLength = (this.durationMs / 1000).toInt(),
+				previewUrl = this.previewUrl
 		)
 	}
 
