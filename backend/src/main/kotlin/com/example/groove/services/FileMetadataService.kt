@@ -49,7 +49,7 @@ class FileMetadataService {
 		}
 	}
 
-    fun createTrackFromSongFile(song: File, user: User, originalFileName: String): Track {
+    fun createTrackFromSongFile(song: File, user: User, originalFileName: String, hasArt: Boolean): Track {
         if (!song.exists()) {
             logger.error("File was not found using the path '${song.path}'")
             throw IllegalArgumentException("File by name '${song.name}' does not exist!")
@@ -69,7 +69,8 @@ class FileMetadataService {
 				genre = audioFile.tag.getFirst(FieldKey.GENRE).trim(),
 				length = audioFile.audioHeader.trackLength,
 				bitRate = audioFile.audioHeader.bitRateAsNumber,
-				sampleRate = audioFile.audioHeader.sampleRateAsNumber
+				sampleRate = audioFile.audioHeader.sampleRateAsNumber,
+				hasArt = hasArt
 		)
 	}
 

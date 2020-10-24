@@ -30,7 +30,7 @@ abstract class FileStorageService(
 	abstract fun copyAllAlbumArt(trackSourceId: Long, trackDestinationId: Long)
 
 	abstract fun getSongLink(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): String
-	abstract fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String?
+	abstract fun getAlbumArtLink(trackId: Long, anonymousAccess: Boolean, artSize: ArtSize): String
 	abstract fun deleteSong(fileName: String)
 	abstract fun copySong(sourceFileName: String, destinationFileName: String, audioFormat: AudioFormat)
 
