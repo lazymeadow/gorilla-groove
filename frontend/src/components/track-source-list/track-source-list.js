@@ -13,6 +13,7 @@ import {ReviewQueueContext} from "../../services/review-queue-provider";
 import ReviewQueueManagement from "../review-queue/review-queue-management/review-queue-management";
 import {PlaybackContext} from "../../services/playback-provider";
 import {DeviceType} from "../../enums/device-type";
+import {PermissionType} from "../../enums/permission-type";
 
 let pendingDeletePlaylist = {};
 
@@ -162,10 +163,9 @@ export default function TrackSourceList(props) {
 
 	const librarySelected = musicContext.trackView === TrackView.LIBRARY && props.centerView === CenterView.TRACKS
 		? 'selected' : '';
-	const deviceManagementSelected = props.centerView === CenterView.REMOTE_DEVICES
-		? 'selected' : '';
-	const globalSearchSelected = props.centerView === CenterView.GLOBAL_SEARCH
-		? 'selected' : '';
+	const deviceManagementSelected = props.centerView === CenterView.REMOTE_DEVICES ? 'selected' : '';
+	const globalSearchSelected = props.centerView === CenterView.GLOBAL_SEARCH ? 'selected' : '';
+	const spotifySearchSelected = props.centerView === CenterView.SPOTIFY_SEARCH ? 'selected' : '';
 
 	return (
 		<div id="view-source-list">
@@ -187,6 +187,18 @@ export default function TrackSourceList(props) {
 			>
 				<span>Remote Play</span>
 			</div>
+
+			{
+				userContext.hasPermission(PermissionType.EXPERIMENTAL) ?
+					<div
+						className={`secondary-option ${spotifySearchSelected} hoverable`}
+						onClick={() => {
+							props.setCenterView(CenterView.SPOTIFY_SEARCH);
+						}}
+					>
+						<span>Spotify</span>
+					</div> : null
+			}
 
 			<div
 				className={`secondary-option ${globalSearchSelected} hoverable`}

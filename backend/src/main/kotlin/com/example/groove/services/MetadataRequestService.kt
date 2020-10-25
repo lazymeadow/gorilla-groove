@@ -31,9 +31,6 @@ class MetadataRequestService(
 			if (track.album.shouldBeUpdated(request.changeAlbum)) {
 				track.album = metadataResponse.album
 			}
-			if (track.genre.shouldBeUpdated(request.changeGenre)) {
-				track.genre = metadataResponse.genre
-			}
 
 			// We only want to update this info if we are actually using the same album as the response
 			if (track.album.toLowerCase() == metadataResponse.album.toLowerCase()) {

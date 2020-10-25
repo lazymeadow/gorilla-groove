@@ -4,14 +4,7 @@ import {useInterval} from "../../../use-interval";
 import {numberWithCommas} from "../../../util";
 import YoutubeDlButton from "../../youtube-dl/youtube-dl";
 import {formatDateEnglish} from "../../../formatters";
-
-const UNSTARTED = -1;
-// noinspection JSUnusedLocalSymbols
-const ENDED = 0;
-const PLAYING = 1;
-// noinspection JSUnusedLocalSymbols
-const PAUSED = 2;
-const BUFFERING = 3;
+import {YoutubeApiVideo, YoutubeVideoState} from "../../../services/youtube-api-client";
 
 export default function YoutubePlayer(props) {
 	const [player, setPlayer] = useState(null);
@@ -49,14 +42,6 @@ export default function YoutubePlayer(props) {
 		})
 	}
 
-	useEffect(() => {
-		if (!window.YT) {
-			console.error('Youtube Player was rendered before the Youtube API was initialized!')
-		} else {
-			initVideo();
-		}
-	}, []);
-
 	const updateTimePlayed = () => {
 		if (player && props.isPlaying) {
 			// noinspection JSDeprecatedSymbols (not actually deprecated)
@@ -68,11 +53,12 @@ export default function YoutubePlayer(props) {
 	// Instead we have to set an interval to update ourselves
 	useInterval(updateTimePlayed, 1000);
 
-	const onPlayerReady = event => {
-		const data = Object.assign({}, trackData);
-		data.length = event.target.getDuration();
+	const onPlayerReady = (player) => {
+		setPlayer(player);
 
-		event.target.setVolume(100);
+		const data = Object.assign({}, trackData);
+
+		data.length = player.getDuration();
 
 		setTrackData(data);
 		setPlayerReady(true);
@@ -81,7 +67,7 @@ export default function YoutubePlayer(props) {
 	const onStateChange = newState => {
 		// For some reason -1 gets thrown out despite it still buffering
 		// It goes, -1, 3, -1, 3, 1
-		if (isPlayingRef.current && (newState.data === BUFFERING || newState.data === UNSTARTED)) {
+		if (isPlayingRef.current && (newState === YoutubeVideoState.BUFFERING || newState === YoutubeVideoState.UNSTARTED)) {
 			isBufferingRef.current = true;
 			setRandom(Math.random());
 		} else {
@@ -97,19 +83,6 @@ export default function YoutubePlayer(props) {
 		}
 	};
 
-	const initVideo = () => {
-		// the Player object is created uniquely based on the id in props
-		const newPlayer = new window.YT.Player(`youtube-player-${props.video.id}`, {
-			videoId: props.video.id,
-			events: {
-				onReady: onPlayerReady,
-				onStateChange: onStateChange
-			},
-		});
-
-		setPlayer(newPlayer);
-	};
-
 	const handleIsPlaying = shouldBePlaying => {
 		if (shouldBePlaying) {
 			player.playVideo();
@@ -122,7 +95,7 @@ export default function YoutubePlayer(props) {
 	// If we're out of step with the parent component, get ourselves back in sync.
 	if (player !== null && player.getPlayerState) {
 		const state = player.getPlayerState();
-		const isPlaying = state === PLAYING || state === BUFFERING;
+		const isPlaying = state === YoutubeVideoState.PLAYING || state === YoutubeVideoState.BUFFERING;
 
 		if (props.isPlaying !== isPlaying) {
 			handleIsPlaying(props.isPlaying);
@@ -131,11 +104,11 @@ export default function YoutubePlayer(props) {
 
 	return (
 		<div className="youtube-player">
-			<iframe
-				id={`youtube-player-${props.video.id}`}
-				width="0" height="0"
-				src={`${props.video.embedUrl}?enablejsapi=1`}
-				frameBorder="0"
+			<YoutubeApiVideo
+				videoId={props.video.id}
+				embedUrl={props.video.embedUrl}
+				onPlayerReady={onPlayerReady}
+				onStateChange={onStateChange}
 			/>
 
 			<MiniPlayer

@@ -112,7 +112,7 @@ class ReviewSourceArtistService(
 		songsToDownload.forEach { song ->
 			val artistDownload = reviewSourceArtistDownloadRepository.findByReviewSourceAndTrackName(source, song.name)
 					?: throw IllegalStateException("Could not locate an artist download with review source ID: ${source.id} and song name ${song.name}!")
-			val videos = youtubeDownloadService.searchYouTube("${song.artist} ${song.name}")
+			val videos = youtubeDownloadService.searchYouTube("${song.artist} ${song.name}", targetLength = song.length)
 
 			// There's a chance that our search yields no valid results, but youtube will pretty much always return
 			// us videos, even if they're a horrible match. Probably the best thing we can do is check the video title
@@ -165,9 +165,8 @@ class ReviewSourceArtistService(
 			reviewSourceArtistDownloadRepository.save(artistDownload)
 
 			// Because we started from Spotify, we have a URL to the actual album art.
-			// This is better than whatever it is we will get from the YT download, so
-			// grab the art and store it
-			imageService.downloadFromUrl(song.albumArtLink!!)?.let { image ->
+			// This is better than whatever it is we will get from the YT download, so grab the art and store it
+			imageService.downloadFromUrl(song.albumArtLink)?.let { image ->
 				songIngestionService.storeAlbumArtForTrack(image, track, false)
 			}
 
@@ -190,12 +189,6 @@ class ReviewSourceArtistService(
 
 		// Make sure the artist is in the title somewhere OR the channel name. If it isn't that seems like a bad sign
 		if (!lowerTitle.contains(artist) && !this.channelName.toLowerCase().contains(artist)) {
-			return false
-		}
-
-		// If the duration doesn't match closely with Spotify's expected duration, that's a bad sign
-		if (this.duration < song.songLength - SORT_LENGTH_IDENTIFICATION_TOLERANCE ||
-				this.duration > song.songLength + SORT_LENGTH_IDENTIFICATION_TOLERANCE) {
 			return false
 		}
 

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.File
 import java.util.*
+import kotlin.math.abs
 
 
 @Service
@@ -20,7 +21,8 @@ class YoutubeDownloadService(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageProperties: FileStorageProperties,
 		private val trackRepository: TrackRepository,
-		private val youTubeDlProperties: YouTubeDlProperties
+		private val youTubeDlProperties: YouTubeDlProperties,
+		private val imageService: ImageService
 ) {
 
 	val mapper = createMapper()
@@ -51,14 +53,14 @@ class YoutubeDownloadService(
 		p.waitFor()
 
 		val newSong = File("$destination.ogg")
-		val newAlbumArt = findArt(destination)
+		val videoThumbnailArt = findArt(destination)
 		if (!newSong.exists()) {
 			throw YouTubeDownloadException("Failed to download song from URL: $url")
 		}
 
 		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
 		// Slightly complicates finding the file after we save it, though
-		val track = songIngestionService.convertAndSaveTrackForUser(newSong, user, url, hasArt = newAlbumArt != null)
+		val track = songIngestionService.convertAndSaveTrackForUser(newSong, user, url, hasArt = videoThumbnailArt != null)
 		// If the uploader provided any metadata, add it to the track and save it again
 		youtubeDownloadDTO.name?.let { track.name = it.trim() }
 		youtubeDownloadDTO.artist?.let { track.artist = it.trim() }
@@ -69,11 +71,16 @@ class YoutubeDownloadService(
 		youtubeDownloadDTO.genre?.let { track.genre = it.trim() }
 		trackRepository.save(track)
 
-		if (!storeArt) {
-			newAlbumArt?.delete()
-		} else if (newAlbumArt != null) {
-			songIngestionService.storeAlbumArtForTrack(newAlbumArt, track, youtubeDownloadDTO.cropArtToSquare)
-			newAlbumArt.delete()
+		if (youtubeDownloadDTO.artUrl != null) {
+			videoThumbnailArt?.delete()
+			imageService.downloadFromUrl(youtubeDownloadDTO.artUrl)?.let { overrideArt ->
+				songIngestionService.storeAlbumArtForTrack(overrideArt, track, youtubeDownloadDTO.cropArtToSquare)
+			}
+		} else if (!storeArt) {
+			videoThumbnailArt?.delete()
+		} else if (videoThumbnailArt != null) {
+			songIngestionService.storeAlbumArtForTrack(videoThumbnailArt, track, youtubeDownloadDTO.cropArtToSquare)
+			videoThumbnailArt.delete()
 		} else {
 			logger.error("Failed to download album art for song at URL: $url.")
 		}
@@ -94,7 +101,8 @@ class YoutubeDownloadService(
 		return null
 	}
 
-	fun searchYouTube(searchTerm: String): List<VideoProperties> {
+	// target length is used to try to find videos that closely match what is found in Spotify
+	fun searchYouTube(searchTerm: String, targetLength: Int): List<VideoProperties> {
 		logger.info("Searching YouTube for the term: '$searchTerm'")
 		val videosToSearch = 5
 		// This combination of arguments will have Youtube-DL not actually download the videos, but instead write the following
@@ -121,20 +129,37 @@ class YoutubeDownloadService(
 
 		return fileContent.map { videoJson ->
 			mapper.readValue(videoJson, VideoProperties::class.java)
+		}.filter { videoProperties ->
+			abs(videoProperties.duration - targetLength) < SONG_LENGTH_IDENTIFICATION_TOLERANCE
 		}
 	}
 
 	data class VideoProperties(
+			@JsonProperty("display_id")
+//			@JsonInclude
+			val id: String,
+
 			@JsonProperty("webpage_url")
+//			@JsonInclude
 			val videoUrl: String,
+
 			val duration: Int,
 			val title: String,
+
 			@JsonProperty("uploader")
+//			@JsonInclude
 			val channelName: String = ""
-	)
+	) {
+		val embedUrl: String
+			get() = "https://www.youtube.com/embed/$id"
+	}
 
 	companion object {
 		val logger = logger()
+
+		// When we are checking if a YouTube video is valid for a given Spotify song, we want to make sure
+		// that the song lengths more or less agree. This is the tolerance for that check
+		private const val SONG_LENGTH_IDENTIFICATION_TOLERANCE = 4
 	}
 }
 

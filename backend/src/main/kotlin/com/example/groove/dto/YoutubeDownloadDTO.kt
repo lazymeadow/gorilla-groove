@@ -9,5 +9,6 @@ data class YoutubeDownloadDTO(
 		val releaseYear: Int? = null,
 		val trackNumber: Int? = null,
 		val genre: String? = null,
-		val cropArtToSquare: Boolean = false
+		val cropArtToSquare: Boolean = false,
+		val artUrl: String? = null
 )

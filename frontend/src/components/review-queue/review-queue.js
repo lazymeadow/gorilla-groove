@@ -28,7 +28,6 @@ export default function ReviewQueue() {
 				return null;
 			}
 
-			console.log('set track', tracks[0]);
 			setReviewTrack(tracks[0]);
 			fetchLinksForTrack(tracks[0]);
 

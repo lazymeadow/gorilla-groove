@@ -167,7 +167,7 @@ class SpotifyApiClient(
 				releaseYear = this.album!!.releaseYear,
 				trackNumber = this.trackNumber,
 				albumArtLink = biggestImageUrl,
-				songLength = (this.durationMs / 1000).toInt(),
+				length = (this.durationMs / 1000).toInt(),
 				previewUrl = this.previewUrl
 		)
 	}

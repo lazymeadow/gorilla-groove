@@ -18,6 +18,7 @@ import {DeviceContext} from "../../services/device-provider";
 import GlobalSearch from "../global-search/global-search";
 import ReviewQueue from "../review-queue/review-queue";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
+import SpotifySearch from "../global-search/spotify-search/spotify-search";
 
 export default function SiteLayout(props) {
 	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
@@ -68,6 +69,8 @@ export default function SiteLayout(props) {
 			return <GlobalSearch/>
 		} else if (centerView === CenterView.REVIEW_QUEUE) {
 			return <ReviewQueue/>
+		} else if (centerView === CenterView.SPOTIFY_SEARCH) {
+			return <SpotifySearch/>
 		}
 	};
 
