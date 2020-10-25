@@ -224,7 +224,8 @@ export default function TrackSourceList(props) {
 						{node.data.map(entry => {
 							let entrySelected = false;
 							if (node.section === CenterView.REVIEW_QUEUE) {
-								entrySelected = entry.id === reviewQueueContext.viewedReviewSourceId
+								entrySelected = props.centerView === CenterView.REVIEW_QUEUE
+									&& entry.id === reviewQueueContext.viewedReviewSourceId;
 							} else {
 								entrySelected = musicContext.trackView === node.section &&
 								entry.id === musicContext.viewedEntityId &&
