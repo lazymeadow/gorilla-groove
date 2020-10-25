@@ -54,6 +54,7 @@ export class SongRow extends React.Component {
 							<div>
 								<EditableDiv
 									id={cellId}
+									showTooltip={true}
 									editable={
 										SongRow.updatableColumns.has(columnName)
 										&& this.props.editableCell === cellId

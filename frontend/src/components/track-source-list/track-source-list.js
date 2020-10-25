@@ -272,6 +272,7 @@ export default function TrackSourceList(props) {
 								>
 									<EditableDiv
 										editable={editedId === cellId && node.section === TrackView.PLAYLIST}
+										showTooltip={node.section !== CenterView.REVIEW_QUEUE}
 										text={text}
 										stopEdit={() => setEditedId(null)}
 										updateHandler={newValue => playlistContext.renamePlaylist(entry, newValue)}
