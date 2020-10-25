@@ -106,7 +106,7 @@ class FileController(
 			@RequestParam(defaultValue = "LARGE") artSize: ArtSize
 	): TrackLinks {
 		val user = loadLoggedInUser()
-		logger.info("Links requested for Track: $trackId from user: ${user.username} with format: $audioFormat and art size: $artSize")
+		logger.info("Links requested for Track: $trackId from user: ${user.name} with format: $audioFormat and art size: $artSize")
 
 		val artLink = fileStorageService.getAlbumArtLink(trackId, false, artSize)
 
