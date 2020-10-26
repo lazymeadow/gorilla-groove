@@ -19,10 +19,16 @@ class YoutubeApiClient(
 
 	private val objectMapper = createMapper()
 
-	fun findVideos(searchTerm: String? = null, channelId: String? = null): YoutubeApiResponse {
+	fun findVideos(searchTerm: String? = null, channelId: String? = null, limit: Int = 100): YoutubeApiResponse {
+		// I noticed that youtube's API seems to have results screwed up by including an ampersand??
+		// I searched for "amba shepherd - wide awake & dreaming" and very few results were relevant,
+		// and the results were very different from searching YouTube on the web. Removing the ampersand
+		// seemed to un-screw it up. So that's what I'm doing here until it doesn't work.
+		val fixedSearchTerm = searchTerm?.replace("&", "")
+
 		// YouTube doesn't return all the necessary data in its 'search' response. So we search and collect the IDS,
 		// then do a follow-up request with those IDs to get all the data we care about, while preserving video order.
-		val videoIds = searchYoutube(searchTerm, channelId)
+		val videoIds = searchYoutube(fixedSearchTerm, channelId)
 		val videoInfo = getVideoInformation(videoIds)
 
 		val videos = videoInfo.filter {
@@ -40,15 +46,9 @@ class YoutubeApiClient(
 				videoUrl = VIDEO_URL + it.id,
 				embedUrl = EMBED_URL + it.id,
 				id = it.id
-		) }.take(6) // Take only the top 6. The extras we query for are used for providing better results
+		) }.take(limit)
 
-		// If we have a search term, then we are searching using relevance. We will be doing additional stuff
-		// on our end later to improve relevance for music, so only take the top 6 for now
-		return if (searchTerm != null) {
-			YoutubeApiResponse(videos.take(6))
-		} else {
-			YoutubeApiResponse(videos)
-		}
+		return YoutubeApiResponse(videos)
 	}
 
 	// Return a list instead of a set, because the order we get them in is Youtube's relevance

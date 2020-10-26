@@ -33,7 +33,9 @@ export function YoutubeApiVideo(props) {
 
 	return <iframe
 		id={`youtube-player-${props.videoId}`}
-		width="0" height="0"
+		className="d-none"
+		width="0"
+		height="0"
 		src={`${props.embedUrl}?enablejsapi=1`}
 		frameBorder="0"
 	/>

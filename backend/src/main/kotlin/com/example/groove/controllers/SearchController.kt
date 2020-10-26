@@ -19,7 +19,7 @@ class SearchController(
 	fun searchYoutubeForTerm(
 			@PathVariable("term") term: String
 	): YoutubeApiClient.YoutubeApiResponse {
-		return youtubeApiClient.findVideos(term)
+		return youtubeApiClient.findVideos(term, limit = 6)
 	}
 
 	@GetMapping("/youtube/term/{term}/length/{length}")

@@ -110,24 +110,31 @@ export default function SpotifySearch() {
 		}
 	};
 
-	const importTrack = spotifyTrack => {
+	const setSourceLoading = (sourceId, isLoading) => {
 		const newDownloads = Object.assign({}, pendingDownloads);
-		newDownloads[spotifyTrack.sourceId] = true;
+		newDownloads[sourceId] = isLoading;
 		setPendingDownloads(newDownloads);
+	};
+
+	const importTrack = spotifyTrack => {
+		setSourceLoading(spotifyTrack.sourceId, true);
 
 		if (spotifyIdToYoutubeUrl[spotifyTrack.sourceId] !== undefined) {
 			downloadFromYoutube(spotifyIdToYoutubeUrl[spotifyTrack.sourceId], spotifyTrack)
 		} else {
 			const term = spotifyTrack.artist + ' ' + spotifyTrack.name;
 			Api.get(`search/youtube/term/${term}/length/${spotifyTrack.length}`).then(res => {
-				downloadFromYoutube(res.videoUrl, spotifyTrack);
+				if (!res || !res.videoUrl) {
+					toast.error(`Failed to find a video to download for ${spotifyTrack.name}`);
+					setSourceLoading(spotifyTrack.sourceId, false);
+				} else {
+					downloadFromYoutube(res.videoUrl, spotifyTrack);
+				}
 			}).catch(error => {
 				console.error(error);
 				toast.error(`The download of ${spotifyTrack.name} failed`);
 
-				const newDownloads = Object.assign({}, pendingDownloads);
-				newDownloads[spotifyTrack.sourceId] = false;
-				setPendingDownloads(newDownloads);
+				setSourceLoading(spotifyTrack.sourceId, false);
 			});
 		}
 	};
@@ -143,16 +150,13 @@ export default function SpotifySearch() {
 			artUrl: spotifyTrack.albumArtLink
 		};
 
-		Api.post('track/youtube-dl', params).then(track => {
-			this.context.addUploadToExistingLibraryView(track);
+		Api.post('track/youtube-dl', params).then(() => {
 			toast.success(`${spotifyTrack.name} downloaded successfully`);
 		}).catch(error => {
 			console.error(error);
 			toast.error(`The download of ${spotifyTrack.name} failed`);
 		}).finally(() => {
-			const newDownloads = Object.assign({}, pendingDownloads);
-			newDownloads[spotifyTrack.sourceId] = false;
-			setPendingDownloads(newDownloads);
+			setSourceLoading(spotifyTrack.sourceId, false);
 		});
 	};
 
