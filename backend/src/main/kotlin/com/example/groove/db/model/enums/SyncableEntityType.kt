@@ -4,5 +4,6 @@ enum class SyncableEntityType {
 	TRACK,
 	USER,
 	PLAYLIST,
-	PLAYLIST_TRACK
+	PLAYLIST_TRACK,
+	REVIEW_SOURCE
 }

@@ -1,9 +1,6 @@
 package com.example.groove.services
 
-import com.example.groove.db.dao.PlaylistRepository
-import com.example.groove.db.dao.PlaylistTrackRepository
-import com.example.groove.db.dao.TrackRepository
-import com.example.groove.db.dao.UserRepository
+import com.example.groove.db.dao.*
 import com.example.groove.db.model.RemoteSyncable
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.enums.SyncableEntityType
@@ -26,7 +23,8 @@ class SyncableEntityService(
 		private val trackRepository: TrackRepository,
 		private val userRepository: UserRepository,
 		private val playlistRepository: PlaylistRepository,
-		private val playlistTrackRepository: PlaylistTrackRepository
+		private val playlistTrackRepository: PlaylistTrackRepository,
+		private val reviewSourceRepository: ReviewSourceRepository
 ) {
 
 	@Transactional(readOnly = true)
@@ -84,6 +82,13 @@ class SyncableEntityService(
 						deleted = it.deleted
 				)
 			}
+
+			SyncableEntityType.REVIEW_SOURCE -> reviewSourceRepository.getReviewSourcesUpdatedBetweenTimestamp(
+					userId = loadLoggedInUser().id,
+					minimum = minimum,
+					maximum = maximum,
+					pageable = PageRequest.of(page, size)
+			)
 		}
 
 		return getEntitiesToSync(entities, minimum)
