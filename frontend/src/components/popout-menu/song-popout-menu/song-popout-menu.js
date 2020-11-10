@@ -63,18 +63,15 @@ export default function SongPopoutMenu(props) {
 	const getBaseMenuOptions = () => {
 		let baseOptions = [
 			{
-				text: 'Play Now', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Play Now', clickHandler: () => {
 					musicContext.playTracks(props.getSelectedTracks());
 				}
 			}, {
-				text: 'Play Next', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Play Next', clickHandler: () => {
 					musicContext.playTracksNext(props.getSelectedTracks());
 				}
 			}, {
-				text: 'Play Last', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Play Last', clickHandler: () => {
 					musicContext.playTracksLast(props.getSelectedTracks());
 				}
 			}, {
@@ -112,8 +109,7 @@ export default function SongPopoutMenu(props) {
 
 		if (selectedTracks.length === 1) {
 			baseOptions = baseOptions.concat([{
-				text: 'Get Link', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Get Link', clickHandler: () => {
 					const trackId = selectedTracks[0].id;
 
 					// Call the API as an authenticated user to generate a link. Then save the frontend link to
@@ -127,7 +123,7 @@ export default function SongPopoutMenu(props) {
 
 					// Make a call to the API so that it generates an anonymous link for someone to consume.
 					// We don't actually care about the response
-					Api.get('file/link/' + trackId).then(() => {
+					Api.post('file/link/' + trackId).then(() => {
 						toast.success('Link copied to clipboard');
 					});
 				}
@@ -250,8 +246,7 @@ export default function SongPopoutMenu(props) {
 	const getPlaylistSpecificOptions = () => {
 		return [
 			{
-				text: 'Remove from Playlist', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Remove from Playlist', clickHandler: () => {
 					const tracks = props.getSelectedTracks();
 					const playlistTrackIds = tracks.map(track => track.playlistTrackId);
 
@@ -288,8 +283,7 @@ export default function SongPopoutMenu(props) {
 	const getOtherUserOptions = () => {
 		return [
 			{
-				text: 'Import to Library', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Import to Library', clickHandler: () => {
 					const tracks = props.getSelectedTracks();
 					musicContext.importTracks(tracks).then(() => {
 						if (tracks.length === 1) {
@@ -309,8 +303,7 @@ export default function SongPopoutMenu(props) {
 	const getNowPlayingOptions = () => {
 		const options = [
 			{
-				text: 'Remove', clickHandler: e => {
-					e.stopPropagation();
+				text: 'Remove', clickHandler: () => {
 					musicContext.removeFromNowPlaying(props.selectionKeys);
 				}
 			}
@@ -339,8 +332,7 @@ export default function SongPopoutMenu(props) {
 		const playlistItems = playlistContext.playlists.map(playlist => {
 			return {
 				text: playlist.name,
-				clickHandler: e => {
-					e.stopPropagation();
+				clickHandler: () => {
 					const tracks = props.getSelectedTracks();
 					const trackIds = tracks.map(track => track.id);
 					playlistContext.addToPlaylist(playlist.id, trackIds).then(() => {

@@ -253,9 +253,9 @@ class TrackService(
 		}
 	}
 
-	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean): Map<String, Any?> {
+	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): Map<String, Any?> {
 		// This will throw an exception if anonymous access is not allowed for this file
-		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, AudioFormat.OGG)
+		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, audioFormat)
 
 		val albumLink = fileStorageService.getAlbumArtLink(trackId, anonymousAccess, ArtSize.LARGE)
 

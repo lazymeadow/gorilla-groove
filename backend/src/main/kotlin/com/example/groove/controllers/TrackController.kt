@@ -4,6 +4,7 @@ import com.example.groove.db.model.Track
 import com.example.groove.dto.*
 import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
+import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -155,16 +156,24 @@ class TrackController(
 	}
 
 	@GetMapping("/preview/public/{trackId}")
-	fun getInfoForTrackAnonymous(@PathVariable trackId: Long): Any {
-		return trackService.getPublicTrackInfo(trackId, true)
+	fun getInfoForTrackAnonymous(
+			@PathVariable trackId: Long,
+			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
+	): Map<String, Any?> {
+		logger.info("Public track info requested for track $trackId, format $audioFormat")
+		return trackService.getPublicTrackInfo(trackId, true, audioFormat)
 	}
 
 	// It's real annoying that I have to have two endpoints for this, but I can't figure out
 	// how to make Spring try to authenticate user for a public endpoint. So instead, have one
 	// endpoint for authenticated users and one for not, and make the clients deal with it
 	@GetMapping("/preview/{trackId}")
-	fun getInfoForTrack(@PathVariable trackId: Long): Map<String, Any?> {
-		return trackService.getPublicTrackInfo(trackId, false)
+	fun getInfoForTrack(
+			@PathVariable trackId: Long,
+			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
+	): Map<String, Any?> {
+		logger.info("Private track info requested for track $trackId, format $audioFormat by user ${loadLoggedInUser().username}")
+		return trackService.getPublicTrackInfo(trackId, false, audioFormat)
 	}
 
 	data class MarkTrackAsListenedToDTO(

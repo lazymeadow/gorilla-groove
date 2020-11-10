@@ -99,6 +99,20 @@ class FileController(
 				.body(resource)
 	}
 
+	@PostMapping("/link/{trackId}")
+	fun forceLinksForTrack(@PathVariable trackId: Long) {
+		logger.info("User ${loadLoggedInUser().username} is forcing link generation for track $trackId")
+
+		// We don't know what device someone is going to listen to this on, so we have to generate MP3 and OGG as
+		// not all browsers support OGG. We don't generate SMALL art size here as those are currently only used by mobile
+		// TODO a good improvement here would be to force new links to be generated instead. This would set the track
+		// expiration out to 4 hours, so you can't request track links, link a song to someone who does not have an account,
+		// and then have the track expire minutes later like it could today.
+		fileStorageService.getSongLink(trackId, false, AudioFormat.MP3)
+		fileStorageService.getSongLink(trackId, false, AudioFormat.OGG)
+		fileStorageService.getAlbumArtLink(trackId, false, ArtSize.LARGE)
+	}
+
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(
 			@PathVariable trackId: Long,
