@@ -144,6 +144,26 @@ class TrackController(
 		return mapOf("newLength" to newLength)
 	}
 
+	data class VolumeAdjustDTO(val volumeAdjustAmount: Double)
+
+	@PostMapping("/{trackId}/volume-adjust")
+	fun adjustVolume(
+			@PathVariable trackId: Long,
+			@RequestBody volumeAdjustDTO: VolumeAdjustDTO
+	) {
+		logger.info("User ${loadLoggedInUser().name} is editing the volume of a track $trackId by ${volumeAdjustDTO.volumeAdjustAmount}")
+
+		require(volumeAdjustDTO.volumeAdjustAmount > 0) {
+			"Volume adjustment must be greater than 0"
+		}
+
+		require(volumeAdjustDTO.volumeAdjustAmount != 1.0) {
+			"Adjusting the volume to 1.0 would not do anything"
+		}
+
+		trackService.adjustVolume(trackId, volumeAdjustDTO.volumeAdjustAmount)
+	}
+
 	@PostMapping("/data-update-request")
 	fun dataUpdateRequest(@RequestBody metadataUpdateRequestDTO: MetadataUpdateRequestDTO): DataUpdateResponseDTO {
 		val (updatedTracks, failedTrackIds) =  metadataRequestService.requestTrackMetadata(metadataUpdateRequestDTO)

@@ -288,6 +288,20 @@ class TrackService(
 		)
 	}
 
+	fun adjustVolume(trackId: Long, volumeAdjustment: Double) {
+		val track = trackRepository.get(trackId)
+
+		if (track == null || track.user.id != loadLoggedInUser().id) {
+			throw IllegalArgumentException("No track found by ID $trackId!")
+		}
+
+		songIngestionService.editVolume(track, volumeAdjustment)
+
+		track.updatedAt = now()
+		track.songUpdatedAt = track.updatedAt
+		trackRepository.save(track)
+	}
+
 	fun trimTrack(trackId: Long, startTime: String?, duration: String?): Int {
 		val track = trackRepository.get(trackId)
 

@@ -138,16 +138,44 @@ class SongIngestionService(
 	}
 
 	@Transactional
+	fun editVolume(track: Track, volume: Double) {
+		editSong(
+				track = track,
+				fileTransformationHandler = { songFile ->
+					ffmpegService.convertTrack(songFile, AudioFormat.OGG, volume)
+				},
+				returnValueHandler = {}
+		)
+	}
+
+	@Transactional
 	fun trimSong(track: Track, startTime: String?, duration: String?): Int {
+		return editSong(
+				track = track,
+				fileTransformationHandler = { songFile ->
+					ffmpegService.trimSong(songFile, startTime, duration)
+				},
+				returnValueHandler = { editedFile ->
+					fileMetadataService.getTrackLength(editedFile)
+				}
+		)
+	}
+
+	private fun<T> editSong(
+			track: Track,
+			fileTransformationHandler: (File) -> File,
+			returnValueHandler: (File) -> T
+	): T {
 		renameSharedTracks(track)
 
 		val oggFile = fileStorageService.loadSong(track, AudioFormat.OGG)
 
-		val trimmedSong = ffmpegService.trimSong(oggFile, startTime, duration)
+		val trimmedSong = fileTransformationHandler(oggFile)
 
 		fileStorageService.storeSong(trimmedSong, track.id, AudioFormat.OGG)
 
-		val newLength = fileMetadataService.getTrackLength(trimmedSong)
+		val returnValue = returnValueHandler(trimmedSong)
+
 		// The new file we save is always specific to this song, so name it with the song's ID as we do
 		// with any song file names that aren't borrowed / shared
 		val newFileName = "${track.id}.ogg"
@@ -170,10 +198,10 @@ class SongIngestionService(
 		mp3File.delete()
 		trimmedSong.delete()
 
-		return newLength
+		return returnValue
 	}
 
-	// Other users could be sharing this track. We don't want to let another user trim the track for all users
+	// Other users could be sharing this track. We don't want to let another user edit the track for all users
 	// Make sure all the tracks sharing the filename of this track are no longer using it
 	private fun renameSharedTracks(track: Track) {
 		// If the track we are trimming has a different ID than its current name, then we don't have to do anything.

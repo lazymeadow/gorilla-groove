@@ -21,7 +21,7 @@ class FFmpegService(
 		private val fileStorageProperties: FileStorageProperties
 ) {
 
-	fun convertTrack(file: File, audioFormat: AudioFormat): File {
+	fun convertTrack(file: File, audioFormat: AudioFormat, volume: Double? = null): File {
 		val convertedFileName = UUID.randomUUID().toString() + audioFormat.extension
 
 		val ffmpeg = FFmpeg(ffmpegProperties.ffmpegBinaryLocation + "ffmpeg")
@@ -31,6 +31,8 @@ class FFmpegService(
 		val builder = FFmpegBuilder()
 				.addInput(file.absolutePath)
 				.addOutput(fileStorageProperties.tmpDir + convertedFileName)
+
+		volume?.let { builder.setAudioFilter("volume=$it") }
 
 		// For whatever reason, if we don't set the quality explicitly the mp3 file doubles in length.
 		// And I don't mean file size, I mean audio duration. Very weird. There is supposedly another flag

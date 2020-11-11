@@ -13,6 +13,7 @@ import RemotePlay from "../../remote-play/modal/remote-play";
 import {RemotePlayType} from "../../remote-play/modal/remote-play-type";
 import SongDelete from "./song-delete/song-delete";
 import RecommendTo from "../../recommend-to/recommend-to";
+import VolumeAdjust from "../../volume-adjust/volume-adjust";
 
 let menuOptions = [];
 let lastExpanded = false;
@@ -147,6 +148,8 @@ export default function SongPopoutMenu(props) {
 					]}
 					expansionOnHover={true}
 				/>
+			}, {
+				component: <VolumeAdjust getSelectedTracks={props.getSelectedTracks.bind(this)}/>
 			}
 			])
 		}
