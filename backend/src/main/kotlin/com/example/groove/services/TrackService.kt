@@ -169,7 +169,6 @@ class TrackService(
 				track.artUpdatedAt = track.updatedAt
 				track.hasArt = true
 				trackLinkRepository.forceExpireLinksByTrackId(track.id)
-				artFile.delete()
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
 				val art = fileStorageService.loadAlbumArt(trackId, ArtSize.LARGE)
@@ -185,6 +184,8 @@ class TrackService(
 
 			trackRepository.save(track)
 		}
+
+		artFile?.delete()
 	}
 
 	@Transactional
