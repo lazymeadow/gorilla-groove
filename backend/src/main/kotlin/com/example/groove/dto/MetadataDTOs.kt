@@ -22,7 +22,6 @@ data class MetadataUpdateRequestDTO(
 		val trackIds: List<Long>,
 		val changeAlbum: MetadataOverrideType = MetadataOverrideType.NEVER,
 		val changeAlbumArt: MetadataOverrideType = MetadataOverrideType.NEVER,
-		val changeGenre: MetadataOverrideType = MetadataOverrideType.NEVER,
 		val changeReleaseYear: MetadataOverrideType = MetadataOverrideType.NEVER,
 		val changeTrackNumber: MetadataOverrideType = MetadataOverrideType.NEVER
 )

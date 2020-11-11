@@ -7,10 +7,12 @@ import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.*
+import com.example.groove.util.DateUtils.now
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.IOException
 import java.net.URL
+import java.sql.Timestamp
 import javax.imageio.ImageIO
 
 @Service
@@ -26,21 +28,25 @@ class MetadataRequestService(
 	@Transactional
 	fun requestTrackMetadata(request: MetadataUpdateRequestDTO): Pair<List<Track>, List<Long>> {
 		val trackIds = request.trackIds
+		val now = now()
 
 		val updatedSuccessTracks = findUpdatableTracks(trackIds).map { (track, metadataResponse) ->
 			if (track.album.shouldBeUpdated(request.changeAlbum)) {
 				track.album = metadataResponse.album
+				track.updatedAt = now
 			}
 
 			// We only want to update this info if we are actually using the same album as the response
-			if (track.album.toLowerCase() == metadataResponse.album.toLowerCase()) {
+			if (track.album.equals(metadataResponse.album, ignoreCase = true)) {
 				if (track.releaseYear.shouldBeUpdated(request.changeReleaseYear)) {
 					track.releaseYear = metadataResponse.releaseYear
+					track.updatedAt = now
 				}
 				if (track.trackNumber.shouldBeUpdated(request.changeTrackNumber)) {
 					track.trackNumber = metadataResponse.trackNumber
+					track.updatedAt = now
 				}
-				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt)
+				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt, now)
 			}
 
 			trackRepository.save(track)
@@ -64,7 +70,7 @@ class MetadataRequestService(
 		}
 	}
 
-	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType) {
+	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType, updateTime: Timestamp) {
 		if (overrideType == MetadataOverrideType.NEVER) {
 			return
 		}
@@ -91,6 +97,9 @@ class MetadataRequestService(
 		file.delete()
 
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
+		track.updatedAt = updateTime
+		track.artUpdatedAt = updateTime
+		track.hasArt = true
 	}
 
 	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataResponseDTO>> {
