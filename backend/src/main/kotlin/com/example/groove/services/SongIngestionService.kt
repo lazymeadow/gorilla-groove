@@ -41,7 +41,7 @@ class SongIngestionService(
 		}
 	}
 
-	private fun storeMultipartFile(file: MultipartFile): File {
+	fun storeMultipartFile(file: MultipartFile): File {
 		// Discard the file's original name; but keep the extension
 		val extension = file.originalFilename!!.split(".").last()
 		val fileName = UUID.randomUUID().toString() + "." + extension
@@ -50,7 +50,13 @@ class SongIngestionService(
 		val targetLocation = fileStorageLocation.resolve(fileName)
 		Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
 
-		return File(targetLocation.toUri())
+		val newFile = File(targetLocation.toUri())
+
+		if (!newFile.exists()) {
+			throw IllegalStateException("Could not store multipart file!")
+		}
+
+		return newFile
 	}
 
 	fun storeSongForUser(songFile: MultipartFile, user: User): Track {
@@ -72,19 +78,6 @@ class SongIngestionService(
 		tmpSongFile.delete()
 
 		return track
-	}
-
-	fun storeAlbumArtForTrack(albumArt: MultipartFile, track: Track, cropImageToSquare: Boolean) {
-		logger.info("Storing album artwork ${albumArt.originalFilename} for track ID: ${track.id}")
-		val imageFile = storeMultipartFile(albumArt)
-
-		if (!imageFile.exists()) {
-			throw IllegalStateException("Could not store album art for track ID: ${track.id}")
-		}
-
-		storeAlbumArtForTrack(imageFile, track, cropImageToSquare)
-
-		imageFile.delete()
 	}
 
 	fun storeAlbumArtForTrack(albumArt: File, track: Track, cropImageToSquare: Boolean) {

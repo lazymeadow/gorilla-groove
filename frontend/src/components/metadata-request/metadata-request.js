@@ -52,6 +52,12 @@ export default function MetadataRequest(props) {
 				existingTrack.album = updatedTrack.album;
 				existingTrack.releaseYear = updatedTrack.releaseYear;
 				existingTrack.trackNumber = updatedTrack.trackNumber;
+
+				// Could optimize this a bit more by making sure we actually requested the art, but I imagine it will nearly
+				// always be requested and the check gets a little hairy and I'm lazy.
+				if (musicContext.playedTrack && musicContext.playedTrack.id === existingTrack.id) {
+					musicContext.refreshArtOfCurrentTrack();
+				}
 			});
 
 			const successMessage = `${successes.length} song${successes.length === 1 ? ' was' : 's were'} updated successfully`;

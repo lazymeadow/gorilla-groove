@@ -21,7 +21,6 @@ import {ReviewQueueContext} from "../../services/review-queue-provider";
 import SpotifySearch from "../global-search/spotify-search/spotify-search";
 
 export default function SiteLayout(props) {
-	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
 	const [centerView, setCenterView] = useState(CenterView.TRACKS);
 
 	if (!isLoggedIn()) {
@@ -109,10 +108,10 @@ export default function SiteLayout(props) {
 				/>
 			</div>
 			<div className="border-layout-southwest">
-				<AlbumArt artLink={albumArtLink}/>
+				<AlbumArt artLink={musicContext.playedAlbumArtUrl}/>
 			</div>
 			<div className="border-layout-south">
-				<PlaybackControls setAlbumArt={setAlbumArtLink}/>
+				<PlaybackControls/>
 			</div>
 			<div className="border-layout-southeast">
 				<SiteStats/>

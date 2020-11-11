@@ -3,6 +3,9 @@ import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
+import {Api} from "../../api";
+
+const UNKNOWN_ART_URL = './images/unknown-art.jpg';
 
 export class SongProperties extends React.Component {
 	constructor(props) {
@@ -23,7 +26,11 @@ export class SongProperties extends React.Component {
 			note: '',
 			albumArt: null,
 			albumArtUrl: '',
-			cropArtToSquare: false
+			newArtUrl: '',
+			cropArtToSquare: false,
+
+			showingAlbumUploadOptions: false,
+			showingAlbumArtUrlUploadModal: false,
 		};
 
 		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNumber',
@@ -51,7 +58,17 @@ export class SongProperties extends React.Component {
 			newState.originalValues[inputName] = originalValue;
 		});
 
-		newState.albumArtUrl = './images/unknown-art.jpg';
+		// Gets tricky to display album art when more than one track is selected, so only do this if we're messing with 1
+		if (tracks.length === 1) {
+			Api.get(`file/link/${tracks[0].id}?linkFetchType=ART`).then(links => {
+				if (links.albumArtLink !== null) {
+					this.setState({ albumArtUrl: links.albumArtLink });
+				}
+			})
+		}
+
+		newState.newArtUrl = '';
+		newState.albumArtUrl = UNKNOWN_ART_URL;
 		newState.albumArt = null;
 		newState.cropArtToSquare = false;
 
@@ -59,7 +76,10 @@ export class SongProperties extends React.Component {
 	}
 
 	setModalOpen(isOpen) {
-		this.setState({ modalOpen: isOpen })
+		this.setState({
+			modalOpen: isOpen,
+			showingAlbumUploadOptions: false
+		})
 	}
 
 	inputChange(stateName, event) {
@@ -89,7 +109,15 @@ export class SongProperties extends React.Component {
 		).then(() => {
 			this.setState({ modalOpen: false });
 			this.context.forceTrackUpdate();
-			toast.success("Track data updated successfully");
+			toast.success('Track data updated successfully');
+
+			// We have altered the album art in some way. Refresh the displayed art if we edited the current song.
+			if (changedProperties.albumArtUrl !== undefined || this.state.albumArt !== null || changedProperties.cropArtToSquare === true) {
+				const currentTrackId = this.context.playedTrack ? this.context.playedTrack.id : undefined;
+				if (this.props.getSelectedTracks().some(track => track.id === currentTrackId)) {
+					this.context.refreshArtOfCurrentTrack();
+				}
+			}
 		}).finally(() => this.setState({ loading: false }));
 	}
 
@@ -109,12 +137,43 @@ export class SongProperties extends React.Component {
 			changedProperties.cropArtToSquare = true;
 		}
 
+		if (this.state.newArtUrl) {
+			changedProperties.albumArtUrl = this.state.newArtUrl;
+		}
+
 		return changedProperties;
 	}
 
 	// noinspection JSMethodCanBeStatic
 	openFileDialog() {
+		this.setState({ showingAlbumUploadOptions: false });
 		document.getElementById('picture-upload').click();
+	}
+
+	openUrlDialog() {
+		this.setState({ showingAlbumArtUrlUploadModal: true });
+	}
+
+	displayImageOptions() {
+		if (this.state.showingAlbumUploadOptions !== true) {
+			this.setState({ showingAlbumUploadOptions: true });
+		}
+	}
+
+	handleUserAlbumArtUrl(e) {
+		e.stopPropagation();
+		const newState = {
+			showingAlbumUploadOptions	: false,
+			showingAlbumArtUrlUploadModal: false
+		};
+
+		if (this.state.newArtUrl.trim().length > 0) {
+			newState.albumArtUrl = this.state.newArtUrl
+		} else {
+			newState.newArtUrl = '';
+		}
+
+		this.setState(newState);
 	}
 
 	handlePictureUpload(inputEvent) {
@@ -135,7 +194,11 @@ export class SongProperties extends React.Component {
 	render() {
 		// noinspection HtmlUnknownTarget
 		return (
-			<div onClick={() => this.setModalOpen(true)}>
+			<div onClick={() => {
+				if (this.state.modalOpen !== true) {
+					this.setModalOpen(true)
+				}
+			}}>
 				Properties
 				<Modal
 					isOpen={this.state.modalOpen}
@@ -284,8 +347,34 @@ export class SongProperties extends React.Component {
 								<div
 									className="album-art"
 									style={{ backgroundImage: 'url(' + this.state.albumArtUrl + ')' }}
-									onClick={this.openFileDialog.bind(this)}
-								/>
+									onClick={this.displayImageOptions.bind(this)}
+								>
+									{ /* Use a div with background image because it fits bounds better. But use img here that's hidden for onError */ }
+									<img
+										src={this.state.albumArtUrl}
+										className="d-none"
+										onError={() => {
+											console.error('An invalid image URL was supplied. Reverting image to default.');
+											toast.error('The supplied URL was not a valid image');
+											this.setState({
+												albumArtUrl: UNKNOWN_ART_URL,
+												newArtUrl: ''
+											})
+										}}
+									/>
+
+									<div id="image-upload-options" className={this.state.showingAlbumUploadOptions ? '' : 'd-none'}>
+										<h3>Upload Art</h3>
+										<div className="art-upload-buttons">
+											<button type="button" onClick={this.openUrlDialog.bind(this)}>
+												From URL
+											</button>
+											<button type="button" onClick={this.openFileDialog.bind(this)}>
+												From file
+											</button>
+										</div>
+									</div>
+								</div>
 								<input
 									type="file"
 									id="picture-upload"
@@ -306,10 +395,29 @@ export class SongProperties extends React.Component {
 								<button type="submit">Save</button>
 							</div>
 
+							<Modal
+								isOpen={this.state.showingAlbumArtUrlUploadModal}
+								closeFunction={() => this.setState({ showingAlbumArtUrlUploadModal: false })}
+							>
+								<form className="form-modal" onSubmit={this.handleUserAlbumArtUrl.bind(this)}>
+									<h3>Album Art URL</h3>
+									<input
+										className="long-property d-block"
+										placeholder="https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg"
+										onChange={(e) => this.inputChange('newArtUrl', e)}
+										value={this.state.newArtUrl}
+									/>
+
+									<div className="text-center">
+										<button type="submit">Enter</button>
+									</div>
+								</form>
+							</Modal>
+
 						</form>
 					</div>
-
 				</Modal>
+
 			</div>
 		)
 	}

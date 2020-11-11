@@ -30,7 +30,6 @@ import java.nio.file.Paths
 class FileController(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageService: FileStorageService,
-		private val s3Properties: S3Properties,
 		private val fileStorageProperties: FileStorageProperties
 ) {
 
@@ -113,16 +112,23 @@ class FileController(
 		fileStorageService.getAlbumArtLink(trackId, false, ArtSize.LARGE)
 	}
 
+	enum class LinkFetchType { ART, SONG, BOTH }
+
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(
 			@PathVariable trackId: Long,
+			@RequestParam(defaultValue = "BOTH") linkFetchType: LinkFetchType,
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat,
 			@RequestParam(defaultValue = "LARGE") artSize: ArtSize
 	): TrackLinks {
 		val user = loadLoggedInUser()
 		logger.info("Links requested for Track: $trackId from user: ${user.name} with format: $audioFormat and art size: $artSize")
 
-		val artLink = fileStorageService.getAlbumArtLink(trackId, false, artSize)
+		val artLink = if (linkFetchType == LinkFetchType.ART || linkFetchType == LinkFetchType.BOTH) {
+			fileStorageService.getAlbumArtLink(trackId, false, artSize)
+		} else {
+			""
+		}
 
 		val returnedArtLink = if (artLink.isEmpty()) {
 			// FIXME Need to update iOS to be able to handle empty / null album art
@@ -137,11 +143,13 @@ class FileController(
 			artLink
 		}
 
-		return TrackLinks(
-				fileStorageService.getSongLink(trackId, false, audioFormat),
-				returnedArtLink,
-				s3Properties.awsStoreInS3
-		)
+		val songLink = if (linkFetchType == LinkFetchType.SONG || linkFetchType == LinkFetchType.BOTH) {
+			fileStorageService.getSongLink(trackId, false, audioFormat)
+		} else {
+			null
+		}
+
+		return TrackLinks(songLink, returnedArtLink)
 	}
 
 	@GetMapping("/track-link/{trackId}")
@@ -149,9 +157,8 @@ class FileController(
 		logger.info("Anonymous track links were requested for Track ID: $trackId")
 
 		return TrackLinks(
-				fileStorageService.getSongLink(trackId, true, AudioFormat.OGG),
-				null,
-				s3Properties.awsStoreInS3
+				songLink = fileStorageService.getSongLink(trackId, true, AudioFormat.OGG),
+				albumArtLink = null
 		)
 	}
 
@@ -160,8 +167,7 @@ class FileController(
     }
 
 	data class TrackLinks(
-			val songLink: String,
-			val albumArtLink: String?,
-			val usingS3: Boolean
+			val songLink: String?,
+			val albumArtLink: String?
 	)
 }

@@ -24,7 +24,7 @@ let initialStateSent = false;
 let previousPlaying = false;
 let previousCurrentSessionPlayCounter = 0;
 
-export default function PlaybackControls(props) {
+export default function PlaybackControls() {
 	const [currentSessionPlayCounter, setCurrentSessionPlayCounter] = useState(0);
 	const [currentTimePercent, setCurrentTimePercent] = useState(0);
 	const [duration, setDuration] = useState(0);
@@ -70,7 +70,7 @@ export default function PlaybackControls(props) {
 		// Safari does not support the superior OGG format. Use MP3 instead for them
 		const audioFormat = isSafari() ? 'MP3' : 'OGG';
 		Api.get('file/link/' + newTrack.id, { audioFormat }).then(links => {
-			props.setAlbumArt(links.albumArtLink);
+			musicContext.setProviderState({ playedAlbumArtUrl: links.albumArtLink }, musicContext.forceTrackUpdate);
 
 			lastTime = 0;
 			listenedTo = false;
@@ -220,7 +220,7 @@ export default function PlaybackControls(props) {
 			// MusicContext upon re-log in. Do this to prevent auto-play of a "null" track upon re-log
 			if (musicContext.playedTrack === null) {
 				audio.src = '';
-				props.setAlbumArt(null);
+				musicContext.setProviderState({ playedAlbumArtUrl: null }, musicContext.forceTrackUpdate);
 			}
 
 			audio.removeEventListener('timeupdate', handleTimeTick);

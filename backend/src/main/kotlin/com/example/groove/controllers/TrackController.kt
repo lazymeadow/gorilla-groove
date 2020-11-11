@@ -5,9 +5,9 @@ import com.example.groove.dto.*
 import com.example.groove.services.MetadataRequestService
 import com.example.groove.services.TrackService
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.createMapper
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -94,8 +94,12 @@ class TrackController(
 			@RequestParam("albumArt") albumArt: MultipartFile?,
 			@RequestParam("updateTrackJson") updateTrackJson: String
 	): ResponseEntity<String> {
-		val mapper = jacksonObjectMapper()
+		val mapper = createMapper()
 		val updateTrackDTO = mapper.readValue(updateTrackJson, UpdateTrackDTO::class.java)
+
+		if (albumArt != null && updateTrackDTO.albumArtUrl != null) {
+			throw IllegalArgumentException("It is invalid to supply albumArt binary data and an albumArtUrl. Which one would we use?")
+		}
 
 		trackService.updateTracks(loadLoggedInUser(), updateTrackDTO, albumArt)
 

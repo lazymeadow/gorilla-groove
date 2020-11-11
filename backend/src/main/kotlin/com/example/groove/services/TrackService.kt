@@ -2,6 +2,7 @@ package com.example.groove.services
 
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.*
 import com.example.groove.dto.UpdateTrackDTO
@@ -31,7 +32,9 @@ class TrackService(
 		private val fileStorageService: FileStorageService,
 		private val songIngestionService: SongIngestionService,
 		private val youtubeDownloadService: YoutubeDownloadService,
-		private val playlistService: PlaylistService
+		private val playlistService: PlaylistService,
+		private val imageService: ImageService,
+		private val trackLinkRepository: TrackLinkRepository
 ) {
 
 	@Transactional(readOnly = true)
@@ -136,6 +139,12 @@ class TrackService(
 
 	@Transactional
 	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?) {
+		val artFile = when {
+			updateTrackDTO.albumArtUrl != null -> imageService.downloadFromUrl(updateTrackDTO.albumArtUrl)
+			albumArt != null -> songIngestionService.storeMultipartFile(albumArt)
+			else -> null
+		}
+
 		updateTrackDTO.trackIds.forEach { trackId ->
 			val track = trackRepository.get(trackId)
 			val user = loadLoggedInUser()
@@ -155,9 +164,12 @@ class TrackService(
 			updateTrackDTO.hidden?.let { track.hidden = it }
 			track.updatedAt = now()
 
-			if (albumArt != null) {
-				songIngestionService.storeAlbumArtForTrack(albumArt, track, updateTrackDTO.cropArtToSquare)
+			if (artFile != null) {
+				songIngestionService.storeAlbumArtForTrack(artFile, track, updateTrackDTO.cropArtToSquare)
 				track.artUpdatedAt = track.updatedAt
+				track.hasArt = true
+				trackLinkRepository.forceExpireLinksByTrackId(track.id)
+				artFile.delete()
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
 				val art = fileStorageService.loadAlbumArt(trackId, ArtSize.LARGE)
@@ -165,10 +177,13 @@ class TrackService(
 					logger.info("$trackId does not have album art to crop!")
 				} else {
 					songIngestionService.storeAlbumArtForTrack(art, track, true)
+					trackLinkRepository.forceExpireLinksByTrackId(track.id)
 					track.artUpdatedAt = track.updatedAt
 					art.delete()
 				}
 			}
+
+			trackRepository.save(track)
 		}
 	}
 

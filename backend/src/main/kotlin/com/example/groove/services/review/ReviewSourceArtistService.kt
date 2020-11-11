@@ -158,7 +158,6 @@ class ReviewSourceArtistService(
 			track.reviewSource = source
 			track.inReview = true
 			track.lastReviewed = now()
-			trackRepository.save(track)
 
 			artistDownload.lastDownloadAttempt = now()
 			artistDownload.downloadedAt = artistDownload.lastDownloadAttempt
@@ -167,8 +166,13 @@ class ReviewSourceArtistService(
 			// Because we started from Spotify, we have a URL to the actual album art.
 			// This is better than whatever it is we will get from the YT download, so grab the art and store it
 			imageService.downloadFromUrl(song.albumArtLink)?.let { image ->
+				track.hasArt = true
 				songIngestionService.storeAlbumArtForTrack(image, track, false)
+			} ?: run {
+				track.hasArt = false
 			}
+
+			trackRepository.save(track)
 
 			// The YT download service will save the Track for the user that downloads it.
 			// So for every other user make a copy of that track
