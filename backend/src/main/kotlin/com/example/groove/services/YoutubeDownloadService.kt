@@ -131,6 +131,8 @@ class YoutubeDownloadService(
 
 		val fileContent = outputFile.useLines { it.toList() }
 
+		outputFile.delete()
+
 		return fileContent.map { videoJson ->
 			mapper.readValue(videoJson, VideoProperties::class.java)
 		}.filter { videoProperties ->
