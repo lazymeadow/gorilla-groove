@@ -26,12 +26,12 @@ class SearchController(
 	fun findVideoForTermAndLength(
 			@PathVariable term: String,
 			@PathVariable length: Int
-	): YoutubeApiClient.YoutubeVideo? {
-		// Youtube-DL is currently unreliable, so fall back to the inferior youtube API client
-//		return youtubeDownloadService.searchYouTube(searchTerm = term, targetLength = length).firstOrNull()
-		return youtubeApiClient.findVideos(searchTerm = term)
-				.videos
-				.firstOrNull { it.duration > length - 4 && it.duration < length + 4 }
+	): YoutubeDownloadService.VideoProperties? {
+		return youtubeDownloadService.searchYouTube(searchTerm = term, targetLength = length).firstOrNull()
+		// Youtube-DL is currently unreliable, so I've commented out the API client's implementation here as well
+//		return youtubeApiClient.findVideos(searchTerm = term)
+//				.videos
+//				.firstOrNull { it.duration > length - 4 && it.duration < length + 4 }
 	}
 
 	@GetMapping("/spotify/artist/{artist}")

@@ -87,7 +87,15 @@ class TrackController(
 		return trackService.importTrack(importDTO.trackIds)
 	}
 
-	// FIXME this should be a PATCH not a PUT. But I was having issues with PATCH failing the OPTIONS check
+	// The other update track endpoint is more difficult to use as it allows you to upload binary album art data within
+	// the request. This endpoint does the same update (minus album art capabilities) and is simpler to consume from
+	@PutMapping("/simple-update")
+	fun updateTrackDataNoAlbumArt(@RequestBody updateTrackDTO: UpdateTrackDTO): ResponseEntity<String> {
+		trackService.updateTracks(loadLoggedInUser(), updateTrackDTO, null)
+
+		return ResponseEntity(HttpStatus.OK)
+	}
+
 	// Can't seem to deserialize a multipart file alongside other data using @RequestBody. So this is my dumb solution
 	@PutMapping
 	fun updateTrackData(
