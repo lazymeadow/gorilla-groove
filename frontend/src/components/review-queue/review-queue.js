@@ -18,7 +18,8 @@ export default function ReviewQueue() {
 	const reviewQueueContext = useContext(ReviewQueueContext);
 	const playbackContext = useContext(PlaybackContext);
 
-	const fetchReviewTracks = () => {
+	// Pass nextTrack in as a param, as we can't check "reviewTrack" due to React setState lag
+	const fetchReviewTracks = nextTrack => {
 		lastReviewSourceId = reviewQueueContext.viewedReviewSourceId;
 
 		return reviewQueueContext.fetchReviewTracks(reviewQueueContext.viewedReviewSourceId).then(tracks => {
@@ -28,8 +29,10 @@ export default function ReviewQueue() {
 				return null;
 			}
 
-			setReviewTrack(tracks[0]);
-			fetchLinksForTrack(tracks[0]);
+			if (reviewTrack === null || nextTrack === undefined || tracks[0].id !== nextTrack.id) {
+				setReviewTrack(tracks[0]);
+				fetchLinksForTrack(tracks[0]);
+			}
 
 			return tracks[0]
 		})
@@ -51,8 +54,10 @@ export default function ReviewQueue() {
 	}, []);
 
 	const loadNextTrack = () => {
+		let nextTrack = undefined;
 		if (reviewQueueContext.reviewQueueTracks.length > 1) {
-			const nextTrack = reviewQueueContext.reviewQueueTracks[1];
+			nextTrack = reviewQueueContext.reviewQueueTracks[1];
+
 			setReviewTrack(nextTrack);
 			fetchLinksForTrack(nextTrack);
 
@@ -66,7 +71,7 @@ export default function ReviewQueue() {
 		// Fetch the sources, just to make sure we keep up-to-date counts on all the queues
 		reviewQueueContext.fetchReviewQueueSources();
 
-		fetchReviewTracks();
+		fetchReviewTracks(nextTrack);
 	};
 
 	const playSong = () => {
