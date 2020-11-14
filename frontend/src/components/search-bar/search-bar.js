@@ -1,8 +1,9 @@
 import React, {useContext, useState} from 'react';
 import {MusicContext} from "../../services/music-provider";
 import {MusicFilterContext} from "../../services/music-filter-provider";
+import {CenterView} from "../../enums/site-views";
 
-export default function SearchBar() {
+export default function SearchBar(props) {
 	const musicFilterContext = useContext(MusicFilterContext);
 	const musicContext = useContext(MusicContext);
 
@@ -15,7 +16,11 @@ export default function SearchBar() {
 			clearTimeout(debounceTimeout);
 		}
 
-		musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
+		musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, () => {
+			if (props.centerView === CenterView.TRACKS) {
+				musicContext.reloadTracks()
+			}
+		});
 	};
 
 	const debouncedKeyPress = newSearchTerm => {

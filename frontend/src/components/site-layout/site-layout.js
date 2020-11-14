@@ -78,7 +78,9 @@ export default function SiteLayout(props) {
 			{ deviceContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
 
 			<div className="border-layout-north">
-				<HeaderBar/>
+				<HeaderBar
+					centerView={centerView}
+				/>
 			</div>
 			<div className="border-layout-west">
 				<TrackSourceList

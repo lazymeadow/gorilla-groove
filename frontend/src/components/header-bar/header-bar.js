@@ -6,7 +6,7 @@ import UserButton from "../user-button/user-button";
 import {SongUpload} from "..";
 import Filter from "./filter/filter";
 
-export default function HeaderBar() {
+export default function HeaderBar(props) {
 	const userContext = useContext(UserContext);
 
 	// noinspection HtmlUnknownTarget
@@ -25,7 +25,9 @@ export default function HeaderBar() {
 			</div>
 
 			<div className="search-content">
-				<SearchBar/>
+				<SearchBar
+					centerView={props.centerView}
+				/>
 				<Filter/>
 			</div>
 
