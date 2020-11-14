@@ -8,6 +8,8 @@ import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
 import com.example.groove.util.createMapper
 import com.example.groove.util.logger
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -136,20 +138,18 @@ class YoutubeDownloadService(
 		}
 	}
 
+	@Suppress("unused")
 	data class VideoProperties(
-			@JsonProperty("display_id")
-//			@JsonInclude
+			@JsonAlias("display_id")
 			val id: String,
 
-			@JsonProperty("webpage_url")
-//			@JsonInclude
+			@JsonAlias("webpage_url")
 			val videoUrl: String,
 
 			val duration: Int,
 			val title: String,
 
-			@JsonProperty("uploader")
-//			@JsonInclude
+			@JsonAlias("uploader")
 			val channelName: String = ""
 	) {
 		val embedUrl: String

@@ -27,11 +27,15 @@ class SearchController(
 			@PathVariable term: String,
 			@PathVariable length: Int
 	): YoutubeDownloadService.VideoProperties? {
-		return youtubeDownloadService.searchYouTube(searchTerm = term, targetLength = length).firstOrNull()
+		val properties = youtubeDownloadService.searchYouTube(searchTerm = term, targetLength = length).firstOrNull()
+		if (properties == null) {
+			logger.info("Could not find a matching video for search term $term")
+		}
 		// Youtube-DL is currently unreliable, so I've commented out the API client's implementation here as well
 //		return youtubeApiClient.findVideos(searchTerm = term)
 //				.videos
 //				.firstOrNull { it.duration > length - 4 && it.duration < length + 4 }
+		return properties
 	}
 
 	@GetMapping("/spotify/artist/{artist}")
