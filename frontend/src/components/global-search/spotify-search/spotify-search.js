@@ -87,8 +87,6 @@ export default function SpotifySearch() {
 			const term = spotifyTrack.artist + ' ' + spotifyTrack.name;
 			Api.get(`search/youtube/term/${term}/length/${spotifyTrack.length}`).then(res => {
 				spotifyIdToYoutubeUrl[spotifyTrack.sourceId] = res.videoUrl;
-
-				console.log(res);
 				if (res && res.id) {
 					setActiveVideo(res);
 				} else {
@@ -179,6 +177,7 @@ export default function SpotifySearch() {
 						<th className="playback-button-column"/>
 						<th className="min-width-column"/>
 						<th>Name</th>
+						<th>Artist</th>
 						<th>Album</th>
 						<th className="min-width-column">Year</th>
 						<th className="import-column"/>
@@ -194,6 +193,7 @@ export default function SpotifySearch() {
 								<AlbumArt artLink={track.albumArtLink}/>
 							</td>
 							<td>{track.name}</td>
+							<td>{track.artist}</td>
 							<td>{track.album}</td>
 							<td>{track.releaseYear}</td>
 							<td className="text-center">
