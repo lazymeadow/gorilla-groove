@@ -3,7 +3,6 @@ package com.example.groove.controllers
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.properties.FileStorageProperties
-import com.example.groove.properties.S3Properties
 import com.example.groove.services.ArtSize
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
@@ -122,7 +121,7 @@ class FileController(
 			@RequestParam(defaultValue = "LARGE") artSize: ArtSize
 	): TrackLinks {
 		val user = loadLoggedInUser()
-		logger.info("Links requested for Track: $trackId from user: ${user.name} with format: $audioFormat and art size: $artSize")
+		logger.info("$linkFetchType link(s) requested for Track: $trackId from user: ${user.name} with format: $audioFormat and art size: $artSize. (${user.currentAuthToken?.device?.deviceType})")
 
 		val artLink = if (linkFetchType == LinkFetchType.ART || linkFetchType == LinkFetchType.BOTH) {
 			fileStorageService.getAlbumArtLink(trackId, false, artSize)
