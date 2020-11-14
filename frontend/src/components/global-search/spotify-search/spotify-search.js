@@ -33,7 +33,8 @@ export default function SpotifySearch() {
 	useEffect(() => {
 		if (musicFilterContext.searchTerm.length > 0) {
 			setLoading(true);
-			Api.get('search/spotify/artist/' + musicFilterContext.searchTerm).then(tracks => {
+			const term = encodeURIComponent(musicFilterContext.searchTerm);
+			Api.get('search/spotify/artist/' + term).then(tracks => {
 				setSpotifyTracks(tracks);
 				setErrorEncountered(false);
 			}).catch(err => {
@@ -84,7 +85,7 @@ export default function SpotifySearch() {
 		} else {
 			setActiveVideoSourceId(spotifyTrack.sourceId);
 			setActiveVideoState(YoutubeVideoState.BUFFERING);
-			const term = spotifyTrack.artist + ' ' + spotifyTrack.name;
+			const term = encodeURIComponent(spotifyTrack.artist + ' ' + spotifyTrack.name);
 			Api.get(`search/youtube/term/${term}/length/${spotifyTrack.length}`).then(res => {
 				spotifyIdToYoutubeUrl[spotifyTrack.sourceId] = res.videoUrl;
 				if (res && res.id) {
@@ -120,7 +121,7 @@ export default function SpotifySearch() {
 		if (spotifyIdToYoutubeUrl[spotifyTrack.sourceId] !== undefined) {
 			downloadFromYoutube(spotifyIdToYoutubeUrl[spotifyTrack.sourceId], spotifyTrack)
 		} else {
-			const term = spotifyTrack.artist + ' ' + spotifyTrack.name;
+			const term = encodeURIComponent(spotifyTrack.artist + ' ' + spotifyTrack.name);
 			Api.get(`search/youtube/term/${term}/length/${spotifyTrack.length}`).then(res => {
 				if (!res || !res.videoUrl) {
 					toast.error(`Failed to find a video to download for ${spotifyTrack.name}`);

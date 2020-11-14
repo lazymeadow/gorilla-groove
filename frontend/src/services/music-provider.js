@@ -668,7 +668,7 @@ export class MusicProvider extends React.Component {
 
 	refreshArtOfCurrentTrack() {
 		const currentTrackId = this.state.playedTrack.id;
-		Api.get(`file/link/${currentTrackId}?linkFetchType=ART`).then(links => {
+		Api.get(`file/link/${currentTrackId}`, { linkFetchType: 'ART' }).then(links => {
 			// Check to make sure the track hasn't changed. If it has, we no longer want to show this art as it'll be for the wrong track
 			if (this.state.playedTrack.id === currentTrackId) {
 				this.setState({
