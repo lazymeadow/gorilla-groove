@@ -162,7 +162,7 @@ class SpotifyApiClient(
 		return MetadataResponseDTO(
 				sourceId = this.id,
 				name = this.name,
-				artist = this.artists.first().name,
+				artist = this.artists.joinToString { it.name },
 				album = this.album!!.name,
 				releaseYear = this.album!!.releaseYear,
 				trackNumber = this.trackNumber,
