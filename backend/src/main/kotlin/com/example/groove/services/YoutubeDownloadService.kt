@@ -122,6 +122,8 @@ class YoutubeDownloadService(
 		val outputFile = File(destination)
 		pb.redirectOutput(outputFile)
 		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
+
+		logger.info(pb.command().joinToString(" "))
 		val p = pb.start()
 		p.waitFor()
 
