@@ -132,7 +132,7 @@ class SecurityConfiguration(
 				registry
 						.addMapping("/**")
 //						.allowedOrigins(*allowedOrigins)
-						.allowCredentials(true)
+//						.allowCredentials(true)
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
 		}
