@@ -131,8 +131,8 @@ class SecurityConfiguration(
 			override fun addCorsMappings(registry: CorsRegistry) {
 				registry
 						.addMapping("/**")
-//						.allowedOrigins(*allowedOrigins)
-//						.allowCredentials(true)
+						.allowedOrigins(*allowedOrigins)
+						.allowCredentials(true)
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
 		}
