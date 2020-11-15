@@ -131,7 +131,7 @@ class SecurityConfiguration(
 			override fun addCorsMappings(registry: CorsRegistry) {
 				registry
 						.addMapping("/**")
-						.allowedOrigins(*allowedOrigins)
+//						.allowedOrigins(*allowedOrigins)
 						.allowCredentials(true)
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
@@ -142,6 +142,8 @@ class SecurityConfiguration(
 		val logger = logger()
 
 		val allowedOrigins = arrayOf(
+				"http://127.0.0.1:8080",
+				"http://localhost:8080",
 				"http://127.0.0.1:8081",
 				"http://localhost:8081",
 				"http://192.168.1.25:8081",
