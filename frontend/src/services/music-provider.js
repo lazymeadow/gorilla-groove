@@ -369,6 +369,13 @@ export class MusicProvider extends React.Component {
 	}
 
 	forceTrackUpdate() {
+		// I have noticed that these can get out of sync (for example, put one track on repeat indefinitely
+		// and only the first play count increase shows up until you refresh from the backend). I've done a
+		// lot of stupid stuff in this file, so let's keep the stupid going and put in this hack fix!
+		if (this.state.playedTrackIndex !== null) {
+			this.state.nowPlayingTracks[this.state.playedTrackIndex] = this.state.playedTrack;
+		}
+
 		this.setState({
 			nowPlayingTracks: this.state.nowPlayingTracks,
 			viewedTracks: this.state.viewedTracks,
