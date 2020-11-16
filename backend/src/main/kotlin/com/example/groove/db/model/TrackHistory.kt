@@ -35,5 +35,17 @@ data class TrackHistory(
 		var listenedInReview: Boolean = false,
 
 		@Column(name = "created_at")
-		val createdAt: Timestamp = now()
+		val createdAt: Timestamp = now(),
+
+		// This is the datetime that the USER experienced when they listened to a song. It has no concept of
+		// a time zone. If they listened to the song at 9AM, it was at 9AM. Doesn't matter where they were.
+		// This is purely for stats tracking on letting people know what time of day they listen to music.
+		// This could be saved as a LocalDateTime, but then Hibernate will try to convert between the JVM
+		// timezone and the DB timezone, which can be problematic if they aren't the same since I want the
+		// time reflected in the database to ALSO be the local time- not some conversion.
+		@Column(name = "local_time_listened_at")
+		val localTimeListenedAt: String,
+
+		@Column(name = "iana_timezone")
+		val ianaTimezone: String
 )

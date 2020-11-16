@@ -28,6 +28,7 @@ class TrackHistoryController(
 			TrackHistoryDTO(
 					id = it.id,
 					listenedDate = it.createdAt,
+					localListenDate = it.localTimeListenedAt,
 					trackLength = it.track.length,
 					trackArtist = it.track.artist,
 					trackAlbum = it.track.album,

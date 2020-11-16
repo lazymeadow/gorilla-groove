@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
+import java.time.ZonedDateTime
 import javax.servlet.http.HttpServletRequest
 
 @RestController
@@ -70,7 +71,23 @@ class TrackController(
 				?: user.currentAuthToken!!.device?.deviceId
 				?: throw IllegalArgumentException("A device must be specified on either the request, or the logged in user's current token!")
 
-		trackService.markSongListenedTo(markSongAsReadDTO.trackId, deviceId, ipAddress)
+		// Clients pass in the time that they listened to something (mostly so that offline listening on mobile can still
+		// report an accurate play history when they go back online). This is just a sanity check to make sure that plays
+		// aren't being recorded in the future. The 2 minute buffer is built in to give leniency for devices having a differing clock
+		markSongAsReadDTO.timeListenedAt.toInstant().toEpochMilli().let { clientMillis ->
+			val serverMillis = System.currentTimeMillis() + 120_000
+			require (clientMillis < serverMillis) {
+				"You may not mark a song as listened to in the future! Your epoch millis was recorded as $clientMillis. It must be less than $serverMillis"
+			}
+		}
+
+		trackService.markSongListenedTo(
+				trackId = markSongAsReadDTO.trackId,
+				deviceId = deviceId,
+				remoteIp = ipAddress,
+				listenedTime = markSongAsReadDTO.timeListenedAt,
+				timezone = markSongAsReadDTO.ianaTimezone
+		)
 
 		return ResponseEntity(HttpStatus.OK)
 	}
@@ -211,7 +228,9 @@ class TrackController(
 	data class MarkTrackAsListenedToDTO(
 			val trackId: Long,
 			@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
-			val deviceId: String?
+			val deviceId: String?,
+			val timeListenedAt: ZonedDateTime = ZonedDateTime.now(),
+			val ianaTimezone: String = "America/Denver"
 	)
 
 	data class SetPrivateDTO(

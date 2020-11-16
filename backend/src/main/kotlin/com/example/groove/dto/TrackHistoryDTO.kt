@@ -5,6 +5,7 @@ import java.sql.Timestamp
 data class TrackHistoryDTO(
 		val id: Long,
 		val listenedDate: Timestamp,
+		val localListenDate: String,
 		val trackName: String,
 		val trackArtist: String,
 		val trackAlbum: String,
