@@ -111,8 +111,7 @@ class WebSocket {
         if (socket != nil) {
             return
         }
-        let token = FileState.read(DeviceState.self)!.deviceId
-        socket = WebSocketTaskConnection(HttpRequester.wsUrl + "?deviceIdentifier=" + token)
+        socket = WebSocketTaskConnection(HttpRequester.wsUrl)
         socket?.connect()
     }
     
