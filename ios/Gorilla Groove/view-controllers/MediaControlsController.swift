@@ -23,6 +23,8 @@ class MediaControlsController: UIViewController {
             target: self,
             action: #selector(toggleRepeat(tapGestureRecognizer:))
         ))
+        icon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.repeatOn)
+
         return icon
     }()
     
@@ -69,6 +71,7 @@ class MediaControlsController: UIViewController {
             target: self,
             action: #selector(toggleShuffle(tapGestureRecognizer:))
         ))
+        icon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.shuffleOn)
         return icon
     }()
     
@@ -374,12 +377,18 @@ class MediaControlsController: UIViewController {
     
     @objc func toggleRepeat(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.repeatOn = !NowPlayingTracks.repeatOn
-        repeatIcon.tintColor = NowPlayingTracks.repeatOn ? Colors.secondary : .white
+        print("Repeat was toggled to \(NowPlayingTracks.repeatOn)")
+        repeatIcon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.repeatOn)
     }
     
     @objc func toggleShuffle(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.shuffleOn = !NowPlayingTracks.shuffleOn
-        shuffleIcon.tintColor = NowPlayingTracks.shuffleOn ? Colors.secondary : .white
+        print("Shuffle was toggled to \(NowPlayingTracks.shuffleOn)")
+        shuffleIcon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.shuffleOn)
+    }
+    
+    func getEnabledButtonColor(enabled: Bool) -> UIColor {
+        return enabled ? Colors.secondary : .white
     }
     
     @objc func handleSeek(tapGestureRecognizer: UITapGestureRecognizer) {

@@ -57,7 +57,7 @@ class HttpRequester {
     static func post<T: Codable>(
         _ url: String,
         _ type: T.Type,
-        _ body: Codable?,
+        _ body: Encodable?,
         asMultipartData: Bool = false,
         authenticated: Bool = true,
         callback: ResponseHandler<T>? = nil
@@ -75,7 +75,7 @@ class HttpRequester {
     static private func getBaseRequest(
         _ method: String,
         _ url: String,
-        body: Codable? = nil,
+        body: Encodable? = nil,
         authenticated: Bool = true,
         asMultipartData: Bool = false
     ) -> URLRequest {

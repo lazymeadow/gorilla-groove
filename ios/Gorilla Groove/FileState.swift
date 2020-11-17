@@ -1,7 +1,7 @@
 import Foundation
 
 class FileState {
-    static func save<T: FileSavable>(_ data: T) {
+    static func save<T: Codable>(_ data: T) {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
         
@@ -15,7 +15,7 @@ class FileState {
         }
     }
     
-    static func read<T: FileSavable>(_ type: T.Type) -> T? {
+    static func read<T: Codable>(_ type: T.Type) -> T? {
         let path = getPlistPath(type)
         
         let xml = FileManager.default.contents(atPath: path)
@@ -27,7 +27,7 @@ class FileState {
         return savedState
     }
     
-    static func clear<T: FileSavable>(_ type: T.Type) {
+    static func clear<T: Codable>(_ type: T.Type) {
         let path = getPlistPath(type)
         
         try? FileManager.default.removeItem(atPath: path)
@@ -42,13 +42,11 @@ class FileState {
     }
 }
 
-struct LoginState: FileSavable {
+struct LoginState: Codable {
     let token: String
     let id: Int
 }
 
-struct DeviceState: FileSavable {
+struct DeviceState: Codable {
     let deviceId: String
 }
-
-protocol FileSavable: Codable {}

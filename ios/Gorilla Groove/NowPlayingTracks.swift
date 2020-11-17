@@ -17,15 +17,30 @@ class NowPlayingTracks {
             if (shuffleOn) {
                 doShuffle(preservePrevious: false)
             }
+            persistState()
         }
     }
     
-    static var repeatOn: Bool = false
+    static var repeatOn: Bool = false {
+        didSet {
+            persistState()
+        }
+    }
     
     private static var registeredCallbacks: Array<(_ track: Track?)->()> = []
     
     private init() { }
     
+    static func initialize() {
+        let mediaState = FileState.read(MediaState.self) ?? MediaState(shuffleEnabled: false, repeatEnabled: false)
+        shuffleOn = mediaState.shuffleEnabled
+        repeatOn = mediaState.repeatEnabled
+    }
+    
+    static func persistState() {
+        let mediaState = MediaState(shuffleEnabled: shuffleOn, repeatEnabled: repeatOn)
+        FileState.save(mediaState)
+    }
     
     static func setNowPlayingTracks(_ tracks: Array<Track>, playFromIndex: Int) {
         nowPlayingTracks = tracks
@@ -238,4 +253,9 @@ class NowPlayingTracks {
     static func addTrackChangeObserver(callback: @escaping (_ track: Track?) -> Void) {
         registeredCallbacks.append(callback)
     }
+}
+
+struct MediaState: Codable {
+    let shuffleEnabled: Bool
+    let repeatEnabled: Bool
 }

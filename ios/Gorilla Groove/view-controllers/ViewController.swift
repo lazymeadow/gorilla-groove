@@ -6,7 +6,7 @@ struct VersionResponse: Codable {
     let version: String
 }
 
-struct LoginRequest: Codable {
+struct LoginRequest: Encodable {
     let email: String
     let password: String
     let deviceId: String

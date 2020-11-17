@@ -12,6 +12,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().isTranslucent = false
         
         AudioPlayer.initialize()
+        NowPlayingTracks.initialize()
         
         // Make sure we have a device ID generated for the app
         if (FileState.read(DeviceState.self) == nil) {
