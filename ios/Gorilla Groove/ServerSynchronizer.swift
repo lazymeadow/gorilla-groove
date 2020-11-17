@@ -6,13 +6,31 @@ class ServerSynchronizer {
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
     static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=400&page="
     
-    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil) {
+    private static var syncRunning = false
+    
+    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) {
         print("Initiating sync with server...")
+        if syncRunning {
+            print("Sync already running. Not syncing")
+            return
+        }
         
         let ownUser = UserState.getOwnUser()
         let lastSync = ownUser.lastSync
         let ownId = ownUser.id
+        
+        if abortIfRecentlySynced, let lastSync = lastSync {
+            if let diff = Calendar.current.dateComponents([.minute], from: lastSync, to: Date()).minute, diff > 10 {
+                print("Last sync was old enough to do a new sync")
+            }
+            else {
+                print("Last sync was too recent. Not syncing")
+                return
+            }
+        }
 
+        syncRunning = true
+        
         let minimum = lastSync?.toEpochTime() ?? 0
         let newDate = Date()
         let maximum = newDate.toEpochTime()
@@ -40,7 +58,8 @@ class ServerSynchronizer {
         print("Saving new user sync date")
 
         UserState.updateUserSync(newDate)
-        
+        syncRunning = false
+
         print("All up to date")
     }
     
@@ -114,8 +133,6 @@ class ServerSynchronizer {
                 
                 let updatedTrack = modifiedTrackResponse.asTrack(userId: userId, songCachedAt: newSongCachedAt, artCachedAt: newArtCachedAt)
                 TrackDao.save(updatedTrack)
-                
-                print("Updated existing track with ID: \(modifiedTrackResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {

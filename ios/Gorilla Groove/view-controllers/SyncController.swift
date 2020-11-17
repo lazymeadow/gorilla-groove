@@ -21,7 +21,7 @@ class SyncController: UIViewController {
         userSection = createSection(content, "person.3.fill", "Users")
         
         self.view.addSubview(content)
-        self.view.backgroundColor = .white
+        self.view.backgroundColor = UIColor(named: "Background")
         
         NSLayoutConstraint.activate([
             content.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 170),
@@ -105,11 +105,12 @@ class SyncController: UIViewController {
         
         let percentDone = UILabel()
         percentDone.text = "0%"
+        percentDone.textColor = UIColor(named: "Foreground")
+        percentDone.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        percentDone.textAlignment = .right
         
         bottomRow.addArrangedSubview(progressBar)
         bottomRow.addArrangedSubview(percentDone)
-        
-        bottomRow.setCustomSpacing(10, after: progressBar)
         
         
         // -- Combine them all
@@ -131,7 +132,7 @@ class SyncController: UIViewController {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 2.5, weight: .medium, scale: .large)
         
         let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
-        icon.tintColor = .black
+        icon.tintColor = UIColor(named: "Foreground")
         
         return icon
     }

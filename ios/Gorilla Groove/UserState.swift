@@ -3,6 +3,8 @@ import CoreData
 
 class UserState {
     
+    static var isLoggedIn: Bool = false
+    
     static func getOwnUser() -> User {
         let ownId = FileState.read(LoginState.self)!.id
         

@@ -28,10 +28,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 if AppDelegate.getAppVersion() == "1.3.1.1" {
                     print("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
                     window!.rootViewController = SyncController()
+                    UserState.isLoggedIn = true
                 } else {
                     print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
                 }
             } else {
+                UserState.isLoggedIn = true
                 window!.rootViewController = RootNavigationController()
             }
         }
@@ -42,6 +44,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+        print("App resigned active")
+        // TODO maybe can use this to close the socket?
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
@@ -50,6 +54,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         print("App is now in the foreground")
+        if UserState.isLoggedIn {
+            DispatchQueue.global().async {
+                ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
+            }
+        }
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {

@@ -33,6 +33,7 @@ class MyLibraryController: UITableViewController {
     @objc func logout(_ sender: Any) {
         // Call stop() before we actually clear out login state as this updates the server with our device
         AudioPlayer.stop()
+        UserState.isLoggedIn = false
 
         // TODO actually send the logout command to the API
         HttpRequester.post("authentication/logout", EmptyResponse.self, nil) { _, statusCode, _ in

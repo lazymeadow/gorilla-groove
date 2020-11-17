@@ -45,8 +45,10 @@ class ViewController: UIViewController {
         let user = UserState.getOwnUser()
         let newView: UIViewController = {
             if (user.lastSync == nil) {
+                print("First time logging in with user \(user.name)")
                 return SyncController()
             } else {
+                print("Logged in with in with user \(user.name) that has already synced")
                 return RootNavigationController()
             }
         }()
@@ -78,6 +80,7 @@ class ViewController: UIViewController {
             }
             
             FileState.save(response!)
+            UserState.isLoggedIn = true
 
             DispatchQueue.main.async {
                 self.loginSpinner.isHidden = true
