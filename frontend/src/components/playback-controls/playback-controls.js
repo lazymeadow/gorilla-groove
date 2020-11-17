@@ -3,10 +3,10 @@ import {Api} from "../../api";
 import {MusicContext} from "../../services/music-provider";
 import {formatTimeFromSeconds} from "../../formatters";
 import {ShuffleChaos} from "./shuffle-chaos/shuffle-chaos";
-import {getDeviceIdentifier} from "../../services/version";
 import {SocketContext} from "../../services/socket-provider";
 import {getVolumeIcon, isSafari} from "../../util";
 import {PlaybackContext} from "../../services/playback-provider";
+import {markTrackListened} from "../../services/mark-track-listened";
 
 const originalTitle = document.title;
 
@@ -24,7 +24,7 @@ let initialStateSent = false;
 let previousPlaying = false;
 let previousCurrentSessionPlayCounter = 0;
 
-export default function PlaybackControls(props) {
+export default function PlaybackControls() {
 	const [currentSessionPlayCounter, setCurrentSessionPlayCounter] = useState(0);
 	const [currentTimePercent, setCurrentTimePercent] = useState(0);
 	const [duration, setDuration] = useState(0);
@@ -70,7 +70,7 @@ export default function PlaybackControls(props) {
 		// Safari does not support the superior OGG format. Use MP3 instead for them
 		const audioFormat = isSafari() ? 'MP3' : 'OGG';
 		Api.get('file/link/' + newTrack.id, { audioFormat }).then(links => {
-			props.setAlbumArt(links.albumArtLink);
+			musicContext.setProviderState({ playedAlbumArtUrl: links.albumArtLink }, musicContext.forceTrackUpdate);
 
 			lastTime = 0;
 			listenedTo = false;
@@ -220,7 +220,7 @@ export default function PlaybackControls(props) {
 			// MusicContext upon re-log in. Do this to prevent auto-play of a "null" track upon re-log
 			if (musicContext.playedTrack === null) {
 				audio.src = '';
-				props.setAlbumArt(null);
+				musicContext.setProviderState({ playedAlbumArtUrl: null }, musicContext.forceTrackUpdate);
 			}
 
 			audio.removeEventListener('timeupdate', handleTimeTick);
@@ -239,7 +239,7 @@ export default function PlaybackControls(props) {
 	if (
 		audio !== null && // Can happen when logging out and back in temporarily
 		((!previousPlaying && playbackContext.isPlaying) // Started playing something when we weren't playing anything
-		|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter)) // Song changed
+			|| (previousCurrentSessionPlayCounter !== currentSessionPlayCounter)) // Song changed
 	) {
 		lastSongPlayHeartbeatTime = Date.now();
 
@@ -298,20 +298,15 @@ export default function PlaybackControls(props) {
 			listenedTo = true;
 
 			const playedTrack = musicContext.playedTrack;
-			Api.post('track/mark-listened', { trackId: playedTrack.id, deviceId: getDeviceIdentifier() })
-				.then(() => {
-					// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
-					playedTrack.playCount++;
-					playedTrack.lastPlayed = new Date();
+			markTrackListened(playedTrack.id, () => {
+				// Could grab the track data from the backend, but this update is simple to just replicate on the frontend
+				playedTrack.playCount++;
+				playedTrack.lastPlayed = new Date();
 
-					// We updated the reference rather than dealing with the hassle of updating via setState for multiple collections
-					// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
-					musicContext.forceTrackUpdate();
-				})
-				.catch(e => {
-					console.error('Failed to update play count');
-					console.error(e);
-				});
+				// We updated the reference rather than dealing with the hassle of updating via setState for multiple collections
+				// that we'd have to search and find indexes for. So issue an update to the parent component afterwards
+				musicContext.forceTrackUpdate();
+			});
 		}
 
 		broadcastListenHeartbeatIfNeeded(currentTimePercent);

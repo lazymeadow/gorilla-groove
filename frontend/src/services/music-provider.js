@@ -29,8 +29,10 @@ export class MusicProvider extends React.Component {
 			nowPlayingTracks: [],
 			playedTrack: null,
 			playedTrackIndex: null,
+			playedAlbumArtUrl: null,
 			songIndexesToShuffle: [],
 			shuffledSongIndexes: [],
+			excludedPlaylistId: -1,
 			shuffleSongs: LocalStorage.getBoolean('shuffleSongs', false),
 			shuffleChaos: LocalStorage.getNumber('shuffleChaos', 1),
 			repeatSongs: LocalStorage.getBoolean('repeatSongs', false),
@@ -65,6 +67,7 @@ export class MusicProvider extends React.Component {
 			setProviderState: (...args) => this.setProviderState(...args),
 			resetColumnPreferences: (...args) => this.resetColumnPreferences(...args),
 			resetSessionState: (...args) => this.resetSessionState(...args),
+			refreshArtOfCurrentTrack: (...args) => this.refreshArtOfCurrentTrack(...args)
 		};
 	}
 
@@ -113,6 +116,10 @@ export class MusicProvider extends React.Component {
 			params.searchTerm = searchTerm;
 		}
 		params.showHidden = params.showHidden !== undefined ? params.showHidden : this.props.filterContext.showHidden;
+
+		if (this.state.excludedPlaylistId !== -1) {
+			params.excludedPlaylistId = this.state.excludedPlaylistId;
+		}
 	}
 
 	loadSongsForUser(userId, params, append) {
@@ -362,6 +369,13 @@ export class MusicProvider extends React.Component {
 	}
 
 	forceTrackUpdate() {
+		// I have noticed that these can get out of sync (for example, put one track on repeat indefinitely
+		// and only the first play count increase shows up until you refresh from the backend). I've done a
+		// lot of stupid stuff in this file, so let's keep the stupid going and put in this hack fix!
+		if (this.state.playedTrackIndex !== null) {
+			this.state.nowPlayingTracks[this.state.playedTrackIndex] = this.state.playedTrack;
+		}
+
 		this.setState({
 			nowPlayingTracks: this.state.nowPlayingTracks,
 			viewedTracks: this.state.viewedTracks,
@@ -598,7 +612,8 @@ export class MusicProvider extends React.Component {
 		// Use Api.upload here because we might have image data
 		return Api.upload('PUT', 'track', params).catch(error => {
 			console.error(error);
-			toast.error('Failed to updated song data')
+			toast.error('Failed to update song data');
+			throw error;
 		})
 	}
 
@@ -658,6 +673,19 @@ export class MusicProvider extends React.Component {
 		this.setState(state, callback);
 	}
 
+	refreshArtOfCurrentTrack() {
+		const currentTrackId = this.state.playedTrack.id;
+		Api.get(`file/link/${currentTrackId}`, { linkFetchType: 'ART' }).then(links => {
+			// Check to make sure the track hasn't changed. If it has, we no longer want to show this art as it'll be for the wrong track
+			if (this.state.playedTrack.id === currentTrackId) {
+				this.setState({
+					playedAlbumArtUrl: links.albumArtLink,
+					renderCounter: this.state.renderCounter + 1
+				});
+			}
+		})
+	}
+
 	resetColumnPreferences() {
 		LocalStorage.deleteKey('columnPreferences');
 		const preferences = this.loadColumnPreferences();
@@ -673,6 +701,7 @@ export class MusicProvider extends React.Component {
 		this.setState({
 			playedTrack: null,
 			playedTrackIndex: null,
+			playedAlbumArtUrl: null,
 			nowPlayingTracks: []
 		});
 	}

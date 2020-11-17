@@ -41,7 +41,7 @@ class SongIngestionService(
 		}
 	}
 
-	private fun storeMultipartFile(file: MultipartFile): File {
+	fun storeMultipartFile(file: MultipartFile): File {
 		// Discard the file's original name; but keep the extension
 		val extension = file.originalFilename!!.split(".").last()
 		val fileName = UUID.randomUUID().toString() + "." + extension
@@ -50,7 +50,13 @@ class SongIngestionService(
 		val targetLocation = fileStorageLocation.resolve(fileName)
 		Files.copy(file.inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING)
 
-		return File(targetLocation.toUri())
+		val newFile = File(targetLocation.toUri())
+
+		if (!newFile.exists()) {
+			throw IllegalStateException("Could not store multipart file!")
+		}
+
+		return newFile
 	}
 
 	fun storeSongForUser(songFile: MultipartFile, user: User): Track {
@@ -59,7 +65,7 @@ class SongIngestionService(
 		val tmpSongFile = storeMultipartFile(songFile)
 		val tmpImageFile = ripAndSaveAlbumArt(tmpSongFile)
 
-		val track = convertAndSaveTrackForUser(tmpSongFile, user, songFile.originalFilename!!)
+		val track = convertAndSaveTrackForUser(tmpSongFile, user, songFile.originalFilename!!, hasArt = tmpImageFile != null)
 		track.addedToLibrary = track.createdAt
 		trackRepository.save(track)
 
@@ -72,19 +78,6 @@ class SongIngestionService(
 		tmpSongFile.delete()
 
 		return track
-	}
-
-	fun storeAlbumArtForTrack(albumArt: MultipartFile, track: Track, cropImageToSquare: Boolean) {
-		logger.info("Storing album artwork ${albumArt.originalFilename} for track ID: ${track.id}")
-		val imageFile = storeMultipartFile(albumArt)
-
-		if (!imageFile.exists()) {
-			throw IllegalStateException("Could not store album art for track ID: ${track.id}")
-		}
-
-		storeAlbumArtForTrack(imageFile, track, cropImageToSquare)
-
-		imageFile.delete()
 	}
 
 	fun storeAlbumArtForTrack(albumArt: File, track: Track, cropImageToSquare: Boolean) {
@@ -117,7 +110,7 @@ class SongIngestionService(
 	}
 
 	@Transactional
-	fun convertAndSaveTrackForUser(file: File, user: User, originalFileName: String): Track {
+	fun convertAndSaveTrackForUser(file: File, user: User, originalFileName: String, hasArt: Boolean): Track {
 		logger.info("Saving file ${file.name} for user ${user.name}")
 
 		val oggFile = ffmpegService.convertTrack(file, AudioFormat.OGG)
@@ -125,7 +118,7 @@ class SongIngestionService(
 		val mp3File = ffmpegService.convertTrack(file, AudioFormat.MP3)
 
 		// add the track to database
-		val track = fileMetadataService.createTrackFromSongFile(oggFile, user, originalFileName)
+		val track = fileMetadataService.createTrackFromSongFile(oggFile, user, originalFileName, hasArt)
 		// Save once to have its ID generated
 		trackRepository.save(track)
 
@@ -145,16 +138,44 @@ class SongIngestionService(
 	}
 
 	@Transactional
+	fun editVolume(track: Track, volume: Double) {
+		editSong(
+				track = track,
+				fileTransformationHandler = { songFile ->
+					ffmpegService.convertTrack(songFile, AudioFormat.OGG, volume)
+				},
+				returnValueHandler = {}
+		)
+	}
+
+	@Transactional
 	fun trimSong(track: Track, startTime: String?, duration: String?): Int {
+		return editSong(
+				track = track,
+				fileTransformationHandler = { songFile ->
+					ffmpegService.trimSong(songFile, startTime, duration)
+				},
+				returnValueHandler = { editedFile ->
+					fileMetadataService.getTrackLength(editedFile)
+				}
+		)
+	}
+
+	private fun<T> editSong(
+			track: Track,
+			fileTransformationHandler: (File) -> File,
+			returnValueHandler: (File) -> T
+	): T {
 		renameSharedTracks(track)
 
 		val oggFile = fileStorageService.loadSong(track, AudioFormat.OGG)
 
-		val trimmedSong = ffmpegService.trimSong(oggFile, startTime, duration)
+		val trimmedSong = fileTransformationHandler(oggFile)
 
 		fileStorageService.storeSong(trimmedSong, track.id, AudioFormat.OGG)
 
-		val newLength = fileMetadataService.getTrackLength(trimmedSong)
+		val returnValue = returnValueHandler(trimmedSong)
+
 		// The new file we save is always specific to this song, so name it with the song's ID as we do
 		// with any song file names that aren't borrowed / shared
 		val newFileName = "${track.id}.ogg"
@@ -177,10 +198,10 @@ class SongIngestionService(
 		mp3File.delete()
 		trimmedSong.delete()
 
-		return newLength
+		return returnValue
 	}
 
-	// Other users could be sharing this track. We don't want to let another user trim the track for all users
+	// Other users could be sharing this track. We don't want to let another user edit the track for all users
 	// Make sure all the tracks sharing the filename of this track are no longer using it
 	private fun renameSharedTracks(track: Track) {
 		// If the track we are trimming has a different ID than its current name, then we don't have to do anything.
@@ -233,7 +254,7 @@ class SongIngestionService(
 
 	fun createTrackFileWithMetadata(trackId: Long, audioFormat: AudioFormat): File {
 		logger.info("About to create a downloadable track for track ID: $trackId with format ${audioFormat.extension}")
-		val track = trackRepository.findById(trackId).unwrap()
+		val track = trackRepository.get(trackId)
 
 		if (track == null || (track.private && track.user != loadLoggedInUser())) {
 			throw IllegalArgumentException("No track found by ID $trackId!")

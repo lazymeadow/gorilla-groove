@@ -10,7 +10,6 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.http.HttpHeaders
 import org.springframework.util.LinkedMultiValueMap
 import java.awt.Image
-import java.util.*
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.io.File
@@ -18,17 +17,15 @@ import java.io.File
 
 // JPA repositories use Java's Optional class
 // Kotlin has its own, better way of handling nullable values
-// Here we extend Java's Optional type to return a Kotlin nullable type so it is easier to work with
-fun <T> Optional<T>.unwrap(): T? = orElse(null)
-
-// Screw the previous solution above this. Just add an extension function directly to CrudRepository.
+// Here we extend CrudRepository with another method that returns a Kotlin nullable instead
 fun<T> CrudRepository<T, Long>.get(id: Long): T? {
-	return this.findById(id).unwrap()
+	return this.findById(id).orElse(null)
 }
 
 fun createMapper(): ObjectMapper = ObjectMapper()
 		.registerKotlinModule()
 		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
 fun Image.writeToFile(destination: File, imageType: String) {
 	val bufferedImage = BufferedImage(this.getWidth(null), this.getHeight(null), BufferedImage.TYPE_INT_RGB)
 	bufferedImage.graphics.drawImage(this, 0, 0, null)

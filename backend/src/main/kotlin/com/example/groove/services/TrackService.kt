@@ -2,6 +2,7 @@ package com.example.groove.services
 
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
+import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.*
 import com.example.groove.dto.UpdateTrackDTO
@@ -12,7 +13,6 @@ import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.example.groove.util.unwrap
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 
 @Service
@@ -31,7 +34,10 @@ class TrackService(
 		private val deviceRepository: DeviceRepository,
 		private val fileStorageService: FileStorageService,
 		private val songIngestionService: SongIngestionService,
-		private val youtubeDownloadService: YoutubeDownloadService
+		private val youtubeDownloadService: YoutubeDownloadService,
+		private val playlistService: PlaylistService,
+		private val imageService: ImageService,
+		private val trackLinkRepository: TrackLinkRepository
 ) {
 
 	@Transactional(readOnly = true)
@@ -42,6 +48,7 @@ class TrackService(
 			userId: Long?,
 			searchTerm: String?,
 			showHidden: Boolean,
+			excludedPlaylistId: Long?,
 			pageable: Pageable
 	): Page<Track> {
 		val loggedInId = loadLoggedInUser().id
@@ -59,6 +66,15 @@ class TrackService(
 				}.toMutableList()
 
 		val page = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(newSort))
+
+		// The user can provide an ID of a playlist they DON'T want to see tracks from.
+		// This makes it easier to add tracks to an existing playlist when you aren't sure if the tracks are already added
+		val excludedTrackIds = excludedPlaylistId?.let { playlistId ->
+			playlistService.getTracks(playlistId = playlistId)
+					.content
+					.map { it.track.id }
+		}
+
 		return trackRepository.getTracks(
 				name = name,
 				artist = artist,
@@ -67,6 +83,7 @@ class TrackService(
 				loadPrivate = loadPrivate,
 				loadHidden = showHidden,
 				searchTerm = searchTerm,
+				excludedTrackIds = excludedTrackIds,
 				pageable = page
 		)
 	}
@@ -99,8 +116,8 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long, deviceId: String, remoteIp: String?) {
-		val track = trackRepository.findById(trackId).unwrap()
+	fun markSongListenedTo(trackId: Long, deviceId: String, remoteIp: String?, listenedTime: ZonedDateTime, timezone: String) {
+		val track = trackRepository.get(trackId)
 		val user = loadLoggedInUser()
 
 		if (track == null || track.user.id != user.id) {
@@ -119,14 +136,36 @@ class TrackService(
 		// Device we used might have been merged into another device. If it was, use the parent device
 		val device = savedDevice.mergedDevice ?: savedDevice
 
-		val trackHistory = TrackHistory(track = track, device = device, ipAddress = remoteIp, listenedInReview = track.inReview)
+		val localTimeNoTz = listenedTime
+				// Put the timezone to be the one the user provided
+				.withZoneSameInstant(ZoneId.of(timezone))
+				// Now KEEP the time the same, but change it to be UTC. This is because MySQL wants to convert all our
+				// dates to be UTC and it'll erase our actual time when we do so. So preempt it by pre-UTC-ifying our
+				// timezone WHILE keeping the time unchanged so it isn't lost
+				.withZoneSameLocal(ZoneOffset.UTC)
+				.toLocalDateTime()
+
+		val trackHistory = TrackHistory(
+				track = track,
+				device = device,
+				ipAddress = remoteIp,
+				listenedInReview = track.inReview,
+				localTimeListenedAt = localTimeNoTz.toString(),
+				ianaTimezone = timezone
+		)
 		trackHistoryRepository.save(trackHistory)
 	}
 
 	@Transactional
 	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?) {
+		val artFile = when {
+			updateTrackDTO.albumArtUrl != null -> imageService.downloadFromUrl(updateTrackDTO.albumArtUrl)
+			albumArt != null -> songIngestionService.storeMultipartFile(albumArt)
+			else -> null
+		}
+
 		updateTrackDTO.trackIds.forEach { trackId ->
-			val track = trackRepository.findById(trackId).unwrap()
+			val track = trackRepository.get(trackId)
 			val user = loadLoggedInUser()
 
 			if (track == null || track.user.id != user.id) {
@@ -144,9 +183,11 @@ class TrackService(
 			updateTrackDTO.hidden?.let { track.hidden = it }
 			track.updatedAt = now()
 
-			if (albumArt != null) {
-				songIngestionService.storeAlbumArtForTrack(albumArt, track, updateTrackDTO.cropArtToSquare)
+			if (artFile != null) {
+				songIngestionService.storeAlbumArtForTrack(artFile, track, updateTrackDTO.cropArtToSquare)
 				track.artUpdatedAt = track.updatedAt
+				track.hasArt = true
+				trackLinkRepository.forceExpireLinksByTrackId(track.id)
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
 				val art = fileStorageService.loadAlbumArt(trackId, ArtSize.LARGE)
@@ -154,11 +195,16 @@ class TrackService(
 					logger.info("$trackId does not have album art to crop!")
 				} else {
 					songIngestionService.storeAlbumArtForTrack(art, track, true)
+					trackLinkRepository.forceExpireLinksByTrackId(track.id)
 					track.artUpdatedAt = track.updatedAt
 					art.delete()
 				}
 			}
+
+			trackRepository.save(track)
 		}
+
+		artFile?.delete()
 	}
 
 	@Transactional
@@ -242,13 +288,13 @@ class TrackService(
 		}
 	}
 
-	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean): Map<String, Any?> {
+	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): Map<String, Any?> {
 		// This will throw an exception if anonymous access is not allowed for this file
-		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, AudioFormat.OGG)
+		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, audioFormat)
 
 		val albumLink = fileStorageService.getAlbumArtLink(trackId, anonymousAccess, ArtSize.LARGE)
 
-		val track = trackRepository.findById(trackId).unwrap()!!
+		val track = trackRepository.get(trackId)!!
 
 		return mapOf(
 				"trackLink" to trackLink,
@@ -261,8 +307,22 @@ class TrackService(
 		)
 	}
 
+	fun adjustVolume(trackId: Long, volumeAdjustment: Double) {
+		val track = trackRepository.get(trackId)
+
+		if (track == null || track.user.id != loadLoggedInUser().id) {
+			throw IllegalArgumentException("No track found by ID $trackId!")
+		}
+
+		songIngestionService.editVolume(track, volumeAdjustment)
+
+		track.updatedAt = now()
+		track.songUpdatedAt = track.updatedAt
+		trackRepository.save(track)
+	}
+
 	fun trimTrack(trackId: Long, startTime: String?, duration: String?): Int {
-		val track = trackRepository.findById(trackId).unwrap()
+		val track = trackRepository.get(trackId)
 
 		if (track == null || track.user.id != loadLoggedInUser().id) {
 			throw IllegalArgumentException("No track found by ID $trackId!")
@@ -296,6 +356,7 @@ class TrackService(
 				hidden = false,
 				addedToLibrary = null,
 				createdAt = now(),
+				updatedAt = now(),
 				playCount = 0,
 				lastPlayed = null,
 				originalTrack = if (setAsCopied) track else null

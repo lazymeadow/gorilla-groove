@@ -38,6 +38,7 @@ fun String.urlDecode(): String {
 			.replace("%2C", ",")
 			.replace("%3A", ":")
 			.replace("%22", "\"")
+			.replace("+", " ")
 }
 
 fun String.splitFirst(delimiter: String): Pair<String, String> {

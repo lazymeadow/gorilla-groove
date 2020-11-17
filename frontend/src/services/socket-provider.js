@@ -18,6 +18,8 @@ export class SocketProvider extends React.Component {
 		this.state = {
 			nowListeningUsers: {},
 			onConnectedHandlers: [],
+			isConnected: false,
+			initialized: false,
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args),
@@ -83,7 +85,7 @@ export class SocketProvider extends React.Component {
 	}
 
 	handleReviewQueueMessage(message) {
-		this.props.reviewQueueContext.fetchReviewTracks();
+		this.props.reviewQueueContext.fetchReviewQueueSources();
 		let toastMessage;
 		switch (message.sourceType) {
 			case ReviewSourceType.USER_RECOMMEND:
@@ -111,13 +113,10 @@ export class SocketProvider extends React.Component {
 
 		forceDisconnect = false;
 
-		console.debug('Opening socket');
-		const uri = Api.getSocketUri() + '?deviceIdentifier=' + getDeviceIdentifier();
-		const newSocket = new WebSocket(uri);
+		const newSocket = new WebSocket(Api.getSocketUri());
 
 		newSocket.onmessage = res => {
 			const data = JSON.parse(res.data);
-			console.debug('Received socket data', data);
 
 			switch (data.messageType) {
 				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
@@ -127,13 +126,14 @@ export class SocketProvider extends React.Component {
 			}
 		};
 		newSocket.onclose = () => {
+			this.setState({ isConnected: false });
 			if (!forceDisconnect) {
-				console.debug('WebSocket was closed. Reconnecting');
 				this.connectToSocket();
 			}
 		};
 		newSocket.onopen = () => {
-			this.state.onConnectedHandlers.forEach(it => it())
+			this.state.onConnectedHandlers.forEach(it => it());
+			this.setState({ isConnected: true, initialized: true });
 		};
 		socket = newSocket;
 		this.setState({
@@ -200,7 +200,6 @@ export class SocketProvider extends React.Component {
 	}
 
 	sendSocketData(payload) {
-		console.debug('Socket data', payload);
 		const readyState = socket.readyState;
 		if (readyState === WebSocket.OPEN) {
 			socket.send(JSON.stringify(payload))

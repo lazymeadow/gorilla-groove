@@ -1,8 +1,9 @@
 import React, {useContext, useState} from 'react';
 import {MusicContext} from "../../services/music-provider";
 import {MusicFilterContext} from "../../services/music-filter-provider";
+import {CenterView} from "../../enums/site-views";
 
-export default function SearchBar() {
+export default function SearchBar(props) {
 	const musicFilterContext = useContext(MusicFilterContext);
 	const musicContext = useContext(MusicContext);
 
@@ -15,7 +16,11 @@ export default function SearchBar() {
 			clearTimeout(debounceTimeout);
 		}
 
-		musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, musicContext.reloadTracks);
+		musicFilterContext.setProviderState({ searchTerm: newSearchTerm }, () => {
+			if (props.centerView === CenterView.TRACKS) {
+				musicContext.reloadTracks()
+			}
+		});
 	};
 
 	const debouncedKeyPress = newSearchTerm => {
@@ -29,10 +34,6 @@ export default function SearchBar() {
 	const handleInputChange = event => {
 		setSearchTerm(event.target.value);
 		debouncedKeyPress(event.target.value);
-	};
-
-	const handleHiddenChange = () => {
-		musicFilterContext.setProviderState({ showHidden: !musicFilterContext.showHidden }, musicContext.reloadTracks);
 	};
 
 	const clearInput = () => {
@@ -53,9 +54,9 @@ export default function SearchBar() {
 	return (
 		<div className="d-flex search" onKeyDown={handleKeyPress}>
 			<div className="p-relative">
-				Search
 				<input
 					className="search-bar"
+					placeholder="Search"
 					value={searchTerm}
 					onChange={handleInputChange}
 				/>
@@ -66,18 +67,6 @@ export default function SearchBar() {
 					/>
 					: <i/>
 				}
-			</div>
-
-			<div className="hidden-checkbox">
-				Show Hidden Tracks
-				<i title="Show songs that have been hidden from the library.
-This is not the same as private tracks, which are only visible to the owner"
-					 className="fas fa-question-circle"/>
-				<input
-					type="checkbox"
-					checked={musicFilterContext.showHidden}
-					onChange={handleHiddenChange}
-				/>
 			</div>
 		</div>
 	)

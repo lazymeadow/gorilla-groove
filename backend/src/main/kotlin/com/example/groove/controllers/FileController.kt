@@ -1,8 +1,8 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.properties.FileStorageProperties
-import com.example.groove.properties.S3Properties
 import com.example.groove.services.ArtSize
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
@@ -29,7 +29,6 @@ import java.nio.file.Paths
 class FileController(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageService: FileStorageService,
-		private val s3Properties: S3Properties,
 		private val fileStorageProperties: FileStorageProperties
 ) {
 
@@ -98,19 +97,58 @@ class FileController(
 				.body(resource)
 	}
 
+	@PostMapping("/link/{trackId}")
+	fun forceLinksForTrack(@PathVariable trackId: Long) {
+		logger.info("User ${loadLoggedInUser().username} is forcing link generation for track $trackId")
+
+		// We don't know what device someone is going to listen to this on, so we have to generate MP3 and OGG as
+		// not all browsers support OGG. We don't generate SMALL art size here as those are currently only used by mobile
+		// TODO a good improvement here would be to force new links to be generated instead. This would set the track
+		// expiration out to 4 hours, so you can't request track links, link a song to someone who does not have an account,
+		// and then have the track expire minutes later like it could today.
+		fileStorageService.getSongLink(trackId, false, AudioFormat.MP3)
+		fileStorageService.getSongLink(trackId, false, AudioFormat.OGG)
+		fileStorageService.getAlbumArtLink(trackId, false, ArtSize.LARGE)
+	}
+
+	enum class LinkFetchType { ART, SONG, BOTH }
+
 	@GetMapping("/link/{trackId}")
 	fun getLinksForTrack(
 			@PathVariable trackId: Long,
+			@RequestParam(defaultValue = "BOTH") linkFetchType: LinkFetchType,
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat,
 			@RequestParam(defaultValue = "LARGE") artSize: ArtSize
 	): TrackLinks {
-		logger.info("Track links requested for Track ID: $trackId from user ${loadLoggedInUser().name} for audio format $audioFormat and art size $artSize")
+		val user = loadLoggedInUser()
+		logger.info("$linkFetchType link(s) requested for Track: $trackId from user: ${user.name} with format: $audioFormat and art size: $artSize. (${user.currentAuthToken?.device?.deviceType})")
 
-		return TrackLinks(
-				fileStorageService.getSongLink(trackId, false, audioFormat),
-				fileStorageService.getAlbumArtLink(trackId, false, artSize),
-				s3Properties.awsStoreInS3
-		)
+		val artLink = if (linkFetchType == LinkFetchType.ART || linkFetchType == LinkFetchType.BOTH) {
+			fileStorageService.getAlbumArtLink(trackId, false, artSize)
+		} else {
+			""
+		}
+
+		val returnedArtLink = if (artLink.isEmpty()) {
+			// FIXME Need to update iOS to be able to handle empty / null album art
+			if (user.currentAuthToken!!.device!!.deviceType == DeviceType.IPHONE) {
+				"https://gorillagroove.net/api/somethingfake"
+			} else {
+				// We get back an empty string if it's invalid for laziness reasons.
+				// But we want to return null to consumers as it's the right thing to do.
+				null
+			}
+		} else {
+			artLink
+		}
+
+		val songLink = if (linkFetchType == LinkFetchType.SONG || linkFetchType == LinkFetchType.BOTH) {
+			fileStorageService.getSongLink(trackId, false, audioFormat)
+		} else {
+			null
+		}
+
+		return TrackLinks(songLink, returnedArtLink)
 	}
 
 	@GetMapping("/track-link/{trackId}")
@@ -118,9 +156,8 @@ class FileController(
 		logger.info("Anonymous track links were requested for Track ID: $trackId")
 
 		return TrackLinks(
-				fileStorageService.getSongLink(trackId, true, AudioFormat.OGG),
-				null,
-				s3Properties.awsStoreInS3
+				songLink = fileStorageService.getSongLink(trackId, true, AudioFormat.OGG),
+				albumArtLink = null
 		)
 	}
 
@@ -129,8 +166,7 @@ class FileController(
     }
 
 	data class TrackLinks(
-			val songLink: String,
-			val albumArtLink: String?,
-			val usingS3: Boolean
+			val songLink: String?,
+			val albumArtLink: String?
 	)
 }

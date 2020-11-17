@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import java.lang.RuntimeException
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
@@ -32,16 +33,14 @@ class SpotifyApiClient(
 	private val authHeader: String
 		get() = "Bearer ${spotifyTokenManager.authenticationToken}"
 
-//	fun getMetadataByTrackArtistAndName(artist: String, name: String, album: String?): MetadataResponseDTO? {
-//		println(spotifyTokenManager.authenticationToken)
-//
-//		val url = createSpotifySearchUrl(artist, name, 1, "track")
-//		val result = restTemplate.querySpotify(url)
-//
-//		// Assume spotify has good relevance on its search and just grab the first result
-//		// (we already limited ourselves to 1 in the query parameter anyway)
-//		return result.tracks.items.firstOrNull()?.toMetadataResponseDTO()
-//	}
+	fun getMetadataByTrackArtistAndName(artist: String, name: String?, limit: Int): List<MetadataResponseDTO> {
+		val url = createSpotifySearchUrl(artist, name, limit, "track")
+		val result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
+
+		// Assume spotify has good relevance on its search and just grab the first result
+		// (we already limited ourselves to 1 in the query parameter anyway)
+		return result.tracks.items.map { it.toMetadataResponseDTO() }
+	}
 
 	private inline fun<reified T> RestTemplate.querySpotify(url: String): T {
 		val headers = mapOf("Authorization" to authHeader).toHeaders()
@@ -85,7 +84,7 @@ class SpotifyApiClient(
 		return filteredTracks.map { it.toMetadataResponseDTO() }
 	}
 
-	fun getSpotifyArtistId(artist: String): String? {
+	private fun getSpotifyArtistId(artist: String): String? {
 		val lowerName = artist.toLowerCase()
 		val matchingArtist = searchArtistsByName(artist).find { it.name.toLowerCase() == lowerName }
 
@@ -116,12 +115,14 @@ class SpotifyApiClient(
 				.toUnencodedString()
 	}
 
-	data class SpotifyArtistSearchResponse(val artists: SpotifySearchItems)
-	data class SpotifySearchItems(val items: List<SpotifyArtist>, val next: String?)
+	data class SpotifyArtistSearchResponse(val artists: SpotifySearchItems<SpotifyArtist>)
+	data class SpotifySearchItems<T>(val items: List<T>, val next: String?)
 	data class SpotifyArtist(val name: String, val id: String)
 	data class SpotifyAlbumImage(val height: Int, val width: Int, val url: String)
 	data class SpotifyAlbumResponse(val items: List<SpotifyAlbum>)
 	data class SpotifyAlbumBulkResponse(val albums: List<SpotifyAlbum>)
+
+	data class SpotifyTrackSearchResponse(val tracks: SpotifySearchItems<SpotifyTrack>)
 
 	data class SpotifyAlbum(
 			val name: String,
@@ -148,6 +149,9 @@ class SpotifyApiClient(
 			val artists: List<SpotifyArtist>,
 			var album: SpotifyAlbum? = null, // Not always here depending on the endpoint
 			val href: String,
+
+			@JsonProperty("preview_url")
+			val previewUrl: String?,
 			val id: String,
 			val name: String
 	)
@@ -156,13 +160,15 @@ class SpotifyApiClient(
 		val biggestImageUrl = this.album!!.images.maxBy { it.height }!!.url
 
 		return MetadataResponseDTO(
+				sourceId = this.id,
 				name = this.name,
-				artist = this.artists.first().name,
+				artist = this.artists.joinToString { it.name },
 				album = this.album!!.name,
 				releaseYear = this.album!!.releaseYear,
 				trackNumber = this.trackNumber,
-				albumArtUrl = biggestImageUrl,
-				songLength = (this.durationMs / 1000).toInt()
+				albumArtLink = biggestImageUrl,
+				length = (this.durationMs / 1000).toInt(),
+				previewUrl = this.previewUrl
 		)
 	}
 
@@ -206,11 +212,11 @@ class SpotifyApiClient(
 
 	private fun String.toDate(): LocalDate {
 		val sections = this.split("-")
-		return when {
-			sections.size == 1 -> Year.parse(this).atMonth(0).atDay(0)
-			sections.size == 2 -> YearMonth.parse(this).atDay(0)
-			sections.size == 3 -> LocalDate.parse(this)
-			else -> throw IllegalArgumentException("Weird date encountered on track! $this")
+		return when (sections.size) {
+			1 -> Year.parse(this).atMonth(1).atDay(1)
+			2 -> YearMonth.parse(this).atDay(1)
+			3 -> LocalDate.parse(this)
+			else -> throw RuntimeException("Weird date encountered on track! $this")
 		}
 	}
 

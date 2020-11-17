@@ -25,7 +25,7 @@ export class EditableDiv extends React.Component {
 	// This probably could be its own React component... like
 	// maybe an <AbbreviatedText/> component or something. But... eh... maybe when I need to reuse it
 	handleLongNameTooltip(element) {
-		if (!element) {
+		if (!element || !this.props.showTooltip) {
 			return;
 		}
 

@@ -13,8 +13,7 @@ export default function MetadataRequest(props) {
 		{ metadataName: 'Album', overrideType: MetadataOverrideType.IF_EMPTY },
 		{ metadataName: 'AlbumArt', overrideType: MetadataOverrideType.IF_EMPTY },
 		{ metadataName: 'ReleaseYear', overrideType: MetadataOverrideType.IF_EMPTY },
-		{ metadataName: 'TrackNumber', overrideType: MetadataOverrideType.IF_EMPTY },
-		{ metadataName: 'Genre', overrideType: MetadataOverrideType.IF_EMPTY }
+		{ metadataName: 'TrackNumber', overrideType: MetadataOverrideType.IF_EMPTY }
 	]);
 
 	const [loading, setLoading] = useState(false);
@@ -51,9 +50,14 @@ export default function MetadataRequest(props) {
 			successes.forEach(updatedTrack => {
 				const existingTrack = selectedTracks.find(selectedTrack => selectedTrack.id === updatedTrack.id);
 				existingTrack.album = updatedTrack.album;
-				existingTrack.genre = updatedTrack.genre;
 				existingTrack.releaseYear = updatedTrack.releaseYear;
 				existingTrack.trackNumber = updatedTrack.trackNumber;
+
+				// Could optimize this a bit more by making sure we actually requested the art, but I imagine it will nearly
+				// always be requested and the check gets a little hairy and I'm lazy.
+				if (musicContext.playedTrack && musicContext.playedTrack.id === existingTrack.id) {
+					musicContext.refreshArtOfCurrentTrack();
+				}
 			});
 
 			const successMessage = `${successes.length} song${successes.length === 1 ? ' was' : 's were'} updated successfully`;
@@ -116,7 +120,6 @@ export default function MetadataRequest(props) {
 					<h2 className="text-center">Request Metadata</h2>
 					<div className="metadata-request-content">
 						Take the following pieces of Metadata:
-						<small className="d-block">If the album cannot be matched on, only the genre will be taken</small>
 						<hr/>
 						<table className="full-width">
 							<thead>

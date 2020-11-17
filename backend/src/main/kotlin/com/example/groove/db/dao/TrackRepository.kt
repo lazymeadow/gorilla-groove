@@ -21,6 +21,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			AND (:name IS NULL OR t.name LIKE %:name%)
 			AND (:artist IS NULL OR t.artist LIKE %:artist%)
 			AND (:album IS NULL OR t.album LIKE %:album%)
+			AND (COALESCE(:excludedTrackIds) IS NULL OR t.id NOT IN :excludedTrackIds)
 			AND (:searchTerm IS NULL
 				OR t.name LIKE %:searchTerm%
 				OR t.artist LIKE %:searchTerm%
@@ -37,6 +38,7 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("loadPrivate") loadPrivate: Boolean = false,
 			@Param("loadHidden") loadHidden: Boolean = false,
 			@Param("searchTerm") searchTerm: String? = null,
+			@Param("excludedTrackIds") excludedTrackIds: List<Long>? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
 
@@ -46,16 +48,19 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			WHERE t.user.id = :userId
 			AND t.inReview = TRUE
 			AND t.deleted = FALSE
+			AND (:reviewSourceId IS NULL OR t.reviewSource.id = :reviewSourceId)
 			ORDER BY t.lastReviewed ASC
 		""")
 	fun getTracksInReview(
 			@Param("userId") userId: Long,
+			@Param("reviewSourceId") reviewSourceId: Long? = null,
 			pageable: Pageable = Pageable.unpaged()
 	): Page<Track>
 
 	@Modifying
 	@Query("""
-			DELETE FROM Track t
+			UPDATE Track t
+			SET t.deleted = TRUE, t.updatedAt = now()
 			WHERE t.user.id = :userId
 			AND t.inReview = TRUE
 			AND t.reviewSource.id = :reviewSourceId
@@ -128,4 +133,18 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("maximum") maximum: Timestamp,
 			pageable: Pageable
 	): Page<Track>
+
+	@Query("""
+			SELECT t.reviewSource.id, count(t)
+			FROM Track t
+			WHERE t.user.id = :userId
+			AND t.deleted = FALSE
+			AND t.inReview = TRUE
+			AND t.reviewSource.id IN :reviewSourceIds
+			GROUP BY t.reviewSource.id
+			""")
+	fun getTrackCountsForReviewSources(
+			@Param("userId") userId: Long,
+			@Param("reviewSourceIds") reviewSourceIds: List<Long>
+	): List<Array<Long>>
 }

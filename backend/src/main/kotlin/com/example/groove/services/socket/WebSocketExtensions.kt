@@ -16,7 +16,10 @@ fun WebSocketSession.sendIfOpen(message: Any) {
 		if (isOpen) {
 			sendMessage(textMessage)
 		} else {
-			WebSocket.logger.warn("Could not send message to user: $userId, socket ID: $id: $message")
+			// Leaving this at debug logging as it seems to be reasonably par for the course. The websockets
+			// time out after 30 minutes, and if a message is sent while it's reconnecting it triggers this and
+			// that seems okay as it's fairly normal
+			WebSocket.logger.debug("Could not send message to user: $userId, socket ID: $id: $message")
 		}
 	}
 }

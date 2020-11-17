@@ -15,7 +15,7 @@ class ReviewSourceArtist(
 		val artistName: String,
 
 		@Column(name = "search_newer_than")
-		val searchNewerThan: Timestamp? = null
+		var searchNewerThan: Timestamp? = null
 ) : ReviewSource(sourceType = ReviewSourceType.ARTIST) {
 	override val displayName: String
 		get() = artistName

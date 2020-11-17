@@ -9,5 +9,6 @@ export const CenterView = Object.freeze({
 	TRACKS: 0,
 	REMOTE_DEVICES: 1,
 	GLOBAL_SEARCH: 2,
-	REVIEW_QUEUE: 3
+	REVIEW_QUEUE: 3,
+	SPOTIFY_SEARCH: 4,
 });

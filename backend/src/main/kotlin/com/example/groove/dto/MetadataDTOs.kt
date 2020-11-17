@@ -2,18 +2,17 @@ package com.example.groove.dto
 
 import com.example.groove.db.model.Track
 import com.example.groove.services.enums.MetadataOverrideType
-import java.awt.Image
 
 data class MetadataResponseDTO (
+		val sourceId: String,
 		val name: String,
 		val artist: String,
 		val album: String,
-		val genre: String? = null, // Not returned by Spotify
 		val releaseYear: Int,
 		val trackNumber: Int,
-		val albumArt: Image? = null, // TODO Shouldn't be returned. Should do that further upstream
-		val albumArtUrl: String? = null, // TODO Should always be returned. Isn't yet b/c iTunes
-		val songLength: Int
+		val albumArtLink: String,
+		val length: Int,
+		val previewUrl: String? // Not all tracks have this. Quite a few don't, actually
 ) {
 	// Add an empty companion object so private extensions can be added
 	companion object
@@ -23,7 +22,6 @@ data class MetadataUpdateRequestDTO(
 		val trackIds: List<Long>,
 		val changeAlbum: MetadataOverrideType = MetadataOverrideType.NEVER,
 		val changeAlbumArt: MetadataOverrideType = MetadataOverrideType.NEVER,
-		val changeGenre: MetadataOverrideType = MetadataOverrideType.NEVER,
 		val changeReleaseYear: MetadataOverrideType = MetadataOverrideType.NEVER,
 		val changeTrackNumber: MetadataOverrideType = MetadataOverrideType.NEVER
 )

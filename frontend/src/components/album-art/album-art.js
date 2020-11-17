@@ -2,7 +2,7 @@ import React from 'react';
 import {MusicContext} from "../../services/music-provider";
 import {Modal} from "../modal/modal";
 
-let defaultImageLink = './images/unknown-art.jpg';
+const defaultImageLink = './images/unknown-art.jpg';
 
 export class AlbumArt extends React.Component {
 	constructor(props) {
@@ -10,7 +10,7 @@ export class AlbumArt extends React.Component {
 
 		this.state = {
 			modalOpen: false,
-			imageUrl: defaultImageLink,
+			imageUrl: props.artLink !== null ? props.artLink : defaultImageLink,
 			lastAttemptedLink: null
 		}
 	}

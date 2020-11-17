@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Api} from "..";
 import MiniPlayer from "../playback-controls/mini-player/mini-player";
-import {isLoggedIn} from "../../util";
+import {isLoggedIn, isSafari} from "../../util";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {toast} from "react-toastify";
 
@@ -23,8 +23,11 @@ export default function SongLinkPlayer(props) {
 
 	useEffect(() => {
 		// If we are logged in, we can request a different endpoint that can link to expired tracks
+		const audioFormat = isSafari() ? 'MP3' : 'OGG';
+
 		const baseUrl = isLoggedIn() ? 'track/preview/' : 'track/preview/public/';
-		Api.get(baseUrl + trackId).then(res => {
+		const url = baseUrl + trackId + '?audioFormat=' + audioFormat;
+		Api.get(url).then(res => {
 			setTrackData(res);
 		}).catch(e => {
 			if (e.status === 401) {

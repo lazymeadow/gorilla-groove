@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ReviewSourceArtistService(
-		private val youtubeApiClient: YoutubeApiClient,
 		private val spotifyApiClient: SpotifyApiClient,
 		private val reviewSourceArtistRepository: ReviewSourceArtistRepository,
 		private val reviewSourceArtistDownloadRepository: ReviewSourceArtistDownloadRepository,
@@ -42,8 +41,13 @@ class ReviewSourceArtistService(
 			logger.info("Checking for new songs for artist: ${source.artistName} ...")
 			val users = source.subscribedUsers
 
+			if (source.deleted) {
+				logger.info("Review source ${source.artistName} was deleted. Skipping")
+				return@forEach
+			}
+
 			if (users.isEmpty()) {
-				logger.info("No users were set up for review source ${source.artistName}. Skipping")
+				logger.error("No users were set up for review source ${source.artistName}. Skipping")
 				return@forEach
 			}
 
@@ -108,7 +112,7 @@ class ReviewSourceArtistService(
 		songsToDownload.forEach { song ->
 			val artistDownload = reviewSourceArtistDownloadRepository.findByReviewSourceAndTrackName(source, song.name)
 					?: throw IllegalStateException("Could not locate an artist download with review source ID: ${source.id} and song name ${song.name}!")
-			val videos = youtubeApiClient.findVideos("${song.artist} ${song.name}").videos
+			val videos = youtubeDownloadService.searchYouTube("${song.artist} ${song.name}", targetLength = song.length)
 
 			// There's a chance that our search yields no valid results, but youtube will pretty much always return
 			// us videos, even if they're a horrible match. Probably the best thing we can do is check the video title
@@ -129,6 +133,7 @@ class ReviewSourceArtistService(
 			// Might be better to try to exclude music videos and stuff later, though the time checking might help already.
 			val video = validVideos.first()
 
+			logger.info("Found a valid match. YouTube video title: ${video.title}")
 			val downloadDTO = YoutubeDownloadDTO(
 					url = video.videoUrl,
 					name = song.name,
@@ -138,22 +143,36 @@ class ReviewSourceArtistService(
 					cropArtToSquare = true
 			)
 
-			val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
+			// Sometimes YoutubeDL can have issues. Don't cascade fail all downloads because of it
+			val track = try {
+				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
+			} catch (e: Exception) {
+				logger.error("Failed to download from YouTube for ${song.artist} - ${song.name}!", e)
+
+				artistDownload.lastDownloadAttempt = now()
+				reviewSourceArtistDownloadRepository.save(artistDownload)
+
+				return@forEach
+			}
+
 			track.reviewSource = source
 			track.inReview = true
 			track.lastReviewed = now()
-			trackRepository.save(track)
 
 			artistDownload.lastDownloadAttempt = now()
 			artistDownload.downloadedAt = artistDownload.lastDownloadAttempt
 			reviewSourceArtistDownloadRepository.save(artistDownload)
 
 			// Because we started from Spotify, we have a URL to the actual album art.
-			// This is better than whatever it is we will get from the YT download, so
-			// grab the art and store it
-			imageService.downloadFromUrl(song.albumArtUrl!!)?.let { image ->
+			// This is better than whatever it is we will get from the YT download, so grab the art and store it
+			imageService.downloadFromUrl(song.albumArtLink)?.let { image ->
+				track.hasArt = true
 				songIngestionService.storeAlbumArtForTrack(image, track, false)
+			} ?: run {
+				track.hasArt = false
 			}
+
+			trackRepository.save(track)
 
 			// The YT download service will save the Track for the user that downloads it.
 			// So for every other user make a copy of that track
@@ -168,17 +187,12 @@ class ReviewSourceArtistService(
 	}
 
 
-	private fun YoutubeApiClient.YoutubeVideo.isValidForSong(song: MetadataResponseDTO): Boolean {
+	private fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponseDTO): Boolean {
 		val lowerTitle = this.title.toLowerCase()
+		val artist = song.artist.toLowerCase()
 
-		// Make sure the artist is in the title somewhere. If it isn't that seems like a bad sign
-		if (!lowerTitle.contains(song.artist.toLowerCase())) {
-			return false
-		}
-
-		// If the duration doesn't match closely with Spotify's expected duration, that's a bad sign
-		if (this.duration < song.songLength - SORT_LENGTH_IDENTIFICATION_TOLERANCE ||
-				this.duration > song.songLength + SORT_LENGTH_IDENTIFICATION_TOLERANCE) {
+		// Make sure the artist is in the title somewhere OR the channel name. If it isn't that seems like a bad sign
+		if (!lowerTitle.contains(artist) && !this.channelName.toLowerCase().contains(artist)) {
 			return false
 		}
 
@@ -207,6 +221,14 @@ class ReviewSourceArtistService(
 			if (existing.isUserSubscribed(currentUser)) {
 				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
 			}
+
+			// If this source was previously deleted, re-enable it and update the time to search from to now
+			if (existing.deleted) {
+				existing.deleted = false
+				existing.updatedAt = now()
+				existing.searchNewerThan = now()
+			}
+
 			existing.subscribedUsers.add(currentUser)
 			reviewSourceArtistRepository.save(existing)
 			return true to emptyList()

@@ -5,9 +5,9 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.TrackHistory
 import com.example.groove.exception.ResourceNotFoundException
+import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
-import com.example.groove.util.unwrap
 import org.springframework.data.domain.PageRequest
 
 import org.springframework.stereotype.Service
@@ -25,7 +25,7 @@ class TrackHistoryService(
 	@Transactional(readOnly = true)
 	fun getTrackHistory(userId: Long?, startDate: Timestamp, endDate: Timestamp): List<TrackHistory> {
 		val currentUser = loadLoggedInUser()
-		val targetUser = if (userId != null) { userRepository.findById(userId).unwrap() } else { null }
+		val targetUser = userId?.let { userRepository.get(it) }
 
 		val loadPrivate = targetUser != null && targetUser.id == currentUser.id
 
@@ -34,7 +34,7 @@ class TrackHistoryService(
 
 	@Transactional
 	fun deleteTrackHistory(id: Long) {
-		val trackHistory = trackHistoryRepository.findById(id).unwrap()
+		val trackHistory = trackHistoryRepository.get(id)
 		if (trackHistory == null || trackHistory.deleted || trackHistory.track.user.id != loadLoggedInUser().id) {
 			throw ResourceNotFoundException("No track history found with ID $id")
 		}

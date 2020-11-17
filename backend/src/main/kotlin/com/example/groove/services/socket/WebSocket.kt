@@ -10,7 +10,6 @@ import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpStatus
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
 import org.springframework.transaction.annotation.Transactional
@@ -25,6 +24,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 import org.springframework.web.socket.server.HandshakeInterceptor
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler
 import java.security.Principal
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -39,7 +39,7 @@ class WebSocket(
 ) : WebSocketConfigurer {
 
 	private val objectMapper = createMapper()
-	val sessions = mutableMapOf<String, WebSocketSession>()
+	val sessions = ConcurrentHashMap<String, WebSocketSession>()
 
 	override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
 		registry
@@ -63,23 +63,9 @@ class WebSocket(
 				})
 				.addInterceptors(object : HandshakeInterceptor {
 					override fun beforeHandshake(request: ServerHttpRequest, response: ServerHttpResponse, wsHandler: WebSocketHandler, attributes: MutableMap<String, Any>): Boolean {
-						// New user logins will have the device ID associated to the principle and don't need to be passed in.
-						// Everything in the "run" is temporary and can be deleted in the future when all clients have adapted to the new model
-						val deviceIdentifier = loadLoggedInUser().currentAuthToken!!.device?.deviceId ?: run {
-							// I think this is temporary. I'd like to save the deviceId with the logged in user's principal going forward, actually
-							val paramParts = request.uri.query?.split("=")
-							if (paramParts.isNullOrEmpty() || paramParts.size != 2) {
-								response.setStatusCode(HttpStatus.BAD_REQUEST)
-								return false
-							}
-
-							val (paramKey, paramValue) = paramParts
-							if (paramKey != "deviceIdentifier") {
-								response.setStatusCode(HttpStatus.BAD_REQUEST)
-								return false
-							}
-
-							paramValue
+						val deviceIdentifier = loadLoggedInUser().currentAuthToken?.device?.deviceId ?: run {
+							logger.error("No device ID associated to logged in user! User: ${loadLoggedInUser().name}, token: ${loadLoggedInUser().currentAuthToken}")
+							throw IllegalArgumentException("No device ID associated to logged in user!")
 						}
 
 						val activeDevice = deviceService.getDeviceById(deviceIdentifier)
@@ -120,7 +106,7 @@ class WebSocket(
 	inner class SocketTextHandler : TextWebSocketHandler() {
 
 		override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
-			logger.info("Received message from user ${session.userId} session ${session.id}")
+			logger.debug("Received message from user ${session.userId} session ${session.id}")
 			val clientMessage = try {
 				objectMapper.readValue(message.payload, WebSocketMessage::class.java)
 			} catch (e: Exception) {
@@ -136,7 +122,7 @@ class WebSocket(
 		}
 
 		override fun afterConnectionEstablished(session: WebSocketSession) {
-			logger.info("New user with ID: ${session.userId} connected to socket with ID: ${session.id}")
+			logger.debug("New user with ID: ${session.userId} connected to socket with ID: ${session.id}")
 			sessions[session.id] = session
 
 			// This is mostly here for debugging. But it's a nice easter egg too if anyone finds it
@@ -147,7 +133,7 @@ class WebSocket(
 		}
 
 		override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
-			logger.info("User with ID: ${session.userId} disconnected from socket with ID: ${session.id}")
+			logger.debug("User with ID: ${session.userId} disconnected from socket with ID: ${session.id}")
 
 			sessions.remove(session.id)
 			nowListeningSocketHandler.removeSession(session)

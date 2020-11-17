@@ -38,8 +38,13 @@ class ReviewSourceYoutubeChannelService(
 			logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
 			val users = source.subscribedUsers
 
+			if (source.deleted) {
+				logger.info("Review source ${source.channelName} was deleted. Skipping")
+				return@forEach
+			}
+
 			if (users.isEmpty()) {
-				logger.info("No users were set up for review source with ID: ${source.channelName}. Skipping")
+				logger.error("No users were set up for review source with ID: ${source.channelName}. Skipping")
 				return@forEach
 			}
 
@@ -116,7 +121,8 @@ class ReviewSourceYoutubeChannelService(
 				"(lyric video)",
 				"[Monstercat Release]",
 				"[Monstercat Lyric Video]",
-				"(Official Video)"
+				"(Official Video)",
+				"[Copyright Free Electronic]"
 		)
 
 		var finalTitle = rawTitle
@@ -150,10 +156,14 @@ class ReviewSourceYoutubeChannelService(
 			if (reviewSource.isUserSubscribed(ownUser)) {
 				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to ${reviewSource.channelName}!")
 			}
-			if (reviewSource.subscribedUsers.isEmpty()) {
-				logger.info("$channelId (${reviewSource.channelName}) already exists but has no users subscribed. Resetting its last searched")
+
+			if (reviewSource.deleted) {
+				logger.info("$channelId (${reviewSource.channelName}) already exists but was deleted. Resetting its last searched")
+				reviewSource.deleted = false
+				reviewSource.updatedAt = now()
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
 			}
+
 			reviewSource.subscribedUsers.add(ownUser)
 			reviewSourceYoutubeChannelRepository.save(reviewSource)
 			return
@@ -171,10 +181,14 @@ class ReviewSourceYoutubeChannelService(
 			if (reviewSource.isUserSubscribed(user)) {
 				throw IllegalArgumentException("User ${user.name} is already subscribed to ${reviewSource.channelName}! (${reviewSource.channelId})")
 			}
-			if (reviewSource.subscribedUsers.isEmpty()) {
-				logger.info("${reviewSource.channelName} already exists but has no users subscribed. Resetting its last searched")
+
+			if (reviewSource.deleted) {
+				logger.info("${reviewSource.channelName} already exists but was deleted. Resetting its last searched")
+				reviewSource.deleted = false
+				reviewSource.updatedAt = now()
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
 			}
+
 			reviewSource.subscribedUsers.add(user)
 			reviewSourceYoutubeChannelRepository.save(reviewSource)
 			return

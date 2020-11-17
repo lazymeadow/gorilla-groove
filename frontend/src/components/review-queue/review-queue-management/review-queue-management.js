@@ -46,15 +46,17 @@ function ReviewQueueManagementModal() {
 				</tr>
 				</thead>
 				<tbody>
-				{reviewQueueContext.reviewQueueSources.map(source =>
-					<tr key={source.id} className="">
-						<td>{toTitleCaseFromSnakeCase(source.sourceType)}</td>
-						<td>{source.displayName}</td>
-						<td>
-							<i className="fas fa-times clickable" title="Delete" onClick={() => { deleteReviewSource(source) }}/>
-						</td>
-					</tr>
-				)}
+				{reviewQueueContext.reviewQueueSources
+					.filter(source => source.sourceType !== ReviewSourceType.USER_RECOMMEND)
+					.map(source =>
+						<tr key={source.id} className="">
+							<td>{toTitleCaseFromSnakeCase(source.sourceType)}</td>
+							<td>{source.displayName}</td>
+							<td>
+								<i className="fas fa-times clickable" title="Delete" onClick={() => { deleteReviewSource(source) }}/>
+							</td>
+						</tr>
+					)}
 				</tbody>
 			</table>
 		</div>

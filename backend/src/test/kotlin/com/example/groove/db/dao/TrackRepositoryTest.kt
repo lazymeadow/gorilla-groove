@@ -2,7 +2,7 @@ package com.example.groove.db.dao
 
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
-import com.example.groove.util.unwrap
+import com.example.groove.util.get
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -76,8 +76,8 @@ class TrackRepositoryTest(
 		trackRepository.setPrivateForUser(listOf(track.id), user.id, true)
 		entityManager.clear() // Clear the cache so the track we grab is the updated one
 
-		val recoveredTrack = trackRepository.findById(track.id)
-		assertThat(recoveredTrack.unwrap()!!.private).isTrue()
+		val recoveredTrack = trackRepository.get(track.id)
+		assertThat(recoveredTrack!!.private).isTrue()
 	}
 
 	private fun createPersistedTrack(

@@ -18,9 +18,9 @@ import {DeviceContext} from "../../services/device-provider";
 import GlobalSearch from "../global-search/global-search";
 import ReviewQueue from "../review-queue/review-queue";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
+import SpotifySearch from "../global-search/spotify-search/spotify-search";
 
 export default function SiteLayout(props) {
-	const [albumArtLink, setAlbumArtLink] = useState(null); // FIXME Really not sure where this should live long term
 	const [centerView, setCenterView] = useState(CenterView.TRACKS);
 
 	if (!isLoggedIn()) {
@@ -48,7 +48,7 @@ export default function SiteLayout(props) {
 		});
 		musicContext.loadSongsForUser();
 		playlistContext.loadPlaylists();
-		reviewQueueContext.fetchReviewTracks();
+		reviewQueueContext.fetchReviewQueueSources();
 		deviceContext.loadOtherDevices();
 
 		socketContext.connectToSocket();
@@ -68,6 +68,8 @@ export default function SiteLayout(props) {
 			return <GlobalSearch/>
 		} else if (centerView === CenterView.REVIEW_QUEUE) {
 			return <ReviewQueue/>
+		} else if (centerView === CenterView.SPOTIFY_SEARCH) {
+			return <SpotifySearch/>
 		}
 	};
 
@@ -76,7 +78,9 @@ export default function SiteLayout(props) {
 			{ deviceContext.isInPartyMode() ? <div id="party-border" className="animation-rainbow-border"/> : null }
 
 			<div className="border-layout-north">
-				<HeaderBar/>
+				<HeaderBar
+					centerView={centerView}
+				/>
 			</div>
 			<div className="border-layout-west">
 				<TrackSourceList
@@ -106,10 +110,10 @@ export default function SiteLayout(props) {
 				/>
 			</div>
 			<div className="border-layout-southwest">
-				<AlbumArt artLink={albumArtLink}/>
+				<AlbumArt artLink={musicContext.playedAlbumArtUrl}/>
 			</div>
 			<div className="border-layout-south">
-				<PlaybackControls setAlbumArt={setAlbumArtLink}/>
+				<PlaybackControls/>
 			</div>
 			<div className="border-layout-southeast">
 				<SiteStats/>

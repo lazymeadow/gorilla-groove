@@ -1,5 +1,6 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.model.Track
 import com.example.groove.services.review.ReviewQueueService
 import com.example.groove.services.TrackService
 import com.example.groove.util.loadLoggedInUser
@@ -20,17 +21,29 @@ class ReviewQueueTrackController(
 	fun getAllTracks(
 			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<ReviewTrackResponse> {
-		return reviewQueueService.getTracksInReviewForCurrentUser(pageable).map {
-			ReviewTrackResponse(
-					id = it.id,
-					name = it.name,
-					artist = it.artist,
-					album = it.album,
-					length = it.length,
-					reviewSourceId = it.reviewSource!!.id
-			)
+		return reviewQueueService.getTracksInReviewForCurrentUser(null, pageable).map {
+			it.toReviewTrackResponse()
 		}
 	}
+
+	@GetMapping("/review-source-id/{reviewSourceId}")
+	fun getAllTracksWithSourceId(
+			@PathVariable("reviewSourceId") reviewSourceId: Long,
+			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
+	): Page<ReviewTrackResponse> {
+		return reviewQueueService.getTracksInReviewForCurrentUser(reviewSourceId, pageable).map {
+			it.toReviewTrackResponse()
+		}
+	}
+
+	private fun Track.toReviewTrackResponse() = ReviewTrackResponse(
+			id = this.id,
+			name = this.name,
+			artist = this.artist,
+			album = this.album,
+			length = this.length,
+			reviewSourceId = this.reviewSource!!.id
+	)
 
 	@PostMapping("/{trackId}/skip")
 	fun skipTrack(@PathVariable("trackId") trackId: Long) {

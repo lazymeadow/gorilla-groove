@@ -5,43 +5,30 @@ import {MusicFilterContext} from "../../services/music-filter-provider";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {toast} from "react-toastify";
 import {PlaybackContext} from "../../services/playback-provider";
+import {initializeYoutubeApiIfNeeded, isYoutubeApiInitialized} from "../../services/youtube-api-client";
 
 export default function GlobalSearch() {
 	const [videos, setVideos] = useState([]);
 	const [playingId, setPlayingId] = useState(null);
-	const [apiInitialized, setApiInitialized] = useState(!!window.YT);
+	const [apiInitialized, setApiInitialized] = useState(isYoutubeApiInitialized());
 	const [loading, setLoading] = useState(false);
 	const [errorEncountered, setErrorEncountered] = useState(false);
 
 	const musicFilterContext = useContext(MusicFilterContext);
 	const playbackContext = useContext(PlaybackContext);
 
-	const initializeYoutubeApi = () => {
-		const tag = document.createElement('script');
-		tag.src = 'https://www.youtube.com/iframe_api';
-
-		window.onYouTubeIframeAPIReady = () => setApiInitialized(true);
-
-		const firstScriptTag = document.getElementsByTagName('script')[0];
-		firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-	};
-
 	useEffect(() => {
-		// The way Youtube's custom controls have to work requires injecting a script. It's weird.
-		// But we only need to do it once, and only once we visit this page. So check that it isn't already there.
-		if (!window.YT) {
-			initializeYoutubeApi();
-		}
+		initializeYoutubeApiIfNeeded(() => { setApiInitialized(true) });
 
 		if (musicFilterContext.searchTerm.length > 0) {
 			setLoading(true);
 			Api.get('search/youtube/term/' + musicFilterContext.searchTerm).then(res => {
 				setVideos(res.videos);
-				setLoading(false);
 			}).catch(err => {
 				console.error(err);
 				toast.error("An error was encountered searching YouTube");
 				setErrorEncountered(true);
+			}).finally(() => {
 				setLoading(false);
 			});
 		}

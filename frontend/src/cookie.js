@@ -1,5 +1,5 @@
 export function addCookie(name, value, expiration) {
-	document.cookie = `${name}=${value};max-age=${expiration};path='/';SameSite=Strict`
+	document.cookie = `${name}=${value};max-age=${expiration};path=/;SameSite=Strict`
 }
 
 export function deleteCookie(name) {
