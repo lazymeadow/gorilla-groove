@@ -35,11 +35,15 @@ class TrackService {
             return
         }
         
+        let listenTime = ISO8601DateFormatter().string(from: Date())
+        
         // Update the server
         let postBody = MarkListenedRequest(
             trackId: track.id,
-            deviceId: FileState.read(DeviceState.self)!.deviceId
+            timeListenedAt: listenTime,
+            ianaTimezone: TimeZone.current.identifier
         )
+        
         HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
             if (statusCode < 200 || statusCode >= 300) {
                 print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
@@ -53,6 +57,7 @@ class TrackService {
     
     struct MarkListenedRequest: Codable {
         let trackId: Int
-        let deviceId: String
+        let timeListenedAt: String
+        let ianaTimezone: String
     }
 }
