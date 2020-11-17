@@ -96,9 +96,13 @@ class NowPlayingTracks {
     
     private static func setNowPlayingAlbumArt(_ artLink: String?) {
         guard let link = artLink else { return }
+        if link.isEmpty { return }
         
         DispatchQueue.global().async {
-            let url = URL(string: link)!
+            guard let url = URL(string: link) else {
+                print("Could not parse link! \(link)")
+                return
+            }
             
             do {
                 let data = try Data.init(contentsOf: url)
