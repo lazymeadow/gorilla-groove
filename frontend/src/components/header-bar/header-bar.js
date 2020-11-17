@@ -5,6 +5,7 @@ import {UserContext} from "../../services/user-provider";
 import UserButton from "../user-button/user-button";
 import {SongUpload} from "..";
 import Filter from "./filter/filter";
+import DisconnectedWarningBar from "./disconnected-warning-bar";
 
 export default function HeaderBar(props) {
 	const userContext = useContext(UserContext);
@@ -12,6 +13,8 @@ export default function HeaderBar(props) {
 	// noinspection HtmlUnknownTarget
 	return (
 		<div className="header-bar">
+			<DisconnectedWarningBar/>
+
 			<div className="d-flex">
 				<img src="./images/logo.png" width="50" height="50"/>
 				<div className="vertical-center">
@@ -38,4 +41,3 @@ export default function HeaderBar(props) {
 		</div>
 	)
 }
-

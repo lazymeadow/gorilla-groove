@@ -18,6 +18,8 @@ export class SocketProvider extends React.Component {
 		this.state = {
 			nowListeningUsers: {},
 			onConnectedHandlers: [],
+			isConnected: false,
+			initialized: false,
 
 			connectToSocket: (...args) => this.connectToSocket(...args),
 			sendPlayEvent: (...args) => this.sendPlayEvent(...args),
@@ -124,12 +126,14 @@ export class SocketProvider extends React.Component {
 			}
 		};
 		newSocket.onclose = () => {
+			this.setState({ isConnected: false });
 			if (!forceDisconnect) {
 				this.connectToSocket();
 			}
 		};
 		newSocket.onopen = () => {
-			this.state.onConnectedHandlers.forEach(it => it())
+			this.state.onConnectedHandlers.forEach(it => it());
+			this.setState({ isConnected: true, initialized: true });
 		};
 		socket = newSocket;
 		this.setState({
