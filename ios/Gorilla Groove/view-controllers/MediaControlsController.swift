@@ -69,7 +69,6 @@ class MediaControlsController: UIViewController {
             target: self,
             action: #selector(toggleShuffle(tapGestureRecognizer:))
         ))
-        icon.backgroundColor = .blue
         return icon
     }()
     
