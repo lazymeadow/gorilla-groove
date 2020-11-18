@@ -1,5 +1,3 @@
---ALTER TABLE `user_library`
---DROP FOREIGN KEY `FKc0yldqsbglvvenxcqjuh39tvc`;
 ALTER TABLE `user_library`
 DROP COLUMN `track_id`,
 CHANGE COLUMN `created_at` `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `hidden`,
@@ -20,8 +18,6 @@ ADD CONSTRAINT `ruewiofjewaiforewa`
   ON DELETE CASCADE
   ON UPDATE CASCADE;
 
---ALTER TABLE `playlist_track`
---DROP FOREIGN KEY `FKf9qyasbwmrlc4tb1vfll54bot`;
 ALTER TABLE `playlist_track`
 CHANGE COLUMN `track_id` `user_library_id` INT(10) UNSIGNED NOT NULL ;
 ALTER TABLE `playlist_track`

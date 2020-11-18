@@ -230,7 +230,7 @@ class TrackController(
 			@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
 			val deviceId: String?,
 			val timeListenedAt: ZonedDateTime = ZonedDateTime.now(),
-			val ianaTimezone: String = "America/Denver"
+			val ianaTimezone: String = "America/Boise"
 	)
 
 	data class SetPrivateDTO(
