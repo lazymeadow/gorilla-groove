@@ -13,7 +13,9 @@ class HttpRequester {
         callback: @escaping ResponseHandler<T>
     ) {
         let session = URLSession(configuration: .default)
-        let request = getBaseRequest("GET", url)
+        guard let request = getBaseRequest("GET", url) else {
+            return
+        }
         
         print("Network - GET " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
@@ -30,7 +32,9 @@ class HttpRequester {
         callback: ResponseHandler<T>? = nil
     ) {
         let session = URLSession(configuration: .default)
-        let request = getBaseRequest("PUT", url, body: body, asMultipartData: asMultipartData)
+        guard let request = getBaseRequest("PUT", url, body: body, asMultipartData: asMultipartData) else {
+            return
+        }
         
         print("Network - PUT " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
@@ -45,7 +49,9 @@ class HttpRequester {
         callback: @escaping ResponseHandler<EmptyResponse>
     ) {
         let session = URLSession(configuration: .default)
-        let request = getBaseRequest("DELETE", url, body: body)
+        guard let request = getBaseRequest("DELETE", url, body: body) else {
+            return
+        }
         
         print("Network - DELETE " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
@@ -63,7 +69,9 @@ class HttpRequester {
         callback: ResponseHandler<T>? = nil
     ) {
         let session = URLSession(configuration: .default)
-        let request = getBaseRequest("POST", url, body: body, authenticated: authenticated, asMultipartData: asMultipartData)
+        guard let request = getBaseRequest("POST", url, body: body, authenticated: authenticated, asMultipartData: asMultipartData) else {
+            return
+        }
         
         print("Network - POST " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
@@ -78,14 +86,19 @@ class HttpRequester {
         body: Encodable? = nil,
         authenticated: Bool = true,
         asMultipartData: Bool = false
-    ) -> URLRequest {
+    ) -> URLRequest? {
         
         let url = URL(string: self.baseUrl + url)!
         var request : URLRequest = URLRequest(url: url)
         
         if authenticated {
-            let token = FileState.read(LoginState.self)!.token
-            request.setValue(token, forHTTPHeaderField: "Authorization")
+            if UserState.isLoggedIn {
+                let token = FileState.read(LoginState.self)!.token
+                request.setValue(token, forHTTPHeaderField: "Authorization")
+            } else {
+                print("An authenticated request was started to URL '\(url)' while the user was not logged in. This is likely a race condition with logging out, and this request will be aborted")
+                return nil
+            }
         }
         
         request.httpMethod = method
