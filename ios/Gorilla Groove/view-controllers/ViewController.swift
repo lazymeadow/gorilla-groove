@@ -63,6 +63,8 @@ class ViewController: UIViewController {
         // TODO check for empty inputs here maybe?
         // Might be able to use the "show()" function for a simple error message
         
+        self.view.endEditing(false)
+        
         let deviceId = FileState.read(DeviceState.self)!.deviceId
         let requestBody = LoginRequest(email: emailField.text!, password: passwordField.text!, deviceId: deviceId)
         
