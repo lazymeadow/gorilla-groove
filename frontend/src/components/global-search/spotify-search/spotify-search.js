@@ -6,16 +6,17 @@ import {LoadingSpinner} from "../../loading-spinner/loading-spinner";
 import {toast} from "react-toastify";
 import {
 	initializeYoutubeApiIfNeeded,
-	isYoutubeApiInitialized,
-	YoutubeApiVideo, YoutubeVideoState
+	YoutubeApiVideo,
+	YoutubeVideoState
 } from "../../../services/youtube-api-client";
 
 const spotifyIdToYoutubeUrl = {};
 
 export default function SpotifySearch() {
 	const [spotifyTracks, setSpotifyTracks] = useState([]);
-	const [apiInitialized, setApiInitialized] = useState(isYoutubeApiInitialized());
+	const [apiInitialized, setApiInitialized] = useState(false);
 	const [errorEncountered, setErrorEncountered] = useState(false);
+	const [youtubeApiTimedOut, setYoutubeApiTimedOut] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [activeVideoSourceId, setActiveVideoSourceId] = useState(null);
 	const [activeVideo, setActiveVideo] = useState(null);
@@ -27,7 +28,17 @@ export default function SpotifySearch() {
 	const musicFilterContext = useContext(MusicFilterContext);
 
 	useEffect(() => {
-		initializeYoutubeApiIfNeeded(() => { setApiInitialized(true) });
+		initializeYoutubeApiIfNeeded(
+			success => {
+				if (!apiInitialized) {
+					setApiInitialized(true)
+				}
+
+				if (!success && !youtubeApiTimedOut) {
+					setYoutubeApiTimedOut(true)
+				}
+			}
+		);
 	});
 
 	useEffect(() => {
@@ -159,9 +170,19 @@ export default function SpotifySearch() {
 		});
 	};
 
+	const getPlayerIconElement = track => {
+		if (youtubeApiTimedOut) {
+			return <i className="fas fa-ban" title="The song player could not be loaded. Imports are still possible"/>
+		} else if (apiInitialized) {
+			return <i className={`fas ${getPlayButtonClasses(track)}`} onClick={() => toggleTrackPlay(track)}/>
+		} else {
+			return <i className="fas fa-circle-notch animation-spin"/>
+		}
+	};
+
 	return (
 		<div id="spotify-search">
-			<LoadingSpinner visible={loading || (spotifyTracks.length && !apiInitialized)}/>
+			<LoadingSpinner visible={loading}/>
 			{ getDisplayedText() }
 
 			{ apiInitialized && activeVideo !== null ? <YoutubeApiVideo
@@ -188,7 +209,7 @@ export default function SpotifySearch() {
 					{ spotifyTracks.map(track =>
 						<tr key={track.sourceId}>
 							<td className="text-center">
-								<i className={`fas ${getPlayButtonClasses(track)}`} onClick={() => toggleTrackPlay(track)}/>
+								{ getPlayerIconElement(track) }
 							</td>
 							<td>
 								<AlbumArt artLink={track.albumArtLink}/>

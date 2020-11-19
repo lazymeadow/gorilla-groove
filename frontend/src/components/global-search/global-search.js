@@ -5,12 +5,12 @@ import {MusicFilterContext} from "../../services/music-filter-provider";
 import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 import {toast} from "react-toastify";
 import {PlaybackContext} from "../../services/playback-provider";
-import {initializeYoutubeApiIfNeeded, isYoutubeApiInitialized} from "../../services/youtube-api-client";
+import {initializeYoutubeApiIfNeeded} from "../../services/youtube-api-client";
 
 export default function GlobalSearch() {
 	const [videos, setVideos] = useState([]);
 	const [playingId, setPlayingId] = useState(null);
-	const [apiInitialized, setApiInitialized] = useState(isYoutubeApiInitialized());
+	const [apiInitialized, setApiInitialized] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [errorEncountered, setErrorEncountered] = useState(false);
 

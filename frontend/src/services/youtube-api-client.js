@@ -41,24 +41,52 @@ export function YoutubeApiVideo(props) {
 	/>
 }
 
-export function isYoutubeApiInitialized() {
-	return !!window.YT;
+function isYoutubeApiInitialized() {
+	// When the script is initialized, this YT property is found on 'window'
+	if (window.YT !== undefined) {
+		return true;
+	}
+
+	// However, if the script fails to initialize for whatever reason (we have seen 429 errors appear)
+	// then we need to check if we already included the script. If we did, there's no reason to include it again
+	const script = document.getElementById('youtube-iframe-api-script');
+
+	return script !== null;
 }
 
+let youtubeApiErrored = undefined;
 export function initializeYoutubeApiIfNeeded(onInitializedHandler) {
   // The way Youtube's custom controls have to work requires injecting a script. It's weird.
   // But we only need to do it once, and only once we visit this page. So check that it isn't already there.
 	if (isYoutubeApiInitialized()) {
+		if (youtubeApiErrored !== undefined) {
+			onInitializedHandler(!youtubeApiErrored);
+		}
 		return;
 	}
 
 	const tag = document.createElement('script');
 	tag.src = 'https://www.youtube.com/iframe_api';
+	tag.id = 'youtube-iframe-api-script';
 
-	window.onYouTubeIframeAPIReady = onInitializedHandler;
+	window.onYouTubeIframeAPIReady = () => {
+		youtubeApiErrored = false;
+		onInitializedHandler(true);
+	};
 
 	const firstScriptTag = document.getElementsByTagName('script')[0];
 	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+	// We have seen the API fail to initialize, but they offer us no way to detect a failed initialization.
+	// So set up a timer just so we don't sit and wait forever.
+	setTimeout(() => {
+		if (window.YT === undefined) {
+			youtubeApiErrored = true;
+			onInitializedHandler(false);
+		} else {
+			youtubeApiErrored = false;
+		}
+	}, 4000)
 }
 
 export const YoutubeVideoState = Object.freeze({
