@@ -16,6 +16,7 @@ export default function DisconnectedWarningBar() {
 	if (isConnectedRound1) {
 		if (!isConnected) {
 			setConnected(true);
+			setShouldPanic(false);
 			if (panicTimeout !== null) {
 				clearTimeout(panicTimeout);
 				panicTimeout = null;
