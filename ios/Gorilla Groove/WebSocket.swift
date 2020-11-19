@@ -102,7 +102,7 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 class WebSocket {
     static private var socket: WebSocketTaskConnection? = nil
     
-    static func sendMessage(_ message: Codable) {
+    static func sendMessage(_ message: Encodable) {
         let messageJson = message.toJSONData()!.toString()
         socket?.send(messageJson)
     }

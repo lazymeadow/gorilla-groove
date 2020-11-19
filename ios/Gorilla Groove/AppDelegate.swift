@@ -13,6 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         AudioPlayer.initialize()
         NowPlayingTracks.initialize()
+        LocationService.initialize()
         
         // Make sure we have a device ID generated for the app
         if (FileState.read(DeviceState.self) == nil) {
@@ -44,8 +45,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
-        print("App resigned active")
-        // TODO maybe can use this to close the socket?
+        
+        // Seems to fire at the same time as applicationDidEnterBackground, so can't use it for stuff like Socket destruction
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {

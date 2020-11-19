@@ -56,6 +56,7 @@ class NowPlayingTracks {
     
     private static func playTrack(_ originalTrack: Track) {
         AudioPlayer.pause()
+        LocationService.requestLocationPermissionIfNeeded()
         
         // Make sure we've got the latest information. Song may have been cached since the last view retrieved it, or whatever
         let track = TrackDao.findById(originalTrack.id)!

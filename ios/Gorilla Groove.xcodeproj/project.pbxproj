@@ -38,6 +38,7 @@
 		E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DDA23DE4F99006BD7EE /* SyncController.swift */; };
 		E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50E923E2736D00029D7C /* RootNavigationController.swift */; };
 		E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */; };
+		E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E864D82F2564B5B8008C2C4C /* LocationService.swift */; };
 		E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */; };
 		E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1C23E9572A005B84EB /* UsersController.swift */; };
 		E86AFF1F23E963A8005B84EB /* TableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1E23E963A8005B84EB /* TableViewCell.swift */; };
@@ -83,6 +84,7 @@
 		E85A4DDA23DE4F99006BD7EE /* SyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncController.swift; sourceTree = "<group>"; };
 		E85A50E923E2736D00029D7C /* RootNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootNavigationController.swift; sourceTree = "<group>"; };
 		E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsControllers.swift; sourceTree = "<group>"; };
+		E864D82F2564B5B8008C2C4C /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSynchronizer.swift; sourceTree = "<group>"; };
 		E86AFF1C23E9572A005B84EB /* UsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsersController.swift; sourceTree = "<group>"; };
 		E86AFF1E23E963A8005B84EB /* TableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewCell.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */,
 				E85692B924F4D46500A741D2 /* ViewUtil.swift */,
 				E8598FB5250B17D900D70E9F /* WebSocket.swift */,
+				E864D82F2564B5B8008C2C4C /* LocationService.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -270,6 +273,7 @@
 				E85966492440021200AA8727 /* UIExtensions.swift in Sources */,
 				E83B012124CE82F600C2C5E4 /* Database.swift in Sources */,
 				E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */,
+				E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */,
 				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,
 				E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */,
 				A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */,
@@ -377,7 +381,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -432,7 +436,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

@@ -41,4 +41,15 @@ class ViewUtil {
             }
         }
     }
+    
+    static func openAppSettings() {
+        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+            print("Unable to parse URL to open settings screen")
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(settingsUrl) {
+            UIApplication.shared.open(settingsUrl)
+        }
+    }
 }

@@ -183,7 +183,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         }
     }
     
-    struct PlayEventRequest: Codable {
+    struct PlayEventRequest: Encodable {
         let trackId: Int?
         let isPlaying: Bool?
         let messageType: String = "NOW_PLAYING"

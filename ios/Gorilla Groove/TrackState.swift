@@ -37,27 +37,35 @@ class TrackService {
         
         let listenTime = ISO8601DateFormatter().string(from: Date())
         
-        // Update the server
-        let postBody = MarkListenedRequest(
-            trackId: track.id,
-            timeListenedAt: listenTime,
-            ianaTimezone: TimeZone.current.identifier
-        )
-        
-        HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
-            if (statusCode < 200 || statusCode >= 300) {
-                print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
-                self.markTrackListenedTo(track, retry + 1)
-                return
-            }
+        // Getting the location takes a while, so do not do this on the main thread
+        DispatchQueue.global().async {
+            let point = LocationService.getLocationPoint()
             
-            print("Track \(track.id) marked listened to")
+            let postBody = MarkListenedRequest(
+                trackId: track.id,
+                timeListenedAt: listenTime,
+                ianaTimezone: TimeZone.current.identifier,
+                latitude: point?.coordinate.latitude,
+                longitude: point?.coordinate.longitude
+            )
+            
+            HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
+                if (statusCode < 200 || statusCode >= 300) {
+                    print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
+                    self.markTrackListenedTo(track, retry + 1)
+                    return
+                }
+                
+                print("Track \(track.id) marked listened to")
+            }
         }
     }
     
-    struct MarkListenedRequest: Codable {
+    struct MarkListenedRequest: Encodable {
         let trackId: Int
         let timeListenedAt: String
         let ianaTimezone: String
+        let latitude: Double?
+        let longitude: Double?
     }
 }
