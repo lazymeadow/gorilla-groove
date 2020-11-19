@@ -55,12 +55,15 @@ export class AlbumArt extends React.Component {
 					className="album-art"
 					style={{ backgroundImage: `url(${this.state.imageUrl})` }}
 				/>
-				<Modal
-					isOpen={this.state.modalOpen}
-					closeFunction={() => this.setModalOpen(false)}
-				>
-					<img className="modal-image" src={this.state.imageUrl}/>
-				</Modal>
+				{
+					this.state.modalOpen ? <Modal
+						isOpen={true}
+						closeFunction={() => this.setModalOpen(false)}
+					>
+						<img className="modal-image" src={this.state.imageUrl}/>
+					</Modal> : null
+				}
+
 			</div>
 		)
 	}

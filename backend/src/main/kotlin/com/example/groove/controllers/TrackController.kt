@@ -82,11 +82,9 @@ class TrackController(
 		}
 
 		trackService.markSongListenedTo(
-				trackId = markSongAsReadDTO.trackId,
 				deviceId = deviceId,
 				remoteIp = ipAddress,
-				listenedTime = markSongAsReadDTO.timeListenedAt,
-				timezone = markSongAsReadDTO.ianaTimezone
+				data = markSongAsReadDTO
 		)
 
 		return ResponseEntity(HttpStatus.OK)
@@ -225,14 +223,6 @@ class TrackController(
 		return trackService.getPublicTrackInfo(trackId, false, audioFormat)
 	}
 
-	data class MarkTrackAsListenedToDTO(
-			val trackId: Long,
-			@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
-			val deviceId: String?,
-			val timeListenedAt: ZonedDateTime = ZonedDateTime.now(),
-			val ianaTimezone: String = "America/Boise"
-	)
-
 	data class SetPrivateDTO(
 			val trackIds: List<Long>,
 			val isPrivate: Boolean
@@ -246,3 +236,14 @@ class TrackController(
 		val logger = logger()
 	}
 }
+
+data class MarkTrackAsListenedToDTO(
+		val trackId: Long,
+		@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
+		val deviceId: String?,
+		val timeListenedAt: ZonedDateTime = ZonedDateTime.now(),
+		val ianaTimezone: String = "America/Boise",
+		val latitude: Double?,
+		val longitude: Double?
+)
+

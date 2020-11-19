@@ -1,5 +1,7 @@
 package com.example.groove.services
 
+import com.example.groove.controllers.MarkTrackAsListenedToDTO
+import com.example.groove.controllers.TrackController
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackLinkRepository
@@ -116,12 +118,12 @@ class TrackService(
 	}
 
 	@Transactional
-	fun markSongListenedTo(trackId: Long, deviceId: String, remoteIp: String?, listenedTime: ZonedDateTime, timezone: String) {
-		val track = trackRepository.get(trackId)
+	fun markSongListenedTo(deviceId: String, remoteIp: String?, data: MarkTrackAsListenedToDTO) {
+		val track = trackRepository.get(data.trackId)
 		val user = loadLoggedInUser()
 
 		if (track == null || track.user.id != user.id) {
-			throw IllegalArgumentException("No track found by ID $trackId!")
+			throw IllegalArgumentException("No track found by ID ${data.trackId}!")
 		}
 
 		// May want to do some sanity checks / server side validation here to prevent this incrementing too often.
@@ -136,9 +138,9 @@ class TrackService(
 		// Device we used might have been merged into another device. If it was, use the parent device
 		val device = savedDevice.mergedDevice ?: savedDevice
 
-		val localTimeNoTz = listenedTime
+		val localTimeNoTz = data.timeListenedAt
 				// Put the timezone to be the one the user provided
-				.withZoneSameInstant(ZoneId.of(timezone))
+				.withZoneSameInstant(ZoneId.of(data.ianaTimezone))
 				// Now KEEP the time the same, but change it to be UTC. This is because MySQL wants to convert all our
 				// dates to be UTC and it'll erase our actual time when we do so. So preempt it by pre-UTC-ifying our
 				// timezone WHILE keeping the time unchanged so it isn't lost
@@ -151,7 +153,9 @@ class TrackService(
 				ipAddress = remoteIp,
 				listenedInReview = track.inReview,
 				localTimeListenedAt = localTimeNoTz.toString(),
-				ianaTimezone = timezone
+				ianaTimezone = data.ianaTimezone,
+				latitude = data.latitude,
+				longitude = data.longitude
 		)
 		trackHistoryRepository.save(trackHistory)
 	}

@@ -47,5 +47,11 @@ data class TrackHistory(
 		val localTimeListenedAt: String,
 
 		@Column(name = "iana_timezone")
-		val ianaTimezone: String
+		val ianaTimezone: String,
+
+		@Column
+		val latitude: Double? = null,
+
+		@Column
+		val longitude: Double? = null
 )
