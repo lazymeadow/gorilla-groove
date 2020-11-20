@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Unless location permission is set to &apos;Always&apos;, your location history can&apos;t be gathered while listening in the background. Gorilla Groove only requests your location when you finish listening to a song</string>
+	<string>Unless location permission is set to 'Always', your location history can't be gathered while listening in the background. Gorilla Groove only requests your location when you finish listening to a song</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location can be saved as part of your listening history</string>
 	<key>UIBackgroundModes</key>
