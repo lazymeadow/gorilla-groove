@@ -9,7 +9,6 @@ class RootNavigationController : UIViewController {
     func getNowPlayingSongController() -> TrackViewController {
         return TrackViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
     }
-    let settingsController = SettingsController()
     
     lazy var topView = UINavigationController()
     lazy var activeButton: NavigationButton? = nil
@@ -18,7 +17,9 @@ class RootNavigationController : UIViewController {
     lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, getNowPlayingSongController, handleButtonTap)
     lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, nil, handleButtonTap)
     lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, nil, handleButtonTap)
-    lazy var settingsButton = NavigationButton("Settings", "gear", settingsController, nil, handleButtonTap)
+    lazy var settingsButton = NavigationButton("Settings", "gear", nil, nil) { _ in
+        ViewUtil.openAppSettings()
+    }
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
     
@@ -138,7 +139,7 @@ class RootNavigationController : UIViewController {
     
     class NavigationButton : UIViewController {
         let label: UILabel = UILabel()
-        var swapViewFunction: ((NavigationButton) -> ())? = nil
+        var swapViewFunction: ((NavigationButton) -> ()) = { _ in }
         var icon: UIImageView = UIImageView()
         var controllerToLoad: UIViewController? = nil
         var controllerToLoadFunction: (() -> UIViewController)?
@@ -205,9 +206,7 @@ class RootNavigationController : UIViewController {
                 controllerToLoad = controllerToLoadFunction!()
             }
             
-            if (controllerToLoad != nil) {
-                swapViewFunction!(self)
-            }
+            swapViewFunction(self)
         }
         
         func setActive() {

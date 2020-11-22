@@ -1,5 +1,6 @@
 import Foundation
 import CoreLocation
+import UIKit
 
 class LocationService {
     
@@ -11,6 +12,12 @@ class LocationService {
     
     private static var locationRequestSemaphore: DispatchSemaphore? = nil
     
+    @SettingsBundleStorage(key: "location_min_battery")
+    private static var locationMinBattery: Int
+    
+    @SettingsBundleStorage(key: "location_enabled")
+    private static var locationEnabled: Bool
+    
     static func getLocationPoint() -> CLLocation? {
         if Thread.isMainThread {
             fatalError("Don't check location on the main thread")
@@ -19,6 +26,31 @@ class LocationService {
         if !authorized {
             print("Not authorized to gather location points")
             return nil
+        }
+        
+        if ProcessInfo.processInfo.isLowPowerModeEnabled {
+            print("Low power mode was enabled. Not gathering location point")
+            return nil
+        }
+        
+        if !locationEnabled {
+            print("Location was not enabled. Not gathering location point")
+            return nil
+        }
+        
+        let minBattery = locationMinBattery // Accessing this hits prefs so I'm caching it as a local variable
+        if minBattery > 0 {
+            let batteryLevel = Int(UIDevice.current.batteryLevel * 100)
+            if batteryLevel < minBattery {
+                if UIDevice.current.batteryState == .charging {
+                    print("Battery was lower than the minimum to gather location, but was plugged in. Minimum: \(minBattery). Had: \(batteryLevel)")
+                } else {
+                    print("Battery was too low to gather a location point and was not plugged in. Minimum: \(minBattery). Had: \(batteryLevel)")
+                    return nil
+                }
+            } else if minBattery == -100 {
+                print("Battery monitoring was not enabled. This is an error. Ignoring battery check")
+            }
         }
         
         // Though I don't know why it would ever happen, in theory two threads could both request location more or less at the same time.
@@ -94,6 +126,11 @@ class LocationService {
                     authorized = false
                 }
                 
+                // If we're good to go on checking for location, then enable battery monitoring since we will use battery levels
+                // to determine if we should pull location points
+                if authorized && !UIDevice.current.isBatteryMonitoringEnabled {
+                    UIDevice.current.isBatteryMonitoringEnabled = true
+                }
                 bootPermissionChecked = true
             }
         }
