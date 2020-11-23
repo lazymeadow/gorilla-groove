@@ -12,6 +12,7 @@ import TrackHistory from "../track-history/track-history";
 import DeviceManagement from "../device-management/device-management";
 import {toast} from "react-toastify";
 import {MusicContext} from "../../services/music-provider";
+import CrashReport from "../crash-report/crash-report";
 
 const originalTitle = document.title;
 
@@ -55,9 +56,10 @@ export default function UserButton() {
 					{ component: <Settings/> },
 					{ component: <DeviceManagement/> },
 					{ component: <TrackHistory/> },
-					{ component: <InviteUser/>, shouldRender: userContext.hasPermission(PermissionType.INVITE_USER)  },
+					{ component: <InviteUser/>, shouldRender: userContext.hasPermission(PermissionType.INVITE_USER) },
 					{ component: <DraftRelease/>, shouldRender: userContext.hasPermission(PermissionType.WRITE_VERSION_HISTORY) },
-					{ text: "Run Review Queues", clickHandler: runReviewQueues, shouldRender: userContext.hasPermission(PermissionType.RUN_REVIEW_QUEUES)},
+					{ component: <CrashReport/>, shouldRender: userContext.hasPermission(PermissionType.VIEW_CRASH_REPORTS) },
+					{ text: "Run Review Queues", clickHandler: runReviewQueues, shouldRender: userContext.hasPermission(PermissionType.RUN_REVIEW_QUEUES) },
 					{ text: "Logout", clickHandler: logout }
 				]}
 			/>

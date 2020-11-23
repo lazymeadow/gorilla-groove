@@ -7,6 +7,7 @@ import com.example.groove.services.ArtSize
 import com.example.groove.services.FileStorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.FileUtils
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.web.bind.annotation.*
@@ -29,7 +30,8 @@ import java.nio.file.Paths
 class FileController(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageService: FileStorageService,
-		private val fileStorageProperties: FileStorageProperties
+		private val fileStorageProperties: FileStorageProperties,
+		private val fileUtils: FileUtils
 ) {
 
 	// Example cURL command for uploading a file
@@ -56,19 +58,8 @@ class FileController(
 			response: HttpServletResponse
 	) {
 		val file = songIngestionService.createTrackFileWithMetadata(trackId, audioFormat)
-		response.contentType = audioFormat.contentType
-		response.setHeader("Content-disposition", """attachment; filename="${file.name}"""")
+		fileUtils.writeFileToServlet(file, response, audioFormat.contentType)
 
-		val outStream = response.outputStream
-		val inStream = FileInputStream(file)
-
-		logger.info("Writing song data for ${file.name} to output stream...")
-		outStream.write(inStream.readAllBytes())
-
-		outStream.close()
-		inStream.close()
-
-		logger.info("Deleting temporary file")
 		file.delete()
 	}
 

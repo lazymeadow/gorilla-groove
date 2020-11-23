@@ -1,0 +1,84 @@
+#crash-report-modal {
+  h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+
+  .table-list {
+    font-size: 0.95em;
+    width: 230px;
+    padding-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-left: 1px solid black;
+    overflow-y: auto;
+
+    li {
+      padding-bottom: 3px;
+      padding-top: 3px;
+      padding-left: 5px;
+      cursor: pointer;
+      overflow-x: hidden;
+      white-space: nowrap;
+
+      &:nth-child(even) {
+        background-color: @light-grey;
+      }
+
+      &.selected {
+        background-color: @select-blue;
+        color: white;
+      }
+    }
+  }
+
+  #table-container {
+    display: flex;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    height: 400px;
+  }
+
+  .header-item {
+    margin-bottom: 5px;
+    width: 175px;
+
+    &.large-item {
+      width: 325px;
+    }
+    &.small-item {
+      width: 225px;
+    }
+  }
+
+  .header-key {
+    font-weight: bold;
+  }
+
+  .crash-report-info {
+    font-size: 0.9em;
+    padding-top: 5px;
+  }
+
+  #report-log {
+    resize: none;
+    white-space: pre;
+    font-size: 10px;
+    width: 100%;
+    flex-grow: 1;
+  }
+
+  .table-content {
+    display: flex;
+    flex-direction: column;
+
+    padding-left: 5px;
+    padding-right: 5px;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+
+    hr {
+      margin-top: 4px;
+    }
+  }
+}

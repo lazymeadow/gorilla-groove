@@ -3,6 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.CrashReportRepository
 import com.example.groove.db.model.CrashReport
 import com.example.groove.db.model.User
+import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.util.extension
 import com.example.groove.util.logger
@@ -37,14 +38,18 @@ class CrashReportService(
 		// Grab the size after the unzip so we get the true size on disk and not the compressed size
 		val sizeKb = files.sumBy { (it.length() / 1024L).toInt() }
 
+		val reportingDevice = user.currentAuthToken!!.device!!
 		// Now that we have unzipped the files and they're good, we need to save the crash report into the DB
 		// so we know what ID we get. Then we'll rename the files to that ID so they're easy to locate
 		val crashReport = CrashReport(
 				user = user,
-				version = user.currentAuthToken!!.device!!.applicationVersion,
+				version = reportingDevice.applicationVersion,
+				deviceType = reportingDevice.deviceType,
 				sizeKb = sizeKb
 		).also { crashReportRepository.save(it) }
 
+		// It might make sense to store these in S3. But I am considering them rather temporary, and they are PROBABLY going to be fairly small...
+		// But good chance I'm wrong and they end up in S3 anyway.
 		val parentDir = File(fileStorageProperties.crashReportLocation!!)
 		if (!parentDir.exists()) {
 			parentDir.mkdirs()
@@ -107,6 +112,28 @@ class CrashReportService(
 		}
 
 		return listOf(logFile!!, dbFile!!)
+	}
+
+	fun getCrashReports(): List<CrashReport> {
+		return crashReportRepository.findAllNewestFirst()
+	}
+
+	fun getCrashReportLog(id: Long): String {
+		val logFile = File(fileStorageProperties.crashReportLocation, id.toString().withNewExtension("txt"))
+		if (!logFile.exists()) {
+			throw ResourceNotFoundException("No log file exists for crash log with ID: $id")
+		}
+
+		return logFile.bufferedReader().use { it.readText() }
+	}
+
+	fun getCrashReportDb(id: Long): File {
+		val dbFile = File(fileStorageProperties.crashReportLocation, id.toString().withNewExtension("db"))
+		if (!dbFile.exists()) {
+			throw ResourceNotFoundException("No db file exists for crash log with ID: $id")
+		}
+
+		return dbFile
 	}
 
 	companion object {
