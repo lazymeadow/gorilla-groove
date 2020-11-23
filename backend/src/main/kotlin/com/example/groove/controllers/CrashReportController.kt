@@ -65,6 +65,18 @@ class CrashReportController(
 		file.delete()
 	}
 
+	@DeleteMapping("/{id}")
+	fun deleteCrashReport(@PathVariable id: Long): ResponseEntity<String> {
+		val user = loadLoggedInUser()
+		logger.info("Crash report $id being deleted by user ${user.name}")
+
+		userService.assertPermission(user, PermissionType.VIEW_CRASH_REPORTS)
+
+		crashReportService.deleteCrashReport(id)
+
+		return ResponseEntity(HttpStatus.OK)
+	}
+
     companion object {
         private val logger = logger()
     }

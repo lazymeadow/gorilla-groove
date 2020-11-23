@@ -38,6 +38,19 @@ function CrashReportModal() {
 		Api.download(`crash-report/${id}/db`);
 	};
 
+	const deleteCrashReport = id => {
+		Api.delete(`crash-report/${id}`).then(() => {
+			toast.success('Crash report deleted successfully');
+			const newReports = crashReports.slice(0).filter(it => it.id !== id);
+			setCrashReports(newReports);
+
+			const activeCrashReport = newReports.length > 0 ? newReports[0] : {};
+			setActiveCrashReport(activeCrashReport);
+		}).catch(() => {
+			toast.error('Failed to delete crash report');
+		});
+	};
+
 	return (
 		<div onKeyDown={e => e.nativeEvent.propagationStopped = true}>
 			<div id="crash-report-modal" className="p-relative">
@@ -90,7 +103,7 @@ function CrashReportModal() {
 									<span className="header-value">{selectedReport.version}</span>
 								</span>
 								<span className="header-item text-right">
-									<button>Delete</button>
+									<button onClick={() => deleteCrashReport(selectedReport.id)}>Delete</button>
 								</span>
 							</div>
 						</div>

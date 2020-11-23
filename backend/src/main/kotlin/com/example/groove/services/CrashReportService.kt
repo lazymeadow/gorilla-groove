@@ -5,10 +5,7 @@ import com.example.groove.db.model.CrashReport
 import com.example.groove.db.model.User
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.properties.FileStorageProperties
-import com.example.groove.util.extension
-import com.example.groove.util.logger
-import com.example.groove.util.withNewExtension
-import com.example.groove.util.withoutExtension
+import com.example.groove.util.*
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
@@ -134,6 +131,30 @@ class CrashReportService(
 		}
 
 		return dbFile
+	}
+
+	fun deleteCrashReport(id: Long) {
+		val logFile = File(fileStorageProperties.crashReportLocation, id.toString().withNewExtension("txt"))
+		val dbFile = File(fileStorageProperties.crashReportLocation, id.toString().withNewExtension("db"))
+
+		if (logFile.exists()) {
+			logFile.delete()
+		} else {
+			logger.error("No log file exists for crash log with ID: $id")
+		}
+
+		if (dbFile.exists()) {
+			dbFile.delete()
+		} else {
+			logger.error("No db file exists for crash log with ID: $id")
+		}
+
+		crashReportRepository.get(id)?.let { crashReport ->
+			crashReportRepository.delete(crashReport)
+			crashReport
+		} ?: run {
+			logger.error("No crash report was found with ID $id!")
+		}
 	}
 
 	companion object {
