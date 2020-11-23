@@ -2,12 +2,16 @@ import React from 'react';
 import {Api} from "../../api";
 import {Modal} from "../modal/modal";
 import {toast} from "react-toastify";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 export class DraftRelease extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.state = { modalOpen: false }
+		this.state = {
+			modalOpen: false,
+			loading: false
+		}
 	}
 
 	setModalOpen(isOpen) {
@@ -23,6 +27,7 @@ export class DraftRelease extends React.Component {
 		const version = document.getElementById('version-history-version').value;
 		const notes = document.getElementById('version-history-notes').value;
 
+		this.setState({ loading: true });
 		Api.post(`version/history/deviceType/${deviceType}`, {
 			version,
 			notes
@@ -32,6 +37,8 @@ export class DraftRelease extends React.Component {
 		}).catch(error => {
 			console.error(error);
 			toast.error('The creation of a the new version history failed');
+		}).finally(() => {
+			this.setState({ loading: false });
 		});
 	}
 
@@ -47,7 +54,8 @@ export class DraftRelease extends React.Component {
 					isOpen={this.state.modalOpen}
 					closeFunction={() => this.setModalOpen(false)}
 				>
-					<form id="version-history-modal" className="form-modal" onSubmit={e => this.submitHistoryForm(e)}>
+					<form id="version-history-modal" className="form-modal p-relative" onSubmit={e => this.submitHistoryForm(e)}>
+						<LoadingSpinner visible={this.state.loading}/>
 						<h2>Draft Release</h2>
 
 						<div className="flex-label">
