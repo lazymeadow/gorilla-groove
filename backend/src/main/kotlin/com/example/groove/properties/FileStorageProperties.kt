@@ -26,4 +26,8 @@ class FileStorageProperties {
 	@Value("\${spring.data.album.art.location:#{null}}")
 	val albumArtDirectoryLocation: String? = null
 		get() = (field ?: "${rootStorageLocation!!}art").endWith("/")
+
+	@Value("\${spring.data.crash.report.location:#{null}}")
+	val crashReportLocation: String? = null
+		get() = (field ?: "${rootStorageLocation!!}crashes").endWith("/")
 }

@@ -15,6 +15,11 @@ fun String.endWith(ending: String): String {
 
 fun String.withNewExtension(extension: String): String {
 	val extensionWithoutDot = if (extension.first() == '.') extension.substring(1) else extension
+
+	if (!this.contains(".")) {
+		return "$this.$extensionWithoutDot"
+	}
+
 	return this.split('.')
 			.dropLast(1)
 			.plus(extensionWithoutDot)
@@ -25,6 +30,12 @@ fun String.withoutExtension(): String {
 	return this.split('.')
 			.dropLast(1)
 			.joinToString(".")
+}
+
+fun String.extension(): String {
+	return this.split('.')
+			.last()
+			.toLowerCase()
 }
 
 // Windows is the worst offending OS, so this is just the list of characters that Windows won't let you put in a file name

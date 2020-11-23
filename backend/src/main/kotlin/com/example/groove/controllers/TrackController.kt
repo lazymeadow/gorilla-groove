@@ -246,4 +246,3 @@ data class MarkTrackAsListenedToDTO(
 		val latitude: Double?,
 		val longitude: Double?
 )
-
