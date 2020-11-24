@@ -75,11 +75,15 @@ class CrashReportService(
 			val entries = zip.entries().asSequence()
 			entries.forEachIndexed { i, entry ->
 				if (i > 2) {
-					throw IllegalArgumentException("Zip file contained too many items! Only 1 .txt file and one .db file should be inside")
+					throw IllegalArgumentException("Zip file contained too many items! Only 1 .txt file and one .db (or .sqlite) file should be inside")
 				}
 
 				zip.getInputStream(entry).use { input ->
-					val extension = entry.name.extension()
+					val extension = when (val extension = entry.name.extension()) {
+						"sqlite" -> "db"
+						else -> extension
+					}
+
 					val subFileName = tmpName.withNewExtension(extension)
 
 					val subFile = File(fileStorageProperties.tmpDir, subFileName)
@@ -92,7 +96,7 @@ class CrashReportService(
 							subFile.delete()
 							logFile?.delete()
 							dbFile?.delete()
-							throw IllegalArgumentException("Unknown extension '$extension' in ZIP file! Only a .txt and .db file should be inside")
+							throw IllegalArgumentException("Unknown extension '$extension' in ZIP file! Only a .txt and .db (or .sqlite) file should be inside")
 						}
 					}
 				}
@@ -105,7 +109,7 @@ class CrashReportService(
 		}
 		if (dbFile == null) {
 			logFile?.delete()
-			throw IllegalArgumentException("No .db file found inside of zip file!")
+			throw IllegalArgumentException("No .db (or .sqlite) file found inside of zip file!")
 		}
 
 		return listOf(logFile!!, dbFile!!)

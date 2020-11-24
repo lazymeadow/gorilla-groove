@@ -12,7 +12,6 @@ import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.FileInputStream
 import javax.servlet.http.HttpServletResponse
 import kotlin.system.measureTimeMillis
 import org.springframework.http.ResponseEntity
