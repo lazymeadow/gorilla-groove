@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,6 +20,8 @@
 		A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A89100F423BD339E00D6EA2D /* Assets.xcassets */; };
 		A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */; };
 		E83B012124CE82F600C2C5E4 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83B012024CE82F600C2C5E4 /* Database.swift */; };
+		E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A57D256C88C2009F3C9E /* CrashReportService.swift */; };
+		E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E840A581256CD15E009F3C9E /* ZIPFoundation */; };
 		E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692B924F4D46500A741D2 /* ViewUtil.swift */; };
 		E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */; };
 		E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */; };
@@ -67,6 +69,7 @@
 		A89100F723BD339E00D6EA2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E83B012024CE82F600C2C5E4 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
+		E840A57D256C88C2009F3C9E /* CrashReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportService.swift; sourceTree = "<group>"; };
 		E85692B924F4D46500A741D2 /* ViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtil.swift; sourceTree = "<group>"; };
 		E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackContextMenu.swift; sourceTree = "<group>"; };
 		E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackViewController.swift; sourceTree = "<group>"; };
@@ -103,6 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,6 +199,7 @@
 				E864D82F2564B5B8008C2C4C /* LocationService.swift */,
 				E8711867256777BD007B8F16 /* SettingsService.swift */,
 				E871186425675C1C007B8F16 /* Settings.bundle */,
+				E840A57D256C88C2009F3C9E /* CrashReportService.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -215,6 +220,9 @@
 			dependencies = (
 			);
 			name = "Gorilla Groove";
+			packageProductDependencies = (
+				E840A581256CD15E009F3C9E /* ZIPFoundation */,
+			);
 			productName = "Gorilla Groove";
 			productReference = A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */;
 			productType = "com.apple.product-type.application";
@@ -243,6 +251,9 @@
 				Base,
 			);
 			mainGroup = A89100E123BD339C00D6EA2D;
+			packageReferences = (
+				E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+			);
 			productRefGroup = A89100EB23BD339D00D6EA2D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -276,6 +287,7 @@
 				E86EB67C24ECA3F80066CB4E /* Playlist.swift in Sources */,
 				E85966492440021200AA8727 /* UIExtensions.swift in Sources */,
 				E83B012124CE82F600C2C5E4 /* Database.swift in Sources */,
+				E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */,
 				E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */,
 				E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */,
 				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,
@@ -514,6 +526,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.11;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E840A581256CD15E009F3C9E /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A89100E223BD339C00D6EA2D /* Project object */;
 }

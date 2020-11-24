@@ -31,7 +31,7 @@ class TrackContextMenu {
         alert.addAction(UIAlertAction(title: hideTitle, style: .default, handler: { (_) in
             track.isHidden = !track.isHidden
             let request = UpdateTrackRequest(trackIds: [track.id], hidden: track.isHidden)
-            HttpRequester.put("track", EmptyResponse.self, request, asMultipartData: true) { _, statusCode, _ in
+            HttpRequester.put("track/simple-update", EmptyResponse.self, request) { _, statusCode, _ in
                 if statusCode.isSuccessful() {
                     onAction(track)
                     ServerSynchronizer.syncWithServer()

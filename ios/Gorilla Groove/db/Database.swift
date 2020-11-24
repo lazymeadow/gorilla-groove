@@ -4,7 +4,7 @@ import SQLite3
 class Database {
     static var db: OpaquePointer?
     
-    private static func getDbPath(_ userId: Int) -> URL {
+    static func getDbPath(_ userId: Int) -> URL {
         let dbName = "Groove-\(userId).sqlite"
         
         let basePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

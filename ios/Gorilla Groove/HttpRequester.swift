@@ -73,6 +73,25 @@ class HttpRequester {
             return
         }
         
+        print("Network - POST (upload) " + request.url!.absoluteString)
+        let dataTask = session.dataTask(with: request) { data, response, error in
+            handleResponse(data, type, response, error, callback)
+        }
+        dataTask.resume()
+    }
+    
+    static func upload<T: Codable>(
+        _ url: String,
+        _ type: T.Type,
+        _ body: Data,
+        authenticated: Bool = true,
+        callback: ResponseHandler<T>? = nil
+    ) {
+        let session = URLSession(configuration: .default)
+        guard let request = getBaseRequest("POST", url, body: body, authenticated: authenticated, asMultipartData: true) else {
+            return
+        }
+        
         print("Network - POST " + request.url!.absoluteString)
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
@@ -108,8 +127,6 @@ class HttpRequester {
                 let boundary = UUID().uuidString
                 request.addValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
                 request.httpBody = body.toMultipartFormData(boundary: boundary)
-                
-                print(String(decoding: request.httpBody!, as: UTF8.self))
             } else {
                 request.addValue("application/json", forHTTPHeaderField: "Content-Type")
                 request.httpBody = body.toJSONData()
@@ -161,14 +178,12 @@ extension Encodable {
         return try! JSONEncoder().encode(self)
     }
     
-    // This specifically targets the UpdateTrack request, which is a combination of json and image binary data.
-    // This does not yet have support for the image binary data.
-    // As the need arises, I will update this extension to be more generic and support said binary data
+    // This currently is hard coded for the crash log. I don't THINK the "filename" matters. But these parts could be parameterized
     func toMultipartFormData(boundary: String) -> Data? {
         var formData = Data()
         formData.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
-        formData.append("Content-Disposition: form-data; name=\"updateTrackJson\"\r\n\r\n".data(using: .utf8)!)
-        formData.append(self.toJSONData()!)
+        formData.append("Content-Disposition: form-data; name=\"file\"; filename=\"crashlog.zip\"\r\n\r\n".data(using: .utf8)!)
+        formData.append(self as! Data)
         formData.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         
         return formData

@@ -3,6 +3,8 @@ import UIKit
 
 class RootNavigationController : UIViewController {
     
+    var consecutiveNowPlayingTaps = 0
+    
     let libraryController = MyLibraryController()
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
@@ -22,7 +24,6 @@ class RootNavigationController : UIViewController {
     }
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
-    
     
     override func viewDidLoad() {
         print("Loaded root navigation")
@@ -108,6 +109,23 @@ class RootNavigationController : UIViewController {
     }
     
     private func handleButtonTap(_ tappedButton: NavigationButton) {
+        if tappedButton == nowPlayingButton {
+            consecutiveNowPlayingTaps += 1
+            if consecutiveNowPlayingTaps >= 5 {
+                ViewUtil.showAlert(
+                    title: "Send crash report?",
+                    message: "This will send Gorilla Groove's app logs and database",
+                    yesText: "Send",
+                    dismissText: "No thanks"
+                ) {
+                    CrashReportService.sendProblemReport()
+                }
+                consecutiveNowPlayingTaps = 0
+            }
+        } else {
+            consecutiveNowPlayingTaps = 0
+        }
+        
         // Do some extra tomfoolery here so that the swipe gesture (left or right) matches
         // where the tapped button was in relation to our currently active button
         let currentViewIndex = buttons.firstIndex { button in
