@@ -195,11 +195,11 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
         let songCacheItem = playerItem as! SongCachingPlayerItem
         let trackId = songCacheItem.trackId
 
-        print("Track \(trackId) is downloaded and ready for storing")
+        GGLog.info("Track \(trackId) is downloaded and ready for storing")
 
         CacheService.setCachedSongData(trackId: trackId, data: data)
         
-        print("Track \(trackId) is saved")
+        GGLog.info("Track \(trackId) is saved")
     }
 }
 

@@ -9,7 +9,8 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        GGNavLog.info("Loaded artist view")
+
         let artistTableView = UITableView()
 
         view.addSubview(artistTableView)
@@ -26,7 +27,6 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
         TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: artistTableView) { input in
             let searchTerm = input.lowercased()
-            print(searchTerm)
             if (searchTerm.isEmpty) {
                 self.visibleArtists = self.artists
             } else {

@@ -31,7 +31,7 @@ class TrackService {
     // This doesn't update the play count. Waits for the server to sync it back down later. Possibly a mistake
     static func markTrackListenedTo(_ track: Track, _ retry: Int = 0) {
         if (retry > 3) {
-            print("Failed to update track too many times. Giving up")
+            GGLog.error("Failed to update track too many times. Giving up")
             return
         }
         
@@ -51,12 +51,12 @@ class TrackService {
             
             HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
                 if (statusCode < 200 || statusCode >= 300) {
-                    print("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
+                    GGLog.warning("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
                     self.markTrackListenedTo(track, retry + 1)
                     return
                 }
                 
-                print("Track \(track.id) marked listened to")
+                GGLog.info("Track \(track.id) marked listened to")
             }
         }
     }

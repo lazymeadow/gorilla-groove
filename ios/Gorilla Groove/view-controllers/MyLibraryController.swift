@@ -6,7 +6,7 @@ class MyLibraryController: UITableViewController {
     let options = SongViewType.allCases
     
     override func viewDidLoad() {
-        print("Loaded my library")
+        GGNavLog.info("Loaded my library")
 
         super.viewDidLoad()
 
@@ -38,7 +38,7 @@ class MyLibraryController: UITableViewController {
         // TODO actually send the logout command to the API
         HttpRequester.post("authentication/logout", EmptyResponse.self, nil) { _, statusCode, _ in
             if (statusCode == 200) {
-                print("Logout token deleted")
+                GGLog.info("Logout token deleted")
             }
         }
         FileState.clear(LoginState.self)

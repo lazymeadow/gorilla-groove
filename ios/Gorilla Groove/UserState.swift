@@ -35,14 +35,14 @@ class UserState {
         
         HttpRequester.put("device", EmptyResponse.self, requestBody) { _, responseCode, _ in
             if (responseCode < 200 || responseCode >= 300) {
-                print("Failed to inform the server of our current device!")
+                GGLog.error("Failed to inform the server of our current device!")
             } else {
-                print("Posted current device to server")
+                GGLog.info("Posted current device to server")
             }
         }
     }
     
-    struct PostSessionRequest: Codable {
+    struct PostSessionRequest: Encodable {
         let deviceId: String
         let deviceType: String = "IPHONE"
         let version: String

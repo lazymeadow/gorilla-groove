@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 class HttpRequester {
     
@@ -6,6 +7,8 @@ class HttpRequester {
     static let wsUrl = "wss://gorillagroove.net/api/socket"
     
     typealias ResponseHandler<T> = (_ data: T?, _ status: Int, _ err: String?) -> Void
+    
+    static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "network")
     
     static func get<T: Codable>(
         _ url: String,
@@ -17,7 +20,7 @@ class HttpRequester {
             return
         }
         
-        print("Network - GET " + request.url!.absoluteString)
+        logger.debug("GET \(request.url!.absoluteString)")
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
         }
@@ -27,7 +30,7 @@ class HttpRequester {
     static func put<T: Codable>(
         _ url: String,
         _ type: T.Type,
-        _ body: Codable?,
+        _ body: Encodable?,
         asMultipartData: Bool = false,
         callback: ResponseHandler<T>? = nil
     ) {
@@ -36,7 +39,7 @@ class HttpRequester {
             return
         }
         
-        print("Network - PUT " + request.url!.absoluteString)
+        logger.debug("PUT \(request.url!.absoluteString)")
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
         }
@@ -45,7 +48,7 @@ class HttpRequester {
     
     static func delete(
         _ url: String,
-        _ body: Codable?,
+        _ body: Encodable?,
         callback: @escaping ResponseHandler<EmptyResponse>
     ) {
         let session = URLSession(configuration: .default)
@@ -53,7 +56,7 @@ class HttpRequester {
             return
         }
         
-        print("Network - DELETE " + request.url!.absoluteString)
+        logger.debug("DELETE \(request.url!.absoluteString)")
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, EmptyResponse.self, response, error, callback)
         }
@@ -73,7 +76,7 @@ class HttpRequester {
             return
         }
         
-        print("Network - POST (upload) " + request.url!.absoluteString)
+        logger.debug("POST (upload) \(request.url!.absoluteString)")
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
         }
@@ -92,7 +95,7 @@ class HttpRequester {
             return
         }
         
-        print("Network - POST " + request.url!.absoluteString)
+        logger.debug("POST \(request.url!.absoluteString)")
         let dataTask = session.dataTask(with: request) { data, response, error in
             handleResponse(data, type, response, error, callback)
         }
@@ -115,7 +118,7 @@ class HttpRequester {
                 let token = FileState.read(LoginState.self)!.token
                 request.setValue(token, forHTTPHeaderField: "Authorization")
             } else {
-                print("An authenticated request was started to URL '\(url)' while the user was not logged in. This is likely a race condition with logging out, and this request will be aborted")
+                logger.warning("An authenticated request was started to URL '\(url)' while the user was not logged in. This is likely a race condition with logging out, and this request will be aborted")
                 return nil
             }
         }
@@ -143,15 +146,14 @@ class HttpRequester {
         _ error: Error?,
         _ callback: ResponseHandler<T>?
     ) {
-        guard let httpResponse = response as? HTTPURLResponse
-            else {
-                print("error: not a valid http response")
-                return
+        guard let httpResponse = response as? HTTPURLResponse else {
+            logger.error("error: not a valid http response")
+            return
         }
         
         if (httpResponse.statusCode >= 300) {
             let dataError = data?.toString() ?? ""
-            print("Non 2xx received! Code: \(httpResponse.statusCode). Error: \(dataError)")
+            logger.error("Non 2xx received! Code: \(httpResponse.statusCode). Error: \(dataError)")
             callback?(nil, httpResponse.statusCode, error as! String?)
             return
         }

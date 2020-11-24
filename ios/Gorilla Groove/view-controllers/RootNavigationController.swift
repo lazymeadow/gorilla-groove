@@ -26,7 +26,7 @@ class RootNavigationController : UIViewController {
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
     
     override func viewDidLoad() {
-        print("Loaded root navigation")
+        GGNavLog.info("Loaded root navigation")
         super.viewDidLoad()
         
         topView.pushViewController(libraryController, animated: false)

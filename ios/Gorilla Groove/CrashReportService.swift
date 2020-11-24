@@ -9,7 +9,9 @@ import ZIPFoundation
 class CrashReportService {
     
     static func initialize() {
-        redirectLogToDocuments()
+        if !isDebuggerAttached() {
+            redirectLogToDocuments()
+        }
         setupErrorInterceptors()
     }
     
@@ -22,7 +24,7 @@ class CrashReportService {
         // This can catch some issues, but not a lot of the important ones.
         // Keeping a print statement in here just to see what kinds of errors actually trip it.
         NSSetUncaughtExceptionHandler() { exception in
-            print("Chaos. Mischief. Fatal Error.")
+            GGLog.critical("Chaos. Mischief. Fatal Error.")
         }
                 
         //        let mySigAction: SigactionHandler = { type in
@@ -55,7 +57,7 @@ class CrashReportService {
             .appendingPathComponent("crash-report.zip")
         
         guard let archive = Archive(url: archiveUrl, accessMode: .create) else {
-            print("Could not create archive")
+            GGLog.error("Could not create archive")
             return
         }
         
@@ -69,37 +71,54 @@ class CrashReportService {
             try archive.addEntry(with: logPath.lastPathComponent, relativeTo: logPath.deletingLastPathComponent())
             try archive.addEntry(with: dbPath.lastPathComponent, relativeTo: dbPath.deletingLastPathComponent())
         } catch {
-            print("Adding entry to ZIP archive failed with error: \(error)")
+            GGLog.info("Adding entry to ZIP archive failed with error: \(error.localizedDescription)")
         }
         
         let archiveData = try! Data(contentsOf: archiveUrl)
 
         if FileManager.exists(archiveUrl) {
-            print("Cleaning up zip archive")
+            GGLog.info("Cleaning up zip archive")
             try! FileManager.default.removeItem(at: archiveUrl)
         } else {
-            print("Attempted to clean up zip archive but it was not found!")
+            GGLog.warning("Attempted to clean up zip archive but it was not found!")
         }
         
         HttpRequester.upload("crash-report", EmptyResponse.self, archiveData) { _, status, _ in
             if status >= 200 && status < 300 {
-                print("Crash report was uploaded")
+                GGLog.info("Crash report was uploaded")
             }
         }
     }
     
     static func redirectLogToDocuments() {
-//        let allPaths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-//        let documentsDirectory = allPaths.first!
-//        let logPath = "\(documentsDirectory)/app-log.txt"
-        
-//        print("Log path 1 \(logPath)")
-//        print("Log path 2 \(getLogPath().path)")
-
         let logPath = getLogPath().path
         
-//        freopen(logPath.cString(using: String.Encoding.ascii)!, "a+", stdout)
-//        freopen(logPath.cString(using: String.Encoding.ascii)!, "a+", stderr)
+        freopen(logPath.cString(using: String.Encoding.ascii)!, "a+", stdout)
+        freopen(logPath.cString(using: String.Encoding.ascii)!, "a+", stderr)
+    }
+    
+    // https://christiantietze.de/posts/2019/07/swift-is-debugger-attached/
+    private static func isDebuggerAttached() -> Bool {
+        var debuggerIsAttached = false
+
+        var name: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+        var info: kinfo_proc = kinfo_proc()
+        var info_size = MemoryLayout<kinfo_proc>.size
+
+        let success = name.withUnsafeMutableBytes { (nameBytePtr: UnsafeMutableRawBufferPointer) -> Bool in
+            guard let nameBytesBlindMemory = nameBytePtr.bindMemory(to: Int32.self).baseAddress else { return false }
+            return -1 != sysctl(nameBytesBlindMemory, 4, &info, &info_size, nil, 0)
+        }
+
+        if !success {
+            debuggerIsAttached = false
+        }
+
+        if !debuggerIsAttached && (info.kp_proc.p_flag & P_TRACED) != 0 {
+            debuggerIsAttached = true
+        }
+
+        return debuggerIsAttached
     }
 }
 

@@ -22,6 +22,7 @@
 		E83B012124CE82F600C2C5E4 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83B012024CE82F600C2C5E4 /* Database.swift */; };
 		E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A57D256C88C2009F3C9E /* CrashReportService.swift */; };
 		E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E840A581256CD15E009F3C9E /* ZIPFoundation */; };
+		E840A588256DA19F009F3C9E /* GGLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A587256DA19F009F3C9E /* GGLog.swift */; };
 		E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692B924F4D46500A741D2 /* ViewUtil.swift */; };
 		E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */; };
 		E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */; };
@@ -70,6 +71,7 @@
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E83B012024CE82F600C2C5E4 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		E840A57D256C88C2009F3C9E /* CrashReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportService.swift; sourceTree = "<group>"; };
+		E840A587256DA19F009F3C9E /* GGLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGLog.swift; sourceTree = "<group>"; };
 		E85692B924F4D46500A741D2 /* ViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtil.swift; sourceTree = "<group>"; };
 		E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackContextMenu.swift; sourceTree = "<group>"; };
 		E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackViewController.swift; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 				E8711867256777BD007B8F16 /* SettingsService.swift */,
 				E871186425675C1C007B8F16 /* Settings.bundle */,
 				E840A57D256C88C2009F3C9E /* CrashReportService.swift */,
+				E840A587256DA19F009F3C9E /* GGLog.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -304,6 +307,7 @@
 				E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */,
 				E8C2ABE224E102A10050A01E /* User.swift in Sources */,
 				E85A4DD523D56D13006BD7EE /* UserState.swift in Sources */,
+				E840A588256DA19F009F3C9E /* GGLog.swift in Sources */,
 				E8711868256777BD007B8F16 /* SettingsService.swift in Sources */,
 				E86AFF1F23E963A8005B84EB /* TableViewCell.swift in Sources */,
 				E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */,
@@ -470,7 +474,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 284N7PSW3W;
 				INFOPLIST_FILE = "Gorilla Groove/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -491,7 +495,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 284N7PSW3W;
 				INFOPLIST_FILE = "Gorilla Groove/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

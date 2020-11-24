@@ -13,6 +13,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
     override func viewDidLoad() {
         super.viewDidLoad()
+        GGNavLog.info("Loaded album view")
         
         view.addSubview(albumTableView)
         
@@ -28,7 +29,6 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: albumTableView) { input in
             let searchTerm = input.lowercased()
-            print(searchTerm)
             if (searchTerm.isEmpty) {
                 self.visibleAlbums = self.albums
             } else {
@@ -88,7 +88,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                 albumViewCell.album = album
                 return
             }
-            print("Had cached art but failed to load it! Wiping out bad cache and fetching live art")
+            GGLog.error("Had cached art but failed to load it! Wiping out bad cache and fetching live art")
             TrackDao.setCachedAt(trackId: album.trackIdForArt, cachedAt: nil, isSongCache: false)
         }
         
@@ -102,11 +102,11 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                 }
                 
                 guard let art = UIImage.fromUrl(response!.albumArtLink) else {
-                    print("Failed to load art from URL despite a status code of \(status)!")
+                    GGLog.error("Failed to load art from URL despite a status code of \(status)!")
                     return
                 }
                 guard let data = art.pngData() else {
-                    print("Failed to get PNG data from art!")
+                    GGLog.error("Failed to get PNG data from art!")
                     return
                 }
                 

@@ -23,17 +23,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         if let loginState = FileState.read(LoginState.self) {
-            print("User was previously logged in")
+            GGLog.debug("User was previously logged in")
             Database.openDatabase(userId: loginState.id)
             
             let user = UserState.getOwnUser()
             if (user.lastSync == nil) {
                 if AppDelegate.getAppVersion() == "1.3.1.1" {
-                    print("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
+                    GGLog.info("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
                     window!.rootViewController = SyncController()
                     UserState.isLoggedIn = true
                 } else {
-                    print("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
+                    GGLog.warning("Somehow logged in without ever syncing. Seems like a bad thing. Going to login screen again instead")
                 }
             } else {
                 UserState.isLoggedIn = true
@@ -52,11 +52,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        print("App is now in the background")
+        GGLog.debug("App is now in the background")
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
-        print("App is now in the foreground")
+        GGLog.debug("App is now in the foreground")
         if UserState.isLoggedIn {
             DispatchQueue.global().async {
                 ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
@@ -69,7 +69,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        print("Application is terminating")
+        GGLog.info("Application is terminating")
     }
     
     typealias SigactionHandler = @convention(c)(Int32) -> Void

@@ -1,8 +1,10 @@
 import Foundation
 import Combine
-
+import os
 
 class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "socket")
+
     var webSocketTask: URLSessionWebSocketTask!
     let delegateQueue = OperationQueue()
     
@@ -12,10 +14,10 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 
     init(_ url: String) {
         super.init()
-        print("WebSocket init with URL \(url)")
+        logger.info("WebSocket init with URL \(url)")
 
         onError = { _, message, error in
-            print("Got fatal error code \(error.code) from WebSocket message: \(message). Error: \(error.localizedDescription)")
+            self.logger.error("Got fatal error code \(error.code) from WebSocket message: \(message). Error: \(error.localizedDescription)")
             
             WebSocket.reset()
         }
@@ -30,15 +32,15 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        print("Websocket finished connecting")
+        logger.info("Websocket finished connecting")
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        print("Socket disconnected")
+        logger.info("Socket disconnected")
     }
     
     func connect() {
-        print("Connecting WebSocket...")
+        logger.info("Connecting WebSocket...")
         webSocketTask.resume()
         
         listen()
@@ -50,7 +52,7 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
     
     func listen()  {
         webSocketTask.receive { result in
-            print("Received WebSocket message: \(result)")
+            self.logger.info("Received websocket message")
             switch result {
             case .failure(let error):
                 self.onError?(self, "", error as NSError)
@@ -70,18 +72,18 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
     }
     
     func send(_ text: String, _ retry: Int = 1) {
-        print("WebSocket Send (try \(retry) - \(text)")
+        logger.info("WebSocket Send (try \(retry) - \(text)")
         webSocketTask.send(URLSessionWebSocketTask.Message.string(text)) { error in
             if let error = error as NSError? {
                 if error.code == 53 || error.code == 57 || error.code == 89 {
-                    print("Websocket was disconnected. About to reconnect")
+                    self.logger.info("Websocket was disconnected. About to reconnect")
                     WebSocket.reset()
                     
                     if retry < 3 {
                         sleep(1)
                         self.send(text, retry + 1)
                     } else {
-                        print("Failed to send WebSocket message \(text) after retry limit was reached")
+                        self.logger.error("Failed to send WebSocket message \(text) after retry limit was reached")
                     }
                 } else {
                     self.onError?(self, text, error)

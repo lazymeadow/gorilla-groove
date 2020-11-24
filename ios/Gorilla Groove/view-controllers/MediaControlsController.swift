@@ -377,13 +377,13 @@ class MediaControlsController: UIViewController {
     
     @objc func toggleRepeat(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.repeatOn = !NowPlayingTracks.repeatOn
-        print("Repeat was toggled to \(NowPlayingTracks.repeatOn)")
+        GGLog.info("Repeat was toggled to \(NowPlayingTracks.repeatOn)")
         repeatIcon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.repeatOn)
     }
     
     @objc func toggleShuffle(tapGestureRecognizer: UITapGestureRecognizer) {
         NowPlayingTracks.shuffleOn = !NowPlayingTracks.shuffleOn
-        print("Shuffle was toggled to \(NowPlayingTracks.shuffleOn)")
+        GGLog.info("Shuffle was toggled to \(NowPlayingTracks.shuffleOn)")
         shuffleIcon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.shuffleOn)
     }
     
@@ -453,7 +453,7 @@ extension UIImage {
             let data = try Data.init(contentsOf: url)
             return UIImage(data: data)
         } catch {
-            print(error)
+            GGLog.error("\(error.localizedDescription)")
         }
         
         return nil

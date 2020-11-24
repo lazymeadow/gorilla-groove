@@ -1,9 +1,9 @@
 import Foundation
 import CoreLocation
 import UIKit
+import os
 
 class LocationService {
-    
     private static var locationManager: CLLocationManager = CLLocationManager()
     private static let delegate = LocationManagerDelegate()
     private static var authorized = false
@@ -11,6 +11,8 @@ class LocationService {
     private static var bootPermissionChecked = false
     
     private static var locationRequestSemaphore: DispatchSemaphore? = nil
+    
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "location")
     
     @SettingsBundleStorage(key: "location_min_battery")
     private static var locationMinBattery: Int
@@ -24,17 +26,17 @@ class LocationService {
         }
         
         if !authorized {
-            print("Not authorized to gather location points")
+            logger.info("Not authorized to gather location points")
             return nil
         }
         
         if ProcessInfo.processInfo.isLowPowerModeEnabled {
-            print("Low power mode was enabled. Not gathering location point")
+            logger.info("Low power mode was enabled. Not gathering location point")
             return nil
         }
         
         if !locationEnabled {
-            print("Location was not enabled. Not gathering location point")
+            logger.info("Location was not enabled. Not gathering location point")
             return nil
         }
         
@@ -43,13 +45,13 @@ class LocationService {
             let batteryLevel = Int(UIDevice.current.batteryLevel * 100)
             if batteryLevel < minBattery {
                 if UIDevice.current.batteryState == .charging {
-                    print("Battery was lower than the minimum to gather location, but was plugged in. Minimum: \(minBattery). Had: \(batteryLevel)")
+                    logger.info("Battery was lower than the minimum to gather location, but was plugged in. Minimum: \(minBattery). Had: \(batteryLevel)")
                 } else {
-                    print("Battery was too low to gather a location point and was not plugged in. Minimum: \(minBattery). Had: \(batteryLevel)")
+                    logger.info("Battery was too low to gather a location point and was not plugged in. Minimum: \(minBattery). Had: \(batteryLevel)")
                     return nil
                 }
             } else if minBattery == -100 {
-                print("Battery monitoring was not enabled. This is an error. Ignoring battery check")
+                logger.info("Battery monitoring was not enabled. This is an error. Ignoring battery check")
             }
         }
         
@@ -59,13 +61,13 @@ class LocationService {
             locationRequestSemaphore = DispatchSemaphore(value: 0)
             locationManager.requestLocation()
         } else {
-            print("A thread was requesting location while another one was waiting on it. Is this expected?")
+            logger.warning("A thread was requesting location while another one was waiting on it. Is this expected?")
         }
 
         locationRequestSemaphore?.wait()
         locationRequestSemaphore = nil
         guard let location = locationManager.location else {
-            print("No location point could be gathered!")
+            logger.error("No location point could be gathered!")
             return nil
         }
         
@@ -100,14 +102,14 @@ class LocationService {
 
                 switch status {
                 case .notDetermined:
-                    print("Location permission is not determined")
+                    logger.info("Location permission is not determined")
                     authorized = false
                     authorizationChecked = false
                 case .restricted, .denied:
-                    print("Location permission is denied")
+                    logger.info("Location permission is denied")
                     authorized = false
                 case .authorizedWhenInUse:
-                    print("Location permission is granted as 'When In Use'")
+                    logger.info("Location permission is granted as 'When In Use'")
                     authorized = true
                     // This delegate function is triggered on app open, and we don't want to pop this modal open every time someone opens the app.
                     // Only show it if they changed permissions to this SINCE opening up the app
@@ -119,10 +121,10 @@ class LocationService {
                         ) { ViewUtil.openAppSettings() }
                     }
                 case .authorizedAlways:
-                    print("Location permission is granted as 'Always'")
+                    logger.info("Location permission is granted as 'Always'")
                     authorized = true
                 default:
-                    print("Unknown permission grant type encountered")
+                    logger.info("Unknown permission grant type encountered")
                     authorized = false
                 }
                 
@@ -137,15 +139,15 @@ class LocationService {
         
         func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
             if let location = locations.first {
-                print("Found user's location: \(location)")
+                logger.info("Found user's location: \(location)")
             } else {
-                print("Found no location??")
+                logger.error("Found no location??")
             }
             locationRequestSemaphore?.signal()
         }
 
         func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-            print("Failed to find user's location: \(error.localizedDescription)")
+            logger.error("Failed to find user's location: \(error.localizedDescription)")
             locationRequestSemaphore?.signal()
         }
     }

@@ -30,7 +30,7 @@ class ViewUtil {
         let rootVc = appDelegate.window!.rootViewController!
         
         rootVc.presentedViewController?.dismiss(animated: true, completion: {
-            print("Dismissed existing alert")
+            GGLog.debug("Dismissed existing alert")
         })
         
         if Thread.isMainThread {
@@ -44,7 +44,7 @@ class ViewUtil {
     
     static func openAppSettings() {
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
-            print("Unable to parse URL to open settings screen")
+            GGLog.error("Unable to parse URL to open settings screen")
             return
         }
         

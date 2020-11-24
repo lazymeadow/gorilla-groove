@@ -65,10 +65,10 @@ class NowPlayingTracks {
         if track.songCachedAt != nil {
             let cachedSong = CacheService.getCachedSongData(track.id)
             if cachedSong == nil {
-                print("Failed to find cached song data, despite track thinking it had a cache! Clearing cache from DB for track \(track.id)")
+                GGLog.error("Failed to find cached song data, despite track thinking it had a cache! Clearing cache from DB for track \(track.id)")
                 CacheService.deleteCachedSong(track.id)
             } else {
-                print("Track \(track.id) is already cached. Playing from offline storage")
+                GGLog.debug("Track \(track.id) is already cached. Playing from offline storage")
                 AudioPlayer.playSongData(cachedSong!)
                 updatePlayingTrackInfo(track)
                 
@@ -80,7 +80,7 @@ class NowPlayingTracks {
         // If it is not cached, go out to the LIVE INTERNET To find it (and cache it while streaming it)
         HttpRequester.get("file/link/\(track.id)?audioFormat=MP3", TrackLinkResponse.self) { links, status , err in
             if (status < 200 || status >= 300 || links == nil) {
-                print("Failed to get track links!")
+                GGLog.error("Failed to get track links!")
                 return
             }
             
@@ -116,7 +116,7 @@ class NowPlayingTracks {
         
         DispatchQueue.global().async {
             guard let url = URL(string: link) else {
-                print("Could not parse link! \(link)")
+                GGLog.critical("Could not parse link! \(link)")
                 return
             }
             
@@ -127,10 +127,10 @@ class NowPlayingTracks {
                 
                     MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
                 } else {
-                    print("Found image data that could not be displayed. It is probably in an unsupported format like webp")
+                    GGLog.error("Found image data that could not be displayed. It is probably in an unsupported format like webp")
                 }
             } catch {
-                print(error)
+                GGLog.error("Error reading in album art: \(error.localizedDescription)")
             }
         }
     }

@@ -60,7 +60,7 @@ class TrackContextMenu {
         }))
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
-            print("User click Dismiss button")
+            GGNavLog.info("User clicked context menu 'Cancel' button")
         }))
         
         return alert

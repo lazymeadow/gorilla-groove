@@ -11,7 +11,7 @@ class FileState {
             let data = try encoder.encode(data)
             try data.write(to: URL(fileURLWithPath: path))
         } catch {
-            print(error)
+            GGLog.error("Could not save file state: \(error.localizedDescription)")
         }
     }
     

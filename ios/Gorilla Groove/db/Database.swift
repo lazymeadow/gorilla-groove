@@ -1,8 +1,11 @@
 import Foundation
 import SQLite3
+import os
 
 class Database {
     static var db: OpaquePointer?
+    
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "db")
     
     static func getDbPath(_ userId: Int) -> URL {
         let dbName = "Groove-\(userId).sqlite"
@@ -16,16 +19,16 @@ class Database {
         
         let openResult = sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_CREATE, nil)
         if openResult == SQLITE_OK {
-            print("Successfully opened connection to database at \(path)")
+            logger.info("Successfully opened connection to database at \(path)")
             
             migrate()
             
             if (getDbVersion() == 4) {
-                print("User is on a flawed DB version and needs a forced migration")
+                logger.info("User is on a flawed DB version and needs a forced migration")
                 reset(userId)
             }
         } else {
-            print("Unable to open database. Got result code \(openResult)")
+            logger.critical("Unable to open database. Got result code \(openResult)")
         }
     }
     
@@ -46,7 +49,7 @@ class Database {
             success = sqlite3_step(queryStatement) == SQLITE_DONE
         } else {
             let errorMessage = String(cString: sqlite3_errmsg(db))
-            print("Query is not prepared. Error: '\(errorMessage)'")
+            logger.critical("Query is not prepared. Error: '\(errorMessage)'")
         }
         sqlite3_finalize(queryStatement)
         
@@ -60,7 +63,7 @@ class Database {
         
         var statement: OpaquePointer? = nil
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            print("Could not prepare statement: \(sql)")
+            logger.critical("Could not prepare statement: \(sql)")
             return nil
         }
         return statement
@@ -104,9 +107,9 @@ class Database {
         
         guard currentStep == SQLITE_DONE else {
             if currentStep == SQLITE_MISUSE {
-                print("SQL execution was misused!")
+                logger.critical("SQL execution was misused!")
             } else {
-                print("SQL execution did not end cleanly with code: \(currentStep)")
+                logger.critical("SQL execution did not end cleanly with code: \(currentStep)")
             }
             return result
         }
@@ -125,15 +128,15 @@ class Database {
         }
         let targetVersion = 5 // 5 and not 4 because 4 is a bugged version that needed a forced 1 time migration
         
-        print("Existing DB is using version: \(currentVersion)")
+        logger.info("Existing DB is using version: \(currentVersion)")
         
         if currentVersion == targetVersion {
-            print("Target DB version is: \(targetVersion). Skipping migrate")
+            logger.debug("Target DB version is: \(targetVersion). Skipping migrate")
             return
         }
         
         if (currentVersion == 0) {
-            print("Creating table user")
+            logger.info("Creating table user")
             var success = execute("""
         CREATE TABLE "user" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -147,7 +150,7 @@ class Database {
                 fatalError("Failed to create user table")
             }
             
-            print("Creating table track")
+            logger.info("Creating table track")
             success = execute("""
         CREATE TABLE "track" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -173,7 +176,7 @@ class Database {
                 fatalError("Failed to create track table")
             }
             
-            print("Creating table playlist")
+            logger.info("Creating table playlist")
             success = execute("""
         CREATE TABLE "playlist" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -187,7 +190,7 @@ class Database {
                 fatalError("Failed to create playlist table")
             }
             
-            print("Creating table playlist_track")
+            logger.info("Creating table playlist_track")
             success = execute("""
         CREATE TABLE "playlist_track" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -200,7 +203,7 @@ class Database {
                 fatalError("Failed to create playlist_track table")
             }
             
-            print("Creating table db_version")
+            logger.info("Creating table db_version")
             success = execute("""
         CREATE TABLE "db_version" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -219,7 +222,7 @@ class Database {
         }
         
         if currentVersion < 2 {
-            print("Adding cached_at column")
+            logger.info("Adding cached_at column")
             let success = execute("ALTER TABLE track ADD cached_at INT NULL;")
             if !success {
                 fatalError("Failed to add cachedAt column!")
@@ -227,7 +230,7 @@ class Database {
         }
         
         if currentVersion < 3 {
-            print("Renaming song cache column")
+            logger.info("Renaming song cache column")
             let success = execute("ALTER TABLE track RENAME cached_at TO song_cached_at;")
             if !success {
                 fatalError("Failed to rename song cache column!")
@@ -235,7 +238,7 @@ class Database {
         }
         
         if currentVersion < 4 {
-            print("Adding art cache column")
+            logger.info("Adding art cache column")
             let success = execute("ALTER TABLE track ADD art_cached_at INT NULL;")
             if !success {
                 fatalError("Failed to rename art cache column!")
@@ -246,7 +249,7 @@ class Database {
         if !success {
             fatalError("Failed to update db_version!")
         }
-        print("Datbase was upgraded to version \(targetVersion)")
+        logger.info("Datbase was upgraded to version \(targetVersion)")
     }
 }
 

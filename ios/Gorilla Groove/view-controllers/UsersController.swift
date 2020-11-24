@@ -7,7 +7,7 @@ class UsersController : UITableViewController {
     var users: Array<User> = []
     
     override func viewDidLoad() {
-        print("Loaded users")
+        GGNavLog.info("Loaded users")
         super.viewDidLoad()
         self.title = "Users"
 

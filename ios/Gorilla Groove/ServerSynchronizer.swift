@@ -1,17 +1,20 @@
 import Foundation
 import CoreData
+import os
 
 class ServerSynchronizer {
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
     static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=400&page="
     
+    static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "sync")
+    
     private static var syncRunning = false
     
     static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) {
-        print("Initiating sync with server...")
+        logger.info("Initiating sync with server...")
         if syncRunning {
-            print("Sync already running. Not syncing")
+            logger.info("Sync already running. Not syncing")
             return
         }
         
@@ -21,10 +24,10 @@ class ServerSynchronizer {
         
         if abortIfRecentlySynced, let lastSync = lastSync {
             if let diff = Calendar.current.dateComponents([.minute], from: lastSync, to: Date()).minute, diff > 10 {
-                print("Last sync was old enough to do a new sync")
+                logger.info("Last sync was old enough to do a new sync")
             }
             else {
-                print("Last sync was too recent. Not syncing")
+                logger.info("Last sync was too recent. Not syncing")
                 return
             }
         }
@@ -55,12 +58,12 @@ class ServerSynchronizer {
             semaphore.wait()
         }
         
-        print("Saving new user sync date")
+        logger.info("Saving new user sync date")
 
         UserState.updateUserSync(newDate)
         syncRunning = false
 
-        print("All up to date")
+        logger.info("All up to date")
     }
     
     // -- TRACKS
@@ -82,7 +85,7 @@ class ServerSynchronizer {
             currentPage += 1
         } while (currentPage < pagesToGet)
         
-        print("Finished syncing tracks")
+        logger.info("Finished syncing tracks")
         allDoneSemaphore.signal()
     }
     
@@ -95,7 +98,7 @@ class ServerSynchronizer {
         ) { entityResponse, status, err in
             
             if (status < 200 || status >= 300 || entityResponse == nil) {
-                print("Failed to sync new data!")
+                logger.info("Failed to sync new data!")
                 semaphore.signal()
                 
                 return
@@ -104,12 +107,12 @@ class ServerSynchronizer {
             for newTrackResponse in entityResponse!.content.new {
                 TrackDao.save(newTrackResponse.asTrack(userId: userId))
 
-                print("Added new track with ID: \(newTrackResponse.id)")
+                logger.info("Added new track with ID: \(newTrackResponse.id)")
             }
             
             for modifiedTrackResponse in entityResponse!.content.modified {
                 let modifiedTrackId = modifiedTrackResponse.id
-                print("Modifying track with ID \(modifiedTrackId)")
+                logger.info("Modifying track with ID \(modifiedTrackId)")
                 let oldTrack = TrackDao.findById(modifiedTrackId)!
                 
                 // Check if our caches are invalidated for this track
@@ -139,7 +142,7 @@ class ServerSynchronizer {
                 TrackDao.delete(deletedId)
                 CacheService.deleteCachedSong(deletedId)
                 
-                print("Deleted track with ID: \(deletedId)")
+                logger.info("Deleted track with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages
@@ -167,7 +170,7 @@ class ServerSynchronizer {
             currentPage += 1
         } while (currentPage < pagesToGet)
         
-        print("Finished syncing playlists")
+        logger.info("Finished syncing playlists")
     }
     
     static private func savePageOfPlaylistChanges(url: String, page: Int, userId: Int) -> Int {
@@ -178,7 +181,7 @@ class ServerSynchronizer {
             EntityChangeResponse<PlaylistResponse>.self
         ) { entityResponse, status, err in
             if (status < 200 || status >= 300 || entityResponse == nil) {
-                print("Failed to sync new playlist data!")
+                logger.info("Failed to sync new playlist data!")
                 semaphore.signal()
                 
                 return
@@ -186,17 +189,17 @@ class ServerSynchronizer {
             
             for newPlaylistResponse in entityResponse!.content.new {
                 PlaylistDao.save(newPlaylistResponse.asPlaylist(userId: userId))
-                print("Adding new Playlist with ID: \(newPlaylistResponse.id)")
+                logger.info("Adding new Playlist with ID: \(newPlaylistResponse.id)")
             }
             
             for modifiedPlaylistResponse in entityResponse!.content.modified {
                 PlaylistDao.save(modifiedPlaylistResponse.asPlaylist(userId: userId))
-                print("Updating existing Playlist with ID: \(modifiedPlaylistResponse.id)")
+                logger.info("Updating existing Playlist with ID: \(modifiedPlaylistResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
                 PlaylistDao.delete(deletedId)
-                print("Deleting Playlist with ID: \(deletedId)")
+                logger.info("Deleting Playlist with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages
@@ -227,7 +230,7 @@ class ServerSynchronizer {
             currentPage += 1
         } while (currentPage < pagesToGet)
         
-        print("Finished syncing playlist tracks")
+        logger.info("Finished syncing playlist tracks")
         allDoneSemaphore.signal()
     }
     
@@ -239,7 +242,7 @@ class ServerSynchronizer {
             EntityChangeResponse<PlaylistTrackResponse>.self
         ) { entityResponse, status, err in
             if (status < 200 || status >= 300 || entityResponse == nil) {
-                print("Failed to sync new playlist data!")
+                logger.info("Failed to sync new playlist data!")
                 semaphore.signal()
                 
                 return
@@ -247,17 +250,17 @@ class ServerSynchronizer {
             
             for newResponse in entityResponse!.content.new {
                 PlaylistTrackDao.save(newResponse.asPlaylistTrack())
-                print("Adding new PlaylistTrack with ID: \(newResponse.id)")
+                logger.info("Adding new PlaylistTrack with ID: \(newResponse.id)")
             }
             
             for modifiedResponse in entityResponse!.content.modified {
                 PlaylistTrackDao.save(modifiedResponse.asPlaylistTrack())
-                print("Updating existing PlaylistTrack with ID: \(modifiedResponse.id)")
+                logger.info("Updating existing PlaylistTrack with ID: \(modifiedResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
                 PlaylistTrackDao.delete(deletedId)
-                print("Deleting PlaylistTrack with ID: \(deletedId)")
+                logger.info("Deleting PlaylistTrack with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages
@@ -288,7 +291,7 @@ class ServerSynchronizer {
              currentPage += 1
          } while (currentPage < pagesToGet)
          
-         print("Finished syncing users")
+         logger.info("Finished syncing users")
          allDoneSemaphore.signal()
      }
      
@@ -300,7 +303,7 @@ class ServerSynchronizer {
              EntityChangeResponse<UserResponse>.self
          ) { entityResponse, status, err in
              if (status < 200 || status >= 300 || entityResponse == nil) {
-                 print("Failed to sync new playlist data!")
+                 logger.info("Failed to sync new playlist data!")
                  semaphore.signal()
                  
                  return
@@ -308,17 +311,17 @@ class ServerSynchronizer {
             
             for newResponse in entityResponse!.content.new {
                 UserDao.save(newResponse.asUser())
-                print("Added new User with ID: \(newResponse.id)")
+                logger.info("Added new User with ID: \(newResponse.id)")
             }
             
             for modifiedResponse in entityResponse!.content.modified {
                 UserDao.save(modifiedResponse.asUser())
-                print("Updated existing User with ID: \(modifiedResponse.id)")
+                logger.info("Updated existing User with ID: \(modifiedResponse.id)")
             }
             
             for deletedId in entityResponse!.content.removed {
                 UserDao.delete(Int(deletedId))
-                print("Deleted User with ID: \(deletedId)")
+                logger.info("Deleted User with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages

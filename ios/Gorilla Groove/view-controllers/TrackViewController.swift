@@ -12,7 +12,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
        
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        GGNavLog.info("Loaded track view")
+
         view.addSubview(tableView)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -102,9 +103,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let track = visibleTracks[tableIndex.row]
 
         let alert = TrackContextMenu.createMenuForTrack(track) { newTrack in
-            print(track.isPrivate)
             if newTrack == nil || (!self.showingHidden && newTrack!.isHidden) {
-                print("Hiding track")
+                GGLog.info("Hiding existing track from menu list in response to edit")
                 self.visibleTracks.remove(at: tableIndex.row)
                 DispatchQueue.main.async {
                     self.tableView.deleteRows(at: [tableIndex], with: .automatic)

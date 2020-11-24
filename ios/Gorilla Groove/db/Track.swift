@@ -226,10 +226,10 @@ class CacheService {
     
     private static func deleteAtPath(_ path: URL, _ trackId: Int, _ itemDescription: String) {
         if FileManager.exists(path) {
-            print("Deleting cached \(itemDescription) for track ID: \(trackId)")
+            GGLog.info("Deleting cached \(itemDescription) for track ID: \(trackId)")
             try! FileManager.default.removeItem(at: path)
         } else {
-            print("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found")
+            GGLog.warning("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found")
         }
     }
 }
