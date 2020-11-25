@@ -1,11 +1,10 @@
 import Foundation
 import SQLite3
-import os
 
 class Database {
     static var db: OpaquePointer?
     
-    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "db")
+    private static let logger = GGLogger(category: "db")
     
     static func getDbPath(_ userId: Int) -> URL {
         let dbName = "Groove-\(userId).sqlite"

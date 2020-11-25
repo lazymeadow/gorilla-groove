@@ -1,9 +1,8 @@
 import Foundation
 import Combine
-import os
 
 class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
-    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "socket")
+    private let logger = GGLogger(category: "socket")
 
     var webSocketTask: URLSessionWebSocketTask!
     let delegateQueue = OperationQueue()

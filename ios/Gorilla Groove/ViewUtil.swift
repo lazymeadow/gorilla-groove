@@ -41,15 +41,4 @@ class ViewUtil {
             }
         }
     }
-    
-    static func openAppSettings() {
-        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
-            GGLog.error("Unable to parse URL to open settings screen")
-            return
-        }
-        
-        if UIApplication.shared.canOpenURL(settingsUrl) {
-            UIApplication.shared.open(settingsUrl)
-        }
-    }
 }

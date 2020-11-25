@@ -1,5 +1,4 @@
 import Foundation
-import os
 
 class HttpRequester {
     
@@ -8,7 +7,7 @@ class HttpRequester {
     
     typealias ResponseHandler<T> = (_ data: T?, _ status: Int, _ err: String?) -> Void
     
-    static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "network")
+    static let logger = GGLogger(category: "network")
     
     static func get<T: Codable>(
         _ url: String,

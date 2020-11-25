@@ -20,7 +20,7 @@ class RootNavigationController : UIViewController {
     lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, nil, handleButtonTap)
     lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, nil, handleButtonTap)
     lazy var settingsButton = NavigationButton("Settings", "gear", nil, nil) { _ in
-        ViewUtil.openAppSettings()
+        SettingsService.openAppSettings()
     }
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
@@ -112,14 +112,7 @@ class RootNavigationController : UIViewController {
         if tappedButton == nowPlayingButton {
             consecutiveNowPlayingTaps += 1
             if consecutiveNowPlayingTaps >= 5 {
-                ViewUtil.showAlert(
-                    title: "Send crash report?",
-                    message: "This will send Gorilla Groove's app logs and database",
-                    yesText: "Send",
-                    dismissText: "No thanks"
-                ) {
-                    CrashReportService.sendProblemReport()
-                }
+                CrashReportService.promptProblemReport()
                 consecutiveNowPlayingTaps = 0
             }
         } else {

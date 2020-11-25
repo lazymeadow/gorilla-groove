@@ -23,6 +23,8 @@
 		E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A57D256C88C2009F3C9E /* CrashReportService.swift */; };
 		E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E840A581256CD15E009F3C9E /* ZIPFoundation */; };
 		E840A588256DA19F009F3C9E /* GGLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A587256DA19F009F3C9E /* GGLog.swift */; };
+		E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */; };
+		E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = E840A58D256DE2D2009F3C9E /* CocoaLumberjack */; };
 		E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692B924F4D46500A741D2 /* ViewUtil.swift */; };
 		E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */; };
 		E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */; };
@@ -108,6 +110,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */,
+				E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */,
 				E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -225,6 +229,8 @@
 			name = "Gorilla Groove";
 			packageProductDependencies = (
 				E840A581256CD15E009F3C9E /* ZIPFoundation */,
+				E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */,
+				E840A58D256DE2D2009F3C9E /* CocoaLumberjack */,
 			);
 			productName = "Gorilla Groove";
 			productReference = A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */;
@@ -256,6 +262,7 @@
 			mainGroup = A89100E123BD339C00D6EA2D;
 			packageReferences = (
 				E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */,
 			);
 			productRefGroup = A89100EB23BD339D00D6EA2D /* Products */;
 			projectDirPath = "";
@@ -540,6 +547,14 @@
 				minimumVersion = 0.9.11;
 			};
 		};
+		E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CocoaLumberjack/CocoaLumberjack.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.7.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -547,6 +562,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
+		};
+		E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			productName = CocoaLumberjackSwift;
+		};
+		E840A58D256DE2D2009F3C9E /* CocoaLumberjack */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			productName = CocoaLumberjack;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

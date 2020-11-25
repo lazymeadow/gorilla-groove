@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 // Pretty slick, and stolen from
 // https://stackoverflow.com/a/64712479/13175115
@@ -28,6 +29,19 @@ public struct SettingsBundleStorage<T> {
         }
         
         UserDefaults.standard.register(defaults: Dictionary(uniqueKeysWithValues: keysAndValues))
+    }
+}
+
+class SettingsService {
+    static func openAppSettings() {
+        guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+            GGLog.error("Unable to parse URL to open settings screen")
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(settingsUrl) {
+            UIApplication.shared.open(settingsUrl)
+        }
     }
 }
 

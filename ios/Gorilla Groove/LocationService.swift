@@ -1,7 +1,6 @@
 import Foundation
 import CoreLocation
 import UIKit
-import os
 
 class LocationService {
     private static var locationManager: CLLocationManager = CLLocationManager()
@@ -12,7 +11,7 @@ class LocationService {
     
     private static var locationRequestSemaphore: DispatchSemaphore? = nil
     
-    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "location")
+    private static let logger = GGLogger(category: "location")
     
     @SettingsBundleStorage(key: "location_min_battery")
     private static var locationMinBattery: Int
@@ -118,7 +117,7 @@ class LocationService {
                             title: "Data will be incomplete",
                             message: "Your location permission is set to 'While Using the App'. Gorilla Groove will be unable to read your location while listening to music with the app in the background. Would you like to change location to 'Always'?",
                             yesText: "Yes"
-                        ) { ViewUtil.openAppSettings() }
+                        ) { SettingsService.openAppSettings() }
                     }
                 case .authorizedAlways:
                     logger.info("Location permission is granted as 'Always'")

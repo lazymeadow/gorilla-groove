@@ -1,13 +1,12 @@
 import Foundation
 import CoreData
-import os
 
 class ServerSynchronizer {
     
     typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ type: String) -> Void
     static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=400&page="
     
-    static let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "sync")
+    static let logger = GGLogger(category: "sync")
     
     private static var syncRunning = false
     
