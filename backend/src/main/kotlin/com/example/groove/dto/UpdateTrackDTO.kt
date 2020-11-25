@@ -1,5 +1,7 @@
 package com.example.groove.dto
 
+import com.example.groove.db.model.enums.OfflineAvailabilityType
+
 data class UpdateTrackDTO(
 		val trackIds: List<Long>,
 		val name: String?,
@@ -12,5 +14,6 @@ data class UpdateTrackDTO(
 		val note: String?,
 		val hidden: Boolean?,
 		val albumArtUrl: String?,
+		val offlineAvailability: OfflineAvailabilityType?,
 		val cropArtToSquare: Boolean = false
 )

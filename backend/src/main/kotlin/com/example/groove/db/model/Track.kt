@@ -1,5 +1,6 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.model.enums.OfflineAvailabilityType
 import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -82,6 +83,9 @@ data class Track(
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")
 		override var deleted: Boolean = false,
+
+		@Column(name = "offline_availability")
+		var offlineAvailability: OfflineAvailabilityType = OfflineAvailabilityType.NORMAL,
 
 		@Column
 		var note: String? = null,

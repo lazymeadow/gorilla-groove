@@ -158,6 +158,20 @@ export default function SongPopoutMenu(props) {
 	};
 
 	const getOwnLibraryOptions = () => {
+		const changeAvailabilityHandler = (availabilityType, successMessage) => {
+			const tracks = props.getSelectedTracks();
+			musicContext.updateTracks(tracks, null, { offlineAvailability: availabilityType }).then(() => {
+				if (tracks.length === 1) {
+					toast.success(`'${tracks[0].name}' was ${successMessage}`);
+				} else {
+					toast.success(`${tracks.length} tracks were ${successMessage}`);
+				}
+			}).catch(error => {
+				console.error(error);
+				toast.error('Failed to change the availability of the selected tracks');
+			});
+		};
+
 		let ownLibraryOptions = [
 			{
 				component: <PopoutMenu
@@ -221,6 +235,26 @@ export default function SongPopoutMenu(props) {
 									console.error(error);
 									toast.error('Failed to make the selected tracks visible');
 								});
+							}
+						}
+					]}
+					expansionOnHover={true}
+				/>
+			}, {
+				component: <PopoutMenu
+					mainItem={{text: 'Mobile Availability'}}
+					menuItems={[
+						{
+							text: 'Available Offline', clickHandler: () => {
+								changeAvailabilityHandler('AVAILABLE_OFFLINE', 'made available offline on mobile devices');
+							}
+						}, {
+							text: 'Normal Availability', clickHandler: () => {
+								changeAvailabilityHandler('NORMAL', 'updated to have normal offline availability');
+							}
+						}, {
+							text: 'Online Only', clickHandler: () => {
+								changeAvailabilityHandler('ONLINE_ONLY', 'updated to be online only');
 							}
 						}
 					]}

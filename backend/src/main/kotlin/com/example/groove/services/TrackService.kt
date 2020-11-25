@@ -1,7 +1,6 @@
 package com.example.groove.services
 
 import com.example.groove.controllers.MarkTrackAsListenedToDTO
-import com.example.groove.controllers.TrackController
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackLinkRepository
@@ -26,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
 
 
 @Service
@@ -185,6 +183,7 @@ class TrackService(
 			updateTrackDTO.note?.let { track.note = it.trim() }
 			updateTrackDTO.genre?.let { track.genre = it.trim() }
 			updateTrackDTO.hidden?.let { track.hidden = it }
+			updateTrackDTO.offlineAvailability?.let { track.offlineAvailability = it }
 			track.updatedAt = now()
 
 			if (artFile != null) {
