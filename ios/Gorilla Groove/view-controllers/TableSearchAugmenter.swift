@@ -7,7 +7,7 @@ class TableSearchAugmenter {
         tableView: UITableView,
         _ textChanged: @escaping (_ text: String) -> Void
     ) {
-        let searchController = UISearchController()
+        let searchController = GGSearchController()
         let searchDelegate = SearchControllerDelegate(controller, tableView, searchController, textChanged)
 
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
@@ -85,14 +85,37 @@ class TableSearchAugmenter {
         }
         
         func search() {
-             if (controller.navigationItem.searchController == nil) {
-                 controller.navigationItem.searchController = searchController
-             } else {
-                 controller.navigationItem.searchController = nil
-             }
-             
-             let bar = controller.navigationController?.navigationBar
-             bar!.sizeToFit()
+            if (controller.navigationItem.searchController == nil) {
+                controller.navigationItem.searchController = searchController
+            } else {
+                controller.navigationItem.searchController = nil
+            }
+            
+            let bar = controller.navigationController?.navigationBar
+            bar!.sizeToFit()
          }
+    }
+}
+
+class GGSearchController : UISearchController {
+    let ggSearchBar = GGSearchBar()
+    
+    override public var searchBar: UISearchBar {
+        get {
+            return ggSearchBar
+        }
+    }
+}
+
+class GGSearchBar : UISearchBar {
+    override func willMove(toWindow newWindow: UIWindow?) {
+        super.willMove(toWindow: newWindow)
+        
+        // UIView appear
+        if newWindow != nil {
+            DispatchQueue.main.async {
+                self.becomeFirstResponder()
+            }
+        }
     }
 }
