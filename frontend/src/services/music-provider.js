@@ -553,7 +553,15 @@ export class MusicProvider extends React.Component {
 	}
 
 	removeFromNowPlaying(selectionKeys) {
-		const newNowPlaying = this.state.nowPlayingTracks.filter(track => !selectionKeys.has(track.selectionKey));
+		const newNowPlaying = [];
+		const indexesToRemove = [];
+		this.state.nowPlayingTracks.forEach((track, i) => {
+			if (selectionKeys.has(track.selectionKey)) {
+				indexesToRemove.push(i);
+			} else {
+				newNowPlaying.push(track);
+			}
+		});
 
 		// Handle changing the currently playing song, if we need to
 		if (this.state.playedTrack !== null && selectionKeys.has(this.state.playedTrack.selectionKey)) {
@@ -566,13 +574,13 @@ export class MusicProvider extends React.Component {
 			// If we removed tracks BEFORE our now playing track index (i.e. we are playing the 10th song and
 			// we removed the 5th song) then we need to shift the now playing track index up by the number of
 			// tracks we removed less than the currently played track index
-			let indexesToRemove = 0;
-			selectionKeys.forEach(indexRemoved => {
+			let indexesRemoved = 0;
+			indexesToRemove.forEach(indexRemoved => {
 				if (indexRemoved < this.state.playedTrackIndex) {
-					indexesToRemove++;
+					indexesRemoved++;
 				}
 			});
-			this.setState({ playedTrackIndex: this.state.playedTrackIndex - indexesToRemove });
+			this.setState({ playedTrackIndex: this.state.playedTrackIndex - indexesRemoved });
 		}
 
 		this.setState({
