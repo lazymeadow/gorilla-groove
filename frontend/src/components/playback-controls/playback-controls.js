@@ -70,6 +70,12 @@ export default function PlaybackControls() {
 		// Safari does not support the superior OGG format. Use MP3 instead for them
 		const audioFormat = isSafari() ? 'MP3' : 'OGG';
 		Api.get('file/link/' + newTrack.id, { audioFormat }).then(links => {
+			if (musicContext.playedTrack && musicContext.playedTrack.id !== loadingTrackId) {
+				// The song we chose is no longer the active one. Don't acknowledge it.
+				// This can easily happen if using "play next" multiple times quickly
+				return;
+			}
+
 			musicContext.setProviderState({ playedAlbumArtUrl: links.albumArtLink }, musicContext.forceTrackUpdate);
 
 			lastTime = 0;
@@ -157,11 +163,9 @@ export default function PlaybackControls() {
 		}
 	};
 
-	const togglePause = () => {
+	const setIsPlaying = newIsPlaying => {
 		const audio = document.getElementById('audio');
-		if (playbackContext.isPlaying) {
-			audio.pause();
-		} else {
+		if (newIsPlaying) {
 			// People seem to want clicking play without an active song to start playing the library
 			// A (maybe) good improvement would be to have it respect your selected songs. But hard to do right now
 			if (musicContext.playedTrack === null) {
@@ -169,9 +173,11 @@ export default function PlaybackControls() {
 			} else {
 				audio.play();
 			}
+		} else {
+			audio.pause();
 		}
 
-		playbackContext.setProviderState({ isPlaying: !playbackContext.isPlaying });
+		playbackContext.setProviderState({ isPlaying: newIsPlaying });
 	};
 
 	const toggleMute = () => {
@@ -341,15 +347,21 @@ export default function PlaybackControls() {
 				<div>
 					<div className="d-flex">
 						<i
-							onMouseDown={musicContext.playPrevious}
+							onMouseDown={() => {
+								setIsPlaying(false);
+								musicContext.playPrevious()
+							}}
 							className="fas fa-step-backward control"
 						/>
 						<i
-							onMouseDown={togglePause}
+							onMouseDown={() => setIsPlaying(!playbackContext.isPlaying)}
 							className={`fas fa-${playbackContext.isPlaying ? 'pause' : 'play'} control`}
 						/>
 						<i
-							onMouseDown={musicContext.playNext}
+							onMouseDown={() => {
+								setIsPlaying(false);
+								musicContext.playNext()
+							}}
 							className="fas fa-step-forward control"
 						/>
 						<i
