@@ -11,6 +11,12 @@ class CrashReportService {
     private static var currentStdout = stdout
     private static var currentStderr = stderr
     
+    @SettingsBundleStorage(key: "show_critical_error_notice")
+    private static var showCriticalErrorNotice: Bool
+    
+    @SettingsBundleStorage(key: "automatic_error_reporting")
+    private static var automaticErrorReporting: Bool
+    
     static func initialize() {
         // CocoaLumberjack will output to the console (stdout) as well as output to a file.
         // This means that if we redirect stdout to the file, we're going to double up on our logging.
@@ -99,6 +105,43 @@ class CrashReportService {
             CrashReportService.sendProblemReport()
         }
     }
+    
+    static func sendAutomatedCrashReport(_ errorMessage: String) {
+        // Not a lot of point in sending a crash report when the app is being directly monitored
+        if isDebuggerRunning() {
+            GGLog.info("Debugger is running. Not sending automated crash report")
+            return
+        }
+        
+        let lastAutomatedReport = FileState.read(LastAutomatedReport.self)?.time
+        let now = Date()
+        if lastAutomatedReport == nil || Calendar.current.dateComponents([.hour], from: lastAutomatedReport!, to: now).hour! > 6 {
+            if !automaticErrorReporting {
+                GGLog.info("Automatic error reporting is disabled. Not sending crash report")
+                return
+            }
+            
+            // Local variable cache it as this hits prefs and we will invoke it more than once
+            let showNotice = showCriticalErrorNotice
+            
+            GGLog.info("About to send automated crash report. The user will\(showNotice ? " " : " not ")be notified of the error")
+            sendProblemReport()
+            
+            FileState.save(LastAutomatedReport(time: now))
+            
+            if showNotice {
+                ViewUtil.showAlert(
+                    title: "Critical Error",
+                    message: "A critical error occurred. Gorilla Groove staff have been notified. Show error message?",
+                    yesText: "Show"
+                ) {
+                    ViewUtil.showAlert(message: errorMessage, dismissText: "Oof")
+                }
+            }
+        } else {
+            GGLog.info("A critical error was logged, but the last automated report was too recent. Not sending crash report")
+        }
+    }
 
     static func sendProblemReport() {
         let archiveUrl = FileManager.default
@@ -146,6 +189,10 @@ class CrashReportService {
                 GGLog.info("Crash report was uploaded")
             }
         }
+    }
+    
+    struct LastAutomatedReport: Codable {
+        let time: Date
     }
 }
 

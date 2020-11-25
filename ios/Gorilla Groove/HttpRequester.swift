@@ -170,9 +170,11 @@ class HttpRequester {
         
         guard let decodedData = try? decoder.decode(T.self, from: data!) else {
             let loggedData = String(data: data!, encoding: .utf8) ?? "--Unparsable--"
-            let errorString = "Could not parse HTTP response into expected type \(type)! Response: \(loggedData)."
+            let errorString = "Could not parse HTTP response into expected type \(type)! Response: \(loggedData)"
             logger.critical(errorString)
-            fatalError(errorString)
+            
+            callback?(nil, httpResponse.statusCode, errorString)
+            return
         }
         
         callback?(decodedData, httpResponse.statusCode, error as! String?)

@@ -28,8 +28,7 @@ class GGLogger {
 
                 
         // The file is rolled when either of these is true. Either 1 week, or 10 MB exceeded.
-        fileLogger.rollingFrequency = 60
-//        fileLogger.rollingFrequency = 60 * 60 * 168 // 1 week
+        fileLogger.rollingFrequency = 60 * 60 * 168 // 1 week
 
         fileLogger.maximumFileSize = 10_737_418_240 // 10 MB
         fileLogger.logFileManager.maximumNumberOfLogFiles = 2
@@ -54,6 +53,8 @@ class GGLogger {
     }
     func critical(_ message: String, file: StaticString = #file, line: UInt = #line) {
         DDLogError(message, file: file, line: line, tag: LogTag(category: category, logLevel: "crit"))
+        
+        CrashReportService.sendAutomatedCrashReport(message)
     }
     
     struct LogTag {

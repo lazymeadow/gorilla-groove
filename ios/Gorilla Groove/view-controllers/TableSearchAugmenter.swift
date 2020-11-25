@@ -95,26 +95,28 @@ class TableSearchAugmenter {
             bar!.sizeToFit()
          }
     }
-}
-
-class GGSearchController : UISearchController {
-    let ggSearchBar = GGSearchBar()
     
-    override public var searchBar: UISearchBar {
-        get {
-            return ggSearchBar
+    // Need to do this to let the search bar auto-focus itself when it is displayed.
+    // Hooray using horrible inheritance to solve problems! Thanks Apple!
+    class GGSearchController : UISearchController {
+        let ggSearchBar = GGSearchBar()
+        
+        override public var searchBar: UISearchBar {
+            get {
+                return ggSearchBar
+            }
         }
     }
-}
 
-class GGSearchBar : UISearchBar {
-    override func willMove(toWindow newWindow: UIWindow?) {
-        super.willMove(toWindow: newWindow)
-        
-        // UIView appear
-        if newWindow != nil {
-            DispatchQueue.main.async {
-                self.becomeFirstResponder()
+    class GGSearchBar : UISearchBar {
+        override func willMove(toWindow newWindow: UIWindow?) {
+            super.willMove(toWindow: newWindow)
+            
+            // UIView appear
+            if newWindow != nil {
+                DispatchQueue.main.async {
+                    self.becomeFirstResponder()
+                }
             }
         }
     }
