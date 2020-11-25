@@ -168,7 +168,12 @@ class HttpRequester {
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
         
-        let decodedData = try! decoder.decode(T.self, from: data!)
+        guard let decodedData = try? decoder.decode(T.self, from: data!) else {
+            let loggedData = String(data: data!, encoding: .utf8) ?? "--Unparsable--"
+            let errorString = "Could not parse HTTP response into expected type \(type)! Response: \(loggedData)."
+            logger.critical(errorString)
+            fatalError(errorString)
+        }
         
         callback?(decodedData, httpResponse.statusCode, error as! String?)
     }
