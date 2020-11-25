@@ -1,7 +1,6 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
-import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.ArtSize
 import com.example.groove.services.FileStorageService
@@ -119,18 +118,9 @@ class FileController(
 			""
 		}
 
-		val returnedArtLink = if (artLink.isEmpty()) {
-			// FIXME Need to update iOS to be able to handle empty / null album art
-			if (user.currentAuthToken!!.device!!.deviceType == DeviceType.IPHONE) {
-				"https://gorillagroove.net/api/somethingfake"
-			} else {
-				// We get back an empty string if it's invalid for laziness reasons.
-				// But we want to return null to consumers as it's the right thing to do.
-				null
-			}
-		} else {
-			artLink
-		}
+		// We get back an empty string if it's invalid for laziness reasons.
+		// But we want to return null to consumers as it's the right thing to do.
+		val returnedArtLink = artLink.takeUnless { it.isEmpty() }
 
 		val songLink = if (linkFetchType == LinkFetchType.SONG || linkFetchType == LinkFetchType.BOTH) {
 			fileStorageService.getSongLink(trackId, false, audioFormat)
