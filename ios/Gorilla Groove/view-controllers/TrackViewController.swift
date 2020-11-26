@@ -135,5 +135,5 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
 
 struct TrackLinkResponse: Codable {
     let songLink: String
-    let albumArtLink: String
+    let albumArtLink: String?
 }

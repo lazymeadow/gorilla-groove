@@ -101,7 +101,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                     return
                 }
                 
-                guard let art = UIImage.fromUrl(response!.albumArtLink) else {
+                guard let artLink = response?.albumArtLink, let art = UIImage.fromUrl(artLink) else {
                     GGLog.error("Failed to load art from URL despite a status code of \(status)!")
                     return
                 }
