@@ -122,10 +122,7 @@ class Database {
     
     static private func migrate() {
         let currentVersion = getDbVersion()
-        if (currentVersion == 4) {
-            return
-        }
-        let targetVersion = 5 // 5 and not 4 because 4 is a bugged version that needed a forced 1 time migration
+        let targetVersion = 6
         
         logger.info("Existing DB is using version: \(currentVersion)")
         
@@ -241,6 +238,16 @@ class Database {
             let success = execute("ALTER TABLE track ADD art_cached_at INT NULL;")
             if !success {
                 fatalError("Failed to rename art cache column!")
+            }
+        }
+        
+        // 5 was skipped as there was a bug
+        
+        if currentVersion < 6 {
+            logger.info("Adding track offline availability column")
+            let success = execute("ALTER TABLE track ADD offline_availability TEXT NOT NULL DEFAULT 'NORMAL';")
+            if !success {
+                fatalError("Failed to add offline_availability column!")
             }
         }
         

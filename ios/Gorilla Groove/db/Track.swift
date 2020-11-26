@@ -20,7 +20,8 @@ public class Track : Entity {
     public var userId: Int
     public var songCachedAt: Date?
     public var artCachedAt: Date?
-    
+    public var offlineAvailability: OfflineAvailabilityType
+
     public init(
         id: Int,
         album: String,
@@ -40,7 +41,8 @@ public class Track : Entity {
         trackNumber: Int?,
         userId: Int,
         songCachedAt: Date?,
-        artCachedAt: Date?
+        artCachedAt: Date?,
+        offlineAvailability: OfflineAvailabilityType
     ) {
         self.id = id
         self.album = album
@@ -61,6 +63,7 @@ public class Track : Entity {
         self.userId = userId
         self.songCachedAt = songCachedAt
         self.artCachedAt = artCachedAt
+        self.offlineAvailability = offlineAvailability
     }
     
     public static func fromDict(_ dict: [String : Any?]) -> Track {
@@ -83,7 +86,8 @@ public class Track : Entity {
             trackNumber: dict["trackNumber"] as? Int,
             userId: dict["userId"] as! Int,
             songCachedAt: (dict["songCachedAt"] as? Int)?.toDate(),
-            artCachedAt: (dict["artCachedAt"] as? Int)?.toDate()
+            artCachedAt: (dict["artCachedAt"] as? Int)?.toDate(),
+            offlineAvailability: OfflineAvailabilityType(rawValue: (dict["offlineAvailability"] as! String)) ?? OfflineAvailabilityType.UNKNOWN
         )
     }
 }
@@ -242,4 +246,23 @@ extension FileManager {
     static func move(_ oldPath: URL, _ newPath: URL) {
         try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
     }
+}
+
+public enum OfflineAvailabilityType: String, Codable, DbEnum {
+    case NORMAL
+    case AVAILABLE_OFFLINE
+    case ONLINE_ONLY
+    case UNKNOWN // Future API additions may not yet be mapped
+    
+    func getDbName() -> String {
+        return rawValue
+    }
+}
+
+// Swift reflection is really bad. Can't check if something is just an 'Enum'. Can't check if something
+// is 'RawRepresentable'. We CAN check if something is 'Encodable', but hilariously, JSONEncoder can't
+// take a generic Encodable, it has to be a concrete type. So my hands are tied and every enum now has
+// to have a "getDbName" function that has the exact same implementation. Thanks Apple.
+protocol DbEnum {
+    func getDbName() -> String
 }

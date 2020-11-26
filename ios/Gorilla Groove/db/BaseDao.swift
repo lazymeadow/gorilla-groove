@@ -31,9 +31,12 @@ public class BaseDao<T: Entity> {
             } else if value is Date {
                 let dateType = value as! Date
                 columnValues.append(String(dateType.toEpochTime()))
+            } else if value is DbEnum {
+                let enumType = value as! DbEnum
+                columnValues.append("'\(enumType.getDbName())\'")
             } else {
                 // This is incredibly stupid, but optionals from Mirror seem batshit crazy. Have to check for nil like this.
-                // StackOverflow suggests not using Mirror and instead using the objc runtime because Mirror sucks.
+                // StackOverflow suggests not using Mirror and instead using the objc runtime because Mirror sucks. Thanks Apple.
                 // https://stackoverflow.com/questions/50254646/how-to-check-if-anynot-any-is-nil-or-not-in-swift
                 if case Optional<Any>.none = value {
                     columnValues.append("null")

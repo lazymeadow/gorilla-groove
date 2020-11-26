@@ -352,6 +352,7 @@ class ServerSynchronizer {
         let note: String?
         let songUpdatedAt: Date?
         let artUpdatedAt: Date?
+        let offlineAvailability: OfflineAvailabilityType
         
         func asTrack(userId: Int, songCachedAt: Date? = nil, artCachedAt: Date? = nil) -> Track {
             return Track(
@@ -373,7 +374,8 @@ class ServerSynchronizer {
                 trackNumber: trackNumber,
                 userId: userId,
                 songCachedAt: songCachedAt,
-                artCachedAt: artCachedAt
+                artCachedAt: artCachedAt,
+                offlineAvailability: offlineAvailability
             )
         }
     }
