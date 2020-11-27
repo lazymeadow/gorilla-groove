@@ -42,10 +42,10 @@ class S3MigrationController(
 
 	@GetMapping
 	fun letsGo() {
-		val (oggFoundIds, oggErrorIds) = extractDataFromBucket(bucketPrefix = "music/") { objectSize, track ->
+		val (oggFoundIds, oggErrorIds) = extractDataFromBucket(bucketPrefix = "music/", shared = true) { objectSize, track ->
 			track.filesizeSongOgg = objectSize
 		}
-		val (mp3FoundIds, mp3ErrorIds) = extractDataFromBucket(bucketPrefix = "music-mp3/") { objectSize, track ->
+		val (mp3FoundIds, mp3ErrorIds) = extractDataFromBucket(bucketPrefix = "music-mp3/", shared = true) { objectSize, track ->
 			track.filesizeSongMp3 = objectSize
 		}
 		val (artFoundIds, artErrorIds) = extractDataFromBucket(bucketPrefix = "art/", setImageFoundOnSuccess = true) { objectSize, track ->
@@ -70,6 +70,7 @@ class S3MigrationController(
 
 	private fun extractDataFromBucket(
 			bucketPrefix: String,
+			shared: Boolean = false,
 			setImageFoundOnSuccess: Boolean = false,
 			setTrackSizeFn: (Long, Track) -> Unit
 	): Pair<Set<Long>, Set<Long>> {
@@ -84,9 +85,6 @@ class S3MigrationController(
 			}
 
 			val trackId = s3Object.key.removePrefix(bucketPrefix).withoutExtension().toLong()
-			if (trackId > 796) {
-				return@forEach
-			}
 
 			logger.info("Processing ${s3Object.key} ...")
 			foundS3Ids.add(trackId)
@@ -97,19 +95,31 @@ class S3MigrationController(
 				return@forEach
 			}
 
-			if (track.deleted) {
-				logger.error("Track with ID $trackId has been deleted!")
-				tracksWithErrors.add(trackId)
-				return@forEach
+			val tracks = if (shared) {
+				trackRepository.findAllByFileName(track.fileName)
+			} else {
+				listOf(track)
 			}
 
-			setTrackSizeFn(s3Object.size, track)
-
-			if (setImageFoundOnSuccess) {
-				track.hasArt = true
+			if (tracks.size > 1) {
+				val otherTrackIds = tracks.map { it.id }.filter { it != trackId }
+				logger.info("$trackId shares song data with: $otherTrackIds")
 			}
 
-			trackRepository.save(track)
+			tracks.forEach { sharedTrack ->
+				if (sharedTrack.deleted) {
+					logger.error("Track with ID $trackId has been deleted!")
+					tracksWithErrors.add(trackId)
+				} else {
+					setTrackSizeFn(s3Object.size, sharedTrack)
+
+					if (setImageFoundOnSuccess) {
+						sharedTrack.hasArt = true
+					}
+
+					trackRepository.save(sharedTrack)
+				}
+			}
 		}
 
 		return foundS3Ids to tracksWithErrors

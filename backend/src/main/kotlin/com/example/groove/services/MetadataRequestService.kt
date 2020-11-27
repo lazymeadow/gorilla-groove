@@ -46,7 +46,7 @@ class MetadataRequestService(
 					track.trackNumber = metadataResponse.trackNumber
 					track.updatedAt = now
 				}
-				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt, now)
+				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt)
 			}
 
 			trackRepository.save(track)
@@ -70,7 +70,7 @@ class MetadataRequestService(
 		}
 	}
 
-	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType, updateTime: Timestamp) {
+	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType) {
 		if (overrideType == MetadataOverrideType.NEVER) {
 			return
 		}
