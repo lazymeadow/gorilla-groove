@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 // so the next time it isn't as time consuming
 @RestController
 @RequestMapping("api/s3-migration")
-@Profile("!prod")
+//@Profile("!prod")
 class S3MigrationController(
 		s3Properties: S3Properties,
 		private val trackRepository: TrackRepository
