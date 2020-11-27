@@ -17,6 +17,7 @@ import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.logger
 import com.example.groove.util.withoutExtension
+import org.springframework.context.annotation.Profile
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 // so the next time it isn't as time consuming
 @RestController
 @RequestMapping("api/s3-migration")
-//@Profile("!prod")
+@Profile("!prod")
 class S3MigrationController(
 		s3Properties: S3Properties,
 		private val trackRepository: TrackRepository,
