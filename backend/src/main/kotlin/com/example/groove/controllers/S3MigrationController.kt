@@ -9,11 +9,15 @@ import com.amazonaws.services.s3.iterable.S3Objects
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.S3Properties
+import com.example.groove.services.ArtSize
+import com.example.groove.services.FileStorageService
+import com.example.groove.services.ImageService
 import com.example.groove.services.S3StorageService
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.logger
 import com.example.groove.util.withoutExtension
-import org.springframework.context.annotation.Profile
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -26,7 +30,9 @@ import org.springframework.web.bind.annotation.RestController
 //@Profile("!prod")
 class S3MigrationController(
 		s3Properties: S3Properties,
-		private val trackRepository: TrackRepository
+		private val trackRepository: TrackRepository,
+		private val imageService: ImageService,
+		private val storageService: FileStorageService
 ) {
 	final val s3Client: AmazonS3
 
@@ -40,7 +46,7 @@ class S3MigrationController(
 				.build()
 	}
 
-	@GetMapping
+//	@GetMapping
 	fun letsGo() {
 		val (oggFoundIds, oggErrorIds) = extractDataFromBucket(bucketPrefix = "music/", shared = true) { objectSize, track ->
 			track.filesizeSongOgg = objectSize
@@ -48,7 +54,7 @@ class S3MigrationController(
 		val (mp3FoundIds, mp3ErrorIds) = extractDataFromBucket(bucketPrefix = "music-mp3/", shared = true) { objectSize, track ->
 			track.filesizeSongMp3 = objectSize
 		}
-		val (artFoundIds, artErrorIds) = extractDataFromBucket(bucketPrefix = "art/", setImageFoundOnSuccess = true) { objectSize, track ->
+		val (artFoundIds, artErrorIds) = extractDataFromBucket(bucketPrefix = "art/") { objectSize, track ->
 			track.filesizeArtPng = objectSize
 		}
 		val (artFoundIdsThumb, artErrorIdsThumb) = extractDataFromBucket(bucketPrefix = "art-64x64/") { objectSize, track ->
@@ -71,7 +77,6 @@ class S3MigrationController(
 	private fun extractDataFromBucket(
 			bucketPrefix: String,
 			shared: Boolean = false,
-			setImageFoundOnSuccess: Boolean = false,
 			setTrackSizeFn: (Long, Track) -> Unit
 	): Pair<Set<Long>, Set<Long>> {
 		val tracksWithErrors = mutableSetOf<Long>()
@@ -113,16 +118,41 @@ class S3MigrationController(
 				} else {
 					setTrackSizeFn(s3Object.size, sharedTrack)
 
-					if (setImageFoundOnSuccess) {
-						sharedTrack.hasArt = true
-					}
-
 					trackRepository.save(sharedTrack)
 				}
 			}
 		}
 
 		return foundS3Ids to tracksWithErrors
+	}
+
+	@Transactional
+	@GetMapping
+	fun createThumbnailArt() {
+		val brokenIds: List<Long> = listOf(7212, 7213, 7214, 7215, 7216, 7217, 7218, 7219, 7220, 7221, 7222, 7228, 7938)
+
+		brokenIds.forEach { trackId ->
+			val track = trackRepository.get(trackId) ?: run {
+				logger.error("Could not find track with ID: $trackId")
+				return@forEach
+			}
+
+			val art = storageService.loadAlbumArt(trackId, ArtSize.LARGE) ?: run {
+				logger.error("No art found with track ID: $trackId")
+				return@forEach
+			}
+			val thumbnailArt = imageService.convertToStandardArtFile(art, ArtSize.SMALL, cropToSquare = false) ?: run {
+				logger.error("Could not create thumbnail art for track ID: $trackId")
+				return@forEach
+			}
+
+			storageService.storeAlbumArt(thumbnailArt, trackId, ArtSize.SMALL)
+
+			track.artUpdatedAt = now()
+			track.updatedAt = track.artUpdatedAt
+			track.filesizeThumbnail64x64Png = thumbnailArt.length()
+			trackRepository.save(track)
+		}
 	}
 
 	companion object {

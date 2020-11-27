@@ -105,7 +105,6 @@ class SongIngestionService(
 
 		track.updatedAt = now()
 		track.artUpdatedAt = track.updatedAt
-		track.hasArt = true
 
 		trackRepository.save(track)
 	}
@@ -160,7 +159,6 @@ class SongIngestionService(
 				releaseYear = trackDTO.releaseYear ?: trackData.releaseYear,
 				genre = trackDTO.genre ?: trackData.genre,
 				note = trackDTO.note,
-				hasArt = art != null,
 				filesizeSongOgg = oggFile.length(),
 				filesizeSongMp3 = mp3File.length(),
 				filesizeArtPng = albumArt?.length() ?: 0,

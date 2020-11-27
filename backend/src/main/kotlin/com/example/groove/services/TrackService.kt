@@ -180,7 +180,6 @@ class TrackService(
 			if (artFile != null) {
 				songIngestionService.storeAlbumArtForTrack(artFile, track, updateTrackDTO.cropArtToSquare)
 				track.artUpdatedAt = track.updatedAt
-				track.hasArt = true
 				trackLinkRepository.forceExpireLinksByTrackId(track.id)
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")

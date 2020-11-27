@@ -95,13 +95,6 @@ data class Track(
 		@Column(columnDefinition = "BIT")
 		var inReview: Boolean = false,
 
-		// TODO This is nullable because I need to do a migration to set it.
-		// null means "not known". When the art is fetched for a track, this is set to true or false forevermore
-		// TODO x2, going to get rid of this now that the art sizes are being populated into the DB. I might keep
-		// the property around, but it'll just be "hasArt = artSize > 0" and not a DB column
-		@Column(columnDefinition = "BIT")
-		var hasArt: Boolean?,
-
 		@JsonIgnore
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "original_track_id")
@@ -138,4 +131,6 @@ data class Track(
 
 	@Transient
 	val sampleRate: Long = 0
+
+	val hasArt: Boolean get() = filesizeArtPng > 0
 }
