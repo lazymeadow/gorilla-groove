@@ -4,10 +4,13 @@ import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
+import com.example.groove.dto.GGImportTrackDTO
+import com.example.groove.dto.UpdateTrackDTO
 import com.example.groove.exception.FileStorageException
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.*
+import com.example.groove.util.DateUtils.now
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -65,21 +68,24 @@ class SongIngestionService(
 		val tmpSongFile = storeMultipartFile(songFile)
 		val tmpImageFile = ripAndSaveAlbumArt(tmpSongFile)
 
-		val track = convertAndSaveTrackForUser(tmpSongFile, user, songFile.originalFilename!!, hasArt = tmpImageFile != null)
-		track.addedToLibrary = track.createdAt
+		val track = convertAndSaveTrackForUser(
+				trackDTO = UpdateTrackDTO(),
+				user = user,
+				song = tmpSongFile,
+				art = tmpImageFile,
+				originalFileName = songFile.originalFilename!!
+		)
+
+		track.addedToLibrary = now()
 		trackRepository.save(track)
 
-		if (tmpImageFile != null) {
-			storeAlbumArtForTrack(tmpImageFile, track, false)
-			// We have stored the songFile in its permanent home. We can delete this tmp songFile
-			tmpImageFile.delete()
-		}
-
 		tmpSongFile.delete()
+		tmpImageFile?.delete()
 
 		return track
 	}
 
+	@Transactional
 	fun storeAlbumArtForTrack(albumArt: File, track: Track, cropImageToSquare: Boolean) {
 		ArtSize.values().forEach { artSize ->
 			logger.info("Beginning album art storage for track ID: ${track.id} and art size of: $artSize")
@@ -88,9 +94,20 @@ class SongIngestionService(
 
 			fileStorageService.storeAlbumArt(convertedArt, track.id, artSize)
 
+			when (artSize) {
+				ArtSize.LARGE -> track.filesizeArtPng = convertedArt.length()
+				ArtSize.SMALL -> track.filesizeThumbnail64x64Png = convertedArt.length()
+			}
+
 			convertedArt.delete()
 			logger.info("Finished album art storage for track ID: ${track.id} and art size of: $artSize")
 		}
+
+		track.updatedAt = now()
+		track.artUpdatedAt = track.updatedAt
+		track.hasArt = true
+
+		trackRepository.save(track)
 	}
 
 	// It's important to rip the album art out PRIOR to running the song
@@ -110,29 +127,66 @@ class SongIngestionService(
 	}
 
 	@Transactional
-	fun convertAndSaveTrackForUser(file: File, user: User, originalFileName: String, hasArt: Boolean): Track {
-		logger.info("Saving file ${file.name} for user ${user.name}")
+	fun convertAndSaveTrackForUser(
+			trackDTO: GGImportTrackDTO,
+			user: User,
+			song: File,
+			art: File?,
+			originalFileName: String
+	): Track {
+		logger.info("Saving file ${song.name} for user ${user.name}")
 
-		val oggFile = ffmpegService.convertTrack(file, AudioFormat.OGG)
+		val oggFile = ffmpegService.convertTrack(song, AudioFormat.OGG)
 		// iOS does not support OGG playback. So at least for now, we have to store everything in both formats...
-		val mp3File = ffmpegService.convertTrack(file, AudioFormat.MP3)
+		val mp3File = ffmpegService.convertTrack(song, AudioFormat.MP3)
 
-		// add the track to database
-		val track = fileMetadataService.createTrackFromSongFile(oggFile, user, originalFileName, hasArt)
+		// If the track file already has data embedded, pull it out and use it if the user has not overridden it
+		val trackData = fileMetadataService.extractTrackInfoFromFile(oggFile, originalFileName)
+
+		val (albumArt, thumbnailArt) = art?.let {
+			val albumArt = imageService.convertToStandardArtFile(it, ArtSize.LARGE, trackDTO.cropArtToSquare)
+			val thumbnailArt = imageService.convertToStandardArtFile(it, ArtSize.SMALL, trackDTO.cropArtToSquare)
+			albumArt to thumbnailArt
+		} ?: null to null
+
+		val track = Track(
+				user = user,
+				name = trackDTO.name ?: trackData.name ?: "",
+				artist = trackDTO.artist ?: trackData.artist ?: "",
+				featuring = trackDTO.featuring ?: "",
+				album = trackDTO.album ?: trackData.album ?: "",
+				trackNumber = trackDTO.trackNumber ?: trackData.trackNumber,
+				length = trackData.length,
+				releaseYear = trackDTO.releaseYear ?: trackData.releaseYear,
+				genre = trackDTO.genre ?: trackData.genre,
+				note = trackDTO.note,
+				hasArt = art != null,
+				filesizeSongOgg = oggFile.length(),
+				filesizeSongMp3 = mp3File.length(),
+				filesizeArtPng = albumArt?.length() ?: 0,
+				filesizeThumbnail64x64Png = thumbnailArt?.length() ?: 0,
+				fileName = ""
+		)
+
 		// Save once to have its ID generated
 		trackRepository.save(track)
 
 		// Use the ID to derive the file name and save again
+		// TODO delete filename as it is stupid? Should be a Long column that denotes which tracks share data
 		track.fileName = "${track.id}.ogg"
 		trackRepository.save(track)
 
 		fileStorageService.storeSong(oggFile, track.id, AudioFormat.OGG)
 		fileStorageService.storeSong(mp3File, track.id, AudioFormat.MP3)
+		albumArt?.let { fileStorageService.storeAlbumArt(it, track.id, ArtSize.LARGE) }
+		thumbnailArt?.let { fileStorageService.storeAlbumArt(it, track.id, ArtSize.SMALL) }
 
 		// We have stored the file in S3, (or copied it to its final home)
 		// We no longer need these files and can clean it up to save space
 		oggFile.delete()
 		mp3File.delete()
+		albumArt?.delete()
+		thumbnailArt?.delete()
 
 		return track
 	}
@@ -156,7 +210,7 @@ class SongIngestionService(
 					ffmpegService.trimSong(songFile, startTime, duration)
 				},
 				returnValueHandler = { editedFile ->
-					fileMetadataService.getTrackLength(editedFile)
+					fileMetadataService.extractTrackInfoFromFile(editedFile).length
 				}
 		)
 	}
@@ -170,11 +224,11 @@ class SongIngestionService(
 
 		val oggFile = fileStorageService.loadSong(track, AudioFormat.OGG)
 
-		val trimmedSong = fileTransformationHandler(oggFile)
+		val transformedSongFile = fileTransformationHandler(oggFile)
 
-		fileStorageService.storeSong(trimmedSong, track.id, AudioFormat.OGG)
+		fileStorageService.storeSong(transformedSongFile, track.id, AudioFormat.OGG)
 
-		val returnValue = returnValueHandler(trimmedSong)
+		val returnValue = returnValueHandler(transformedSongFile)
 
 		// The new file we save is always specific to this song, so name it with the song's ID as we do
 		// with any song file names that aren't borrowed / shared
@@ -182,7 +236,6 @@ class SongIngestionService(
 		if (newFileName != track.fileName) {
 			logger.info("Track ${track.id} is now using the filename $newFileName instead of ${track.fileName}")
 			track.fileName = newFileName
-			trackRepository.save(track)
 		}
 
 		// Force a new link to be generated to break the browser cache
@@ -194,9 +247,18 @@ class SongIngestionService(
 		val mp3File = ffmpegService.convertTrack(oggFile, AudioFormat.MP3)
 		fileStorageService.storeSong(mp3File, track.id, AudioFormat.MP3)
 
+		// We've made some sort of edit to the actual music file, so there are some
+		// properties we always want to update on the Track
+		track.filesizeSongOgg = transformedSongFile.length()
+		track.filesizeSongMp3 = mp3File.length()
+		track.updatedAt = now()
+		track.songUpdatedAt = track.updatedAt
+
+		trackRepository.save(track)
+
 		oggFile.delete()
 		mp3File.delete()
-		trimmedSong.delete()
+		transformedSongFile.delete()
 
 		return returnValue
 	}

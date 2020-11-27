@@ -151,12 +151,16 @@ class ReviewSourceArtistService(
 					artist = song.artist,
 					album = song.album,
 					releaseYear = song.releaseYear,
+
+					// Because we started from Spotify, we have a URL to the actual album art.
+					// This is better than whatever it is we will get from the YT download, so pass it along to be used instead
+					artUrl = song.albumArtLink,
 					cropArtToSquare = true
 			)
 
 			// Sometimes YoutubeDL can have issues. Don't cascade fail all downloads because of it
 			val track = try {
-				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
+				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
 			} catch (e: Exception) {
 				logger.error("Failed to download from YouTube for ${song.artist} - ${song.name}!", e)
 
@@ -169,21 +173,11 @@ class ReviewSourceArtistService(
 			track.reviewSource = source
 			track.inReview = true
 			track.lastReviewed = now()
+			trackRepository.save(track)
 
 			artistDownload.lastDownloadAttempt = now()
 			artistDownload.downloadedAt = artistDownload.lastDownloadAttempt
 			reviewSourceArtistDownloadRepository.save(artistDownload)
-
-			// Because we started from Spotify, we have a URL to the actual album art.
-			// This is better than whatever it is we will get from the YT download, so grab the art and store it
-			imageService.downloadFromUrl(song.albumArtLink)?.let { image ->
-				track.hasArt = true
-				songIngestionService.storeAlbumArtForTrack(image, track, false)
-			} ?: run {
-				track.hasArt = false
-			}
-
-			trackRepository.save(track)
 
 			// The YT download service will save the Track for the user that downloads it.
 			// So for every other user make a copy of that track

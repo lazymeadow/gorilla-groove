@@ -98,8 +98,6 @@ const displayKeyToTrackKeyMap = {
 	'Year': 'releaseYear',
 	'Genre' : 'genre',
 	'Play Count': 'playCount',
-	'Bit Rate': 'bitRate',
-	'Sample Rate': 'sampleRate',
 	'Added': 'addedToLibrary',
 	'Last Played': 'lastPlayed',
 	'Note' : 'note'

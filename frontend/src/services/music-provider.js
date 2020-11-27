@@ -79,17 +79,23 @@ export class MusicProvider extends React.Component {
 
 		let columnPreferences = LocalStorage.getObject('columnPreferences');
 
-		// If the preferences already existed, we need to check if any new columns were added
-		// since the user last logged in.
+		// If the preferences already existed, we need to check if any new columns were added since the user last logged in.
 		if (columnPreferences) {
-			let savedColumns = columnPreferences.map(columnPref => columnPref.name );
-			let newColumns = Util.arrayDifference(columnOptions, savedColumns);
+			const savedColumns = columnPreferences.map(columnPref => columnPref.name);
+			const newColumns = Util.arrayDifference(columnOptions, savedColumns);
+			const removedColumns = Util.arrayDifference(savedColumns, columnOptions);
 
 			if (newColumns.length > 0) {
 				// We have new columns to add. Initialize them and add them to the column preferences
 				columnPreferences = columnPreferences.concat(newColumns.map(trackColumnName => {
 					return { name: trackColumnName, enabled: true };
 				}));
+				LocalStorage.setObject('columnPreferences', columnPreferences);
+			}
+
+			if (removedColumns.length > 0) {
+				// If the pref has a name that matches any removed name, filter it out
+				columnPreferences = columnPreferences.filter(pref => !removedColumns.some(removedName => removedName === pref.name));
 				LocalStorage.setObject('columnPreferences', columnPreferences);
 			}
 

@@ -46,7 +46,7 @@ class FileController(
 			track = songIngestionService.storeSongForUser(file, loadLoggedInUser())
 		}
 
-		logger.info("File upload complete for ${file.name} in $timeToUpload")
+		logger.info("File upload complete for ${file.name} in $timeToUpload ms")
 		return track!!
     }
 

@@ -30,8 +30,6 @@ class S3StorageService(
 
 	private val s3Client: AmazonS3
 
-	private val bucketName = "gorilla-tracks"
-
 	init {
 		val awsCredentials = BasicAWSCredentials(s3Properties.awsAccessKeyId, s3Properties.awsSecretAccessKey)
 
@@ -141,5 +139,7 @@ class S3StorageService(
 
 	companion object {
 		val logger = logger()
+
+		const val bucketName = "gorilla-tracks"
 	}
 }

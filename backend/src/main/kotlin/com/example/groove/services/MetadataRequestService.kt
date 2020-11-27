@@ -97,9 +97,6 @@ class MetadataRequestService(
 		file.delete()
 
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
-		track.updatedAt = updateTime
-		track.artUpdatedAt = updateTime
-		track.hasArt = true
 	}
 
 	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataResponseDTO>> {

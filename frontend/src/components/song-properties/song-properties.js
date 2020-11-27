@@ -21,8 +21,6 @@ export class SongProperties extends React.Component {
 			genre: '',
 			trackNumber: '',
 			releaseYear: '',
-			bitRate: '',
-			sampleRate: '',
 			note: '',
 			albumArt: null,
 			albumArtUrl: '',
@@ -33,8 +31,7 @@ export class SongProperties extends React.Component {
 			showingAlbumArtUrlUploadModal: false,
 		};
 
-		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNumber',
-			'releaseYear', 'bitRate', 'sampleRate', 'note'];
+		this.inputNames = ['name', 'artist', 'featuring', 'album', 'genre', 'trackNumber', 'releaseYear', 'note'];
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -296,28 +293,6 @@ export class SongProperties extends React.Component {
 											value={this.state.releaseYear}
 										/>
 									</div>
-									<div className="flex-label">
-										<label htmlFor="property-bit-rate">Bit Rate</label>
-										<input
-											id="property-bit-rate"
-											name="property-bit-rate"
-											className="short-property"
-											type="text"
-											value={this.state.bitRate}
-											disabled
-										/>
-									</div>
-									<div className="flex-label">
-										<label htmlFor="property-sample-rate">Sample Rate</label>
-										<input
-											id="property-sample-rate"
-											name="property-sample-rate"
-											className="short-property"
-											type="text"
-											value={this.state.sampleRate}
-											disabled
-										/>
-									</div>
 
 									<hr/>
 									<div className="flex-label">
@@ -379,6 +354,7 @@ export class SongProperties extends React.Component {
 									type="file"
 									id="picture-upload"
 									className="display-none"
+									accept="image/*"
 									onChange={this.handlePictureUpload.bind(this)}
 								/>
 

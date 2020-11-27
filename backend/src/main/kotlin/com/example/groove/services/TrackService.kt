@@ -174,16 +174,7 @@ class TrackService(
 				throw IllegalArgumentException("No track found by ID $trackId!")
 			}
 
-			updateTrackDTO.name?.let { track.name = it.trim() }
-			updateTrackDTO.artist?.let { track.artist = it.trim() }
-			updateTrackDTO.featuring?.let { track.featuring = it.trim() }
-			updateTrackDTO.album?.let { track.album = it.trim() }
-			updateTrackDTO.releaseYear?.let { track.releaseYear = it }
-			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
-			updateTrackDTO.note?.let { track.note = it.trim() }
-			updateTrackDTO.genre?.let { track.genre = it.trim() }
-			updateTrackDTO.hidden?.let { track.hidden = it }
-			updateTrackDTO.offlineAvailability?.let { track.offlineAvailability = it }
+			updateTrackDTO.updateTrack(track)
 			track.updatedAt = now()
 
 			if (artFile != null) {
@@ -318,10 +309,6 @@ class TrackService(
 		}
 
 		songIngestionService.editVolume(track, volumeAdjustment)
-
-		track.updatedAt = now()
-		track.songUpdatedAt = track.updatedAt
-		trackRepository.save(track)
 	}
 
 	fun trimTrack(trackId: Long, startTime: String?, duration: String?): Int {
@@ -334,8 +321,6 @@ class TrackService(
 		val newLength = songIngestionService.trimSong(track, startTime, duration)
 
 		track.length = newLength
-		track.updatedAt = now()
-		track.songUpdatedAt = track.updatedAt
 		trackRepository.save(track)
 
 		return newLength
