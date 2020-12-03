@@ -63,10 +63,10 @@ class NowPlayingTracks {
         
         // First check if this song is already cached so we don't have to fetch it
         if track.songCachedAt != nil {
-            let cachedSong = CacheService.getCachedSongData(track.id)
+            let cachedSong = CacheService.getCachedData(trackId: track.id, cacheType: .song)
             if cachedSong == nil {
                 GGLog.error("Failed to find cached song data, despite track thinking it had a cache! Clearing cache from DB for track \(track.id)")
-                CacheService.deleteCachedSong(track.id)
+                CacheService.deleteCachedData(trackId: track.id, cacheType: .song)
             } else {
                 GGLog.debug("Track \(track.id) is already cached. Playing from offline storage")
                 AudioPlayer.playSongData(cachedSong!)

@@ -64,6 +64,92 @@
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 			<key>Title</key>
+			<string>Offline Storage</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Enabled</string>
+			<key>Key</key>
+			<string>offline_storage_enabled</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Titles</key>
+			<array>
+				<string>Never</string>
+				<string>On Wi-Fi</string>
+				<string>Always</string>
+			</array>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Download Offline Music</string>
+			<key>Key</key>
+			<string>offline_storage_fetch_mode</string>
+			<key>DefaultValue</key>
+			<integer>1</integer>
+			<key>Values</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTitleValueSpecifier</string>
+			<key>Title</key>
+			<string>Offline Storage Used</string>
+			<key>DefaultValue</key>
+			<string>5.17 MB</string>
+			<key>Key</key>
+			<string>offline_storage_used</string>
+		</dict>
+		<dict>
+			<key>Titles</key>
+			<array>
+				<string>100 MB</string>
+				<string>250 MB</string>
+				<string>500 MB</string>
+				<string>1 GB</string>
+				<string>2.5 GB</string>
+				<string>5 GB</string>
+				<string>10 GB</string>
+				<string>25 GB</string>
+				<string>50 GB</string>
+				<string>100 GB</string>
+				<string>No Limit</string>
+			</array>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Maximum Offline Storage</string>
+			<key>Key</key>
+			<string>max_offline_storage</string>
+			<key>DefaultValue</key>
+			<integer>5000</integer>
+			<key>Values</key>
+			<array>
+				<integer>100</integer>
+				<integer>250</integer>
+				<integer>500</integer>
+				<integer>1000</integer>
+				<integer>2500</integer>
+				<integer>5000</integer>
+				<integer>10000</integer>
+				<integer>25000</integer>
+				<integer>50000</integer>
+				<integer>100000</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
 			<string>Error Reporting</string>
 		</dict>
 		<dict>

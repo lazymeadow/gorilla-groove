@@ -122,10 +122,10 @@ class Database {
     
     static private func migrate() {
         let currentVersion = getDbVersion()
-        let targetVersion = 6
+        let targetVersion = 7
         
         logger.info("Existing DB is using version: \(currentVersion)")
-        
+
         if currentVersion == targetVersion {
             logger.debug("Target DB version is: \(targetVersion). Skipping migrate")
             return
@@ -133,7 +133,7 @@ class Database {
         
         if (currentVersion == 0) {
             logger.info("Creating table user")
-            var success = execute("""
+            executeOrFail("""
         CREATE TABLE "user" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "name"    TEXT NOT NULL UNIQUE,
@@ -142,12 +142,9 @@ class Database {
             "created_at"    INTEGER NOT NULL
         );
         """)
-            if !success {
-                fatalError("Failed to create user table")
-            }
             
             logger.info("Creating table track")
-            success = execute("""
+            executeOrFail("""
         CREATE TABLE "track" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "user_id"    INTEGER NOT NULL,
@@ -168,12 +165,9 @@ class Database {
             "note"    TEXT
         );
         """)
-            if !success {
-                fatalError("Failed to create track table")
-            }
-            
+
             logger.info("Creating table playlist")
-            success = execute("""
+            executeOrFail("""
         CREATE TABLE "playlist" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "user_id"    INTEGER NOT NULL,
@@ -182,12 +176,9 @@ class Database {
             "updated_at"    INTEGER NOT NULL
         );
         """)
-            if !success {
-                fatalError("Failed to create playlist table")
-            }
-            
+
             logger.info("Creating table playlist_track")
-            success = execute("""
+            executeOrFail("""
         CREATE TABLE "playlist_track" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "playlist_id"    INTEGER NOT NULL,
@@ -195,70 +186,68 @@ class Database {
             "created_at"    INTEGER NOT NULL
         );
         """)
-            if !success {
-                fatalError("Failed to create playlist_track table")
-            }
-            
+
             logger.info("Creating table db_version")
-            success = execute("""
+            executeOrFail("""
         CREATE TABLE "db_version" (
             "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
             "version"    INTEGER NOT NULL,
             "created_at"    INTEGER NOT NULL
         );
         """)
-            if !success {
-                fatalError("Failed to create db_version table")
-            }
-            
-            success = execute("INSERT INTO db_version (version, created_at) VALUES (1, \(Date().toEpochTime()))")
-            if !success {
-                fatalError("Failed to update db_version!")
-            }
+
+            executeOrFail("INSERT INTO db_version (version, created_at) VALUES (1, \(Date().toEpochTime()))")
         }
         
         if currentVersion < 2 {
             logger.info("Adding cached_at column")
-            let success = execute("ALTER TABLE track ADD cached_at INT NULL;")
-            if !success {
-                fatalError("Failed to add cachedAt column!")
-            }
+            executeOrFail("ALTER TABLE track ADD cached_at INT NULL;")
         }
         
         if currentVersion < 3 {
             logger.info("Renaming song cache column")
-            let success = execute("ALTER TABLE track RENAME cached_at TO song_cached_at;")
-            if !success {
-                fatalError("Failed to rename song cache column!")
-            }
+            executeOrFail("ALTER TABLE track RENAME cached_at TO song_cached_at;")
         }
         
         if currentVersion < 4 {
             logger.info("Adding art cache column")
-            let success = execute("ALTER TABLE track ADD art_cached_at INT NULL;")
-            if !success {
-                fatalError("Failed to rename art cache column!")
-            }
+            executeOrFail("ALTER TABLE track ADD art_cached_at INT NULL;")
         }
         
         // 5 was skipped as there was a bug
         
         if currentVersion < 6 {
             logger.info("Adding track offline availability column")
-            let success = execute("ALTER TABLE track ADD offline_availability TEXT NOT NULL DEFAULT 'NORMAL';")
-            if !success {
-                fatalError("Failed to add offline_availability column!")
-            }
+            executeOrFail("ALTER TABLE track ADD offline_availability TEXT NOT NULL DEFAULT 'NORMAL';")
         }
         
-        let success = execute("UPDATE db_version SET version = \(targetVersion)")
-        if !success {
-            fatalError("Failed to update db_version!")
+        if currentVersion < 7 {
+            logger.info("Adding storage sizes and thumbnail cache columns")
+            executeOrFail("ALTER TABLE track ADD filesize_song_ogg INT NOT NULL DEFAULT 0;")
+            executeOrFail("ALTER TABLE track ADD filesize_song_mp3 INT NOT NULL DEFAULT 0;")
+            executeOrFail("ALTER TABLE track ADD filesize_art_png INT NOT NULL DEFAULT 0;")
+            executeOrFail("ALTER TABLE track ADD filesize_thumbnail_png INT NOT NULL DEFAULT 0;")
+            executeOrFail("ALTER TABLE track ADD thumbnail_cached_at INT NULL;")
+            
+            // I previously used the art_cached_at to mean thumbnail data. Not the smartest, really. Now that I want to
+            // actually cache full sized thumbnail art, I am migrating that data to a new column specifically for thumbnails.
+            executeOrFail("UPDATE track SET thumbnail_cached_at = art_cached_at;")
+            executeOrFail("UPDATE track SET art_cached_at = NULL;")
         }
+        
+        executeOrFail("UPDATE db_version SET version = \(targetVersion)")
         logger.info("Datbase was upgraded to version \(targetVersion)")
     }
+    
+    private static func executeOrFail(_ sql: String) {
+        let success = execute(sql)
+        if !success {
+            let errorMessage = "Failed to execute sql: \(sql)"
+            GGLog.critical(errorMessage)
+            fatalError(errorMessage)
+        }
+    }
 }
-
 
 extension Collection {
     

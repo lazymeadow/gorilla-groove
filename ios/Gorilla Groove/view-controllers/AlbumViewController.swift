@@ -82,14 +82,14 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
         
         if album.artCached {
-            if let artData = CacheService.getCachedArtThumbnailData(album.trackIdForArt) {
+            if let artData = CacheService.getCachedData(trackId: album.trackIdForArt, cacheType: .thumbnail) {
                 let art = UIImage.init(data: artData)
                 album.art = art
                 albumViewCell.album = album
                 return
             }
             GGLog.error("Had cached art but failed to load it! Wiping out bad cache and fetching live art")
-            TrackDao.setCachedAt(trackId: album.trackIdForArt, cachedAt: nil, isSongCache: false)
+            TrackDao.setCachedAt(trackId: album.trackIdForArt, cachedAt: nil, cacheType: .thumbnail)
         }
         
         album.imageLoadFired = true
@@ -110,7 +110,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                     return
                 }
                 
-                CacheService.setCachedArtThumbnailData(trackId: album.trackIdForArt, data: data)
+                CacheService.setCachedData(trackId: album.trackIdForArt, data: data, cacheType: .thumbnail)
                 DispatchQueue.main.async {
                     album.art = art
                     

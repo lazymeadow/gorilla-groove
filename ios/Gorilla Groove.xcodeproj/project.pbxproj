@@ -25,6 +25,7 @@
 		E840A588256DA19F009F3C9E /* GGLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A587256DA19F009F3C9E /* GGLog.swift */; };
 		E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */; };
 		E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = E840A58D256DE2D2009F3C9E /* CocoaLumberjack */; };
+		E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A5902575EA26009F3C9E /* OfflineStorageService.swift */; };
 		E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692B924F4D46500A741D2 /* ViewUtil.swift */; };
 		E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */; };
 		E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */; };
@@ -74,6 +75,7 @@
 		E83B012024CE82F600C2C5E4 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		E840A57D256C88C2009F3C9E /* CrashReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportService.swift; sourceTree = "<group>"; };
 		E840A587256DA19F009F3C9E /* GGLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGLog.swift; sourceTree = "<group>"; };
+		E840A5902575EA26009F3C9E /* OfflineStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineStorageService.swift; sourceTree = "<group>"; };
 		E85692B924F4D46500A741D2 /* ViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtil.swift; sourceTree = "<group>"; };
 		E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackContextMenu.swift; sourceTree = "<group>"; };
 		E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackViewController.swift; sourceTree = "<group>"; };
@@ -207,6 +209,7 @@
 				E871186425675C1C007B8F16 /* Settings.bundle */,
 				E840A57D256C88C2009F3C9E /* CrashReportService.swift */,
 				E840A587256DA19F009F3C9E /* GGLog.swift */,
+				E840A5902575EA26009F3C9E /* OfflineStorageService.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -305,6 +308,7 @@
 				A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */,
 				E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */,
+				E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				E8598FB6250B17D900D70E9F /* WebSocket.swift in Sources */,
 				E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */,

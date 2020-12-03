@@ -120,7 +120,7 @@ class ServerSynchronizer {
                     if songCachedAt > songUpdatedAt {
                         newSongCachedAt = oldTrack.songCachedAt
                     } else {
-                        CacheService.deleteCachedSong(oldTrack.id)
+                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .song)
                     }
                 }
                 
@@ -129,23 +129,41 @@ class ServerSynchronizer {
                     if artCachedAt > artUpdatedAt {
                         newArtCachedAt = oldTrack.artCachedAt
                     } else {
-                        CacheService.deleteCachedArt(oldTrack.id)
+                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .art)
                     }
                 }
                 
-                let updatedTrack = modifiedTrackResponse.asTrack(userId: userId, songCachedAt: newSongCachedAt, artCachedAt: newArtCachedAt)
+                var newThumbnailCachedAt: Date? = nil
+                if let thumbnailCachedAt = oldTrack.thumbnailCachedAt, let thumbnailUpdatedAt = modifiedTrackResponse.artUpdatedAt {
+                    if thumbnailCachedAt > thumbnailUpdatedAt {
+                        newThumbnailCachedAt = oldTrack.thumbnailCachedAt
+                    } else {
+                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .thumbnail)
+                    }
+                }
+                
+                let updatedTrack = modifiedTrackResponse.asTrack(
+                    userId: userId,
+                    songCachedAt: newSongCachedAt,
+                    artCachedAt: newArtCachedAt,
+                    thumbnailCachedAt: newThumbnailCachedAt
+                )
                 TrackDao.save(updatedTrack)
             }
             
             for deletedId in entityResponse!.content.removed {
                 TrackDao.delete(deletedId)
-                CacheService.deleteCachedSong(deletedId)
+                CacheService.deleteAllData(trackId: deletedId)
                 
                 logger.info("Deleted track with ID: \(deletedId)")
             }
             
             pagesToFetch = entityResponse!.pageable.totalPages
             semaphore.signal()
+        }
+        
+        DispatchQueue.global().async {
+            OfflineStorageService.recalculateUsedOfflineStorage()
         }
         
         semaphore.wait()
@@ -353,8 +371,12 @@ class ServerSynchronizer {
         let songUpdatedAt: Date?
         let artUpdatedAt: Date?
         let offlineAvailability: OfflineAvailabilityType
+        let filesizeSongOgg: Int
+        let filesizeSongMp3: Int
+        let filesizeArtPng: Int
+        let filesizeThumbnail64x64Png: Int
         
-        func asTrack(userId: Int, songCachedAt: Date? = nil, artCachedAt: Date? = nil) -> Track {
+        func asTrack(userId: Int, songCachedAt: Date? = nil, artCachedAt: Date? = nil, thumbnailCachedAt: Date? = nil) -> Track {
             return Track(
                 id: id,
                 album: album,
@@ -375,7 +397,12 @@ class ServerSynchronizer {
                 userId: userId,
                 songCachedAt: songCachedAt,
                 artCachedAt: artCachedAt,
-                offlineAvailability: offlineAvailability
+                thumbnailCachedAt: thumbnailCachedAt,
+                offlineAvailability: offlineAvailability,
+                filesizeSongOgg: filesizeSongOgg,
+                filesizeSongMp3: filesizeSongMp3,
+                filesizeArtPng: filesizeArtPng,
+                filesizeThumbnailPng: filesizeThumbnail64x64Png
             )
         }
     }

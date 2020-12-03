@@ -197,9 +197,19 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
 
         GGLog.info("Track \(trackId) is downloaded and ready for storing")
 
-        CacheService.setCachedSongData(trackId: trackId, data: data)
+        CacheService.setCachedData(trackId: trackId, data: data, cacheType: .song)
         
         GGLog.info("Track \(trackId) is saved")
+    }
+    
+    func playerItemReadyToPlay(_ playerItem: CachingPlayerItem) {
+        // The description of CachingPlayerItem says this is called after pre-buffering. I believe I have something set up
+        // to auto-play after that, so this might be pointless. But I am curious if it is invoked after playback stalls.
+        GGLog.debug("Player item ready to play")
+    }
+    
+    func playerItemPlaybackStalled(_ playerItem: CachingPlayerItem) {
+        GGLog.warning("Player item playback was stalled")
     }
 }
 

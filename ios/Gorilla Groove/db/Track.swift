@@ -20,7 +20,12 @@ public class Track : Entity {
     public var userId: Int
     public var songCachedAt: Date?
     public var artCachedAt: Date?
+    public var thumbnailCachedAt: Date?
     public var offlineAvailability: OfflineAvailabilityType
+    public var filesizeSongOgg: Int
+    public var filesizeSongMp3: Int
+    public var filesizeArtPng: Int
+    public var filesizeThumbnailPng: Int
 
     public init(
         id: Int,
@@ -42,7 +47,12 @@ public class Track : Entity {
         userId: Int,
         songCachedAt: Date?,
         artCachedAt: Date?,
-        offlineAvailability: OfflineAvailabilityType
+        thumbnailCachedAt: Date?,
+        offlineAvailability: OfflineAvailabilityType,
+        filesizeSongOgg: Int,
+        filesizeSongMp3: Int,
+        filesizeArtPng: Int,
+        filesizeThumbnailPng: Int
     ) {
         self.id = id
         self.album = album
@@ -63,7 +73,12 @@ public class Track : Entity {
         self.userId = userId
         self.songCachedAt = songCachedAt
         self.artCachedAt = artCachedAt
+        self.thumbnailCachedAt = thumbnailCachedAt
         self.offlineAvailability = offlineAvailability
+        self.filesizeSongOgg = filesizeSongOgg
+        self.filesizeSongMp3 = filesizeSongMp3
+        self.filesizeArtPng = filesizeArtPng
+        self.filesizeThumbnailPng = filesizeThumbnailPng
     }
     
     public static func fromDict(_ dict: [String : Any?]) -> Track {
@@ -87,7 +102,12 @@ public class Track : Entity {
             userId: dict["userId"] as! Int,
             songCachedAt: (dict["songCachedAt"] as? Int)?.toDate(),
             artCachedAt: (dict["artCachedAt"] as? Int)?.toDate(),
-            offlineAvailability: OfflineAvailabilityType(rawValue: (dict["offlineAvailability"] as! String)) ?? OfflineAvailabilityType.UNKNOWN
+            thumbnailCachedAt: (dict["thumbnailCachedAt"] as? Int)?.toDate(),
+            offlineAvailability: OfflineAvailabilityType(rawValue: (dict["offlineAvailability"] as! String)) ?? OfflineAvailabilityType.UNKNOWN,
+            filesizeSongOgg: dict["filesizeSongOgg"] as! Int,
+            filesizeSongMp3: dict["filesizeSongMp3"] as! Int,
+            filesizeArtPng: dict["filesizeArtPng"] as! Int,
+            filesizeThumbnailPng: dict["filesizeThumbnailPng"] as! Int
         )
     }
 }
@@ -164,13 +184,41 @@ public class TrackDao : BaseDao<Track> {
         }
     }
 
-    static func setCachedAt(trackId: Int, cachedAt: Date?, isSongCache: Bool) {
+    static func setCachedAt(trackId: Int, cachedAt: Date?, cacheType: CacheType) {
         let cacheString = cachedAt?.toEpochTime().toString() ?? "null"
-        let cacheColumn = isSongCache ? "song_cached_at" : "art_cached_at"
+        let cacheColumn: String
+        
+        switch (cacheType) {
+        case .art:
+            cacheColumn = "art_cached_at"
+        case .song:
+            cacheColumn = "song_cached_at"
+        case .thumbnail:
+            cacheColumn = "thumbnail_cached_at"
+        }
         
         if !Database.execute("UPDATE track SET \(cacheColumn) = \(cacheString) WHERE id = \(trackId)") {
-            fatalError("Failed to set cachedAt for track \(trackId)")
+            GGLog.critical("Failed to set cachedAt for track \(trackId)")
         }
+    }
+    
+    // Total bytes of the MP3 and the full sized art for songs that are cached.
+    // Album art thumbnails are not taken into account as it is downloaded when it is viewed, rather than when a song is played. And it's small.
+    static func getTotalBytesStored() -> Int {
+        // Need to COALESCE these queries, as having nothing cached returns null and not 0 from SUM()
+        let songBytes = Database.query("""
+            SELECT COALESCE(SUM(filesize_song_mp3), 0) as total
+            FROM track
+            WHERE song_cached_at IS NOT NULL
+        """)[0]["total"] as! Int
+        
+        let artBytes = Database.query("""
+            SELECT COALESCE(SUM(filesize_art_png), 0) as total
+            FROM track
+            WHERE art_cached_at IS NOT NULL
+        """)[0]["total"] as! Int
+        
+        return songBytes + artBytes
     }
 }
 
@@ -180,71 +228,6 @@ fileprivate extension Optional where Wrapped == String {
             return ""
         }
         return sql + " '\(string.escaped())'"
-    }
-}
-
-class CacheService {
-    private static func baseDir() -> URL {
-        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    }
-    
-    static func getCachedSongData(_ trackId: Int) -> Data? {
-        let path = baseDir().appendingPathComponent("\(trackId).mp3")
-        
-        return try? Data(contentsOf: path)
-    }
-    
-    static func setCachedSongData(trackId: Int, data: Data) {
-        let path = baseDir().appendingPathComponent("\(trackId).mp3")
-        
-        try! data.write(to: path)
-        
-        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), isSongCache: true)
-    }
-    
-    static func getCachedArtThumbnailData(_ trackId: Int) -> Data? {
-        let path = baseDir().appendingPathComponent("\(trackId)-small.png")
-        
-        return try? Data(contentsOf: path)
-    }
-    
-    static func setCachedArtThumbnailData(trackId: Int, data: Data) {
-        let path = baseDir().appendingPathComponent("\(trackId)-small.png")
-        
-        try! data.write(to: path)
-        
-        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), isSongCache: false)
-    }
-    
-    static func deleteCachedSong(_ trackId: Int) {
-        let path = baseDir().appendingPathComponent("\(trackId).mp3")
-
-        deleteAtPath(path, trackId, "song")
-    }
-    
-    static func deleteCachedArt(_ trackId: Int) {
-        let path = baseDir().appendingPathComponent("\(trackId)-small.png")
-
-        deleteAtPath(path, trackId, "art")
-    }
-    
-    private static func deleteAtPath(_ path: URL, _ trackId: Int, _ itemDescription: String) {
-        if FileManager.exists(path) {
-            GGLog.info("Deleting cached \(itemDescription) for track ID: \(trackId)")
-            try! FileManager.default.removeItem(at: path)
-        } else {
-            GGLog.warning("Attempted to deleting cached \(itemDescription) for track ID: \(trackId) at path '\(path)' but it was not found")
-        }
-    }
-}
-
-extension FileManager {
-    static func exists(_ path: URL) -> Bool {
-        return FileManager.default.fileExists(atPath: path.path)
-    }
-    
-    static func move(_ oldPath: URL, _ newPath: URL) {
-        try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
     }
 }
 
