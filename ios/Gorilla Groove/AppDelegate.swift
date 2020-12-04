@@ -16,6 +16,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         AudioPlayer.initialize()
         NowPlayingTracks.initialize()
         LocationService.initialize()
+        OfflineStorageService.initialize()
+        SettingsService.initialize()
         
         // Make sure we have a device ID generated for the app
         if (FileState.read(DeviceState.self) == nil) {

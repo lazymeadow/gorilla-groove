@@ -161,12 +161,12 @@ class ServerSynchronizer {
             pagesToFetch = entityResponse!.pageable.totalPages
             semaphore.signal()
         }
+ 
+        semaphore.wait()
         
         DispatchQueue.global().async {
             OfflineStorageService.recalculateUsedOfflineStorage()
         }
-        
-        semaphore.wait()
         
         return pagesToFetch
     }

@@ -33,6 +33,18 @@ public struct SettingsBundleStorage<T> {
 }
 
 class SettingsService {
+    
+    static let observer = MyObserver()
+    
+    static func initialize() {
+        UserDefaults.standard.addObserver(
+            observer,
+            forKeyPath: "max_offline_storage",
+            options: [.new, .initial, .old],
+            context: nil
+        )
+    }
+
     static func openAppSettings() {
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
             GGLog.error("Unable to parse URL to open settings screen")
@@ -45,8 +57,27 @@ class SettingsService {
     }
 }
 
+class MyObserver: NSObject {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "max_offline_storage" {
+            GGLog.info("My change here1")
+
+        } else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+        
+        GGLog.info("My change here2")
+    }
+}
+
 extension String {
     var boolValue: Bool {
         return (self as NSString).boolValue
+    }
+}
+
+extension UserDefaults {
+    @objc dynamic var max_offline_storage: Int {
+        return integer(forKey: "max_offline_storage")
     }
 }

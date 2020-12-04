@@ -14,16 +14,38 @@ class OfflineStorageService {
     @SettingsBundleStorage(key: "offline_storage_enabled")
     private static var offlineStorageEnabled: Bool
     
+    @SettingsBundleStorage(key: "always_offline_cached")
+    private static var alwaysOfflineSongsCached: String
+    
+    @SettingsBundleStorage(key: "tracks_temporarily_cached")
+    private static var tracksTemporarilyCached: String
+    
+    private static var currentBytesStored = 0
+    
+    static func initialize() {
+        // We read this a lot, so just keep it in memory
+        currentBytesStored = FileState.read(DataStored.self)?.stored ?? 0
+    }
+    
     static func recalculateUsedOfflineStorage() {
-        let priorDataStored = FileState.read(DataStored.self) ?? DataStored(stored: 0)
+        // This makes several DB calls, and several writes to user prefs. It should never be invoked on the main thread.
+        if Thread.isMainThread {
+            fatalError("Do not call recalculate offline storage on the main thread!")
+        }
         
-        let currentDataStored = TrackDao.getTotalBytesStored()
-        let currentDataString = formatBytesString(currentDataStored)
+        let nextBytesStored = TrackDao.getTotalBytesStored()
+        let nextDataString = formatBytesString(nextBytesStored)
         
-        GGLog.info("Stored bytes went from \(formatBytesString(priorDataStored.stored)) to \(currentDataString)")
+        GGLog.debug("Stored bytes went from \(formatBytesString(currentBytesStored)) to \(nextDataString)")
         
-        FileState.save(DataStored(stored: currentDataStored))
-        offlineStorageUsed = currentDataString
+        FileState.save(DataStored(stored: nextBytesStored))
+        offlineStorageUsed = nextDataString
+        
+        let totalAvailabilityCounts = TrackDao.getOfflineAvailabilityCounts(cachedOnly: false)
+        let usedAvailabilityCounts = TrackDao.getOfflineAvailabilityCounts(cachedOnly: true)
+        
+        alwaysOfflineSongsCached = "\(usedAvailabilityCounts[OfflineAvailabilityType.AVAILABLE_OFFLINE]!) / \(totalAvailabilityCounts[OfflineAvailabilityType.AVAILABLE_OFFLINE]!)"
+        tracksTemporarilyCached = "\(usedAvailabilityCounts[OfflineAvailabilityType.NORMAL]!) / \(totalAvailabilityCounts[OfflineAvailabilityType.NORMAL]!)"
     }
     
     private static func formatBytesString(_ bytes: Int) -> String {
@@ -33,8 +55,13 @@ class OfflineStorageService {
         return formatter.string(fromByteCount: Int64(bytes))
     }
     
-    static func canTrackBeCached(track: Track) -> Bool {
-        return true
+    static func shouldTrackBeCached(track: Track) -> Bool {
+        if track.offlineAvailability == .ONLINE_ONLY || !offlineStorageEnabled {
+            return false
+        }
+        // maxOfflineStorage is stored in MB. Need to convert to bytes to do a comparison.
+        let maxOfflineStorageBytes = maxOfflineStorage * 1_000_000
+        return currentBytesStored + track.cacheSize < maxOfflineStorageBytes
     }
 
 
@@ -66,7 +93,12 @@ class CacheService {
         try! data.write(to: path)
         
         TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), cacheType: cacheType)
-        OfflineStorageService.recalculateUsedOfflineStorage()
+        
+        // The user-facing logic for considering a song cached state is determined by song data.
+        // Firstly, because song data is much bigger and therefore more important, and secondly, because not all tracks have art.
+        if cacheType == .song {
+            OfflineStorageService.recalculateUsedOfflineStorage()
+        }
     }
     
     static func getCachedData(trackId: Int, cacheType: CacheType) -> Data? {
@@ -77,12 +109,17 @@ class CacheService {
     
     static func deleteCachedData(trackId: Int, cacheType: CacheType, ignoreWarning: Bool = false) {
         let path = baseDir().appendingPathComponent(filenameFromCacheType(trackId, cacheType: cacheType))
-        
+        TrackDao.setCachedAt(trackId: trackId, cachedAt: nil, cacheType: cacheType)
+
         if FileManager.exists(path) {
             GGLog.info("Deleting cached \(cacheType) for track ID: \(trackId)")
             try! FileManager.default.removeItem(at: path)
         } else if !ignoreWarning {
             GGLog.warning("Attempted to deleting cached \(cacheType) for track ID: \(trackId) at path '\(path)' but it was not found")
+        }
+        
+        if cacheType == .song {
+            OfflineStorageService.recalculateUsedOfflineStorage()
         }
     }
     

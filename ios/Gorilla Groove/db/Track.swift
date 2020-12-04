@@ -26,6 +26,13 @@ public class Track : Entity {
     public var filesizeSongMp3: Int
     public var filesizeArtPng: Int
     public var filesizeThumbnailPng: Int
+    
+    public var cacheSize: Int {
+        get {
+            // Thumbnails are cached separately from the rest of the song data, and are tiny anyway. So don't include in this calculation.
+            return filesizeSongMp3 + filesizeArtPng
+        }
+    }
 
     public init(
         id: Int,
@@ -220,6 +227,29 @@ public class TrackDao : BaseDao<Track> {
         
         return songBytes + artBytes
     }
+    
+    static func getOfflineAvailabilityCounts(cachedOnly: Bool) -> [OfflineAvailabilityType: Int] {
+        let cachedOnlyQuery = cachedOnly ? "WHERE song_cached_at IS NOT NULL" : ""
+        var counts: [OfflineAvailabilityType: Int] = [:]
+        // Need to COALESCE these queries, as having nothing cached returns null and not 0 from SUM()
+        Database.query("""
+            SELECT offline_availability, count(*) AS total
+            FROM track
+            \(cachedOnlyQuery)
+            GROUP BY offline_availability
+        """).forEach { entry in
+            let availabilityType = OfflineAvailabilityType(rawValue: (entry["offline_availability"] as! String)) ?? OfflineAvailabilityType.UNKNOWN
+            counts[availabilityType] = entry["total"] as? Int ?? 0
+        }
+        
+        OfflineAvailabilityType.allCases.forEach { type in
+            if counts[type] == nil {
+               counts[type] = 0
+            }
+        }
+
+        return counts
+    }
 }
 
 fileprivate extension Optional where Wrapped == String {
@@ -231,7 +261,7 @@ fileprivate extension Optional where Wrapped == String {
     }
 }
 
-public enum OfflineAvailabilityType: String, Codable, DbEnum {
+public enum OfflineAvailabilityType: String, Codable, DbEnum, CaseIterable {
     case NORMAL
     case AVAILABLE_OFFLINE
     case ONLINE_ONLY

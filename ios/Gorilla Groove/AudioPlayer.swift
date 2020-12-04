@@ -151,8 +151,8 @@ class AudioPlayer : CachingPlayerItemDelegate {
     }
     
     // This will cache the song to disk while streaming it
-    static func playNewLink(_ link: String, trackId: Int) {
-        let playerItem = SongCachingPlayerItem(url: URL(string: link)!, trackId: trackId)
+    static func playNewLink(_ link: String, trackId: Int, shouldCache: Bool) {
+        let playerItem = SongCachingPlayerItem(url: URL(string: link)!, trackId: trackId, shouldCache: shouldCache)
         playerItem.delegate = audioPlayerCacheDelegate
 
         playPlayerItem(playerItem)
@@ -194,6 +194,11 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
     func playerItem(_ playerItem: CachingPlayerItem, didFinishDownloadingData data: Data) {
         let songCacheItem = playerItem as! SongCachingPlayerItem
         let trackId = songCacheItem.trackId
+        
+        if !songCacheItem.shouldCache {
+            GGLog.debug("Song was cacheable, but was not told to cache. Not caching song data for Track \(trackId)")
+            return
+        }
 
         GGLog.info("Track \(trackId) is downloaded and ready for storing")
 
@@ -215,9 +220,11 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
 
 class SongCachingPlayerItem : CachingPlayerItem {
     let trackId: Int
+    let shouldCache: Bool
     
-    init(url: URL, trackId: Int) {
+    init(url: URL, trackId: Int, shouldCache: Bool) {
         self.trackId = trackId
+        self.shouldCache = shouldCache
 
         super.init(url: url, customFileExtension: nil)
     }
