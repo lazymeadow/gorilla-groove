@@ -21,6 +21,12 @@ class OfflineStorageService {
     private static var tracksTemporarilyCached: String
     
     private static var currentBytesStored = 0
+    private static var maxOfflineStorageBytes: Int {
+        get {
+            // maxOfflineStorage is stored in MB. Need to convert to bytes to do a comparison.
+            maxOfflineStorage * 1_000_000
+        }
+    }
     
     static func initialize() {
         // We read this a lot, so just keep it in memory
@@ -59,11 +65,70 @@ class OfflineStorageService {
         if track.offlineAvailability == .ONLINE_ONLY || !offlineStorageEnabled {
             return false
         }
-        // maxOfflineStorage is stored in MB. Need to convert to bytes to do a comparison.
-        let maxOfflineStorageBytes = maxOfflineStorage * 1_000_000
         return currentBytesStored + track.cacheSize < maxOfflineStorageBytes
     }
 
+    
+    static func purgeExtraTrackDataIfNeeded(offlineAvailability: OfflineAvailabilityType = .NORMAL) {
+        if currentBytesStored < maxOfflineStorage {
+            GGLog.info("Current stored bytes of \(currentBytesStored) are within the limit of \(maxOfflineStorageBytes). Not purging track cache")
+            return
+        }
+        
+        let bytesToPurge = currentBytesStored - maxOfflineStorageBytes
+        
+        GGLog.info("New cache limit of \(maxOfflineStorageBytes) is too small for current cache of \(currentBytesStored). Beginning cache purge of \(bytesToPurge) bytes")
+        
+        let ownId = FileState.read(LoginState.self)!.id
+
+        // Ordered by the last time they were played, with the first one being the track played the LEAST recently.
+        let tracksToMaybePurge = TrackDao.getTracks(
+            userId: ownId,
+            offlineAvailability: offlineAvailability,
+            isCached: true,
+            sorts: [("last_played", true, false)],
+            // We recursively call this function until we've deleted enough.
+            // Grab only 100 to keep memory usage down as this is basically a background task, and there's a good chance 100 is enough
+            limit: 100
+        )
+        
+        if tracksToMaybePurge.isEmpty {
+            if offlineAvailability == .NORMAL {
+                GGLog.info("Need to clear always offline song data in order to bring cache down!")
+                return purgeExtraTrackDataIfNeeded(offlineAvailability: .AVAILABLE_OFFLINE)
+            } else {
+                GGLog.critical("Programmer error! Need to clear bytes, but no tracks are available to delete to clear up space?")
+                return
+            }
+        }
+
+        var bytePurgeCount = 0;
+        var tracksToPurge: Array<Track> = [];
+        
+        for track in tracksToMaybePurge {
+            if bytePurgeCount > bytesToPurge {
+                break
+            }
+            
+            bytePurgeCount += track.cacheSize
+            tracksToPurge.append(track)
+        }
+        
+        GGLog.info("Purging \(tracksToPurge.count) tracks from cache")
+        
+        // There is a lot of potential here to bulk update these in the database. Lot of unnecessary calls here. But this is
+        // currently always invoked in the background, and is not very time-sensitive or even likely to happen, as it requires the
+        // user to reduce the size of storage allocated to GG which is quite rare. So I am being lazy and punting for now.
+        tracksToPurge.forEach { track in
+            CacheService.deleteCachedData(trackId: track.id, cacheType: .song)
+            CacheService.deleteCachedData(trackId: track.id, cacheType: .art)
+        }
+        
+        if bytePurgeCount < bytesToPurge {
+            GGLog.info("Did not clear enough bytes to push cache below the limit (cleared: \(bytePurgeCount) needed: \(bytesToPurge)). Doing another pass")
+            purgeExtraTrackDataIfNeeded(offlineAvailability: offlineAvailability)
+        }
+    }
 
     struct DataStored: Codable {
         let stored: Int

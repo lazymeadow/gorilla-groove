@@ -124,22 +124,35 @@ public class TrackDao : BaseDao<Track> {
         userId: Int,
         album: String? = nil,
         artist: String? = nil,
+        isHidden: Bool? = nil,
         inReview: Bool = false,
-        sorts: Array<(String, Bool, Bool)> = []
+        offlineAvailability: OfflineAvailabilityType? = nil,
+        isCached: Bool? = nil,
+        sorts: Array<(String, Bool, Bool)> = [],
+        limit: Int? = nil
     ) -> Array<Track> {
         let sortString = sorts.map { (key, isAscending, isNoCase) in
             key + (isNoCase ? " COLLATE NOCASE" : "") + (isAscending ? " ASC " : " DESC ")
         }.joined(separator: ",")
         
+        var isCachedQuery = ""
+        if let isCached = isCached {
+            isCachedQuery = "AND song_cached_at IS \(isCached ? "NOT NULL" : "NULL")"
+        }
+        
         let query = """
             SELECT *
             FROM track t
             WHERE user_id = \(userId)
+            \(isHidden.toString().asSqlParam("AND is_hidden ="))
             AND is_hidden = FALSE
             AND in_review = \(inReview)
             \(artist.asSqlParam("AND artist ="))
             \(album.asSqlParam("AND album ="))
+            \(isCachedQuery)
+            \(offlineAvailability?.getDbName().asSqlParam("AND offline_availability =") ?? "")
             \(sortString.isEmpty ? "" : ("ORDER BY \(sortString)"))
+            \(limit.asSqlParam("LIMIT"))
         """
         
         return queryEntities(query)
@@ -252,13 +265,31 @@ public class TrackDao : BaseDao<Track> {
     }
 }
 
-fileprivate extension Optional where Wrapped == String {
+fileprivate extension Optional where Wrapped == Int {
     func asSqlParam(_ sql: String) -> String {
-        guard let string = self else {
+        guard let intVal = self else {
             return ""
         }
-        return sql + " '\(string.escaped())'"
+        return String(intVal).asSqlParam(sql)
     }
+}
+
+fileprivate extension Optional where Wrapped == String {
+    func asSqlParam(_ sql: String) -> String {
+        return self?.asSqlParam(sql) ?? ""
+    }
+}
+
+fileprivate extension String {
+    func asSqlParam(_ sql: String) -> String {
+        return sql + " '\(self.escaped())'"
+    }
+}
+
+extension Optional where Wrapped == Bool {
+  func toString() -> String? {
+    self.map { String($0) }
+  }
 }
 
 public enum OfflineAvailabilityType: String, Codable, DbEnum, CaseIterable {

@@ -25,7 +25,7 @@ class TrackService {
             sorts.append(("name", sortAscending, true))
         }
         
-        return TrackDao.getTracks(userId: ownId, album: album, artist: artist, sorts: sorts)
+        return TrackDao.getTracks(userId: ownId, album: album, artist: artist, isHidden: false, sorts: sorts)
     }
     
     // This doesn't update the play count. Waits for the server to sync it back down later. Possibly a mistake

@@ -34,13 +34,13 @@ public struct SettingsBundleStorage<T> {
 
 class SettingsService {
     
-    static let observer = MyObserver()
+    static let observer = SettingsChangeObserver()
     
     static func initialize() {
         UserDefaults.standard.addObserver(
             observer,
             forKeyPath: "max_offline_storage",
-            options: [.new, .initial, .old],
+            options: [.initial, .new],
             context: nil
         )
     }
@@ -57,27 +57,28 @@ class SettingsService {
     }
 }
 
-class MyObserver: NSObject {
+class SettingsChangeObserver: NSObject {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "max_offline_storage" {
-            GGLog.info("My change here1")
-
+            if let change = change {
+                GGLog.info("User changed (or app was initialized with) 'max_offline_storage' to \(change[NSKeyValueChangeKey.init(rawValue: "new")] ?? "--error--") MB")
+            }
+            
+            if UserState.isLoggedIn {
+                DispatchQueue.global().async {
+                    OfflineStorageService.purgeExtraTrackDataIfNeeded()
+                }
+            } else {
+                GGLog.info("User was not logged in when offline storage handler was invoked. Not checking to purge extra tracks")
+            }
         } else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
-        
-        GGLog.info("My change here2")
     }
 }
 
 extension String {
     var boolValue: Bool {
         return (self as NSString).boolValue
-    }
-}
-
-extension UserDefaults {
-    @objc dynamic var max_offline_storage: Int {
-        return integer(forKey: "max_offline_storage")
     }
 }

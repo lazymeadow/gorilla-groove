@@ -17,7 +17,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NowPlayingTracks.initialize()
         LocationService.initialize()
         OfflineStorageService.initialize()
-        SettingsService.initialize()
         
         // Make sure we have a device ID generated for the app
         if (FileState.read(DeviceState.self) == nil) {
@@ -27,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let loginState = FileState.read(LoginState.self) {
             GGLog.debug("User was previously logged in")
             Database.openDatabase(userId: loginState.id)
-            
+
             let user = UserState.getOwnUser()
             if (user.lastSync == nil) {
                 if AppDelegate.getAppVersion() == "1.3.1.1" {
@@ -42,6 +41,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 window!.rootViewController = RootNavigationController()
             }
         }
+        
+        SettingsService.initialize()
 
         return true
     }

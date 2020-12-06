@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08723C2EE05003899B8 /* MyLibraryController.swift */; };
 		A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08A23C2FC4C003899B8 /* FileState.swift */; };
-		A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0923CA57AD0034AD69 /* TrackState.swift */; };
+		A829AC0A23CA57AD0034AD69 /* TrackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0923CA57AD0034AD69 /* TrackService.swift */; };
 		A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */; };
 		A829AC2423CC2C1D0034AD69 /* TrackViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2323CC2C1D0034AD69 /* TrackViewCell.swift */; };
 		A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2723D158E60034AD69 /* AudioPlayer.swift */; };
@@ -60,7 +60,7 @@
 /* Begin PBXFileReference section */
 		A815B08723C2EE05003899B8 /* MyLibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryController.swift; sourceTree = "<group>"; };
 		A815B08A23C2FC4C003899B8 /* FileState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileState.swift; sourceTree = "<group>"; };
-		A829AC0923CA57AD0034AD69 /* TrackState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackState.swift; sourceTree = "<group>"; };
+		A829AC0923CA57AD0034AD69 /* TrackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackService.swift; sourceTree = "<group>"; };
 		A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpRequester.swift; sourceTree = "<group>"; };
 		A829AC2323CC2C1D0034AD69 /* TrackViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackViewCell.swift; sourceTree = "<group>"; };
 		A829AC2723D158E60034AD69 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
@@ -193,7 +193,7 @@
 				A89100F423BD339E00D6EA2D /* Assets.xcassets */,
 				A89100F923BD339E00D6EA2D /* Info.plist */,
 				A815B08A23C2FC4C003899B8 /* FileState.swift */,
-				A829AC0923CA57AD0034AD69 /* TrackState.swift */,
+				A829AC0923CA57AD0034AD69 /* TrackService.swift */,
 				A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */,
 				A829AC2723D158E60034AD69 /* AudioPlayer.swift */,
 				A829AC2923D3B0DE0034AD69 /* Colors.swift */,
@@ -305,7 +305,7 @@
 				E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */,
 				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,
 				E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */,
-				A829AC0A23CA57AD0034AD69 /* TrackState.swift in Sources */,
+				A829AC0A23CA57AD0034AD69 /* TrackService.swift in Sources */,
 				E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */,
 				E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */,
