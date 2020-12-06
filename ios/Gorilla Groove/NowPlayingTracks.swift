@@ -72,7 +72,7 @@ class NowPlayingTracks {
         }
         if let existingArtData = existingArtData {
             GGLog.debug("Art data for track \(track.id) is already cached. Displaying from offline storage")
-            AudioPlayer.playSongData(existingArtData)
+            displayImageData(trackId: track.id, data: existingArtData)
         }
 
         // If it is not cached, go out to the LIVE INTERNET To find it (and cache it while streaming it)
@@ -82,6 +82,16 @@ class NowPlayingTracks {
             fetchArt: existingArtData == nil && track.filesizeArtPng > 0,
             shouldCache: OfflineStorageService.shouldTrackBeCached(track: track)
         )
+    }
+    
+    private static func displayImageData(trackId: Int, data: Data) {
+        if let image = UIImage.init(data: data) {
+            let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in return image })
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+        } else {
+            GGLog.error("Could not load cached image art data! Deleting this item from cache instead")
+            CacheService.deleteCachedData(trackId: trackId, cacheType: .art)
+        }
     }
     
     private static func getCachedData(_ track: Track) -> (Data?, Data?) {
@@ -148,6 +158,17 @@ class NowPlayingTracks {
                     GGLog.error("Fetched art links from the API for track with ID: \(track.id) but no link was returned!")
                 }
             }
+            
+            if shouldCache {
+                // Recalcluating the cache is a little bit of an expensive process. It hits the DB, potentially multiple times,
+                // and also hits user defaults. This is maybe a pointless optimization, but instead of recalculating individually
+                // for the album art and song when they each finish cashing async, just put in a delay that runs after.
+                // Bit hacky as there is no guarantee the song will have finished by this point. But this code running isn't
+                // super critical as the next check of offline storage will get around to fixing any issues.
+                DispatchQueue.global().asyncAfter(deadline: .now() + 20.0) {
+                    OfflineStorageService.recalculateUsedOfflineStorage()
+                }
+            }
         }
     }
     
@@ -178,14 +199,17 @@ class NowPlayingTracks {
                 return
             }
             
-            if shouldCache {
-                if let pngData = image.pngData() {
-                    CacheService.setCachedData(trackId: track.id, data: pngData, cacheType: .art)
-                } else {
-                    GGLog.error("Could not parse PNG data from image from link! \(link)")
-                }
+            guard let pngData = image.pngData() else {
+                GGLog.error("Could not parse PNG data from link! \(link)")
+                return
             }
             
+            if shouldCache {
+                CacheService.setCachedData(trackId: track.id, data: pngData, cacheType: .art)
+            }
+            
+            displayImageData(trackId: track.id, data: pngData)
+
             let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in return image })
             MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
         }

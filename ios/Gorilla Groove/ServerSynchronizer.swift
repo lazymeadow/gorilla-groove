@@ -120,7 +120,7 @@ class ServerSynchronizer {
                     if songCachedAt > songUpdatedAt {
                         newSongCachedAt = oldTrack.songCachedAt
                     } else {
-                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .song)
+                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .song, ignoreDataUsageRecalculation: true)
                     }
                 }
                 
@@ -129,7 +129,7 @@ class ServerSynchronizer {
                     if artCachedAt > artUpdatedAt {
                         newArtCachedAt = oldTrack.artCachedAt
                     } else {
-                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .art)
+                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .art, ignoreDataUsageRecalculation: true)
                     }
                 }
                 
@@ -138,7 +138,7 @@ class ServerSynchronizer {
                     if thumbnailCachedAt > thumbnailUpdatedAt {
                         newThumbnailCachedAt = oldTrack.thumbnailCachedAt
                     } else {
-                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .thumbnail)
+                        CacheService.deleteCachedData(trackId: oldTrack.id, cacheType: .thumbnail, ignoreDataUsageRecalculation: true)
                     }
                 }
                 

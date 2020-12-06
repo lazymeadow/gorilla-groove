@@ -144,8 +144,7 @@ public class TrackDao : BaseDao<Track> {
             SELECT *
             FROM track t
             WHERE user_id = \(userId)
-            \(isHidden.toString().asSqlParam("AND is_hidden ="))
-            AND is_hidden = FALSE
+            \(isHidden.asSqlParam("AND is_hidden ="))
             AND in_review = \(inReview)
             \(artist.asSqlParam("AND artist ="))
             \(album.asSqlParam("AND album ="))
@@ -276,7 +275,19 @@ fileprivate extension Optional where Wrapped == Int {
 
 fileprivate extension Optional where Wrapped == String {
     func asSqlParam(_ sql: String) -> String {
-        return self?.asSqlParam(sql) ?? ""
+        guard let int = self else {
+            return ""
+        }
+        return sql + " \(int)"
+    }
+}
+
+fileprivate extension Optional where Wrapped == Bool {
+    func asSqlParam(_ sql: String) -> String {
+        guard let bool = self else {
+            return ""
+        }
+        return sql + " \(bool)"
     }
 }
 
