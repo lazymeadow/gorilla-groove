@@ -1,8 +1,8 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.model.enums.OfflineAvailabilityType
 import com.example.groove.util.DateUtils.now
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.sql.Timestamp
 import javax.persistence.*
@@ -37,12 +37,6 @@ data class Track(
 
 		@Column(name = "file_name")
 		var fileName: String,
-
-		@Column(name = "bit_rate")
-		var bitRate: Long,
-
-		@Column(name = "sample_rate")
-		var sampleRate: Int,
 
 		@Column
 		var length: Int,
@@ -83,6 +77,9 @@ data class Track(
 		@Column(columnDefinition = "BIT")
 		override var deleted: Boolean = false,
 
+		@Column(name = "offline_availability")
+		var offlineAvailability: OfflineAvailabilityType = OfflineAvailabilityType.NORMAL,
+
 		@Column
 		var note: String? = null,
 
@@ -98,11 +95,6 @@ data class Track(
 		@Column(columnDefinition = "BIT")
 		var inReview: Boolean = false,
 
-		// TODO This is nullable because I need to do a migration to set it.
-		// null means "not known". When the art is fetched for a track, this is set to true or false forevermore
-		@Column(columnDefinition = "BIT")
-		var hasArt: Boolean?,
-
 		@JsonIgnore
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "original_track_id")
@@ -112,11 +104,33 @@ data class Track(
 		var songUpdatedAt: Timestamp = now(),
 
 		@Column
-		var artUpdatedAt: Timestamp = now()
+		var artUpdatedAt: Timestamp = now(),
+
+		@Column(name = "filesize_song_ogg")
+		var filesizeSongOgg: Long,
+
+		@Column(name = "filesize_song_mp3")
+		var filesizeSongMp3: Long,
+
+		@Column(name = "filesize_art_png")
+		var filesizeArtPng: Long,
+
+		@Column(name = "filesize_thumbnail_64x64_png")
+		var filesizeThumbnail64x64Png: Long
 ) : RemoteSyncable {
 
 	// TODO this is temporary until the clients update to use "addedToLibrary" instead!
 	@JsonProperty("createdAt")
-	@JsonInclude
+	@Transient
 	fun fakeCreatedAt(): Timestamp? = addedToLibrary
+
+	// No longer including these as they are dumb given that we normalize all the song data when we ingest it.
+	// Returning 0 instead in order to satisfy clients that might still be looking for this
+	@Transient
+	val bitRate: Long = 0
+
+	@Transient
+	val sampleRate: Long = 0
+
+	val hasArt: Boolean get() = filesizeArtPng > 0
 }

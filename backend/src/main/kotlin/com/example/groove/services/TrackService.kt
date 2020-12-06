@@ -1,7 +1,6 @@
 package com.example.groove.services
 
 import com.example.groove.controllers.MarkTrackAsListenedToDTO
-import com.example.groove.controllers.TrackController
 import com.example.groove.db.dao.DeviceRepository
 import com.example.groove.db.dao.TrackHistoryRepository
 import com.example.groove.db.dao.TrackLinkRepository
@@ -26,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile
 import java.sql.Timestamp
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
 
 
 @Service
@@ -176,21 +174,12 @@ class TrackService(
 				throw IllegalArgumentException("No track found by ID $trackId!")
 			}
 
-			updateTrackDTO.name?.let { track.name = it.trim() }
-			updateTrackDTO.artist?.let { track.artist = it.trim() }
-			updateTrackDTO.featuring?.let { track.featuring = it.trim() }
-			updateTrackDTO.album?.let { track.album = it.trim() }
-			updateTrackDTO.releaseYear?.let { track.releaseYear = it }
-			updateTrackDTO.trackNumber?.let { track.trackNumber = it }
-			updateTrackDTO.note?.let { track.note = it.trim() }
-			updateTrackDTO.genre?.let { track.genre = it.trim() }
-			updateTrackDTO.hidden?.let { track.hidden = it }
+			updateTrackDTO.updateTrack(track)
 			track.updatedAt = now()
 
 			if (artFile != null) {
 				songIngestionService.storeAlbumArtForTrack(artFile, track, updateTrackDTO.cropArtToSquare)
 				track.artUpdatedAt = track.updatedAt
-				track.hasArt = true
 				trackLinkRepository.forceExpireLinksByTrackId(track.id)
 			} else if (updateTrackDTO.cropArtToSquare) {
 				logger.info("User ${user.name} is cropping existing art to a square for track $trackId")
@@ -319,10 +308,6 @@ class TrackService(
 		}
 
 		songIngestionService.editVolume(track, volumeAdjustment)
-
-		track.updatedAt = now()
-		track.songUpdatedAt = track.updatedAt
-		trackRepository.save(track)
 	}
 
 	fun trimTrack(trackId: Long, startTime: String?, duration: String?): Int {
@@ -335,8 +320,6 @@ class TrackService(
 		val newLength = songIngestionService.trimSong(track, startTime, duration)
 
 		track.length = newLength
-		track.updatedAt = now()
-		track.songUpdatedAt = track.updatedAt
 		trackRepository.save(track)
 
 		return newLength

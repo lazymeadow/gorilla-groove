@@ -127,11 +127,7 @@ class SystemStorageService(
 			val parentDir = trackId / 1000
 			val randomKey = UUID.randomUUID()
 
-			if (track.hasArt == null) {
-				 track.hasArt = loadAlbumArt(trackId, artSize) != null
-			}
-
-			if (track.hasArt == true) {
+			if (track.hasArt) {
 				"http://localhost:8080/album-art/$parentDir/$trackId${artSize.systemFileExtension}?key=$randomKey"
 			} else {
 				""

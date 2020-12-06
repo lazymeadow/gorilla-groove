@@ -1,6 +1,5 @@
 package com.example.groove.services
 
-import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
@@ -9,10 +8,7 @@ import com.example.groove.properties.YouTubeDlProperties
 import com.example.groove.util.createMapper
 import com.example.groove.util.logger
 import com.fasterxml.jackson.annotation.JsonAlias
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.io.File
 import java.util.*
 import kotlin.math.abs
@@ -22,17 +18,13 @@ import kotlin.math.abs
 class YoutubeDownloadService(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageProperties: FileStorageProperties,
-		private val trackRepository: TrackRepository,
 		private val youTubeDlProperties: YouTubeDlProperties,
 		private val imageService: ImageService
 ) {
 
 	val mapper = createMapper()
 
-	// Currently an issue with downloading thumbnails from YT
-	// https://github.com/ytdl-org/youtube-dl/issues/25684
-	@Transactional
-	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO, storeArt: Boolean = true): Track {
+	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO): Track {
 		val url = youtubeDownloadDTO.url
 
 		val tmpFileName = UUID.randomUUID().toString()
@@ -55,44 +47,50 @@ class YoutubeDownloadService(
 		p.waitFor()
 
 		val newSong = File("$destination.ogg")
-		val videoThumbnailArt = findArt(destination)
 		if (!newSong.exists()) {
 			throw YouTubeDownloadException("Failed to download song from URL: $url")
 		}
 
+		val videoArt = chooseAlbumArt(youtubeDownloadDTO.artUrl, destination) ?: run {
+			logger.error("Failed to download album art for song at URL: $url!")
+			null
+		}
+
 		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
 		// Slightly complicates finding the file after we save it, though
-		val track = songIngestionService.convertAndSaveTrackForUser(newSong, user, url, hasArt = videoThumbnailArt != null)
-		// If the uploader provided any metadata, add it to the track and save it again
-		youtubeDownloadDTO.name?.let { track.name = it.trim() }
-		youtubeDownloadDTO.artist?.let { track.artist = it.trim() }
-		youtubeDownloadDTO.featuring?.let { track.featuring = it.trim() }
-		youtubeDownloadDTO.album?.let { track.album = it.trim() }
-		youtubeDownloadDTO.releaseYear?.let { track.releaseYear = it }
-		youtubeDownloadDTO.trackNumber?.let { track.trackNumber = it }
-		youtubeDownloadDTO.genre?.let { track.genre = it.trim() }
-		trackRepository.save(track)
-
-		if (youtubeDownloadDTO.artUrl != null) {
-			videoThumbnailArt?.delete()
-			imageService.downloadFromUrl(youtubeDownloadDTO.artUrl)?.let { overrideArt ->
-				songIngestionService.storeAlbumArtForTrack(overrideArt, track, youtubeDownloadDTO.cropArtToSquare)
-			}
-		} else if (!storeArt) {
-			videoThumbnailArt?.delete()
-		} else if (videoThumbnailArt != null) {
-			songIngestionService.storeAlbumArtForTrack(videoThumbnailArt, track, youtubeDownloadDTO.cropArtToSquare)
-			videoThumbnailArt.delete()
-		} else {
-			logger.error("Failed to download album art for song at URL: $url.")
-		}
+		val track = songIngestionService.convertAndSaveTrackForUser(youtubeDownloadDTO, user, newSong, videoArt, url)
 
 		newSong.delete()
 
 		return track
 	}
 
-	private fun findArt(fileDestinationWithoutExtension: String): File? {
+	// An override link can be provided for a download if we're coming from Spotify. However, if the link
+	// does not exist, or fails to download, fall back to the video thumbnail so we get something
+	private fun chooseAlbumArt(overrideArtLink: String?, thumbnailArtPath: String): File? {
+		val videoArt = findVideoArtOnDisk(thumbnailArtPath)
+
+		return if (overrideArtLink != null) {
+			val overrideArt = imageService.downloadFromUrl(overrideArtLink)
+
+			if (overrideArt == null) {
+				if (videoArt == null) {
+					logger.error("Could not grab the override album art link ${overrideArtLink}! Using video thumbnail instead (if it exists)")
+					null
+				} else {
+					logger.error("Could not grab the override album art link ${overrideArtLink}! The video thumbnail also could not be found!")
+					videoArt
+				}
+			} else {
+				videoArt?.delete()
+				overrideArt
+			}
+		} else {
+			videoArt
+		}
+	}
+
+	private fun findVideoArtOnDisk(fileDestinationWithoutExtension: String): File? {
 		listOf("webp", "jpg").forEach { extension ->
 			val newAlbumArt = File("$fileDestinationWithoutExtension.$extension")
 			if (newAlbumArt.exists()) {

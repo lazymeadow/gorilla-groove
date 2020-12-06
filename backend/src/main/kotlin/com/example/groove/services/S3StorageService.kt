@@ -22,15 +22,13 @@ import java.nio.file.StandardCopyOption
 @Service
 @ConditionalOnProperty(name = ["aws.store.in.s3"], havingValue = "true")
 class S3StorageService(
-		private val trackRepository: TrackRepository,
+		trackRepository: TrackRepository,
 		s3Properties: S3Properties,
 		trackLinkRepository: TrackLinkRepository,
 		fileStorageProperties: FileStorageProperties
 ) : FileStorageService(trackRepository, trackLinkRepository, fileStorageProperties) {
 
 	private val s3Client: AmazonS3
-
-	private val bucketName = "gorilla-tracks"
 
 	init {
 		val awsCredentials = BasicAWSCredentials(s3Properties.awsAccessKeyId, s3Properties.awsSecretAccessKey)
@@ -115,14 +113,7 @@ class S3StorageService(
 		return getCachedTrackLink(trackId, anonymousAccess, isArtLink = true, artSize = artSize) { track ->
 			val key = "${artSize.s3Directory}/${track.id}.png"
 
-			// TODO This entire if statement is a temporary hack until the DB contains all the information about art existing.
-			// Then we can stop going to S3 to check
-			if (track.hasArt == null) {
-				track.hasArt = s3Client.doesObjectExist(bucketName, key)
-				trackRepository.save(track)
-			}
-
-			if (track.hasArt == true) {
+			if (track.hasArt) {
 				s3Client.generatePresignedUrl(bucketName, key, expireHoursOut(4)).toString()
 			} else {
 				// This is stored in the DB and the column and property are non-null.
@@ -141,5 +132,7 @@ class S3StorageService(
 
 	companion object {
 		val logger = logger()
+
+		const val bucketName = "gorilla-tracks"
 	}
 }

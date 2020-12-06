@@ -12,10 +12,6 @@ export class Settings extends React.Component {
 		};
 	}
 
-	componentDidUpdate() {
-
-	}
-
 	setModalOpen(isOpen) {
 		this.setState({ modalOpen: isOpen })
 	}

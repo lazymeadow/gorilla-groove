@@ -8,12 +8,14 @@ import com.example.groove.db.model.ReviewSourceArtistDownload
 import com.example.groove.db.model.User
 import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
+import com.example.groove.properties.S3Properties
 import com.example.groove.services.*
 import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.minusWeeks
+import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,11 +30,20 @@ class ReviewSourceArtistService(
 		private val trackRepository: TrackRepository,
 		private val imageService: ImageService,
 		private val songIngestionService: SongIngestionService,
-		private val reviewQueueSocketHandler: ReviewQueueSocketHandler
+		private val reviewQueueSocketHandler: ReviewQueueSocketHandler,
+		private val environment: Environment,
+		private val s3Properties: S3Properties
 ) {
 	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
 	@Transactional
 	fun downloadNewSongs() {
+		// Dev computers sometimes need to turn on 'awsStoreInS3' to run scripts against prod data, and if these
+		// jobs run while that is active, they will overwrite data in S3. This is an added protection against that.
+		if (s3Properties.awsStoreInS3 && !environment.activeProfiles.contains("prod")) {
+			logger.info("S3 storage is on without the prod profile active. Not running YT Channel job")
+			return
+		}
+
 		val allSources = reviewSourceArtistRepository.findAll()
 
 		logger.info("Running Review Source Artist Downloader")
@@ -140,12 +151,16 @@ class ReviewSourceArtistService(
 					artist = song.artist,
 					album = song.album,
 					releaseYear = song.releaseYear,
+
+					// Because we started from Spotify, we have a URL to the actual album art.
+					// This is better than whatever it is we will get from the YT download, so pass it along to be used instead
+					artUrl = song.albumArtLink,
 					cropArtToSquare = true
 			)
 
 			// Sometimes YoutubeDL can have issues. Don't cascade fail all downloads because of it
 			val track = try {
-				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO, storeArt = false)
+				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
 			} catch (e: Exception) {
 				logger.error("Failed to download from YouTube for ${song.artist} - ${song.name}!", e)
 
@@ -158,21 +173,11 @@ class ReviewSourceArtistService(
 			track.reviewSource = source
 			track.inReview = true
 			track.lastReviewed = now()
+			trackRepository.save(track)
 
 			artistDownload.lastDownloadAttempt = now()
 			artistDownload.downloadedAt = artistDownload.lastDownloadAttempt
 			reviewSourceArtistDownloadRepository.save(artistDownload)
-
-			// Because we started from Spotify, we have a URL to the actual album art.
-			// This is better than whatever it is we will get from the YT download, so grab the art and store it
-			imageService.downloadFromUrl(song.albumArtLink)?.let { image ->
-				track.hasArt = true
-				songIngestionService.storeAlbumArtForTrack(image, track, false)
-			} ?: run {
-				track.hasArt = false
-			}
-
-			trackRepository.save(track)
 
 			// The YT download service will save the Track for the user that downloads it.
 			// So for every other user make a copy of that track

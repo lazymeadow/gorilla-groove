@@ -79,17 +79,23 @@ export class MusicProvider extends React.Component {
 
 		let columnPreferences = LocalStorage.getObject('columnPreferences');
 
-		// If the preferences already existed, we need to check if any new columns were added
-		// since the user last logged in.
+		// If the preferences already existed, we need to check if any new columns were added since the user last logged in.
 		if (columnPreferences) {
-			let savedColumns = columnPreferences.map(columnPref => columnPref.name );
-			let newColumns = Util.arrayDifference(columnOptions, savedColumns);
+			const savedColumns = columnPreferences.map(columnPref => columnPref.name);
+			const newColumns = Util.arrayDifference(columnOptions, savedColumns);
+			const removedColumns = Util.arrayDifference(savedColumns, columnOptions);
 
 			if (newColumns.length > 0) {
 				// We have new columns to add. Initialize them and add them to the column preferences
 				columnPreferences = columnPreferences.concat(newColumns.map(trackColumnName => {
 					return { name: trackColumnName, enabled: true };
 				}));
+				LocalStorage.setObject('columnPreferences', columnPreferences);
+			}
+
+			if (removedColumns.length > 0) {
+				// If the pref has a name that matches any removed name, filter it out
+				columnPreferences = columnPreferences.filter(pref => !removedColumns.some(removedName => removedName === pref.name));
 				LocalStorage.setObject('columnPreferences', columnPreferences);
 			}
 
@@ -553,7 +559,15 @@ export class MusicProvider extends React.Component {
 	}
 
 	removeFromNowPlaying(selectionKeys) {
-		const newNowPlaying = this.state.nowPlayingTracks.filter(track => !selectionKeys.has(track.selectionKey));
+		const newNowPlaying = [];
+		const indexesToRemove = [];
+		this.state.nowPlayingTracks.forEach((track, i) => {
+			if (selectionKeys.has(track.selectionKey)) {
+				indexesToRemove.push(i);
+			} else {
+				newNowPlaying.push(track);
+			}
+		});
 
 		// Handle changing the currently playing song, if we need to
 		if (this.state.playedTrack !== null && selectionKeys.has(this.state.playedTrack.selectionKey)) {
@@ -566,13 +580,13 @@ export class MusicProvider extends React.Component {
 			// If we removed tracks BEFORE our now playing track index (i.e. we are playing the 10th song and
 			// we removed the 5th song) then we need to shift the now playing track index up by the number of
 			// tracks we removed less than the currently played track index
-			let indexesToRemove = 0;
-			selectionKeys.forEach(indexRemoved => {
+			let indexesRemoved = 0;
+			indexesToRemove.forEach(indexRemoved => {
 				if (indexRemoved < this.state.playedTrackIndex) {
-					indexesToRemove++;
+					indexesRemoved++;
 				}
 			});
-			this.setState({ playedTrackIndex: this.state.playedTrackIndex - indexesToRemove });
+			this.setState({ playedTrackIndex: this.state.playedTrackIndex - indexesRemoved });
 		}
 
 		this.setState({

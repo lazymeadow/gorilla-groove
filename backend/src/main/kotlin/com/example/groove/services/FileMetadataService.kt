@@ -1,7 +1,7 @@
 package com.example.groove.services
 
-import com.example.groove.db.model.User
 import com.example.groove.db.model.Track
+import com.example.groove.dto.MetadataParseDTO
 import com.example.groove.util.logger
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -49,28 +49,23 @@ class FileMetadataService {
 		}
 	}
 
-    fun createTrackFromSongFile(song: File, user: User, originalFileName: String, hasArt: Boolean): Track {
-        if (!song.exists()) {
-            logger.error("File was not found using the path '${song.path}'")
-            throw IllegalArgumentException("File by name '${song.name}' does not exist!")
+    fun extractTrackInfoFromFile(file: File, originalFileName: String? = null): MetadataParseDTO {
+        if (!file.exists()) {
+            logger.error("File was not found using the path '${file.path}'")
+            throw IllegalArgumentException("File by name '${file.name}' does not exist!")
         }
-        val audioFile = AudioFileIO.read(song)
+        val audioFile = AudioFileIO.read(file)
 
-		val (backupName, backupArtist) = deriveBackupNamesFromOriginalFileName(originalFileName)
+		val (backupName, backupArtist) = originalFileName?.let { deriveBackupNamesFromOriginalFileName(it) } ?: "" to ""
 
-		return Track(
-				user = user,
-				fileName = song.name,
+		return MetadataParseDTO(
 				name = audioFile.tag.getFirst(FieldKey.TITLE).ifEmpty(backupName).trim(),
 				artist = audioFile.tag.getFirst(FieldKey.ARTIST).ifEmpty(backupArtist).trim(),
 				album = audioFile.tag.getFirst(FieldKey.ALBUM).trim(),
 				trackNumber = parseTrackNumber(audioFile.tag.getFirst(FieldKey.TRACK)),
 				releaseYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull(),
 				genre = audioFile.tag.getFirst(FieldKey.GENRE).trim(),
-				length = audioFile.audioHeader.trackLength,
-				bitRate = audioFile.audioHeader.bitRateAsNumber,
-				sampleRate = audioFile.audioHeader.sampleRateAsNumber,
-				hasArt = hasArt
+				length = audioFile.audioHeader.trackLength
 		)
 	}
 
@@ -113,16 +108,6 @@ class FileMetadataService {
 
 	private fun String.trimExtension(): String {
 		return this.split('.').first().trim()
-	}
-
-	fun getTrackLength(song: File): Int {
-		if (!song.exists()) {
-			logger.error("File was not found using the path '${song.path}'")
-			throw IllegalArgumentException("File by name '${song.name}' does not exist!")
-		}
-		val audioFile = AudioFileIO.read(song)
-
-		return audioFile.audioHeader.trackLength
 	}
 
 	fun addMetadataToFile(song: File, track: Track, albumArt: File?) {

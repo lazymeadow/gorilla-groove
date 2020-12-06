@@ -46,7 +46,7 @@ class MetadataRequestService(
 					track.trackNumber = metadataResponse.trackNumber
 					track.updatedAt = now
 				}
-				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt, now)
+				saveAlbumArt(track, metadataResponse.albumArtLink, request.changeAlbumArt)
 			}
 
 			trackRepository.save(track)
@@ -70,7 +70,7 @@ class MetadataRequestService(
 		}
 	}
 
-	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType, updateTime: Timestamp) {
+	private fun saveAlbumArt(track: Track, newAlbumArtUrl: String, overrideType: MetadataOverrideType) {
 		if (overrideType == MetadataOverrideType.NEVER) {
 			return
 		}
@@ -97,9 +97,6 @@ class MetadataRequestService(
 		file.delete()
 
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
-		track.updatedAt = updateTime
-		track.artUpdatedAt = updateTime
-		track.hasArt = true
 	}
 
 	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataResponseDTO>> {
