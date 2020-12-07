@@ -1,4 +1,5 @@
 import Foundation
+import Connectivity
 
 class OfflineStorageService {
     
@@ -6,7 +7,7 @@ class OfflineStorageService {
     private static var offlineStorageUsed: String
     
     @SettingsBundleStorage(key: "offline_storage_fetch_mode")
-    private static var offlineStorageFetchMode: OfflineStorageFetchModeType
+    private static var offlineStorageFetchModeInt: Int
     
     @SettingsBundleStorage(key: "max_offline_storage")
     private static var maxOfflineStorage: Int
@@ -25,6 +26,14 @@ class OfflineStorageService {
         get {
             // maxOfflineStorage is stored in MB. Need to convert to bytes to do a comparison.
             maxOfflineStorage * 1_000_000
+        }
+    }
+    
+    private static var offlineStorageFetchMode: OfflineStorageFetchModeType {
+        get {
+            // Swift's runtime reflection / generic protocols are very lacking, and I am unable to automatically convert
+            // to an enum inside of the @SettingsBundleStorage propertyWrapper. So here we are.
+            OfflineStorageFetchModeType(rawValue: offlineStorageFetchModeInt)!
         }
     }
     
@@ -150,6 +159,10 @@ class OfflineStorageService {
     private static var offlineMusicDownloadInProgress = false
     
     static func downloadAlwaysOfflineMusic() {
+        if Thread.isMainThread {
+            fatalError("Do not attempt to download music on the main thread!")
+        }
+        
         if offlineMusicDownloadInProgress {
             GGLog.debug("Always offline download process already in progress. Not starting another.")
 
@@ -168,10 +181,43 @@ class OfflineStorageService {
         }
     }
     
+    private static func shouldDownloadMusic() -> Bool {
+        if !offlineStorageEnabled {
+            return false
+        }
+        
+        switch (offlineStorageFetchMode) {
+        case .always:
+            return true
+        case .never:
+            return false
+        case .wifi:
+            var wifiConnectivity = false
+            
+            let connectivityCheckLock = DispatchSemaphore(value: 0)
+            
+            GGLog.debug("Checking WiFi connectivity...")
+
+            let connectivity = Connectivity()
+            connectivity.checkConnectivity { connectivity in
+                wifiConnectivity = connectivity.status == .connectedViaWiFi
+                connectivityCheckLock.signal()
+            }
+            
+            connectivityCheckLock.wait()
+            
+            GGLog.debug("WiFi connectivity was: \(wifiConnectivity)")
+            
+            return wifiConnectivity
+        }
+    }
+    
     private static func downloadAlwaysOfflineMusicInternal() {
         let ownId = FileState.read(LoginState.self)!.id
 
-        // TODO offline / wifi check
+        if !shouldDownloadMusic() {
+            return
+        }
         
         let tracksNeedingCache = TrackDao.getTracks(
             userId: ownId,
@@ -185,9 +231,21 @@ class OfflineStorageService {
             return
         }
         
-        tracksNeedingCache.forEach { track in
+        var i = 0
+        for track in tracksNeedingCache {
+            // Checking for WiFi connectivity is a bit of an expensive operation, so only check every 5 tracks.
+            // It is fairly unlikely that the connectivity changed, so doing it every track is probably overkill anyway.
+            i += 1
+            if i % 5 == 0 {
+                if !shouldDownloadMusic() {
+                    GGLog.info("Music download conditions changed in the middle of downloading tracks. Aborting downloads")
+                    break
+                }
+            }
+
             GGLog.info("Beginning cache of 'always offline' track with ID \(track.id)")
             let trackDownloadSemaphore = DispatchSemaphore(value: 0)
+            
             TrackService.fetchLinksForTrack(
                 track: track,
                 fetchSong: true,
@@ -324,7 +382,6 @@ extension FileManager {
         try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
     }
 }
-
 
 enum OfflineStorageFetchModeType: Int {
     case always = 2

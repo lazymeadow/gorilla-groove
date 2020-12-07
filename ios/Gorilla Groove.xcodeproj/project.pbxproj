@@ -55,6 +55,7 @@
 		E8711868256777BD007B8F16 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8711867256777BD007B8F16 /* SettingsService.swift */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
+		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -115,6 +116,7 @@
 				E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */,
 				E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */,
 				E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */,
+				E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -234,6 +236,7 @@
 				E840A581256CD15E009F3C9E /* ZIPFoundation */,
 				E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */,
 				E840A58D256DE2D2009F3C9E /* CocoaLumberjack */,
+				E8FBB74D257DC0DF007DB097 /* Connectivity */,
 			);
 			productName = "Gorilla Groove";
 			productReference = A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */;
@@ -266,6 +269,7 @@
 			packageReferences = (
 				E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */,
+				E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */,
 			);
 			productRefGroup = A89100EB23BD339D00D6EA2D /* Products */;
 			projectDirPath = "";
@@ -559,6 +563,14 @@
 				minimumVersion = 3.7.0;
 			};
 		};
+		E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rwbutler/connectivity";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -576,6 +588,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjack;
+		};
+		E8FBB74D257DC0DF007DB097 /* Connectivity */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */;
+			productName = Connectivity;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
