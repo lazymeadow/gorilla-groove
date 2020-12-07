@@ -150,7 +150,7 @@ class HttpRequester {
             return
         }
         
-        if (httpResponse.statusCode >= 300) {
+        if (httpResponse.statusCode >= 300 || httpResponse.statusCode < 200) {
             let dataError = data?.toString() ?? ""
             logger.error("Non 2xx received! Code: \(httpResponse.statusCode). Error: \(dataError)")
             callback?(nil, httpResponse.statusCode, error as! String?)
@@ -178,6 +178,34 @@ class HttpRequester {
         }
         
         callback?(decodedData, httpResponse.statusCode, error as! String?)
+    }
+    
+    static func download(
+        _ stringUrl: String,
+        downloadFinishedHandler: @escaping (_ outputUrl: URL?) -> Void
+    ) {
+        guard let url = URL(string: stringUrl) else {
+            GGLog.error("Could not parse URL \(stringUrl)!")
+            downloadFinishedHandler(nil)
+            return
+        }
+        
+        let downloadTask = URLSession.shared.downloadTask(with: url) { outputUrl, response, error in
+            guard let httpResponse = response as? HTTPURLResponse else {
+                logger.error("error: not a valid http response")
+                downloadFinishedHandler(nil)
+                return
+            }
+            
+            if (httpResponse.statusCode >= 300 || httpResponse.statusCode < 200) {
+                logger.error("Non 2xx received! Code: \(httpResponse.statusCode), \(error?.localizedDescription ?? "--no error--")")
+                downloadFinishedHandler(nil)
+                return
+            }
+            
+            downloadFinishedHandler(outputUrl)
+        }
+        downloadTask.resume()
     }
 }
 

@@ -68,4 +68,41 @@ class TrackService {
         let latitude: Double?
         let longitude: Double?
     }
+    
+    static func fetchLinksForTrack(
+        track: Track,
+        fetchSong: Bool,
+        fetchArt: Bool,
+        linkFetchHandler: @escaping (_ trackLinkResponse: TrackLinkResponse?) -> Void
+    ) {
+        // Specifying the links we want to fetch is a very slight optimization on the API side, as it does not have to generate
+        // links for art if we are fetching just the song, or vice versa. This will rarely be separate. But if album art or
+        // song data gets updated and our cache gets busted, then it could happen.
+        let linkFetchType: String
+        if !fetchSong && !fetchArt {
+            return
+        } else if fetchSong && !fetchArt {
+            linkFetchType = "SONG"
+        } else if !fetchSong && fetchArt {
+            linkFetchType = "ART"
+        } else {
+            linkFetchType = "BOTH"
+        }
+        
+        HttpRequester.get("file/link/\(track.id)?audioFormat=MP3&linkFetchType=\(linkFetchType)", TrackLinkResponse.self) { links, status , err in
+            if status < 200 || status >= 300 || links == nil {
+                GGLog.error("Failed to get track links!")
+            }
+            
+            if fetchSong && links!.songLink == nil {
+                GGLog.error("Fetched song links from the API for track with ID: \(track.id) but no link was returned!")
+            }
+            
+            if fetchArt && links!.albumArtLink == nil {
+                GGLog.error("Fetched art links from the API for track with ID: \(track.id) but no link was returned!")
+            }
+            
+            linkFetchHandler(links)
+        }
+    }
 }

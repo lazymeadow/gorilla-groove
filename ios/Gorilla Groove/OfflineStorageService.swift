@@ -147,6 +147,101 @@ class OfflineStorageService {
         }
     }
 
+    private static var offlineMusicDownloadInProgress = false
+    
+    static func downloadAlwaysOfflineMusic() {
+        if offlineMusicDownloadInProgress {
+            GGLog.debug("Always offline download process already in progress. Not starting another.")
+
+            return
+        }
+        
+        // This could take a long time. Don't let multiple threads do it. I put an additional boolean here to bail out
+        // in case this takes a REALLY long time, so we don't have threads just pile up here.
+        synchronized(self) {
+            offlineMusicDownloadInProgress = true
+            
+            GGLog.debug("Checking if always offline music should be downloaded...")
+            downloadAlwaysOfflineMusicInternal()
+            
+            offlineMusicDownloadInProgress = false
+        }
+    }
+    
+    private static func downloadAlwaysOfflineMusicInternal() {
+        let ownId = FileState.read(LoginState.self)!.id
+
+        // TODO offline / wifi check
+        
+        let tracksNeedingCache = TrackDao.getTracks(
+            userId: ownId,
+            offlineAvailability: .AVAILABLE_OFFLINE,
+            isCached: false
+        )
+        
+        if tracksNeedingCache.isEmpty {
+            GGLog.debug("No always offline music to download")
+
+            return
+        }
+        
+        tracksNeedingCache.forEach { track in
+            GGLog.info("Beginning cache of 'always offline' track with ID \(track.id)")
+            let trackDownloadSemaphore = DispatchSemaphore(value: 0)
+            TrackService.fetchLinksForTrack(
+                track: track,
+                fetchSong: true,
+                fetchArt: track.artCachedAt == nil && track.filesizeArtPng > 0
+            ) { trackLinks in
+                guard let trackLinks = trackLinks else {
+                    trackDownloadSemaphore.signal() // Error case. Not logging as the error HTTP logging happens upstream
+                    return
+                }
+                
+                guard let songLink = trackLinks.songLink else {
+                    // If there was no song data, then shit has somehow hit the fan. Don't proceed. Error logging happens upstream
+                    trackDownloadSemaphore.signal()
+                    return
+                }
+                
+                let songDownloadSemaphore = DispatchSemaphore(value: 0)
+                let artDownloadSemaphore = DispatchSemaphore(value: 0)
+
+                HttpRequester.download(songLink) { fileOnDiskUrl in
+                    if let fileOnDiskUrl = fileOnDiskUrl {
+                        CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .song)
+                    }
+
+                    songDownloadSemaphore.signal()
+                }
+                
+                if let artLink = trackLinks.albumArtLink {
+                    HttpRequester.download(artLink) { fileOnDiskUrl in
+                        if let fileOnDiskUrl = fileOnDiskUrl {
+                            CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .art)
+                        }
+
+                        artDownloadSemaphore.signal()
+                    }
+                } else {
+                    artDownloadSemaphore.signal()
+                }
+                
+                // Use semaphores here to let the downloads happen in parallel. But wait for them before continuing to the next track download
+                songDownloadSemaphore.wait()
+                artDownloadSemaphore.wait()
+                
+                trackDownloadSemaphore.signal()
+            }
+            
+            trackDownloadSemaphore.wait()
+            GGLog.info("Cache of 'always offline' track with ID \(track.id) is done")
+        }
+        
+        // In downloading "always offline" music, we may now need to kick out temporary cached music if this put us over the limit
+        recalculateUsedOfflineStorage()
+    }
+
     struct DataStored: Codable {
         let stored: Int
     }
@@ -173,6 +268,14 @@ class CacheService {
         let path = baseDir().appendingPathComponent(filenameFromCacheType(trackId, cacheType: cacheType))
         
         try! data.write(to: path)
+        
+        TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), cacheType: cacheType)
+    }
+    
+    static func setCachedData(trackId: Int, fileOnDisk: URL, cacheType: CacheType) {
+        let path = baseDir().appendingPathComponent(filenameFromCacheType(trackId, cacheType: cacheType))
+        
+        try! FileManager.default.moveItem(at: fileOnDisk, to: path)
         
         TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), cacheType: cacheType)
     }
@@ -233,4 +336,13 @@ enum CacheType: CaseIterable {
     case song
     case art
     case thumbnail
+}
+
+// https://stackoverflow.com/a/61458763/13175115
+@discardableResult
+public func synchronized<T>(_ lock: AnyObject, closure:() -> T) -> T {
+    objc_sync_enter(lock)
+    defer { objc_sync_exit(lock) }
+
+    return closure()
 }

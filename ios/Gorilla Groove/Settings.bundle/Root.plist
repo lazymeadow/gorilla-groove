@@ -99,36 +99,6 @@
 			</array>
 		</dict>
 		<dict>
-			<key>Type</key>
-			<string>PSTitleValueSpecifier</string>
-			<key>Title</key>
-			<string>Offline Storage Used</string>
-			<key>DefaultValue</key>
-			<string>5.17 MB</string>
-			<key>Key</key>
-			<string>offline_storage_used</string>
-		</dict>
-		<dict>
-			<key>Type</key>
-			<string>PSTitleValueSpecifier</string>
-			<key>Title</key>
-			<string>Always Offline Songs Cached</string>
-			<key>DefaultValue</key>
-			<string>0 / 0</string>
-			<key>Key</key>
-			<string>always_offline_cached</string>
-		</dict>
-		<dict>
-			<key>Type</key>
-			<string>PSTitleValueSpecifier</string>
-			<key>Title</key>
-			<string>Tracks Temporarily Cached</string>
-			<key>DefaultValue</key>
-			<string>0</string>
-			<key>Key</key>
-			<string>tracks_temporarily_cached</string>
-		</dict>
-		<dict>
 			<key>Titles</key>
 			<array>
 				<string>100 MB</string>
@@ -165,6 +135,36 @@
 				<integer>100000</integer>
 				<integer>0</integer>
 			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTitleValueSpecifier</string>
+			<key>Title</key>
+			<string>Offline Storage Used</string>
+			<key>DefaultValue</key>
+			<string>5.17 MB</string>
+			<key>Key</key>
+			<string>offline_storage_used</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTitleValueSpecifier</string>
+			<key>Title</key>
+			<string>Always Offline Songs Cached</string>
+			<key>DefaultValue</key>
+			<string>0 / 0</string>
+			<key>Key</key>
+			<string>always_offline_cached</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSTitleValueSpecifier</string>
+			<key>Title</key>
+			<string>Tracks Temporarily Cached</string>
+			<key>DefaultValue</key>
+			<string>0</string>
+			<key>Key</key>
+			<string>tracks_temporarily_cached</string>
 		</dict>
 		<dict>
 			<key>Type</key>

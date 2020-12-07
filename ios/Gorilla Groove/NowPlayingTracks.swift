@@ -118,25 +118,8 @@ class NowPlayingTracks {
     }
     
     private static func playFromLiveInternetData(track: Track, fetchSong: Bool, fetchArt: Bool, shouldCache: Bool) {
-        // Specifying the links we want to fetch is a very slight optimization on the API side, as it does not have to generate
-        // links for art if we are fetching just the song, or vice versa. This will rarely be separate. But if album art or
-        // song data gets updated and our cache gets busted, then it could happen.
-        let linkFetchType: String
-        if !fetchSong && !fetchArt {
-            return
-        } else if fetchSong && !fetchArt {
-            linkFetchType = "SONG"
-        } else if !fetchSong && fetchArt {
-            linkFetchType = "ART"
-        } else {
-            linkFetchType = "BOTH"
-        }
-        
-        HttpRequester.get("file/link/\(track.id)?audioFormat=MP3&linkFetchType=\(linkFetchType)", TrackLinkResponse.self) { links, status , err in
-            if status < 200 || status >= 300 || links == nil {
-                GGLog.error("Failed to get track links!")
-                return
-            }
+        TrackService.fetchLinksForTrack(track: track, fetchSong: fetchSong, fetchArt: fetchArt) { trackLinks in
+            guard let trackLinks = trackLinks else { return }
             
             if track.id != currentTrack?.id {
                 GGLog.debug("Track links were fetched, but the track was changed to Track \(currentTrack?.id ?? -1) before the links returned. Not playing track \(track.id).")
@@ -144,27 +127,21 @@ class NowPlayingTracks {
             }
             
             if fetchSong {
-                if let songLink = links!.songLink {
-                    AudioPlayer.playNewLink(songLink, trackId: track.id, shouldCache: shouldCache)
-                } else {
-                    GGLog.error("Fetched song links from the API for track with ID: \(track.id) but no link was returned!")
-                }
+                // If no song link was fetched despite us asking for one, then something went really wrong and we shouldn't continue.
+                guard let songLink = trackLinks.songLink else { return }
+                AudioPlayer.playNewLink(songLink, trackId: track.id, shouldCache: shouldCache)
             }
             
             if fetchArt {
-                if let artLink = links!.albumArtLink {
-                    setNowPlayingAlbumArt(track: track, artLink: artLink, shouldCache: shouldCache)
-                } else {
-                    GGLog.error("Fetched art links from the API for track with ID: \(track.id) but no link was returned!")
-                }
+                setNowPlayingAlbumArt(track: track, artLink: trackLinks.albumArtLink, shouldCache: shouldCache)
             }
             
             if shouldCache {
                 // Recalcluating the cache is a little bit of an expensive process. It hits the DB, potentially multiple times,
                 // and also hits user defaults. This is maybe a pointless optimization, but instead of recalculating individually
                 // for the album art and song when they each finish cashing async, just put in a delay that runs after.
-                // Bit hacky as there is no guarantee the song will have finished by this point. But this code running isn't
-                // super critical as the next check of offline storage will get around to fixing any issues.
+                // Bit hacky as there is no guarantee the song will have finished caching by this point. But this code running isn't
+                // super critical as the next check of offline storage will get around to fixing any issues anyway.
                 DispatchQueue.global().asyncAfter(deadline: .now() + 20.0) {
                     OfflineStorageService.recalculateUsedOfflineStorage()
                 }

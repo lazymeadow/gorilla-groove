@@ -166,6 +166,7 @@ class ServerSynchronizer {
         
         DispatchQueue.global().async {
             OfflineStorageService.recalculateUsedOfflineStorage()
+            OfflineStorageService.downloadAlwaysOfflineMusic()
         }
         
         return pagesToFetch
