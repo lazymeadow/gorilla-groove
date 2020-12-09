@@ -42,6 +42,27 @@ class OfflineStorageService {
         currentBytesStored = FileState.read(DataStored.self)?.stored ?? 0
     }
     
+    
+    private static var lastRecalculationId = UUID()
+    
+    // Recalculating is a bit expensive, and in some circumstances we might recalculate many times in a short period of time.
+    // This will effectively "batch" recalculations so we only do them once. For example, a user might be skipping through
+    // songs while on a good internet connection, resulting in a lot of things being cached in a short period of time. We don't
+    // need to recalculate immediately after every song is cached. There's not really a benefit to the user.
+    static func enqueueDelayedStorageRecalculation(delaySeconds: Double) {
+        let currentId = UUID()
+        lastRecalculationId = currentId
+        
+        GGLog.debug("Enqueueing storage recalculation in \(delaySeconds) seconds")
+        DispatchQueue.global().asyncAfter(deadline: .now() + delaySeconds) {
+            if currentId == lastRecalculationId {
+                OfflineStorageService.recalculateUsedOfflineStorage()
+            } else {
+                GGLog.debug("Not running delayed recalculation as another one has been enqueued")
+            }
+        }
+    }
+    
     static func recalculateUsedOfflineStorage(purgeAfterRecalculation: Bool = true) {
         // This makes several DB calls, and several writes to user prefs. It should never be invoked on the main thread.
         if Thread.isMainThread {
@@ -90,8 +111,15 @@ class OfflineStorageService {
         return true
     }
 
-    
+    // It's possible, though not likely, that two of these could attempt to run at once. I had it happen with a debugger paused
+    // and it resulted in a lot of attempts to delete stuff that already existed. Not the end of the world, but undesirale.
     static func purgeExtraTrackDataIfNeeded(offlineAvailability: OfflineAvailabilityType = .NORMAL) {
+        synchronized(self) {
+            purgeExtraTrackDataIfNeededInternal(offlineAvailability: offlineAvailability)
+        }
+    }
+    
+    static func purgeExtraTrackDataIfNeededInternal(offlineAvailability: OfflineAvailabilityType = .NORMAL) {
         if currentBytesStored < maxOfflineStorageBytes {
             GGLog.debug("Current stored bytes of \(currentBytesStored) are within the limit of \(maxOfflineStorageBytes). Not purging track cache")
             return
@@ -108,7 +136,7 @@ class OfflineStorageService {
             userId: ownId,
             offlineAvailability: offlineAvailability,
             isCached: true,
-            sorts: [("last_played", true, false)],
+            sorts: [("started_on_device", true, false)],
             // We recursively call this function until we've deleted enough.
             // Grab only 100 to keep memory usage down as this is basically a background task, and there's a good chance 100 is enough
             limit: 100
@@ -152,7 +180,7 @@ class OfflineStorageService {
         
         if bytePurgeCount < bytesToPurge {
             GGLog.info("Did not clear enough bytes to push cache below the limit (cleared: \(bytePurgeCount) needed: \(bytesToPurge)). Doing another pass")
-            purgeExtraTrackDataIfNeeded(offlineAvailability: offlineAvailability)
+            purgeExtraTrackDataIfNeededInternal(offlineAvailability: offlineAvailability)
         }
     }
 

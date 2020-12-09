@@ -54,6 +54,24 @@ class NowPlayingTracks {
         playTrack(currentTrack!)
     }
     
+    // This is used to determine cache eviction policy.
+    private static func updateStartedOnDevice(_ track: Track) {
+        // The reason for marking this on start, and not at the same 60% listened that we normally do,
+        // is just that it greatly simplifies the cache eviction process. Because song caching is async, the cache clearing code
+        // that runs afterwards needs to be async. So it isn't tied to the 60%, and they can't really be tied together.
+        // So it's easier to just mark the song as listened to right away so it's always done by the time the cache clearing runs.
+        // A delay is put in here just to not mark something as listened to if someone skips through multiple songs quickly
+        DispatchQueue.global().asyncAfter(deadline: .now() + 10.0) {
+            // If the current track isn't this track, then the song was skipped in the 10 seconds. Don't mark it.
+            // The exception here is if the song is incredibly short. If it is, it's not really worth not making it.
+            if track.id == currentTrack?.id || track.length < 12 {
+                TrackDao.setDevicePlayStart(trackId: track.id, date: Date())
+            } else {
+                GGLog.debug("Not updated started on time for track \(track.id) as it is no longer being played")
+            }
+        }
+    }
+    
     private static func playTrack(_ originalTrack: Track) {
         AudioPlayer.pause()
         LocationService.requestLocationPermissionIfNeeded()
@@ -69,6 +87,7 @@ class NowPlayingTracks {
         if let existingSongData = existingSongData {
             GGLog.debug("Song data for track \(track.id) is already cached. Playing from offline storage")
             AudioPlayer.playSongData(existingSongData)
+            updateStartedOnDevice(track)
         }
         if let existingArtData = existingArtData {
             GGLog.debug("Art data for track \(track.id) is already cached. Displaying from offline storage")
@@ -130,6 +149,7 @@ class NowPlayingTracks {
                 // If no song link was fetched despite us asking for one, then something went really wrong and we shouldn't continue.
                 guard let songLink = trackLinks.songLink else { return }
                 AudioPlayer.playNewLink(songLink, trackId: track.id, shouldCache: shouldCache)
+                updateStartedOnDevice(track)
             }
             
             if fetchArt {
@@ -137,14 +157,7 @@ class NowPlayingTracks {
             }
             
             if shouldCache {
-                // Recalcluating the cache is a little bit of an expensive process. It hits the DB, potentially multiple times,
-                // and also hits user defaults. This is maybe a pointless optimization, but instead of recalculating individually
-                // for the album art and song when they each finish cashing async, just put in a delay that runs after.
-                // Bit hacky as there is no guarantee the song will have finished caching by this point. But this code running isn't
-                // super critical as the next check of offline storage will get around to fixing any issues anyway.
-                DispatchQueue.global().asyncAfter(deadline: .now() + 20.0) {
-                    OfflineStorageService.recalculateUsedOfflineStorage()
-                }
+                OfflineStorageService.enqueueDelayedStorageRecalculation(delaySeconds: 30.0)
             }
         }
     }

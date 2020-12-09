@@ -389,6 +389,7 @@ class ServerSynchronizer {
                 isPrivate: `private`,
                 inReview: inReview,
                 lastPlayed: lastPlayed,
+                startedOnDevice: nil,
                 length: length,
                 name: name,
                 note: note,

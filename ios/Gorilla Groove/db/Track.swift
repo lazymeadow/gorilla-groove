@@ -11,6 +11,7 @@ public class Track : Entity {
     public var isPrivate: Bool
     public var inReview: Bool
     public var lastPlayed: Date?
+    public var startedOnDevice: Date?
     public var length: Int
     public var name: String
     public var note: String?
@@ -45,6 +46,7 @@ public class Track : Entity {
         isPrivate: Bool,
         inReview: Bool,
         lastPlayed: Date?,
+        startedOnDevice: Date?,
         length: Int,
         name: String,
         note: String?,
@@ -71,6 +73,7 @@ public class Track : Entity {
         self.isPrivate = isPrivate
         self.inReview = inReview
         self.lastPlayed = lastPlayed
+        self.startedOnDevice = startedOnDevice
         self.length = length
         self.name = name
         self.note = note
@@ -100,6 +103,7 @@ public class Track : Entity {
             isPrivate: (dict["isPrivate"] as! Int).toBool(),
             inReview: (dict["inReview"] as! Int).toBool(),
             lastPlayed: (dict["lastPlayed"] as? Int)?.toDate(),
+            startedOnDevice: (dict["startedOnDevice"] as? Int)?.toDate(),
             length: dict["length"] as! Int,
             name: dict["name"] as! String,
             note: dict["note"] as? String,
@@ -218,6 +222,14 @@ public class TrackDao : BaseDao<Track> {
         
         if !Database.execute("UPDATE track SET \(cacheColumn) = \(cacheString) WHERE id = \(trackId)") {
             GGLog.critical("Failed to set cachedAt for track \(trackId)")
+        }
+    }
+    
+    static func setDevicePlayStart(trackId: Int, date: Date?) {
+        let playedString = date?.toEpochTime().toString() ?? "null"
+
+        if !Database.execute("UPDATE track SET started_on_device = \(playedString) WHERE id = \(trackId)") {
+            GGLog.critical("Failed to set startedOnDevice for track \(trackId)!")
         }
     }
     

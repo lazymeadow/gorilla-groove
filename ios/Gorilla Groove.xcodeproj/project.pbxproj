@@ -53,6 +53,7 @@
 		E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67D24ECA4F30066CB4E /* PlaylistTrack.swift */; };
 		E871186525675C1C007B8F16 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E871186425675C1C007B8F16 /* Settings.bundle */; };
 		E8711868256777BD007B8F16 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8711867256777BD007B8F16 /* SettingsService.swift */; };
+		E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDEA258078B100207F99 /* InAppSettingsKit */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
@@ -115,6 +116,7 @@
 			files = (
 				E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */,
 				E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */,
+				E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */,
 				E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */,
 				E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */,
 			);
@@ -237,6 +239,7 @@
 				E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */,
 				E840A58D256DE2D2009F3C9E /* CocoaLumberjack */,
 				E8FBB74D257DC0DF007DB097 /* Connectivity */,
+				E873DDEA258078B100207F99 /* InAppSettingsKit */,
 			);
 			productName = "Gorilla Groove";
 			productReference = A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */;
@@ -270,6 +273,7 @@
 				E840A580256CD15E009F3C9E /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */,
 				E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */,
+				E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */,
 			);
 			productRefGroup = A89100EB23BD339D00D6EA2D /* Products */;
 			projectDirPath = "";
@@ -563,6 +567,14 @@
 				minimumVersion = 3.7.0;
 			};
 		};
+		E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/futuretap/InAppSettingsKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.8;
+			};
+		};
 		E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rwbutler/connectivity";
@@ -588,6 +600,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjack;
+		};
+		E873DDEA258078B100207F99 /* InAppSettingsKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */;
+			productName = InAppSettingsKit;
 		};
 		E8FBB74D257DC0DF007DB097 /* Connectivity */ = {
 			isa = XCSwiftPackageProductDependency;

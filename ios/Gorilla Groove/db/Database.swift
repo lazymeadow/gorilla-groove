@@ -122,7 +122,7 @@ class Database {
     
     static private func migrate() {
         let currentVersion = getDbVersion()
-        let targetVersion = 7
+        let targetVersion = 8
         
         logger.info("Existing DB is using version: \(currentVersion)")
 
@@ -234,6 +234,12 @@ class Database {
             executeOrFail("UPDATE track SET thumbnail_cached_at = art_cached_at;")
             executeOrFail("UPDATE track SET art_cached_at = NULL;")
         }
+        
+        if currentVersion < 8 {
+            logger.info("Adding started_on_device column")
+            executeOrFail("ALTER TABLE track ADD started_on_device INT NULL;")
+        }
+        
         
         executeOrFail("UPDATE db_version SET version = \(targetVersion)")
         logger.info("Datbase was upgraded to version \(targetVersion)")
