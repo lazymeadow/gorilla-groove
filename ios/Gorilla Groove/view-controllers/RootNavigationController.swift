@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import InAppSettingsKit
 
 class RootNavigationController : UIViewController {
     
@@ -8,6 +9,8 @@ class RootNavigationController : UIViewController {
     let libraryController = MyLibraryController()
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
+    let appSettingsViewController = IASKAppSettingsViewController()
+    
     func getNowPlayingSongController() -> TrackViewController {
         return TrackViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
     }
@@ -19,9 +22,7 @@ class RootNavigationController : UIViewController {
     lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, getNowPlayingSongController, handleButtonTap)
     lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, nil, handleButtonTap)
     lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, nil, handleButtonTap)
-    lazy var settingsButton = NavigationButton("Settings", "gear", nil, nil) { _ in
-        SettingsService.openAppSettings()
-    }
+    lazy var settingsButton = NavigationButton("Settings", "gear", appSettingsViewController, nil, handleButtonTap)
     
     lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
     
