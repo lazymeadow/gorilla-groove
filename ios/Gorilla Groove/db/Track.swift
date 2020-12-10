@@ -274,6 +274,28 @@ public class TrackDao : BaseDao<Track> {
 
         return counts
     }
+    
+    static func getOfflineAvailabilityMaxStorage() -> [OfflineAvailabilityType: Int] {
+        var storageRequired: [OfflineAvailabilityType: Int] = [:]
+        
+        Database.query("""
+            SELECT offline_availability, sum(filesize_song_mp3 + filesize_art_png) as total
+            FROM track
+            GROUP BY offline_availability
+        """).forEach { entry in
+            let availabilityType = OfflineAvailabilityType(rawValue: (entry["offline_availability"] as! String)) ?? OfflineAvailabilityType.UNKNOWN
+            storageRequired[availabilityType] = entry["total"] as? Int ?? 0
+        }
+        
+        OfflineAvailabilityType.allCases.forEach { type in
+            if storageRequired[type] == nil {
+                storageRequired[type] = 0
+            }
+        }
+        
+        return storageRequired
+    }
+    
 }
 
 fileprivate extension Optional where Wrapped == Int {

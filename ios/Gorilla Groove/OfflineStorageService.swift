@@ -29,6 +29,14 @@ class OfflineStorageService {
         }
     }
     
+    // Surely it must be possible to read the possible values from a "Multi Value" settings bundle.
+    // I failed to find out how, though. So I have duplicated them in code and hopefully they won't get out of sync....
+    // These are represented in MB, like the settings bundle versions.
+    // 0 Represents "no cap"
+    private static let possibleStorageSizes = [
+        100, 250, 500, 1000, 2500, 5000, 10_000, 25_000, 50_000, 100_000, 0
+    ]
+    
     private static var offlineStorageFetchMode: OfflineStorageFetchModeType {
         get {
             // Swift's runtime reflection / generic protocols are very lacking, and I am unable to automatically convert
@@ -70,10 +78,10 @@ class OfflineStorageService {
         }
         
         let nextBytesStored = TrackDao.getTotalBytesStored()
-        let nextDataString = formatBytesString(nextBytesStored)
+        let nextDataString = nextBytesStored.toByteString()
         
         if currentBytesStored != nextBytesStored {
-            GGLog.debug("Stored bytes for cached songs went from \(formatBytesString(currentBytesStored)) to \(nextDataString)")
+            GGLog.debug("Stored bytes for cached songs went from \(currentBytesStored.toByteString()) to \(nextDataString)")
             currentBytesStored = nextBytesStored
         } else {
             GGLog.debug("Currently storing \(nextDataString) bytes of cached songs")
@@ -91,13 +99,6 @@ class OfflineStorageService {
         if purgeAfterRecalculation {
             purgeExtraTrackDataIfNeeded()
         }
-    }
-    
-    private static func formatBytesString(_ bytes: Int) -> String {
-        let formatter = ByteCountFormatter()
-        formatter.countStyle = .decimal
-        
-        return formatter.string(fromByteCount: Int64(bytes))
     }
     
     static func shouldTrackBeCached(track: Track) -> Bool {
@@ -202,7 +203,6 @@ class OfflineStorageService {
         synchronized(self) {
             offlineMusicDownloadInProgress = true
             
-            GGLog.debug("Checking if always offline music should be downloaded...")
             downloadAlwaysOfflineMusicInternal()
             
             offlineMusicDownloadInProgress = false
@@ -242,7 +242,8 @@ class OfflineStorageService {
     
     private static func downloadAlwaysOfflineMusicInternal() {
         let ownId = FileState.read(LoginState.self)!.id
-
+        
+        GGLog.debug("Checking if always offline music should be downloaded...")
         if !shouldDownloadMusic() {
             return
         }
@@ -250,7 +251,8 @@ class OfflineStorageService {
         let tracksNeedingCache = TrackDao.getTracks(
             userId: ownId,
             offlineAvailability: .AVAILABLE_OFFLINE,
-            isCached: false
+            isCached: false,
+            sorts: [("filesize_song_mp3", true, false)]
         )
         
         if tracksNeedingCache.isEmpty {
@@ -259,6 +261,11 @@ class OfflineStorageService {
             return
         }
         
+        // If this returns false, it means we needed to prompt the user for an action and should not proceed
+        if !handleMaxStorageTooSmall() {
+            return
+        }
+
         var i = 0
         for track in tracksNeedingCache {
             // Checking for WiFi connectivity is a bit of an expensive operation, so only check every 5 tracks.
@@ -327,9 +334,61 @@ class OfflineStorageService {
         // In downloading "always offline" music, we may now need to kick out temporary cached music if this put us over the limit
         recalculateUsedOfflineStorage()
     }
+    
+    // Boolean of whether or not to proceed with downloads
+    private static func handleMaxStorageTooSmall() -> Bool {
+        let maxStoragePerAvailability = TrackDao.getOfflineAvailabilityMaxStorage()
+        
+        let offlineMusicBytes = maxStoragePerAvailability[OfflineAvailabilityType.AVAILABLE_OFFLINE]!
+        if offlineMusicBytes > maxOfflineStorageBytes {
+            GGLog.warning("More songs are marked available offline than space has been allocated for!")
+            
+            let userRejectedStorageIncrease = FileState.read(SizeIncreasePrompt.self)?.userRejectedIncrease ?? false
+            
+            if userRejectedStorageIncrease {
+                GGLog.warning("User previously rejected the storage size increase. Not showing prompt")
+                return true
+            }
+            GGLog.info("Showing storage size increase prompt")
+            
+            // These are ordered smallest to largest, so the first one we find that is larger than the storage we need is the minimum
+            let minimumPossibleStorageSize = possibleStorageSizes.first { storageValue in
+                return storageValue * 1_000_000 > offlineMusicBytes
+            } ?? 0 // 0 represents no cap
+            
+            let suggestedStorageString = minimumPossibleStorageSize > 0 ? (minimumPossibleStorageSize * 1_000_000).toByteString() : "[No Limit]"
+            
+            // Preemptively set it to true so if they ignore it they don't see it again. Will set to false if they accept
+            FileState.save(SizeIncreasePrompt(userRejectedIncrease: true))
+            
+            ViewUtil.showAlert(
+                title: "Storage Space Too Small",
+                message: "You have \(offlineMusicBytes.toByteString()) music marked 'Available Offline' but only have allocated \(maxOfflineStorageBytes.toByteString()) of storage. Would you like to increase it to \(suggestedStorageString)?",
+                yesText: "Sure",
+                dismissText: "No"
+            ) {
+                DispatchQueue.global().async {
+                    GGLog.info("User elected to increase storage space to \(suggestedStorageString)")
+                    FileState.save(SizeIncreasePrompt(userRejectedIncrease: false))
+                    
+                    maxOfflineStorage = minimumPossibleStorageSize
+                    
+                    // Storage is now increased, so run this again
+                    downloadAlwaysOfflineMusic()
+                }
+            }
+            return false
+        }
+        
+        return true
+    }
 
     struct DataStored: Codable {
         let stored: Int
+    }
+    
+    struct SizeIncreasePrompt: Codable {
+        let userRejectedIncrease: Bool
     }
 }
 
@@ -361,8 +420,11 @@ class CacheService {
     static func setCachedData(trackId: Int, fileOnDisk: URL, cacheType: CacheType) {
         let path = baseDir().appendingPathComponent(filenameFromCacheType(trackId, cacheType: cacheType))
         
+        if FileManager.exists(path) {
+            GGLog.warning("We were caching data, but the file already exists. Deleting file, but this is probably unexpected")
+            try! FileManager.default.removeItem(at: path)
+        }
         try! FileManager.default.moveItem(at: fileOnDisk, to: path)
-        
         TrackDao.setCachedAt(trackId: trackId, cachedAt: Date(), cacheType: cacheType)
     }
     
@@ -400,6 +462,18 @@ class CacheService {
         }
     }
 }
+
+
+
+fileprivate extension Int {
+    func toByteString() -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .decimal
+        
+        return formatter.string(fromByteCount: Int64(self))
+    }
+}
+
 
 extension FileManager {
     static func exists(_ path: URL) -> Bool {
