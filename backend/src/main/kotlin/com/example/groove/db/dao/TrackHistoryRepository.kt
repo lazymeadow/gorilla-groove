@@ -3,12 +3,15 @@ package com.example.groove.db.dao
 import com.example.groove.db.model.Device
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackHistory
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
+import java.time.Instant
 
 interface TrackHistoryRepository : CrudRepository<TrackHistory, Long> {
 	@Query("""
@@ -41,6 +44,19 @@ interface TrackHistoryRepository : CrudRepository<TrackHistory, Long> {
 			@Param("track") track: Track,
 			pageable: Pageable
 	): List<TrackHistory>
+
+	@Query("""
+			SELECT th
+			FROM TrackHistory th
+			WHERE th.deleted IS FALSE
+			AND th.device = :device
+			AND th.utcListenedAt < :targetInstant
+			""")
+	fun findPlayHistoryNearInstantForDevice(
+			@Param("targetInstant") targetInstant: Timestamp,
+			@Param("device") device: Device,
+			page: Pageable
+	): Page<TrackHistory>
 
 	@Modifying
 	@Query("""

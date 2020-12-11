@@ -29,7 +29,7 @@ export default function DisconnectedWarningBar() {
 			if (!socketContext.isConnected) {
 				setConnected(false);
 				// Largely unnecessary, but start another timeout if they're still offline after 5 minutes
-				setTimeout(() => {
+				panicTimeout = setTimeout(() => {
 					if (!socketContext.isConnected) {
 						setShouldPanic(true);
 					}

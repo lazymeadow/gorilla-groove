@@ -357,8 +357,8 @@ export class SongProperties extends React.Component {
 									accept="image/*"
 									onChange={this.handlePictureUpload.bind(this)}
 								/>
-
 							</div>
+
 							<div className="property-note">
 								Note
 								<textarea

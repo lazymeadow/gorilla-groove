@@ -14,6 +14,7 @@ import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
+import com.example.groove.util.toTimestamp
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -37,6 +38,7 @@ class TrackService(
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val playlistService: PlaylistService,
 		private val imageService: ImageService,
+		private val trackHistoryService: TrackHistoryService,
 		private val trackLinkRepository: TrackLinkRepository
 ) {
 
@@ -134,7 +136,11 @@ class TrackService(
 				?: throw IllegalArgumentException("No device found with ID $deviceId for user ${user.name} when saving track history!")
 
 		// Device we used might have been merged into another device. If it was, use the parent device
+		// TODO can be removed when auth-token devices are the only devices! They are pre-merged
 		val device = savedDevice.mergedDevice ?: savedDevice
+
+		// Still have some kinks to work out
+//		trackHistoryService.checkValidListeningTimestampForDevice(data.timeListenedAt.toInstant(), track, device)
 
 		val localTimeNoTz = data.timeListenedAt
 				// Put the timezone to be the one the user provided
@@ -150,6 +156,7 @@ class TrackService(
 				device = device,
 				ipAddress = remoteIp,
 				listenedInReview = track.inReview,
+				utcListenedAt = data.timeListenedAt.toInstant().toTimestamp(),
 				localTimeListenedAt = localTimeNoTz.toString(),
 				ianaTimezone = data.ianaTimezone,
 				latitude = data.latitude,
