@@ -261,13 +261,26 @@ class OfflineStorageService {
             return
         }
         
+        let maxStoragePerAvailability = TrackDao.getOfflineAvailabilityMaxStorage()
+        let offlineMusicBytes = maxStoragePerAvailability[OfflineAvailabilityType.AVAILABLE_OFFLINE]!
+        
         // If this returns false, it means we needed to prompt the user for an action and should not proceed
-        if !handleMaxStorageTooSmall() {
+        if !handleMaxStorageTooSmallAlert(maxStoragePerAvailability, offlineMusicBytes) {
             return
         }
 
+        // Now we know that we need to download some music. But we might not have enough space allocated to download it all.
+        // We need to know how much space we have allocated for "always offline" music, and download untli we hit that limit
+        var bytesAvailableToDownload = maxOfflineStorageBytes - offlineMusicBytes
+        
         var i = 0
         for track in tracksNeedingCache {
+            if bytesAvailableToDownload < track.cacheSize {
+                // Tracks are sorted in ascending size. So as soon as we encounter a track we can't download, we can't download any of them.
+                GGLog.info("Not enough space remaining to download track \(track.id). Aborting further downloads")
+                break
+            }
+            
             // Checking for WiFi connectivity is a bit of an expensive operation, so only check every 5 tracks.
             // It is fairly unlikely that the connectivity changed, so doing it every track is probably overkill anyway.
             i += 1
@@ -283,29 +296,28 @@ class OfflineStorageService {
             
             TrackService.fetchLinksForTrack(
                 track: track,
-                fetchSong: true,
+                fetchSong: track.songCachedAt == nil,
                 fetchArt: track.artCachedAt == nil && track.filesizeArtPng > 0
             ) { trackLinks in
                 guard let trackLinks = trackLinks else {
                     trackDownloadSemaphore.signal() // Error case. Not logging as the error HTTP logging happens upstream
                     return
                 }
-                
-                guard let songLink = trackLinks.songLink else {
-                    // If there was no song data, then shit has somehow hit the fan. Don't proceed. Error logging happens upstream
-                    trackDownloadSemaphore.signal()
-                    return
-                }
-                
+
                 let songDownloadSemaphore = DispatchSemaphore(value: 0)
                 let artDownloadSemaphore = DispatchSemaphore(value: 0)
 
-                HttpRequester.download(songLink) { fileOnDiskUrl in
-                    if let fileOnDiskUrl = fileOnDiskUrl {
-                        CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .song)
+                var bytesDownloadedForTrack = 0
+                
+                if let songLink = trackLinks.songLink {
+                    HttpRequester.download(songLink) { fileOnDiskUrl in
+                        if let fileOnDiskUrl = fileOnDiskUrl {
+                            CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .song)
+                        }
+                        
+                        bytesDownloadedForTrack += track.filesizeSongMp3
+                        songDownloadSemaphore.signal()
                     }
-
-                    songDownloadSemaphore.signal()
                 }
                 
                 if let artLink = trackLinks.albumArtLink {
@@ -313,7 +325,8 @@ class OfflineStorageService {
                         if let fileOnDiskUrl = fileOnDiskUrl {
                             CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .art)
                         }
-
+                        
+                        bytesDownloadedForTrack += track.filesizeArtPng
                         artDownloadSemaphore.signal()
                     }
                 } else {
@@ -324,9 +337,11 @@ class OfflineStorageService {
                 songDownloadSemaphore.wait()
                 artDownloadSemaphore.wait()
                 
+                GGLog.debug("\(bytesDownloadedForTrack) bytes were downloaded")
+                bytesAvailableToDownload -= bytesDownloadedForTrack
                 trackDownloadSemaphore.signal()
             }
-            
+
             trackDownloadSemaphore.wait()
             GGLog.info("Cache of 'always offline' track with ID \(track.id) is done")
         }
@@ -336,10 +351,10 @@ class OfflineStorageService {
     }
     
     // Boolean of whether or not to proceed with downloads
-    private static func handleMaxStorageTooSmall() -> Bool {
-        let maxStoragePerAvailability = TrackDao.getOfflineAvailabilityMaxStorage()
-        
-        let offlineMusicBytes = maxStoragePerAvailability[OfflineAvailabilityType.AVAILABLE_OFFLINE]!
+    private static func handleMaxStorageTooSmallAlert(
+        _ maxStoragePerAvailability: [OfflineAvailabilityType: Int],
+        _ offlineMusicBytes: Int
+    ) -> Bool {
         if offlineMusicBytes > maxOfflineStorageBytes {
             GGLog.warning("More songs are marked available offline than space has been allocated for!")
             

@@ -139,9 +139,16 @@ public class TrackDao : BaseDao<Track> {
             key + (isNoCase ? " COLLATE NOCASE" : "") + (isAscending ? " ASC " : " DESC ")
         }.joined(separator: ",")
         
+        // If the song or art is cached, the track is considered cached. A track is not considered cached if these
+        // things don't exist, but COULD exist (so if art doesn't exist, but there is no art to fetch, it doesn't need caching).
+        // So it is possible for a song to be returned from "isCached" being true OR false, if one thing is cached but not the other.
         var isCachedQuery = ""
         if let isCached = isCached {
-            isCachedQuery = "AND song_cached_at IS \(isCached ? "NOT NULL" : "NULL")"
+            if isCached {
+                isCachedQuery = "AND (song_cached_at IS NOT NULL OR art_cached_at IS NOT NULL)"
+            } else {
+                isCachedQuery = "AND (song_cached_at IS NULL OR (art_cached_at IS NULL AND filesize_art_png > 0))"
+            }
         }
         
         let query = """
