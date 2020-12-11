@@ -29,6 +29,8 @@ class OfflineStorageService {
         }
     }
     
+    private static let logger = GGLogger(category: "storage")
+
     // Surely it must be possible to read the possible values from a "Multi Value" settings bundle.
     // I failed to find out how, though. So I have duplicated them in code and hopefully they won't get out of sync....
     // These are represented in MB, like the settings bundle versions.
@@ -61,12 +63,12 @@ class OfflineStorageService {
         let currentId = UUID()
         lastRecalculationId = currentId
         
-        GGLog.debug("Enqueueing storage recalculation in \(delaySeconds) seconds")
+        logger.debug("Enqueueing storage recalculation in \(delaySeconds) seconds")
         DispatchQueue.global().asyncAfter(deadline: .now() + delaySeconds) {
             if currentId == lastRecalculationId {
                 OfflineStorageService.recalculateUsedOfflineStorage()
             } else {
-                GGLog.debug("Not running delayed recalculation as another one has been enqueued")
+                logger.debug("Not running delayed recalculation as another one has been enqueued")
             }
         }
     }
@@ -81,10 +83,10 @@ class OfflineStorageService {
         let nextDataString = nextBytesStored.toByteString()
         
         if currentBytesStored != nextBytesStored {
-            GGLog.debug("Stored bytes for cached songs went from \(currentBytesStored.toByteString()) to \(nextDataString)")
+            logger.debug("Stored bytes for cached songs went from \(currentBytesStored.toByteString()) to \(nextDataString)")
             currentBytesStored = nextBytesStored
         } else {
-            GGLog.debug("Currently storing \(nextDataString) bytes of cached songs")
+            logger.debug("Currently storing \(nextDataString) bytes of cached songs")
         }
         
         FileState.save(DataStored(stored: nextBytesStored))
@@ -122,13 +124,13 @@ class OfflineStorageService {
     
     static func purgeExtraTrackDataIfNeededInternal(offlineAvailability: OfflineAvailabilityType = .NORMAL) {
         if currentBytesStored < maxOfflineStorageBytes {
-            GGLog.debug("Current stored bytes of \(currentBytesStored) are within the limit of \(maxOfflineStorageBytes). Not purging track cache")
+            logger.debug("Current stored bytes of \(currentBytesStored) are within the limit of \(maxOfflineStorageBytes). Not purging track cache")
             return
         }
         
         let bytesToPurge = currentBytesStored - maxOfflineStorageBytes
         
-        GGLog.info("New cache limit of \(maxOfflineStorageBytes) is too small for current cache of \(currentBytesStored). Beginning cache purge of \(bytesToPurge) bytes")
+        logger.info("New cache limit of \(maxOfflineStorageBytes) is too small for current cache of \(currentBytesStored). Beginning cache purge of \(bytesToPurge) bytes")
         
         let ownId = FileState.read(LoginState.self)!.id
 
@@ -145,10 +147,10 @@ class OfflineStorageService {
         
         if tracksToMaybePurge.isEmpty {
             if offlineAvailability == .NORMAL {
-                GGLog.info("Need to clear always offline song data in order to bring cache down!")
+                logger.info("Need to clear always offline song data in order to bring cache down!")
                 return purgeExtraTrackDataIfNeeded(offlineAvailability: .AVAILABLE_OFFLINE)
             } else {
-                GGLog.critical("Programmer error! Need to clear bytes, but no tracks are available to delete to clear up space?")
+                logger.critical("Programmer error! Need to clear bytes, but no tracks are available to delete to clear up space?")
                 return
             }
         }
@@ -165,7 +167,7 @@ class OfflineStorageService {
             tracksToPurge.append(track)
         }
         
-        GGLog.info("Purging \(tracksToPurge.count) tracks from cache")
+        logger.info("Purging \(tracksToPurge.count) tracks from cache")
         
         // There is a lot of potential here to bulk update these in the database. Lot of unnecessary calls here. But this is
         // currently always invoked in the background, and is not very time-sensitive or even likely to happen, as it requires the
@@ -180,7 +182,7 @@ class OfflineStorageService {
         OfflineStorageService.recalculateUsedOfflineStorage(purgeAfterRecalculation: false)
         
         if bytePurgeCount < bytesToPurge {
-            GGLog.info("Did not clear enough bytes to push cache below the limit (cleared: \(bytePurgeCount) needed: \(bytesToPurge)). Doing another pass")
+            logger.info("Did not clear enough bytes to push cache below the limit (cleared: \(bytePurgeCount) needed: \(bytesToPurge)). Doing another pass")
             purgeExtraTrackDataIfNeededInternal(offlineAvailability: offlineAvailability)
         }
     }
@@ -193,7 +195,7 @@ class OfflineStorageService {
         }
         
         if offlineMusicDownloadInProgress {
-            GGLog.debug("Always offline download process already in progress. Not starting another.")
+            logger.debug("Always offline download process already in progress. Not starting another.")
 
             return
         }
@@ -224,7 +226,7 @@ class OfflineStorageService {
             
             let connectivityCheckLock = DispatchSemaphore(value: 0)
             
-            GGLog.debug("Checking WiFi connectivity...")
+            logger.debug("Checking WiFi connectivity...")
 
             let connectivity = Connectivity()
             connectivity.checkConnectivity { connectivity in
@@ -234,7 +236,7 @@ class OfflineStorageService {
             
             connectivityCheckLock.wait()
             
-            GGLog.debug("WiFi connectivity was: \(wifiConnectivity)")
+            logger.debug("WiFi connectivity was: \(wifiConnectivity)")
             
             return wifiConnectivity
         }
@@ -243,7 +245,7 @@ class OfflineStorageService {
     private static func downloadAlwaysOfflineMusicInternal() {
         let ownId = FileState.read(LoginState.self)!.id
         
-        GGLog.debug("Checking if always offline music should be downloaded...")
+        logger.debug("Checking if always offline music should be downloaded...")
         if !shouldDownloadMusic() {
             return
         }
@@ -256,7 +258,7 @@ class OfflineStorageService {
         )
         
         if tracksNeedingCache.isEmpty {
-            GGLog.debug("No always offline music to download")
+            logger.debug("No always offline music to download")
 
             return
         }
@@ -277,7 +279,7 @@ class OfflineStorageService {
         for track in tracksNeedingCache {
             if bytesAvailableToDownload < track.cacheSize {
                 // Tracks are sorted in ascending size. So as soon as we encounter a track we can't download, we can't download any of them.
-                GGLog.info("Not enough space remaining to download track \(track.id). Aborting further downloads")
+                logger.info("Not enough space remaining to download track \(track.id). Aborting further downloads")
                 break
             }
             
@@ -286,12 +288,12 @@ class OfflineStorageService {
             i += 1
             if i % 5 == 0 {
                 if !shouldDownloadMusic() {
-                    GGLog.info("Music download conditions changed in the middle of downloading tracks. Aborting downloads")
+                    logger.info("Music download conditions changed in the middle of downloading tracks. Aborting downloads")
                     break
                 }
             }
 
-            GGLog.info("Beginning cache of 'always offline' track with ID \(track.id)")
+            logger.info("Beginning cache of 'always offline' track with ID \(track.id)")
             let trackDownloadSemaphore = DispatchSemaphore(value: 0)
             
             TrackService.fetchLinksForTrack(
@@ -337,13 +339,13 @@ class OfflineStorageService {
                 songDownloadSemaphore.wait()
                 artDownloadSemaphore.wait()
                 
-                GGLog.debug("\(bytesDownloadedForTrack) bytes were downloaded")
+                logger.debug("\(bytesDownloadedForTrack) bytes were downloaded")
                 bytesAvailableToDownload -= bytesDownloadedForTrack
                 trackDownloadSemaphore.signal()
             }
 
             trackDownloadSemaphore.wait()
-            GGLog.info("Cache of 'always offline' track with ID \(track.id) is done")
+            logger.info("Cache of 'always offline' track with ID \(track.id) is done")
         }
         
         // In downloading "always offline" music, we may now need to kick out temporary cached music if this put us over the limit
@@ -356,15 +358,15 @@ class OfflineStorageService {
         _ offlineMusicBytes: Int
     ) -> Bool {
         if offlineMusicBytes > maxOfflineStorageBytes {
-            GGLog.warning("More songs are marked available offline than space has been allocated for!")
+            logger.warning("More songs are marked available offline than space has been allocated for!")
             
             let userRejectedStorageIncrease = FileState.read(SizeIncreasePrompt.self)?.userRejectedIncrease ?? false
             
             if userRejectedStorageIncrease {
-                GGLog.warning("User previously rejected the storage size increase. Not showing prompt")
+                logger.warning("User previously rejected the storage size increase. Not showing prompt")
                 return true
             }
-            GGLog.info("Showing storage size increase prompt")
+            logger.info("Showing storage size increase prompt")
             
             // These are ordered smallest to largest, so the first one we find that is larger than the storage we need is the minimum
             let minimumPossibleStorageSize = possibleStorageSizes.first { storageValue in
@@ -383,7 +385,7 @@ class OfflineStorageService {
                 dismissText: "No"
             ) {
                 DispatchQueue.global().async {
-                    GGLog.info("User elected to increase storage space to \(suggestedStorageString)")
+                    logger.info("User elected to increase storage space to \(suggestedStorageString)")
                     FileState.save(SizeIncreasePrompt(userRejectedIncrease: false))
                     
                     maxOfflineStorage = minimumPossibleStorageSize
@@ -436,7 +438,7 @@ class CacheService {
         let path = baseDir().appendingPathComponent(filenameFromCacheType(trackId, cacheType: cacheType))
         
         if FileManager.exists(path) {
-            GGLog.warning("We were caching data, but the file already exists. Deleting file, but this is probably unexpected")
+            logger.warning("We were caching data, but the file already exists. Deleting file, but this is probably unexpected")
             try! FileManager.default.removeItem(at: path)
         }
         try! FileManager.default.moveItem(at: fileOnDisk, to: path)
@@ -454,10 +456,10 @@ class CacheService {
         TrackDao.setCachedAt(trackId: trackId, cachedAt: nil, cacheType: cacheType)
 
         if FileManager.exists(path) {
-            GGLog.info("Deleting cached \(cacheType) for track ID: \(trackId)")
+            logger.info("Deleting cached \(cacheType) for track ID: \(trackId)")
             try! FileManager.default.removeItem(at: path)
         } else if !ignoreWarning {
-            GGLog.warning("Attempted to deleting cached \(cacheType) for track ID: \(trackId) at path '\(path)' but it was not found")
+            logger.warning("Attempted to deleting cached \(cacheType) for track ID: \(trackId) at path '\(path)' but it was not found")
         }
         
         if !ignoreDataUsageRecalculation && (cacheType == .song || cacheType == .art) {
