@@ -27,7 +27,7 @@ class TrackHistoryController(
 		return trackHistoryService.getTrackHistory(userId, Timestamp(startDate), Timestamp(endDate)).map {
 			TrackHistoryDTO(
 					id = it.id,
-					listenedDate = it.createdAt,
+					listenedDate = it.utcListenedAt,
 					localListenDate = it.localTimeListenedAt,
 					trackLength = it.track.length,
 					trackArtist = it.track.artist,
