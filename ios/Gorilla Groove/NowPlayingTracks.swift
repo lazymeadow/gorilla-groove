@@ -171,9 +171,9 @@ class NowPlayingTracks {
         
         nowPlayingInfo[MPMediaItemPropertyArtwork] = nil
         
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 0
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = track.length
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = AudioPlayer.rate
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 0
         
         // Set the metadata
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo

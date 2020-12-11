@@ -54,7 +54,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
             
             let timeInSeconds = NSNumber(value: UInt64(time.value)).decimalValue / NSNumber(value: time.timescale.magnitude).decimalValue
 
-            if (CACurrentMediaTime() - lastSongPlayHeartbeatTime > 15.0) {
+            if (CACurrentMediaTime() - lastSongPlayHeartbeatTime > 20.0) {
                 sendPlayEvent(NowPlayingTracks.currentTrack)
             }
             
@@ -167,7 +167,8 @@ class AudioPlayer : CachingPlayerItemDelegate {
     private static func playPlayerItem(_ playerItem: AVPlayerItem) {
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
-        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
+
         sendPlayEvent(NowPlayingTracks.currentTrack)
     }
     
