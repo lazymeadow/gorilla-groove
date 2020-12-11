@@ -109,8 +109,8 @@ class CrashReportService {
     static func sendAutomatedCrashReport(_ errorMessage: String) {
         // Not a lot of point in sending a crash report when the app is being directly monitored
         if isDebuggerRunning() {
-            GGLog.info("Debugger is running. Not sending automated crash report")
-            return
+            GGLog.info("Debugger is running. Not sending automated crash report. Crashing the app instead so you notice this!")
+            fatalError("Woops!")
         }
         
         let lastAutomatedReport = FileState.read(LastAutomatedReport.self)?.time

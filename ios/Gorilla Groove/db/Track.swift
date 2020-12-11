@@ -319,10 +319,7 @@ fileprivate extension Optional where Wrapped == Int {
 
 fileprivate extension Optional where Wrapped == String {
     func asSqlParam(_ sql: String) -> String {
-        guard let int = self else {
-            return ""
-        }
-        return sql + " \(int)"
+        return self?.asSqlParam(sql) ?? ""
     }
 }
 
