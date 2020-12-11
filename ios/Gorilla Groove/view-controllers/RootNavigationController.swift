@@ -30,6 +30,9 @@ class RootNavigationController : UIViewController {
         GGNavLog.info("Loaded root navigation")
         super.viewDidLoad()
         
+        // The library adds a "Done" button as the right nav item. We don't need this
+        appSettingsViewController.showDoneButton = false
+        
         topView.pushViewController(libraryController, animated: false)
         
         activeButton = myLibraryButton

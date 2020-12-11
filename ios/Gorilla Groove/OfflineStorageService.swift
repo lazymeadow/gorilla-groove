@@ -1,6 +1,8 @@
 import Foundation
 import Connectivity
 
+fileprivate let logger = GGLogger(category: "storage")
+
 class OfflineStorageService {
     
     @SettingsBundleStorage(key: "offline_storage_used")
@@ -21,6 +23,9 @@ class OfflineStorageService {
     @SettingsBundleStorage(key: "tracks_temporarily_cached")
     private static var tracksTemporarilyCached: String
     
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private static var offlineModeEnabled: Bool
+    
     private static var currentBytesStored = 0
     private static var maxOfflineStorageBytes: Int {
         get {
@@ -29,7 +34,6 @@ class OfflineStorageService {
         }
     }
     
-    private static let logger = GGLogger(category: "storage")
 
     // Surely it must be possible to read the possible values from a "Multi Value" settings bundle.
     // I failed to find out how, though. So I have duplicated them in code and hopefully they won't get out of sync....
@@ -213,6 +217,10 @@ class OfflineStorageService {
     
     private static func shouldDownloadMusic() -> Bool {
         if !offlineStorageEnabled {
+            return false
+        }
+        
+        if offlineModeEnabled {
             return false
         }
         

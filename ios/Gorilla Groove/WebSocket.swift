@@ -103,21 +103,28 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 class WebSocket {
     static private var socket: WebSocketTaskConnection? = nil
     
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private static var offlineModeEnabled: Bool
+    
     static func sendMessage(_ message: Encodable) {
         let messageJson = message.toJSONData()!.toString()
         socket?.send(messageJson)
     }
     
     static func connect() {
-        if (socket != nil) {
+        if socket != nil {
             return
         }
+        if offlineModeEnabled {
+            return
+        }
+        
         socket = WebSocketTaskConnection(HttpRequester.wsUrl)
         socket?.connect()
     }
     
     static func disconnect() {
-        if (socket != nil) {
+        if socket != nil {
             socket!.disconnect()
             socket = nil
         }

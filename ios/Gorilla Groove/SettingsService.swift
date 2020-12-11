@@ -40,7 +40,14 @@ class SettingsService {
         UserDefaults.standard.addObserver(
             observer,
             forKeyPath: "max_offline_storage",
-            options: [.initial, .new],
+            options: [.initial, .new, .old],
+            context: nil
+        )
+        
+        UserDefaults.standard.addObserver(
+            observer,
+            forKeyPath: "offline_mode_enabled",
+            options: [.new],
             context: nil
         )
     }
@@ -59,9 +66,22 @@ class SettingsService {
 
 class SettingsChangeObserver: NSObject {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        guard let change = change else {
+            GGLog.error("Setting '\(keyPath ?? "nil")' was triggered but no 'change' was found?")
+            return
+        }
+        
         if keyPath == "max_offline_storage" {
-            if let change = change {
-                GGLog.info("User changed (or app was initialized with) 'max_offline_storage' to \(change[NSKeyValueChangeKey.init(rawValue: "new")] ?? "--error--") MB")
+            guard let newValue = change[NSKeyValueChangeKey.init(rawValue: "new")] as? Int else {
+                GGLog.critical("Could not parse 'max_offline_storage''s new value from 'change'!")
+                return
+            }
+            
+            // The "initial" event does not contain an "old" value I guess. So if the old value is absent, it was the init.
+            if let oldValue = change[NSKeyValueChangeKey.init(rawValue: "old")] as? Int {
+                GGLog.info("User changed 'max_offline_storage' from \(oldValue) MB to \(newValue) MB")
+            } else {
+                GGLog.info("App was initialized with 'max_offline_storage' of \(newValue) MB")
             }
             
             if UserState.isLoggedIn {
@@ -70,6 +90,23 @@ class SettingsChangeObserver: NSObject {
                 }
             } else {
                 GGLog.info("User was not logged in when offline storage handler was invoked. Not checking to purge extra tracks")
+            }
+        } else if keyPath == "offline_mode_enabled" {
+            guard let newValue = change[NSKeyValueChangeKey.init(rawValue: "new")] as? Bool else {
+                GGLog.critical("Could not parse 'offline_mode_enabled''s new value from 'change'!")
+                return
+            }
+            
+            GGLog.info("User changed 'offline_mode_enabled' to \(newValue)")
+            
+            if newValue {
+                WebSocket.disconnect()
+            } else {
+                if !AudioPlayer.isPaused {
+                    WebSocket.connect()
+                }
+                
+                ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
             }
         } else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)

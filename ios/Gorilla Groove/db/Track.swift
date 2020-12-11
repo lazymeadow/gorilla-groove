@@ -132,6 +132,7 @@ public class TrackDao : BaseDao<Track> {
         inReview: Bool = false,
         offlineAvailability: OfflineAvailabilityType? = nil,
         isCached: Bool? = nil,
+        isSongCached: Bool? = nil,
         sorts: Array<(String, Bool, Bool)> = [],
         limit: Int? = nil
     ) -> Array<Track> {
@@ -143,7 +144,9 @@ public class TrackDao : BaseDao<Track> {
         // things don't exist, but COULD exist (so if art doesn't exist, but there is no art to fetch, it doesn't need caching).
         // So it is possible for a song to be returned from "isCached" being true OR false, if one thing is cached but not the other.
         var isCachedQuery = ""
-        if let isCached = isCached {
+        if let isSongCached = isSongCached {
+            isCachedQuery = "AND (song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
+        } else if let isCached = isCached {
             if isCached {
                 isCachedQuery = "AND (song_cached_at IS NOT NULL OR art_cached_at IS NOT NULL)"
             } else {

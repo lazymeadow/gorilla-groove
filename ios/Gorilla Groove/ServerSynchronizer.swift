@@ -8,12 +8,20 @@ class ServerSynchronizer {
     
     static let logger = GGLogger(category: "sync")
     
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private static var offlineModeEnabled: Bool
+    
     private static var syncRunning = false
     
     static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) {
         logger.info("Initiating sync with server...")
         if syncRunning {
             logger.info("Sync already running. Not syncing")
+            return
+        }
+        
+        if offlineModeEnabled {
+            logger.debug("Not syncing as we are in offline mode")
             return
         }
         
@@ -57,12 +65,21 @@ class ServerSynchronizer {
             semaphore.wait()
         }
         
+        if offlineModeEnabled {
+            logger.error("Offline mode was enabled while we were syncing. Not updating last sync. Some data will be wack.")
+            return
+        }
+        
         logger.info("Saving new user sync date")
 
         UserState.updateUserSync(newDate)
         syncRunning = false
 
         logger.info("All up to date")
+        
+        DispatchQueue.global().async {
+            TrackService.retryFailedListens()
+        }
     }
     
     // -- TRACKS

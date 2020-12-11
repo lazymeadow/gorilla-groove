@@ -3,6 +3,9 @@ import CoreData
 
 class TrackService {
     
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private static var offlineModeEnabled: Bool
+    
     static func getTracks(
         album: String? = nil,
         artist: String? = nil,
@@ -25,48 +28,103 @@ class TrackService {
             sorts.append(("name", sortAscending, true))
         }
         
-        return TrackDao.getTracks(userId: ownId, album: album, artist: artist, isHidden: false, sorts: sorts)
+        return TrackDao.getTracks(
+            userId: ownId,
+            album: album,
+            artist: artist,
+            isHidden: false,
+            isSongCached: offlineModeEnabled ? true : nil,
+            sorts: sorts
+        )
     }
     
     // This doesn't update the play count. Waits for the server to sync it back down later. Possibly a mistake
-    static func markTrackListenedTo(_ track: Track, _ retry: Int = 0) {
-        if (retry > 3) {
-            GGLog.error("Failed to update track too many times. Giving up")
-            return
-        }
-        
-        let listenTime = ISO8601DateFormatter().string(from: Date())
-        
-        // Getting the location takes a while, so do not do this on the main thread
+    static func markTrackListenedTo(_ track: Track) {
         DispatchQueue.global().async {
+            markTrackListenedToInternal(track.id)
+        }
+    }
+    
+    static func markTrackListenedToInternal(
+        _ trackId: Int,
+        _ retry: Int = 0,
+        request: MarkListenedRequest? = nil,
+        retrySemaphore: DispatchSemaphore? = nil
+    ) {
+        var postBody = request
+        
+        // Will be nil the first time we come through here. Will have data when we retry
+        if postBody == nil {
+            let listenTime = ISO8601DateFormatter().string(from: Date())
+            
             let point = LocationService.getLocationPoint()
             
-            let postBody = MarkListenedRequest(
-                trackId: track.id,
+            postBody = MarkListenedRequest(
+                trackId: trackId,
                 timeListenedAt: listenTime,
                 ianaTimezone: TimeZone.current.identifier,
                 latitude: point?.coordinate.latitude,
                 longitude: point?.coordinate.longitude
             )
-            
-            HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
-                if (statusCode < 200 || statusCode >= 300) {
-                    GGLog.warning("Failed to mark track as listened to! For track with ID: \(track.id). Retrying...")
-                    self.markTrackListenedTo(track, retry + 1)
-                    return
-                }
-                
-                GGLog.info("Track \(track.id) marked listened to")
-            }
         }
+        
+        if offlineModeEnabled || retry > 3 {
+            GGLog.error("Persisting record of Track \(trackId) to update the API later")
+            var failedRequests = FileState.read(FailedListenRequests.self) ?? FailedListenRequests(requests: [])
+            failedRequests.requests.append(postBody!)
+            
+            FileState.save(failedRequests)
+            
+            retrySemaphore?.signal()
+            return
+        }
+        
+        let requestSemaphore = retrySemaphore ?? DispatchSemaphore(value: 0)
+
+        HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
+            if (statusCode < 200 || statusCode >= 300) {
+                GGLog.warning("Failed to mark track as listened to! For track with ID: \(trackId). Retrying...")
+                self.markTrackListenedToInternal(trackId, retry + 1, request: postBody, retrySemaphore: requestSemaphore)
+                return
+            }
+            
+            GGLog.info("Track \(trackId) marked listened to")
+            requestSemaphore.signal()
+        }
+        
+        requestSemaphore.wait()
     }
     
-    struct MarkListenedRequest: Encodable {
+    struct FailedListenRequests: Codable {
+        var requests: Array<MarkListenedRequest>
+    }
+    
+    struct MarkListenedRequest: Codable {
         let trackId: Int
         let timeListenedAt: String
         let ianaTimezone: String
         let latitude: Double?
         let longitude: Double?
+    }
+    
+    static func retryFailedListens() {
+        GGLog.debug("Retrying failed listens if there are any to retry...")
+        
+        let failedRequests = (FileState.read(FailedListenRequests.self) ?? FailedListenRequests(requests: [])).requests
+        if failedRequests.isEmpty {
+            return
+        }
+        
+        // Delete them all, as we've got them in memory and we will iterate through them.
+        // This is not perfect, as the app crashing here means that we will lose this information. Oh well. I'm lazy right now.
+        FileState.save(FailedListenRequests(requests: []))
+        
+        GGLog.info("Found \(failedRequests.count) failed listen requests to retry")
+        
+        failedRequests.forEach { failedRequest in
+            GGLog.info("Retrying listen request for track \(failedRequest.trackId) that happened at \(failedRequest.timeListenedAt)")
+            markTrackListenedToInternal(failedRequest.trackId, 0, request: failedRequest)
+        }
     }
     
     static func fetchLinksForTrack(
@@ -92,6 +150,7 @@ class TrackService {
         HttpRequester.get("file/link/\(track.id)?audioFormat=MP3&linkFetchType=\(linkFetchType)", TrackLinkResponse.self) { links, status , err in
             if status < 200 || status >= 300 || links == nil {
                 GGLog.error("Failed to get track links!")
+                return linkFetchHandler(links)
             }
             
             if fetchSong && links!.songLink == nil {

@@ -5,7 +5,12 @@ class HttpRequester {
     static let baseUrl = "https://gorillagroove.net/api/"
     static let wsUrl = "wss://gorillagroove.net/api/socket"
     
+    static let STATUS_ABORTED = 666
+    
     typealias ResponseHandler<T> = (_ data: T?, _ status: Int, _ err: String?) -> Void
+    
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private static var offlineModeEnabled: Bool
     
     static let logger = GGLogger(category: "network")
     
@@ -16,7 +21,7 @@ class HttpRequester {
     ) {
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("GET", url) else {
-            return
+            return callback(nil, STATUS_ABORTED, nil)
         }
         
         logger.debug("GET \(request.url!.absoluteString)")
@@ -35,6 +40,7 @@ class HttpRequester {
     ) {
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("PUT", url, body: body, asMultipartData: asMultipartData) else {
+            callback?(nil, STATUS_ABORTED, nil)
             return
         }
         
@@ -52,7 +58,7 @@ class HttpRequester {
     ) {
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("DELETE", url, body: body) else {
-            return
+            return callback(nil, STATUS_ABORTED, nil)
         }
         
         logger.debug("DELETE \(request.url!.absoluteString)")
@@ -72,6 +78,7 @@ class HttpRequester {
     ) {
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("POST", url, body: body, authenticated: authenticated, asMultipartData: asMultipartData) else {
+            callback?(nil, STATUS_ABORTED, nil)
             return
         }
         
@@ -91,6 +98,7 @@ class HttpRequester {
     ) {
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("POST", url, body: body, authenticated: authenticated, asMultipartData: true) else {
+            callback?(nil, STATUS_ABORTED, nil)
             return
         }
         
@@ -108,6 +116,11 @@ class HttpRequester {
         authenticated: Bool = true,
         asMultipartData: Bool = false
     ) -> URLRequest? {
+        
+        if offlineModeEnabled {
+            logger.debug("Offline mode is enabled. Not making http request to \(url)")
+            return nil
+        }
         
         let url = URL(string: self.baseUrl + url)!
         var request : URLRequest = URLRequest(url: url)
@@ -184,6 +197,12 @@ class HttpRequester {
         _ stringUrl: String,
         downloadFinishedHandler: @escaping (_ outputUrl: URL?) -> Void
     ) {
+        if offlineModeEnabled {
+            logger.debug("Offline mode is enabled. Not making download request to \(stringUrl)")
+            downloadFinishedHandler(nil)
+            return
+        }
+        
         guard let url = URL(string: stringUrl) else {
             GGLog.error("Could not parse URL \(stringUrl)!")
             downloadFinishedHandler(nil)
