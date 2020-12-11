@@ -150,7 +150,7 @@
 			<key>Type</key>
 			<string>PSTitleValueSpecifier</string>
 			<key>Title</key>
-			<string>Always Offline Songs Cached</string>
+			<string>Always Offline Tracks Cached</string>
 			<key>DefaultValue</key>
 			<string>0 / 0</string>
 			<key>Key</key>
