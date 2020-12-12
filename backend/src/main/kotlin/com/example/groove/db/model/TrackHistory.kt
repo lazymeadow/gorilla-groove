@@ -37,6 +37,9 @@ data class TrackHistory(
 		@Column(name = "created_at")
 		val createdAt: Timestamp = now(),
 
+		@Column(name = "utc_listened_at")
+		val utcListenedAt: Timestamp,
+
 		// This is the datetime that the USER experienced when they listened to a song. It has no concept of
 		// a time zone. If they listened to the song at 9AM, it was at 9AM. Doesn't matter where they were.
 		// This is purely for stats tracking on letting people know what time of day they listen to music.

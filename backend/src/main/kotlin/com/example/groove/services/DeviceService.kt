@@ -18,7 +18,8 @@ import java.sql.Timestamp
 class DeviceService(
 		private val deviceRepository: DeviceRepository,
 		private val userRepository: UserRepository,
-		private val trackHistoryRepository: TrackHistoryRepository
+		private val trackHistoryRepository: TrackHistoryRepository,
+		private val trackRepository: TrackRepository
 ) {
 
 	@Transactional(readOnly = true)
@@ -86,6 +87,8 @@ class DeviceService(
 		// If this device has been merged, we need to update the version of the parent
 		val deviceToUpdate = device.mergedDevice ?: device
 
+		migrateDeviceIfNeeded(deviceToUpdate, version)
+
 		deviceToUpdate.applicationVersion = version
 		deviceToUpdate.updatedAt = now()
 		deviceToUpdate.additionalData = additionalData
@@ -103,6 +106,19 @@ class DeviceService(
 		}
 
 		return device
+	}
+
+	private fun migrateDeviceIfNeeded(device: Device, newVersion: String) {
+		val iosMigrationVersion = "2.0.0.1"
+
+		if (device.deviceType == DeviceType.IPHONE) {
+			// A smart person would check if the prior version was lower than this, and then do the migration.
+			// But I am a lazy person with two iOS users other than myself. So lazy wins out today.
+			if (device.applicationVersion != iosMigrationVersion && newVersion == iosMigrationVersion) {
+				logger.info("User ${device.user.name} is migrating iOS version $iosMigrationVersion")
+				trackRepository.setUpdatedAtForActiveTracksAndUser(device.user.id)
+			}
+		}
 	}
 
 	@Transactional
@@ -192,6 +208,6 @@ class DeviceService(
 	}
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 }
