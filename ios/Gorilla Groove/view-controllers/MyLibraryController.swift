@@ -5,6 +5,9 @@ import CoreData
 class MyLibraryController: UITableViewController {
     let options = SongViewType.allCases
     
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private var offlineModeEnabled: Bool
+    
     override func viewDidLoad() {
         GGNavLog.info("Loaded my library")
 
@@ -116,7 +119,7 @@ class MyLibraryController: UITableViewController {
     @objc private func loadArtistView() {
         let ownId = FileState.read(LoginState.self)!.id
 
-        let artists = TrackDao.getArtists(userId: ownId)
+        let artists = TrackDao.getArtists(userId: ownId, isSongCached: offlineModeEnabled ? true : nil)
 
         let view = ArtistViewController("Artist", artists)
         self.navigationController!.pushViewController(view, animated: true)
@@ -125,7 +128,7 @@ class MyLibraryController: UITableViewController {
     @objc private func loadAlbumView() {
         let ownId = FileState.read(LoginState.self)!.id
 
-        let albums = TrackDao.getAlbums(userId: ownId)
+        let albums = TrackDao.getAlbums(userId: ownId, isSongCached: offlineModeEnabled ? true : nil)
 
         let view = AlbumViewController("Album", albums, nil)
         self.navigationController!.pushViewController(view, animated: true)

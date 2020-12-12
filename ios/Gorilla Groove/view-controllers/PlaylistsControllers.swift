@@ -6,6 +6,9 @@ class PlaylistsController : UITableViewController {
 
     var playlists: Array<Playlist> = []
     
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private var offlineModeEnabled: Bool
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Playlists"
@@ -45,7 +48,8 @@ class PlaylistsController : UITableViewController {
         
         let playlist = cell.data!
         
-        let tracks = TrackDao.getTracksForPlaylist(playlist.id)
+        let isSongCached = offlineModeEnabled ? true : nil
+        let tracks = TrackDao.getTracksForPlaylist(playlist.id, isSongCached: isSongCached)
         
         let view = TrackViewController(playlist.name, tracks, showingHidden: true)
         self.navigationController!.pushViewController(view, animated: true)

@@ -74,7 +74,7 @@ class CrashReportService {
         // This can catch some issues, but not a lot of the important ones.
         // Keeping a print statement in here just to see what kinds of errors actually trip it.
         NSSetUncaughtExceptionHandler() { exception in
-            GGLog.critical("Chaos. Mischief. Fatal Error.")
+            GGLog.critical(exception.description)
         }
                 
         //        let mySigAction: SigactionHandler = { type in
@@ -110,7 +110,7 @@ class CrashReportService {
         // Not a lot of point in sending a crash report when the app is being directly monitored
         if isDebuggerRunning() {
             GGLog.info("Debugger is running. Not sending automated crash report. Crashing the app instead so you notice this!")
-            fatalError("Woops!")
+            fatalError(errorMessage)
         }
         
         let lastAutomatedReport = FileState.read(LastAutomatedReport.self)?.time

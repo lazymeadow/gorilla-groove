@@ -6,7 +6,10 @@ import AVKit
 class ArtistViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     var artists: Array<String> = []
     var visibleArtists: Array<String> = []
-        
+    
+    @SettingsBundleStorage(key: "offline_mode_enabled")
+    private var offlineModeEnabled: Bool
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded artist view")
@@ -61,7 +64,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
         let ownId = FileState.read(LoginState.self)!.id
 
-        let albums = TrackDao.getAlbums(userId: ownId, artist: cell.artist!)
+        let albums = TrackDao.getAlbums(userId: ownId, artist: cell.artist!, isSongCached: offlineModeEnabled ? true : nil)
         
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {

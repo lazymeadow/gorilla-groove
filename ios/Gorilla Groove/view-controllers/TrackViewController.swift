@@ -9,7 +9,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     let scrollPlayedTrackIntoView: Bool
     let showingHidden: Bool
     let tableView = UITableView()
-       
+
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded track view")
@@ -17,10 +17,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         view.addSubview(tableView)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
-        tableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
-        tableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
-        tableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
+        tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        tableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        tableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         tableView.keyboardDismissMode = .onDrag
         
@@ -29,8 +29,11 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         tableView.register(TrackViewCell.self, forCellReuseIdentifier: "songCell")
         
         // Remove extra table rows when we don't have a full screen of songs
-        tableView.tableFooterView = UIView(frame: .zero)
-        
+        // Might possibly use this to display warnings for like, offline mode or w/e later
+        let footerView = UIView(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 0))
+        footerView.backgroundColor = UIColor.green
+        tableView.tableFooterView = footerView
+
         TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: tableView) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {

@@ -171,7 +171,15 @@ public class TrackDao : BaseDao<Track> {
         return queryEntities(query)
     }
     
-    static func getTracksForPlaylist(_ playlistId: Int) -> Array<Track> {
+    static func getTracksForPlaylist(
+        _ playlistId: Int,
+        isSongCached: Bool? = nil
+    ) -> Array<Track> {
+        var isCachedQuery = ""
+        if let isSongCached = isSongCached {
+            isCachedQuery = "AND (t.song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
+        }
+        
         return queryEntities("""
             SELECT t.*
             FROM track t
@@ -180,15 +188,25 @@ public class TrackDao : BaseDao<Track> {
             LEFT JOIN playlist p
                 ON pt.playlist_id = p.id
             WHERE p.id = \(playlistId)
+            \(isCachedQuery)
         """)
     }
     
-    static func getArtists(userId: Int) -> Array<String> {
+    static func getArtists(
+        userId: Int,
+        isSongCached: Bool? = nil
+    ) -> Array<String> {
+        var isCachedQuery = ""
+        if let isSongCached = isSongCached {
+            isCachedQuery = "AND (song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
+        }
+        
         let artistRows = Database.query("""
             SELECT artist
             FROM track
             WHERE user_id = \(userId)
             AND is_hidden = FALSE
+            \(isCachedQuery)
             GROUP BY artist COLLATE NOCASE
             ORDER BY artist COLLATE NOCASE ASC
         """)
@@ -196,12 +214,22 @@ public class TrackDao : BaseDao<Track> {
         return artistRows.map { $0["artist"] as! String }
     }
     
-    static func getAlbums(userId: Int, artist: String? = nil) -> Array<Album> {
+    static func getAlbums(
+        userId: Int,
+        artist: String? = nil,
+        isSongCached: Bool? = nil
+    ) -> Array<Album> {
+        var isCachedQuery = ""
+        if let isSongCached = isSongCached {
+            isCachedQuery = "AND (song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
+        }
+        
         let artistRows = Database.query("""
             SELECT id, album, art_cached_at
             FROM track
             WHERE user_id = \(userId)
             AND is_hidden = FALSE
+            \(isCachedQuery)
             \(artist.asSqlParam("AND artist ="))
             GROUP BY album
             ORDER BY album COLLATE NOCASE ASC
