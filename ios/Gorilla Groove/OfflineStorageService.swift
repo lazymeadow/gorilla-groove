@@ -348,7 +348,7 @@ class OfflineStorageService {
             fetchArt: track.artCachedAt == nil && track.filesizeArtPng > 0
         ) { trackLinks in
             guard let trackLinks = trackLinks else {
-                // Error case. Not logging as the error HTTP logging happens upstream
+                // Error case. Not logging as adequate error logging happens upstream
                 songDownloadSemaphore.signal()
                 artDownloadSemaphore.signal()
                 return

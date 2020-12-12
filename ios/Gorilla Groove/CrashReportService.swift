@@ -30,7 +30,7 @@ class CrashReportService {
     }
     
     static func redirectStdLogsToGGLog() {
-        let logPath = GGLogger.getCurrentLogPath().path
+        guard let logPath = GGLogger.getCurrentLogPath()?.path else { return }
         GGLog.info("Setting up redirects at path \(logPath)")
         
         // "stdout" and "stderr" are closed once they are freopened. We need to continually reassign the stream

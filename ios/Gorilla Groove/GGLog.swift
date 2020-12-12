@@ -83,8 +83,15 @@ class GGLogger {
             .appendingPathComponent("merged-app-log.txt")
     }
     
-    static func getCurrentLogPath() -> URL {
-        let currentPathString = fileLogger.logFileManager.sortedLogFilePaths.first!
+    static func getCurrentLogPath() -> URL? {
+        // This was NEVER EMPTY for me developing locally, even disconnected from the debugger / building on a 'Release' build
+        // But as soon as I deployed to testflight, it was empty.
+        // Same issue at this guy, that never got a resolution as of Dec 2020 https://github.com/CocoaLumberjack/CocoaLumberjack/issues/800
+        guard let currentPathString = fileLogger.logFileManager.sortedLogFilePaths.first else {
+            GGLog.critical("Could not get current log path!")
+            return nil
+        }
+        
         return URL(string: currentPathString.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)!)!
     }
     
