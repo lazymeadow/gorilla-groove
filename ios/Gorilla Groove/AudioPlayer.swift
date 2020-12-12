@@ -137,6 +137,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         // If you leave the app with the music paused, the notification player doesn't seem to get the updated time...
         MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
         MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
+        
         player.pause()
         
         sendPlayEvent(nil)

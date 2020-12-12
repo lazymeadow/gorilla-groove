@@ -112,10 +112,25 @@ class OfflineStorageService {
             return false
         }
         
+        if isDeviceStorageLow(additionalSpaceToUse: track.cacheSize) {
+            return false
+        }
+
         // There could potentially be logic in here to not do a cache if all data is already taken up with "always offline" songs, but
         // it seems like an unnecessary optimization. The track will just be immediately deleted right now after it is cached, which is
         // how it works anyway for a song you haven't played in a long time (or ever played) right now...
         return true
+    }
+    
+    private static func isDeviceStorageLow(additionalSpaceToUse: Int = 0) -> Bool {
+        // This is some paranoia, but I am adding in a buffer here (50 MB) to make this size check a bit more aggressive. I don't think there are
+        // very many instances of people wanting to 100% max out the storage on their phone in order to store offline music....
+        if additionalSpaceToUse + 50_000_000 > FileManager.systemFreeSizeBytes() {
+            GGLog.warning("User is running out of storage space on their phone. \(FileManager.systemFreeSizeBytes()) bytes remaining")
+            return true
+        }
+        
+        return false
     }
 
     // It's possible, though not likely, that two of these could attempt to run at once. I had it happen with a debugger paused
@@ -278,7 +293,7 @@ class OfflineStorageService {
         if !handleMaxStorageTooSmallAlert(maxStoragePerAvailability, offlineMusicBytes) {
             return
         }
-
+        
         // Now we know that we need to download some music. But we might not have enough space allocated to download it all.
         // We need to know how much space we have allocated for "always offline" music, and download untli we hit that limit
         var bytesAvailableToDownload = maxOfflineStorageBytes - offlineMusicBytes
@@ -291,6 +306,10 @@ class OfflineStorageService {
                 break
             }
             
+            if isDeviceStorageLow(additionalSpaceToUse: track.cacheSize) {
+                break
+            }
+            
             // Checking for WiFi connectivity is a bit of an expensive operation, so only check every 5 tracks.
             // It is fairly unlikely that the connectivity changed, so doing it every track is probably overkill anyway.
             i += 1
@@ -300,64 +319,74 @@ class OfflineStorageService {
                     break
                 }
             }
-
-            logger.info("Beginning cache of 'always offline' track with ID \(track.id)")
-            let trackDownloadSemaphore = DispatchSemaphore(value: 0)
             
-            TrackService.fetchLinksForTrack(
-                track: track,
-                fetchSong: track.songCachedAt == nil,
-                fetchArt: track.artCachedAt == nil && track.filesizeArtPng > 0
-            ) { trackLinks in
-                guard let trackLinks = trackLinks else {
-                    trackDownloadSemaphore.signal() // Error case. Not logging as the error HTTP logging happens upstream
-                    return
-                }
+            let bytesDownloaded = OfflineStorageService.downloadTrack(track)
+            bytesAvailableToDownload -= bytesDownloaded
 
-                let songDownloadSemaphore = DispatchSemaphore(value: 0)
-                let artDownloadSemaphore = DispatchSemaphore(value: 0)
-
-                var bytesDownloadedForTrack = 0
-                
-                if let songLink = trackLinks.songLink {
-                    HttpRequester.download(songLink) { fileOnDiskUrl in
-                        if let fileOnDiskUrl = fileOnDiskUrl {
-                            CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .song)
-                        }
-                        
-                        bytesDownloadedForTrack += track.filesizeSongMp3
-                        songDownloadSemaphore.signal()
-                    }
-                }
-                
-                if let artLink = trackLinks.albumArtLink {
-                    HttpRequester.download(artLink) { fileOnDiskUrl in
-                        if let fileOnDiskUrl = fileOnDiskUrl {
-                            CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .art)
-                        }
-                        
-                        bytesDownloadedForTrack += track.filesizeArtPng
-                        artDownloadSemaphore.signal()
-                    }
-                } else {
-                    artDownloadSemaphore.signal()
-                }
-                
-                // Use semaphores here to let the downloads happen in parallel. But wait for them before continuing to the next track download
-                songDownloadSemaphore.wait()
-                artDownloadSemaphore.wait()
-                
-                logger.debug("\(bytesDownloadedForTrack) bytes were downloaded")
-                bytesAvailableToDownload -= bytesDownloadedForTrack
-                trackDownloadSemaphore.signal()
-            }
-
-            trackDownloadSemaphore.wait()
+            // In downloading "always offline" music, we may now need to kick out temporary cached music if this put us over the limit.
+            // It's a bit expensive to do, so only do it periodically, unless we are in danger of running out of storage on the phone.
+            // If we are, then do it every time so we don't get screwed over. Recalculate the offline storage either way though. This
+            // makes it so the user can watch the tracks get cached one at a time in the storage screen if they so choose to
+            let recalculateStorage = i % 5 == 0 || FileManager.systemFreeSizeBytes() < 100_000_000
+            recalculateUsedOfflineStorage(purgeAfterRecalculation: recalculateStorage)
+            
             logger.info("Cache of 'always offline' track with ID \(track.id) is done")
         }
+    }
+    
+    private static func downloadTrack(_ track: Track) -> Int {
+        logger.info("Beginning cache of 'always offline' track with ID \(track.id)")
+
+        let songDownloadSemaphore = DispatchSemaphore(value: 0)
+        let artDownloadSemaphore = DispatchSemaphore(value: 0)
+
+        var bytesDownloadedForTrack = 0
         
-        // In downloading "always offline" music, we may now need to kick out temporary cached music if this put us over the limit
-        recalculateUsedOfflineStorage()
+        TrackService.fetchLinksForTrack(
+            track: track,
+            fetchSong: track.songCachedAt == nil,
+            fetchArt: track.artCachedAt == nil && track.filesizeArtPng > 0
+        ) { trackLinks in
+            guard let trackLinks = trackLinks else {
+                // Error case. Not logging as the error HTTP logging happens upstream
+                songDownloadSemaphore.signal()
+                artDownloadSemaphore.signal()
+                return
+            }
+            
+            if let songLink = trackLinks.songLink {
+                HttpRequester.download(songLink) { fileOnDiskUrl in
+                    if let fileOnDiskUrl = fileOnDiskUrl {
+                        CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .song)
+                    }
+                    
+                    bytesDownloadedForTrack += track.filesizeSongMp3
+                    songDownloadSemaphore.signal()
+                }
+            } else {
+                songDownloadSemaphore.signal()
+            }
+            
+            if let artLink = trackLinks.albumArtLink {
+                HttpRequester.download(artLink) { fileOnDiskUrl in
+                    if let fileOnDiskUrl = fileOnDiskUrl {
+                        CacheService.setCachedData(trackId: track.id, fileOnDisk: fileOnDiskUrl, cacheType: .art)
+                    }
+                    
+                    bytesDownloadedForTrack += track.filesizeArtPng
+                    artDownloadSemaphore.signal()
+                }
+            } else {
+                artDownloadSemaphore.signal()
+            }
+        }
+        
+        // Use semaphores here to let the downloads happen in parallel. But wait for them before continuing to the next track download
+        songDownloadSemaphore.wait()
+        artDownloadSemaphore.wait()
+        
+        logger.debug("\(bytesDownloadedForTrack) bytes were downloaded")
+        return bytesDownloadedForTrack
     }
     
     // Boolean of whether or not to proceed with downloads
@@ -507,6 +536,24 @@ extension FileManager {
     
     static func move(_ oldPath: URL, _ newPath: URL) {
         try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
+    }
+    
+    static func systemFreeSizeBytes() -> Int64 {
+        if let freeBytes = try? FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())[.systemFreeSize] as! Int64 {
+            return freeBytes
+        } else {
+            GGLog.critical("Could not calculate free bytes on device!")
+            return 0
+        }
+    }
+    
+    static func systemSizeBytes() -> Int64 {
+        if let freeBytes = try? FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())[.systemSize] as! Int64 {
+            return freeBytes
+        } else {
+            GGLog.critical("Could not calculate device storage capacity!")
+            return 0
+        }
     }
 }
 

@@ -187,7 +187,7 @@ class ServerSynchronizer {
             // The sync could have happened as a result of launching the app. Give the user some time to fiddle with
             // download settings, in case they want to stop the downloads from happening before we begin. It's not very
             // urgent for these to be downloaded immediately anyway.
-            DispatchQueue.global().asyncAfter(deadline: .now() + 30.0) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + 20.0) {
                 OfflineStorageService.downloadAlwaysOfflineMusic()
             }
         }
