@@ -69,11 +69,13 @@ class RootNavigationController : UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         DispatchQueue.global().async {
-            UserState.postCurrentDevice()
-
-            // No need to do this in a blocking way. It shouldn't be syncing all that much stuff.
-            // If we block, there is a second delay or so before we can start using the app no matter what.
-            ServerSynchronizer.syncWithServer()
+            // Post the device before we kick off the sync. Sometimes the API needs to update data when we are on a new version
+            // so this will make sure our first sync of the login will have the good stuff, instead of having to wait for the next sync.
+            UserState.postCurrentDevice() {
+                // No need to do this in a blocking way. It shouldn't be syncing all that much stuff.
+                // If we block, there is a second delay or so before we can start using the app no matter what.
+                ServerSynchronizer.syncWithServer()
+            }
         }
     }
     

@@ -27,7 +27,9 @@ class UserState {
         UserDao.save(user)
     }
     
-    static func postCurrentDevice() {
+    static func postCurrentDevice(
+        onComplete: @escaping () -> Void
+    ) {
         let requestBody = PostSessionRequest(
             deviceId: FileState.read(DeviceState.self)!.deviceId,
             version: AppDelegate.getAppVersion()
@@ -39,6 +41,8 @@ class UserState {
             } else {
                 GGLog.info("Posted current device to server")
             }
+            
+            onComplete()
         }
     }
     
