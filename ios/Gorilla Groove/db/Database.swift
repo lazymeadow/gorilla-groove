@@ -55,23 +55,25 @@ class Database {
         return success
     }
     
-    static private func prepare(_ sql: String) -> OpaquePointer? {
+    static private func prepare(_ sql: String, logCrit: Bool) -> OpaquePointer? {
         if db == nil {
             fatalError("Attempting to prepare a statement against a nil db!")
         }
         
         var statement: OpaquePointer? = nil
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            logger.critical("Could not prepare statement: \(sql)")
+            if logCrit {
+                logger.critical("Could not prepare statement: \(sql)")
+            }
             return nil
         }
         return statement
     }
     
-    static func query(_ sql: String) -> [Dictionary<String, Any?>] {
+    static func query(_ sql: String, logCrit: Bool = true) -> [Dictionary<String, Any?>] {
         var result: [Dictionary<String, Any?>] = []
         
-        guard let queryStatement = prepare(sql) else {
+        guard let queryStatement = prepare(sql, logCrit: logCrit) else {
             return result
         }
         
@@ -117,7 +119,7 @@ class Database {
     }
     
     static func getDbVersion() -> Int {
-        return query("SELECT version FROM db_version")[safe: 0]?["version"] as? Int ?? 0
+        return query("SELECT version FROM db_version", logCrit: false)[safe: 0]?["version"] as? Int ?? 0
     }
     
     static private func migrate() {

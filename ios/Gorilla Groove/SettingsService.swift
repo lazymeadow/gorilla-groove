@@ -47,7 +47,7 @@ class SettingsService {
         UserDefaults.standard.addObserver(
             observer,
             forKeyPath: "offline_mode_enabled",
-            options: [.new],
+            options: [.new, .old],
             context: nil
         )
     }
@@ -73,7 +73,8 @@ class SettingsChangeObserver: NSObject {
         
         if keyPath == "max_offline_storage" {
             guard let newValue = change[NSKeyValueChangeKey.init(rawValue: "new")] as? Int else {
-                GGLog.critical("Could not parse 'max_offline_storage''s new value from 'change'!")
+                // This was null on a fresh app install, so it might be unfair to classify this as an "error", though it would be bad at any other time
+                GGLog.warning("Could not parse 'max_offline_storage''s new value from 'change'!")
                 return
             }
             
@@ -94,6 +95,11 @@ class SettingsChangeObserver: NSObject {
         } else if keyPath == "offline_mode_enabled" {
             guard let newValue = change[NSKeyValueChangeKey.init(rawValue: "new")] as? Bool else {
                 GGLog.critical("Could not parse 'offline_mode_enabled''s new value from 'change'!")
+                return
+            }
+            
+            guard let _ = change[NSKeyValueChangeKey.init(rawValue: "old")] as? Bool else {
+                GGLog.info("Could not parse 'offline_mode_enabled''s old value from 'change'. Assuming this is a first time login")
                 return
             }
             
