@@ -73,6 +73,17 @@ interface TrackRepository : CrudRepository<Track, Long> {
 	@Modifying
 	@Query("""
 			UPDATE Track t
+			SET t.updatedAt = now()
+			WHERE t.user.id = :userId
+			AND t.deleted = FALSE
+		""")
+	fun setUpdatedAtForActiveTracksAndUser(
+			@Param("userId") userId: Long
+	)
+
+	@Modifying
+	@Query("""
+			UPDATE Track t
 			SET t.private = :isPrivate, t.updatedAt = now()
 			WHERE t.user.id = :userId
 			AND t.id IN :trackIds
