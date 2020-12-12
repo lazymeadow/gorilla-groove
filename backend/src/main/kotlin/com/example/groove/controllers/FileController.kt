@@ -89,7 +89,7 @@ class FileController(
 
 	@PostMapping("/link/{trackId}")
 	fun forceLinksForTrack(@PathVariable trackId: Long) {
-		logger.info("User ${loadLoggedInUser().username} is forcing link generation for track $trackId")
+		logger.info("User ${loadLoggedInUser().name} is forcing link generation for track $trackId")
 
 		// We don't know what device someone is going to listen to this on, so we have to generate MP3 and OGG as
 		// not all browsers support OGG. We don't generate SMALL art size here as those are currently only used by mobile

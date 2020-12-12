@@ -60,21 +60,21 @@ class TrackController(
 
 	@PostMapping("/mark-listened")
 	fun markSongAsListenedTo(
-			@RequestBody markSongAsReadDTO: MarkTrackAsListenedToDTO,
+			@RequestBody markSongListenedDTO: MarkTrackAsListenedToDTO,
 			request: HttpServletRequest
 	): ResponseEntity<String> {
 		val user = loadLoggedInUser()
 		val ipAddress = request.getHeader("x-forwarded-for")
-		logger.info("User ${user.name} listened to track with ID: ${markSongAsReadDTO.trackId}")
+		logger.info("User ${user.name} listened to track with ID: ${markSongListenedDTO.trackId} at ${markSongListenedDTO.timeListenedAt}")
 
-		val deviceId = markSongAsReadDTO.deviceId
+		val deviceId = markSongListenedDTO.deviceId
 				?: user.currentAuthToken!!.device?.deviceId
 				?: throw IllegalArgumentException("A device must be specified on either the request, or the logged in user's current token!")
 
 		// Clients pass in the time that they listened to something (mostly so that offline listening on mobile can still
 		// report an accurate play history when they go back online). This is just a sanity check to make sure that plays
 		// aren't being recorded in the future. The 2 minute buffer is built in to give leniency for devices having a differing clock
-		markSongAsReadDTO.timeListenedAt.toInstant().toEpochMilli().let { clientMillis ->
+		markSongListenedDTO.timeListenedAt.toInstant().toEpochMilli().let { clientMillis ->
 			val serverMillis = System.currentTimeMillis() + 120_000
 			require (clientMillis < serverMillis) {
 				"You may not mark a song as listened to in the future! Your epoch millis was recorded as $clientMillis. It must be less than $serverMillis"
@@ -84,7 +84,7 @@ class TrackController(
 		trackService.markSongListenedTo(
 				deviceId = deviceId,
 				remoteIp = ipAddress,
-				data = markSongAsReadDTO
+				data = markSongListenedDTO
 		)
 
 		return ResponseEntity(HttpStatus.OK)
@@ -147,7 +147,7 @@ class TrackController(
 
 	@PostMapping("/trim")
 	fun trimSong(@RequestBody trackTrimDTO: TrackTrimDTO): Map<String, Int> {
-		logger.info("User ${loadLoggedInUser().username} is attempting to trim a track: $trackTrimDTO")
+		logger.info("User ${loadLoggedInUser().name} is attempting to trim a track: $trackTrimDTO")
 
 		if (trackTrimDTO.startTime == null && trackTrimDTO.duration == null) {
 			throw IllegalArgumentException("No trimming parameters were passed")
@@ -219,7 +219,7 @@ class TrackController(
 			@PathVariable trackId: Long,
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
 	): Map<String, Any?> {
-		logger.info("Private track info requested for track $trackId, format $audioFormat by user ${loadLoggedInUser().username}")
+		logger.info("Private track info requested for track $trackId, format $audioFormat by user ${loadLoggedInUser().name}")
 		return trackService.getPublicTrackInfo(trackId, false, audioFormat)
 	}
 
