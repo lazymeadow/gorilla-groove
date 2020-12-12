@@ -34,6 +34,16 @@ public class Track : Entity {
             return filesizeSongMp3 + filesizeArtPng
         }
     }
+    
+    public var artistString: String {
+        get {
+            if featuring?.count ?? 0 > 0 {
+                return "\(artist) ft. \(featuring!)"
+            } else {
+                return artist
+            }
+        }
+    }
 
     public init(
         id: Int,

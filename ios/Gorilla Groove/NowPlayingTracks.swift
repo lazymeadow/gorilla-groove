@@ -166,7 +166,7 @@ class NowPlayingTracks {
         var nowPlayingInfo = [String : Any]()
         
         nowPlayingInfo[MPMediaItemPropertyTitle] = track.name
-        nowPlayingInfo[MPMediaItemPropertyArtist] = track.artist
+        nowPlayingInfo[MPMediaItemPropertyArtist] = track.artistString
         nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = track.album
         
         nowPlayingInfo[MPMediaItemPropertyArtwork] = nil

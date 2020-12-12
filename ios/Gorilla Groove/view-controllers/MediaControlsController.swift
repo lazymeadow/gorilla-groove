@@ -291,7 +291,7 @@ class MediaControlsController: UIViewController {
         
         self.currentTime.text = Formatters.timeFromSeconds(0)
         self.totalTime.text = Formatters.timeFromSeconds(Int(track.length))
-        self.songText.text = track.name + " - " + track.artist
+        self.songText.text = track.name + " - " + track.artistString
         self.pauseIcon.isHidden = false
         self.playIcon.isHidden = true
         

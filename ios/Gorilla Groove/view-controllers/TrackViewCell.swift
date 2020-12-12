@@ -8,7 +8,7 @@ class TrackViewCell: UITableViewCell {
             guard let track = track else {return}
             
             nameLabel.text = track.name.isEmpty ? " " : track.name
-            artistLabel.text = track.artist.isEmpty ? " " : track.artist.uppercased()
+            artistLabel.text = track.artistString.isEmpty ? " " : track.artistString.uppercased()
             albumLabel.text = track.album.isEmpty ? " " : track.album
             
             durationLabel.text = Formatters.timeFromSeconds(Int(track.length))
