@@ -160,6 +160,7 @@ class HttpRequester {
     ) {
         guard let httpResponse = response as? HTTPURLResponse else {
             logger.error("error: not a valid http response")
+            callback?(nil, -1, error as! String?)
             return
         }
         
