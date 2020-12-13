@@ -123,7 +123,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     
     static func seekTo(_ time: Double) {
         player.seek(to: CMTime(seconds: time, preferredTimescale: 1000))
-        MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = time
+        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = time
     }
     
     static func addTimeObserver(callback: @escaping (_ time: Double) -> Void) {
@@ -131,7 +131,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     }
     
     static func play() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1.0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
         player.play()
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
