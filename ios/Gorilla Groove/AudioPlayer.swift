@@ -54,7 +54,11 @@ class AudioPlayer : CachingPlayerItemDelegate {
             
             let timeInSeconds = NSNumber(value: UInt64(time.value)).decimalValue / NSNumber(value: time.timescale.magnitude).decimalValue
 
-            if (CACurrentMediaTime() - lastSongPlayHeartbeatTime > 20.0) {
+            // This used to work this way because there was no socket, so continually sending events to the API was how the API
+            // knew you were connected. Now that we are using a socket, this might be entirely unnecessary. But I'm feeling a bit
+            // paranoid today so I'm not removing it outright. This does affect battery of the device though, so I've limited it to
+            // sending an event once every minute.
+            if (CACurrentMediaTime() - lastSongPlayHeartbeatTime > 60.0) {
                 sendPlayEvent(NowPlayingTracks.currentTrack)
             }
             

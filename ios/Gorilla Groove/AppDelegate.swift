@@ -62,7 +62,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         GGLog.debug("App is now in the foreground")
         if UserState.isLoggedIn {
             DispatchQueue.global().async {
-                ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
+                let syncRan = ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
+                
+                // Only want to do this if the sync didn't run, as the sync will kick this off afterwards
+                if !syncRan && OfflineStorageService.backgroundDownloadInterrupted {
+                    OfflineStorageService.downloadAlwaysOfflineMusic()
+                }
             }
         }
     }

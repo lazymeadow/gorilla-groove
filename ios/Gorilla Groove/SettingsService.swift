@@ -79,7 +79,10 @@ class SettingsChangeObserver: NSObject {
             }
             
             // The "initial" event does not contain an "old" value I guess. So if the old value is absent, it was the init.
-            if let oldValue = change[NSKeyValueChangeKey.init(rawValue: "old")] as? Int {
+            // Set the oldValue to be the newValue if it was nil, as that just makes sense and simplifies later logic in this function
+            let oldValue = change[NSKeyValueChangeKey.init(rawValue: "old")] as? Int ?? newValue
+            
+            if oldValue != newValue {
                 GGLog.info("User changed 'max_offline_storage' from \(oldValue) MB to \(newValue) MB")
             } else {
                 GGLog.info("App was initialized with 'max_offline_storage' of \(newValue) MB")
@@ -87,7 +90,13 @@ class SettingsChangeObserver: NSObject {
             
             if UserState.isLoggedIn {
                 DispatchQueue.global().async {
-                    OfflineStorageService.purgeExtraTrackDataIfNeeded()
+                    if newValue < oldValue {
+                        // User restricted how much space we are using. Make sure we purge excess data if there is any
+                        OfflineStorageService.purgeExtraTrackDataIfNeeded()
+                    } else if newValue > oldValue {
+                        // User granted us additional storage. We should look to download more stuff if there is stuff to download
+                        OfflineStorageService.downloadAlwaysOfflineMusic()
+                    }
                 }
             } else {
                 GGLog.info("User was not logged in when offline storage handler was invoked. Not checking to purge extra tracks")

@@ -1,5 +1,6 @@
 import Foundation
 import Connectivity
+import UIKit
 
 fileprivate let logger = GGLogger(category: "storage")
 
@@ -207,6 +208,8 @@ class OfflineStorageService {
     }
 
     private static var offlineMusicDownloadInProgress = false
+    private static var backgroundTask: UIBackgroundTaskIdentifier?
+    static var backgroundDownloadInterrupted: Bool = false
     
     static func downloadAlwaysOfflineMusic() {
         if Thread.isMainThread {
@@ -223,9 +226,18 @@ class OfflineStorageService {
         // in case this takes a REALLY long time, so we don't have threads just pile up here.
         synchronized(self) {
             offlineMusicDownloadInProgress = true
-            
+            backgroundDownloadInterrupted = false
+
+            backgroundTask = UIApplication.shared.beginBackgroundTask {
+                logger.info("Background download task was interrupted by the OS")
+                // This lambda is the "interruption handler", invoked by the OS when it wants us to stop.
+                // There are more fully fledged background tasks you can run separately that will notify your
+                // application when they are done. But they are not well-suited for downloading lots of small files, one at a time
+                backgroundDownloadInterrupted = true
+                offlineMusicDownloadInProgress = false
+            }
             downloadAlwaysOfflineMusicInternal()
-            
+
             offlineMusicDownloadInProgress = false
         }
     }
@@ -287,19 +299,29 @@ class OfflineStorageService {
         }
         
         let maxStoragePerAvailability = TrackDao.getOfflineAvailabilityMaxStorage()
-        let offlineMusicBytes = maxStoragePerAvailability[OfflineAvailabilityType.AVAILABLE_OFFLINE]!
+        let offlineMusicBytesNeeded = maxStoragePerAvailability[.AVAILABLE_OFFLINE]!
         
         // If this returns false, it means we needed to prompt the user for an action and should not proceed
-        if !handleMaxStorageTooSmallAlert(maxStoragePerAvailability, offlineMusicBytes) {
+        if !handleMaxStorageTooSmallAlert(maxStoragePerAvailability, offlineMusicBytesNeeded) {
             return
         }
         
+        // We only care about the bytes that have been used for 'available offline' music, as any storage used up
+        // for temporary cached songs does not take priority, and will be deleted to make room for these
+        let offlineMusicBytesUsed = TrackDao.getOfflineAvailabilityCurrentStorage()[.AVAILABLE_OFFLINE]!
+        
         // Now we know that we need to download some music. But we might not have enough space allocated to download it all.
         // We need to know how much space we have allocated for "always offline" music, and download untli we hit that limit
-        var bytesAvailableToDownload = maxOfflineStorageBytes - offlineMusicBytes
+        var bytesAvailableToDownload = maxOfflineStorageBytes - offlineMusicBytesUsed
         
         var i = 0
         for track in tracksNeedingCache {
+            if backgroundDownloadInterrupted {
+                logger.info("Ending track downloads due to background task ending. Remaining time: \(UIApplication.shared.backgroundTimeRemaining)")
+                UIApplication.shared.endBackgroundTask(backgroundTask!)
+                break
+            }
+            
             if bytesAvailableToDownload < track.cacheSize {
                 // Tracks are sorted in ascending size. So as soon as we encounter a track we can't download, we can't download any of them.
                 logger.info("Not enough space remaining to download track \(track.id). Aborting further downloads")
@@ -332,6 +354,13 @@ class OfflineStorageService {
             
             logger.info("Cache of 'always offline' track with ID \(track.id) is done")
         }
+        
+        if backgroundDownloadInterrupted && i == tracksNeedingCache.count {
+            logger.info("Background download was interrupted, but all tracks were finished downloading. Marking download as not interrupted")
+            backgroundDownloadInterrupted = false
+        }
+        
+        UIApplication.shared.endBackgroundTask(backgroundTask!)
     }
     
     private static func downloadTrack(_ track: Track) -> Int {

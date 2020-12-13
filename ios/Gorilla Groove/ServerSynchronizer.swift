@@ -13,16 +13,16 @@ class ServerSynchronizer {
     
     private static var syncRunning = false
     
-    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) {
+    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) -> Bool {
         logger.info("Initiating sync with server...")
         if syncRunning {
             logger.info("Sync already running. Not syncing")
-            return
+            return false
         }
         
         if offlineModeEnabled {
             logger.debug("Not syncing as we are in offline mode")
-            return
+            return false
         }
         
         let ownUser = UserState.getOwnUser()
@@ -35,7 +35,7 @@ class ServerSynchronizer {
             }
             else {
                 logger.info("Last sync was too recent. Not syncing")
-                return
+                return false
             }
         }
 
@@ -67,7 +67,7 @@ class ServerSynchronizer {
         
         if offlineModeEnabled {
             logger.error("Offline mode was enabled while we were syncing. Not updating last sync. Some data will be wack.")
-            return
+            return false
         }
         
         logger.info("Saving new user sync date")
@@ -80,6 +80,8 @@ class ServerSynchronizer {
         DispatchQueue.global().async {
             TrackService.retryFailedListens()
         }
+        
+        return true
     }
     
     // -- TRACKS
@@ -120,13 +122,15 @@ class ServerSynchronizer {
                 return
             }
             
-            for newTrackResponse in entityResponse!.content.new {
+            guard let content = entityResponse?.content else { return }
+            
+            for newTrackResponse in content.new {
                 TrackDao.save(newTrackResponse.asTrack(userId: userId))
 
                 logger.info("Added new track with ID: \(newTrackResponse.id)")
             }
             
-            for modifiedTrackResponse in entityResponse!.content.modified {
+            for modifiedTrackResponse in content.modified {
                 let modifiedTrackId = modifiedTrackResponse.id
                 logger.info("Modifying track with ID \(modifiedTrackId)")
                 let oldTrack = TrackDao.findById(modifiedTrackId)!
@@ -168,7 +172,7 @@ class ServerSynchronizer {
                 TrackDao.save(updatedTrack)
             }
             
-            for deletedId in entityResponse!.content.removed {
+            for deletedId in content.removed {
                 TrackDao.delete(deletedId)
                 CacheService.deleteAllData(trackId: deletedId)
                 
@@ -177,20 +181,20 @@ class ServerSynchronizer {
             
             pagesToFetch = entityResponse!.pageable.totalPages
             semaphore.signal()
-        }
- 
-        semaphore.wait()
-        
-        DispatchQueue.global().async {
+            
+            // These things technically shouldn't have to run if there were no changes, but it is handy to have a place
+            // that continually makes sure these things are correct, as something unexpected could have modified them.
             OfflineStorageService.recalculateUsedOfflineStorage()
             
             // The sync could have happened as a result of launching the app. Give the user some time to fiddle with
-            // download settings, in case they want to stop the downloads from happening before we begin. It's not very
-            // urgent for these to be downloaded immediately anyway.
-            DispatchQueue.global().asyncAfter(deadline: .now() + 20.0) {
+            // download settings, in case they want to stop the downloads from happening before we begin. Don't want
+            // the delay to be too long though as we can't download in the background indefinitely
+            DispatchQueue.global().asyncAfter(deadline: .now() + 8.0) {
                 OfflineStorageService.downloadAlwaysOfflineMusic()
             }
         }
+ 
+        semaphore.wait()
         
         return pagesToFetch
     }
