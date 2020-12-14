@@ -7,6 +7,13 @@ class MyLibraryController: UITableViewController {
     @SettingsBundleStorage(key: "offline_mode_enabled")
     private var offlineModeEnabled: Bool
     
+    private let logoutButton = UIBarButtonItem(
+        title: "Logout",
+        style: .plain,
+        target: self,
+        action: #selector(logout)
+    )
+    
     override func viewDidLoad() {
         GGNavLog.info("Loaded my library")
 
@@ -21,13 +28,13 @@ class MyLibraryController: UITableViewController {
         tableView.tableFooterView = UIView(frame: .zero)
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
-
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: "Logout",
-            style: .plain,
-            target: self,
-            action: #selector(logout)
-        )
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Don't let people log out if they're in offline mode, as they wouldn't be able to log back in anyway. Safety measure.
+        self.navigationItem.leftBarButtonItem = offlineModeEnabled ? nil : logoutButton
     }
     
     @objc func logout(_ sender: Any) {
