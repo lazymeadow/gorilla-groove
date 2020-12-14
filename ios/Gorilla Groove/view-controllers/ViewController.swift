@@ -1,5 +1,4 @@
 import UIKit
-import CoreData
 import Foundation
 
 struct VersionResponse: Codable {

@@ -9,6 +9,8 @@ class RootNavigationController : UITabBarController {
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
     let appSettingsViewController = IASKAppSettingsViewController()
+    
+    let reviewQueueController = ReviewQueueController()
         
     func getNowPlayingSongController() -> TrackViewController {
         return TrackViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
@@ -35,15 +37,27 @@ class RootNavigationController : UITabBarController {
         usersController.tabBarItem = UITabBarItem(title: "Users", image: UIImage(systemName: "person.3.fill"), tag: 2)
         playlistsController.tabBarItem = UITabBarItem(title: "Playlists", image: UIImage(systemName: "music.note.list"), tag: 3)
         appSettingsViewController.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 4)
-
+        
+        reviewQueueController.tabBarItem = UITabBarItem(title: "Review Queue", image: UIImage(systemName: "headphones"), tag: 5)
+        
         self.viewControllers = [
             libraryController,
             nowPlayingController,
             usersController,
             playlistsController,
-            appSettingsViewController
+            appSettingsViewController,
+            reviewQueueController
         ].map { vc in
             UINavigationController(rootViewController: vc)
+        }
+        
+        // This comment changes the color of the "Edit" button in the navbar. Not sure what color to make it right now.
+//        self.moreNavigationController.navigationBar.tintColor = Colors.secondary
+        if let moreMenu = self.moreNavigationController.topViewController?.view as? UITableView {
+            moreMenu.tableFooterView = UIView(frame: .zero)
+            moreMenu.tintColor = Colors.whiteTransparent
+        } else {
+            GGLog.critical("Could not load More menu to customize!")
         }
         
         view.addSubview(mediaControls.view)
