@@ -18,10 +18,10 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         view.addSubview(albumTableView)
         
         albumTableView.translatesAutoresizingMaskIntoConstraints = false
-        albumTableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
-        albumTableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
-        albumTableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
-        albumTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
+        albumTableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        albumTableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        albumTableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        albumTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         
         albumTableView.dataSource = self
         albumTableView.delegate = self

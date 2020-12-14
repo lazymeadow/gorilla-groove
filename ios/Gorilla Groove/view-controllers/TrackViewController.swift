@@ -3,13 +3,14 @@ import Foundation
 import AVKit
 
 class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-
+    
+    var loadTracksFunc: (() -> Array<Track>)? = nil
     var tracks: Array<Track> = []
     var visibleTracks: Array<Track> = []
     let scrollPlayedTrackIntoView: Bool
     let showingHidden: Bool
     let tableView = UITableView()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded track view")
@@ -52,13 +53,22 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 }
             }
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if let loadFunc = loadTracksFunc {
+            self.tracks = loadFunc()
+            self.visibleTracks = self.tracks
+            self.tableView.reloadData()
+        }
         
         if scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
             let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
-            tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+            tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
         }
     }
- 
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return visibleTracks.count
@@ -118,11 +128,18 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         ViewUtil.showAlert(alert)
     }
     
-    init(_ title: String, _ tracks: Array<Track>, scrollPlayedTrackIntoView: Bool = false, showingHidden: Bool = false) {
+    init(
+        _ title: String,
+        _ tracks: Array<Track> = [],
+        scrollPlayedTrackIntoView: Bool = false,
+        showingHidden: Bool = false,
+        loadTracksFunc: (() -> Array<Track>)? = nil
+    ) {
         self.tracks = tracks
         self.visibleTracks = tracks
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
         self.showingHidden = showingHidden
+        self.loadTracksFunc = loadTracksFunc
         
         super.init(nibName: nil, bundle: nil)
 
@@ -134,9 +151,4 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.showingHidden = false
         super.init(coder: aDecoder)
     }
-}
-
-struct TrackLinkResponse: Codable {
-    let songLink: String?
-    let albumArtLink: String?
 }

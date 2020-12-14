@@ -1,6 +1,5 @@
 import UIKit
 import AVFoundation
-import CoreData
 
 class MyLibraryController: UITableViewController {
     let options = SongViewType.allCases
@@ -17,14 +16,12 @@ class MyLibraryController: UITableViewController {
         
         try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
         try! AVAudioSession.sharedInstance().setActive(true)
-        
-        let view = self.view as! UITableView
-        
-        view.register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
-        
+
         // Remove extra table row lines that have no content
-        view.tableFooterView = UIView(frame: .zero)
+        tableView.tableFooterView = UIView(frame: .zero)
         
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
+
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: "Logout",
             style: .plain,

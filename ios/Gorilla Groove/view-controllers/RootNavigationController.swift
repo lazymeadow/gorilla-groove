@@ -2,29 +2,17 @@ import Foundation
 import UIKit
 import InAppSettingsKit
 
-class RootNavigationController : UIViewController {
-    
-    var consecutiveNowPlayingTaps = 0
-    
+class RootNavigationController : UITabBarController {
+        
     let libraryController = MyLibraryController()
+    let nowPlayingController = NowPlayingController()
     let usersController = UsersController()
     let playlistsController = PlaylistsController()
     let appSettingsViewController = IASKAppSettingsViewController()
-    
+        
     func getNowPlayingSongController() -> TrackViewController {
         return TrackViewController("Now Playing", NowPlayingTracks.nowPlayingTracks, scrollPlayedTrackIntoView: true)
     }
-    
-    lazy var topView = UINavigationController()
-    lazy var activeButton: NavigationButton? = nil
-    
-    lazy var myLibraryButton = NavigationButton("My Library", "music.house.fill", libraryController, nil, handleButtonTap)
-    lazy var nowPlayingButton = NavigationButton("Now Playing", "music.note", nil, getNowPlayingSongController, handleButtonTap)
-    lazy var usersButton = NavigationButton("Users", "person.3.fill", usersController, nil, handleButtonTap)
-    lazy var playlistsButton = NavigationButton("Playlists", "music.note.list", playlistsController, nil, handleButtonTap)
-    lazy var settingsButton = NavigationButton("Settings", "gear", appSettingsViewController, nil, handleButtonTap)
-    
-    lazy var buttons = [myLibraryButton, nowPlayingButton, usersButton, playlistsButton, settingsButton]
     
     override func viewDidLoad() {
         GGNavLog.info("Loaded root navigation")
@@ -33,41 +21,46 @@ class RootNavigationController : UIViewController {
         // The library adds a "Done" button as the right nav item. We don't need this
         appSettingsViewController.showDoneButton = false
         
-        topView.pushViewController(libraryController, animated: false)
-        
-        activeButton = myLibraryButton
-        myLibraryButton.setActive()
-        
-        let stackView = UIStackView()
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.axis = .vertical
-        stackView.distribution  = .fill
-        stackView.alignment = .fill
-        
         let mediaControls = MediaControlsController()
         let middleBar = createMiddleBar()
-        let navigationControls = createNavigationControls()
         
-        stackView.addArrangedSubview(topView.view)
-        stackView.addArrangedSubview(mediaControls.view)
-        stackView.addArrangedSubview(middleBar)
-        stackView.addArrangedSubview(navigationControls)
+        self.tabBar.isTranslucent = false
+        // Use this instead of "backgrounColor". For whatever reason "backgroundColor" does not use the color you specify. It's slightly wrong?
+        self.tabBar.barTintColor = UIColor(named: "Nav Controls")
+        self.tabBar.tintColor = Colors.secondary // Icon and text color when selected
+        self.tabBar.unselectedItemTintColor = Colors.whiteTransparent
+
+        libraryController.tabBarItem = UITabBarItem(title: "My Library", image: UIImage(systemName: "music.house.fill"), tag: 0)
+        nowPlayingController.tabBarItem = UITabBarItem(title: "Now Playing", image: UIImage(systemName: "music.note"), tag: 1)
+        usersController.tabBarItem = UITabBarItem(title: "Users", image: UIImage(systemName: "person.3.fill"), tag: 2)
+        playlistsController.tabBarItem = UITabBarItem(title: "Playlists", image: UIImage(systemName: "music.note.list"), tag: 3)
+        appSettingsViewController.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 4)
+
+        self.viewControllers = [
+            libraryController,
+            nowPlayingController,
+            usersController,
+            playlistsController,
+            appSettingsViewController
+        ].map { vc in
+            UINavigationController(rootViewController: vc)
+        }
         
-        self.view.backgroundColor = UIColor(named: "Nav Controls")
-        self.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(mediaControls.view)
+        view.addSubview(middleBar)
+
+        mediaControls.view.translatesAutoresizingMaskIntoConstraints = false
+        mediaControls.view.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        mediaControls.view.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        mediaControls.view.bottomAnchor.constraint(equalTo: middleBar.topAnchor).isActive = true
         
-        self.view.addSubview(stackView)
-        self.addChild(topView)
-        
-        topView.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            stackView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
-            stackView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            stackView.bottomAnchor.constraint(equalToSystemSpacingBelow: self.view.safeAreaLayoutGuide.bottomAnchor, multiplier: 1.0)
-        ])
+        middleBar.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        middleBar.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        middleBar.bottomAnchor.constraint(equalTo: tabBar.topAnchor).isActive = true
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         DispatchQueue.global().async {
             // Post the device before we kick off the sync. Sometimes the API needs to update data when we are on a new version
             // so this will make sure our first sync of the login will have the good stuff, instead of having to wait for the next sync.
@@ -79,31 +72,6 @@ class RootNavigationController : UIViewController {
         }
     }
     
-    private func createNavigationControls() -> UIView {
-        let view = UIView()
-        
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.distribution  = .fillEqually
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        buttons.forEach { button in
-            stackView.addArrangedSubview(button.view)
-        }
-        
-        view.addSubview(stackView)
-        view.backgroundColor = UIColor(named: "Nav Controls")
-        
-        NSLayoutConstraint.activate([
-            stackView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 8),
-            stackView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -8),
-            stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -15),
-            view.heightAnchor.constraint(equalToConstant: 70)
-        ])
-        
-        return view
-    }
-    
     private func createMiddleBar() -> UIView {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -113,132 +81,4 @@ class RootNavigationController : UIViewController {
         
         return view
     }
-    
-    private func handleButtonTap(_ tappedButton: NavigationButton) {
-        if tappedButton == nowPlayingButton {
-            consecutiveNowPlayingTaps += 1
-            if consecutiveNowPlayingTaps >= 5 {
-                CrashReportService.promptProblemReport()
-                consecutiveNowPlayingTaps = 0
-            }
-        } else {
-            consecutiveNowPlayingTaps = 0
-        }
-        
-        // Do some extra tomfoolery here so that the swipe gesture (left or right) matches
-        // where the tapped button was in relation to our currently active button
-        let currentViewIndex = buttons.firstIndex { button in
-            button == activeButton
-        }
-        let nextViewIndex = buttons.firstIndex { button in
-            button.controllerToLoad == tappedButton.controllerToLoad
-        }
-        
-        if (currentViewIndex == nextViewIndex) {
-            return // Tapped the same button that was already active. Nothing to do
-        }
-        
-        let newViews: Array<UIViewController> = {
-            if (currentViewIndex != nil && currentViewIndex! > nextViewIndex!) {
-                return [tappedButton.controllerToLoad!, topView.topViewController!]
-            } else {
-                return [tappedButton.controllerToLoad!]
-            }
-        }()
-        
-        topView.setViewControllers(newViews, animated: true)
-        topView.popToRootViewController(animated: true)
-        
-        activeButton!.setInactive()
-        activeButton = tappedButton
-        tappedButton.setActive()
-    }
-    
-    class NavigationButton : UIViewController {
-        let label: UILabel = UILabel()
-        var swapViewFunction: ((NavigationButton) -> ()) = { _ in }
-        var icon: UIImageView = UIImageView()
-        var controllerToLoad: UIViewController? = nil
-        var controllerToLoadFunction: (() -> UIViewController)?
-        
-        override func viewDidLoad() {
-            let stackView = UIStackView()
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            stackView.axis = .vertical
-            stackView.alignment = .center
-            
-            label.font = UIFont.systemFont(ofSize: 12)
-            // Hacky, but the button has already been set active before it loads and this stomps out the new color
-            if (label.textColor != Colors.secondary) {
-                label.textColor = Colors.whiteTransparent
-            }
-            
-            stackView.addArrangedSubview(icon)
-            stackView.addArrangedSubview(label)
-            
-            stackView.setCustomSpacing(8.0, after: icon)
-            
-            self.view.addGestureRecognizer(UITapGestureRecognizer(
-                target: self,
-                action: #selector(switchToView(sender:))
-            ))
-            
-            self.view.addSubview(stackView)
-            self.view.translatesAutoresizingMaskIntoConstraints = false
-            
-            NSLayoutConstraint.activate([
-                stackView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
-                stackView.heightAnchor.constraint(equalTo: self.view.heightAnchor)
-            ])
-        }
-        
-        init(
-            _ labelText: String,
-            _ iconName: String,
-            _ controllerToLoad: UIViewController?,
-            _ controllerToLoadFunction: (() -> UIViewController)?,
-            _ swapViewFunction: @escaping (NavigationButton) -> ()
-        ) {
-            self.label.text = labelText
-            self.controllerToLoad = controllerToLoad ?? controllerToLoadFunction?()
-            self.swapViewFunction = swapViewFunction
-            self.controllerToLoadFunction = controllerToLoadFunction
-            
-            super.init(nibName: nil, bundle: nil)
-            self.icon = createIcon(iconName)
-        }
-        
-        private func createIcon(_ name: String) -> UIImageView {
-            let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
-            
-            let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
-            icon.isUserInteractionEnabled = true
-            icon.tintColor = Colors.whiteTransparent
-            
-            return icon
-        }
-        
-        @objc func switchToView(sender: UITapGestureRecognizer) {
-            if (controllerToLoadFunction != nil) {
-                controllerToLoad = controllerToLoadFunction!()
-            }
-            
-            swapViewFunction(self)
-        }
-        
-        func setActive() {
-            label.textColor = Colors.secondary
-            icon.tintColor = Colors.secondary
-        }
-        
-        func setInactive() {
-            label.textColor = Colors.whiteTransparent
-            icon.tintColor = Colors.whiteTransparent
-        }
-        
-        required init?(coder aDecoder: NSCoder) {
-            super.init(coder: aDecoder)
-        }
-    }
-    
 }

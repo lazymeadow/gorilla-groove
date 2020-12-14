@@ -165,3 +165,8 @@ class TrackService {
         }
     }
 }
+
+struct TrackLinkResponse: Codable {
+    let songLink: String?
+    let albumArtLink: String?
+}
