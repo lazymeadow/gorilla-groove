@@ -13,6 +13,7 @@ class ServerSynchronizer {
     
     private static var syncRunning = false
     
+    @discardableResult
     static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) -> Bool {
         logger.info("Initiating sync with server...")
         if syncRunning {

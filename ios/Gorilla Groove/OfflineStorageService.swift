@@ -208,7 +208,6 @@ class OfflineStorageService {
     }
 
     private static var offlineMusicDownloadInProgress = false
-    private static var backgroundTask: UIBackgroundTaskIdentifier?
     static var backgroundDownloadInterrupted: Bool = false
     
     static func downloadAlwaysOfflineMusic() {
@@ -228,7 +227,7 @@ class OfflineStorageService {
             offlineMusicDownloadInProgress = true
             backgroundDownloadInterrupted = false
 
-            backgroundTask = UIApplication.shared.beginBackgroundTask {
+            let backgroundTask = UIApplication.shared.beginBackgroundTask {
                 logger.info("Background download task was interrupted by the OS")
                 // This lambda is the "interruption handler", invoked by the OS when it wants us to stop.
                 // There are more fully fledged background tasks you can run separately that will notify your
@@ -237,6 +236,7 @@ class OfflineStorageService {
                 offlineMusicDownloadInProgress = false
             }
             downloadAlwaysOfflineMusicInternal()
+            UIApplication.shared.endBackgroundTask(backgroundTask)
 
             offlineMusicDownloadInProgress = false
         }
@@ -294,7 +294,6 @@ class OfflineStorageService {
         
         if tracksNeedingCache.isEmpty {
             logger.debug("No always offline music to download")
-
             return
         }
         
@@ -318,7 +317,6 @@ class OfflineStorageService {
         for track in tracksNeedingCache {
             if backgroundDownloadInterrupted {
                 logger.info("Ending track downloads due to background task ending. Remaining time: \(UIApplication.shared.backgroundTimeRemaining)")
-                UIApplication.shared.endBackgroundTask(backgroundTask!)
                 break
             }
             
@@ -359,8 +357,6 @@ class OfflineStorageService {
             logger.info("Background download was interrupted, but all tracks were finished downloading. Marking download as not interrupted")
             backgroundDownloadInterrupted = false
         }
-        
-        UIApplication.shared.endBackgroundTask(backgroundTask!)
     }
     
     private static func downloadTrack(_ track: Track) -> Int {
