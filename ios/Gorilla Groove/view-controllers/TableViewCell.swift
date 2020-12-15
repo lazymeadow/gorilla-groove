@@ -9,7 +9,7 @@ class TableViewCell<T>: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        self.textLabel!.textColor = UIColor(named: "Table Text")
+        self.textLabel!.textColor = Colors.tableText
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -21,10 +21,10 @@ class TableViewCell<T>: UITableViewCell {
 extension UITableViewCell {
     func animateSelectionColor() {
         UIView.animate(withDuration: 0.12, animations: {
-            self.backgroundColor = UIColor(named: "Table Transition")
+            self.backgroundColor = Colors.tableTransition
         }) { (finished) in
             UIView.animate(withDuration: 0.12, animations: {
-                self.backgroundColor = UIColor(named: "Background")
+                self.backgroundColor = Colors.background
             })
         }
     }

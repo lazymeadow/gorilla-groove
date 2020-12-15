@@ -1,5 +1,4 @@
 import UIKit
-import AVFoundation
 
 class MyLibraryController: UITableViewController {
     let options = SongViewType.allCases
@@ -15,15 +14,10 @@ class MyLibraryController: UITableViewController {
     )
     
     override func viewDidLoad() {
-        GGNavLog.info("Loaded my library")
-
         super.viewDidLoad()
 
         self.title = "My Library"
         
-        try! AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-        try! AVAudioSession.sharedInstance().setActive(true)
-
         // Remove extra table row lines that have no content
         tableView.tableFooterView = UIView(frame: .zero)
         
@@ -32,7 +26,8 @@ class MyLibraryController: UITableViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+        GGNavLog.info("Loaded my library")
+
         // Don't let people log out if they're in offline mode, as they wouldn't be able to log back in anyway. Safety measure.
         self.navigationItem.leftBarButtonItem = offlineModeEnabled ? nil : logoutButton
     }
@@ -75,7 +70,7 @@ class MyLibraryController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
         
         cell.textLabel!.text = "\(options[indexPath.row])".toTitleCase()
-        cell.textLabel!.textColor = UIColor(named: "Table Text")
+        cell.textLabel!.textColor = Colors.tableText
         let tapGesture = UITapGestureRecognizer(
             target: self,
             action: #selector(handleTap(sender:))

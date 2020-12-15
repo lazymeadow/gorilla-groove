@@ -106,6 +106,10 @@ class CrashReportService {
         }
     }
     
+    static func getProblemReportStatus() -> ProblemReporting {
+        return FileState.read(ProblemReporting.self) ?? ProblemReporting()
+    }
+    
     static func sendAutomatedCrashReport(_ errorMessage: String) {
         // Not a lot of point in sending a crash report when the app is being directly monitored
         if isDebuggerRunning() {
@@ -113,7 +117,8 @@ class CrashReportService {
             fatalError(errorMessage)
         }
         
-        let lastAutomatedReport = FileState.read(LastAutomatedReport.self)?.time
+        var problemReportingStatus = getProblemReportStatus()
+        let lastAutomatedReport = problemReportingStatus.lastAutomatedReport
         let now = Date()
         if lastAutomatedReport == nil || Calendar.current.dateComponents([.hour], from: lastAutomatedReport!, to: now).hour! > 6 {
             if !automaticErrorReporting {
@@ -127,7 +132,8 @@ class CrashReportService {
             GGLog.info("About to send automated crash report. The user will\(showNotice ? " " : " not ")be notified of the error")
             sendProblemReport()
             
-            FileState.save(LastAutomatedReport(time: now))
+            problemReportingStatus.lastAutomatedReport = now
+            FileState.save(problemReportingStatus)
             
             if showNotice {
                 ViewUtil.showAlert(
@@ -142,21 +148,39 @@ class CrashReportService {
             GGLog.info("A critical error was logged, but the last automated report was too recent. Not sending crash report")
         }
     }
-
-    static func sendProblemReport() {
+    
+    static func sendManualProblemReport() -> Bool {
+        let success = sendProblemReport()
+        
+        if success {
+            var problemReportingStatus = getProblemReportStatus()
+            problemReportingStatus.lastManualReport = Date()
+            
+            FileState.save(problemReportingStatus)
+        }
+        
+        return success
+    }
+    
+    @discardableResult
+    private static func sendProblemReport() -> Bool {
+        if Thread.isMainThread {
+            fatalError("Do not send problem report on the main thread!")
+        }
+        
         let archiveUrl = FileManager.default
             .urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("crash-report.zip")
         
         guard let archive = Archive(url: archiveUrl, accessMode: .create) else {
             GGLog.error("Could not create archive")
-            return
+            return false
         }
                 
         let ownId = FileState.read(LoginState.self)!.id
         let logPath = GGLogger.getMergedLogFilePath()
         let dbPath = Database.getDbPath(ownId)
-                
+        
         do {
             // This thing has a not great API. Can't just pass in a complete Path. Have to take the complete path and tear
             // it into two pieces so the library can recombine it??
@@ -184,15 +208,24 @@ class CrashReportService {
             GGLog.warning("Attempted to clean up merged log file but it was not found!")
         }
         
+        let semaphore = DispatchSemaphore(value: 0)
+        var success = false
         HttpRequester.upload("crash-report", EmptyResponse.self, archiveData) { _, status, _ in
             if status >= 200 && status < 300 {
                 GGLog.info("Crash report was uploaded")
+                success = true
             }
+            semaphore.signal()
         }
+        
+        semaphore.wait()
+        
+        return success
     }
     
-    struct LastAutomatedReport: Codable {
-        let time: Date
+    struct ProblemReporting: Codable {
+        var lastAutomatedReport: Date? = nil
+        var lastManualReport: Date? = nil
     }
 }
 

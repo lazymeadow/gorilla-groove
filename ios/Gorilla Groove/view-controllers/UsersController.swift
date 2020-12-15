@@ -7,7 +7,6 @@ class UsersController : UITableViewController {
     var users: Array<User> = []
     
     override func viewDidLoad() {
-        GGNavLog.info("Loaded users")
         super.viewDidLoad()
         self.title = "Users"
 
@@ -21,6 +20,12 @@ class UsersController : UITableViewController {
         users = UserDao.getOtherUsers()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        GGNavLog.info("Loaded users view")
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return users.count
     }
@@ -29,7 +34,7 @@ class UsersController : UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
         
         cell.textLabel!.text = users[indexPath.row].name
-        cell.textLabel!.textColor = UIColor(named: "Table Text")
+        cell.textLabel!.textColor = Colors.tableText
         
         return cell
     }

@@ -9,7 +9,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         GGLogger.initialize()
         CrashReportService.initialize()
         
-        UINavigationBar.appearance().barTintColor = UIColor(named: "Navigation Background")
+        UINavigationBar.appearance().barTintColor = Colors.navigationBackground
         UINavigationBar.appearance().tintColor = Colors.primary
         UINavigationBar.appearance().isTranslucent = false
         
@@ -90,6 +90,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let appVersionString = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
         let buildNumber = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as! String
         return "\(appVersionString).\(buildNumber)"
+    }
+    
+    static var rootView: UIView? {
+        get {
+            (UIApplication.shared.delegate as? AppDelegate)?.window?.rootViewController?.view
+        }
     }
 }
 

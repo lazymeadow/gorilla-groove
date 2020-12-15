@@ -21,7 +21,7 @@ class SyncController: UIViewController {
         userSection = createSection(content, "person.3.fill", "Users")
         
         self.view.addSubview(content)
-        self.view.backgroundColor = UIColor(named: "Background")
+        self.view.backgroundColor = Colors.background
         
         NSLayoutConstraint.activate([
             content.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 170),
@@ -105,7 +105,7 @@ class SyncController: UIViewController {
         
         let percentDone = UILabel()
         percentDone.text = "0%"
-        percentDone.textColor = UIColor(named: "Foreground")
+        percentDone.textColor = Colors.foreground
         percentDone.widthAnchor.constraint(equalToConstant: 50).isActive = true
         percentDone.textAlignment = .right
         
@@ -132,7 +132,7 @@ class SyncController: UIViewController {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 2.5, weight: .medium, scale: .large)
         
         let icon = UIImageView(image: UIImage(systemName: name, withConfiguration: config)!)
-        icon.tintColor = UIColor(named: "Foreground")
+        icon.tintColor = Colors.foreground
         
         return icon
     }

@@ -56,6 +56,8 @@
 		E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDEA258078B100207F99 /* InAppSettingsKit */; };
 		E873DDF32586F45500207F99 /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDF22586F45500207F99 /* NowPlayingController.swift */; };
 		E873DDF6258711CB00207F99 /* ReviewQueueController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDF5258711CB00207F99 /* ReviewQueueController.swift */; };
+		E873DDF925871E6D00207F99 /* ErrorReportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDF825871E6D00207F99 /* ErrorReportController.swift */; };
+		E873DDFD25883CEF00207F99 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDFC25883CEF00207F99 /* Toast */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
@@ -109,6 +111,7 @@
 		E8711867256777BD007B8F16 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		E873DDF22586F45500207F99 /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
 		E873DDF5258711CB00207F99 /* ReviewQueueController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQueueController.swift; sourceTree = "<group>"; };
+		E873DDF825871E6D00207F99 /* ErrorReportController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorReportController.swift; sourceTree = "<group>"; };
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -118,6 +121,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E873DDFD25883CEF00207F99 /* Toast in Frameworks */,
 				E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */,
 				E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */,
 				E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */,
@@ -172,6 +176,7 @@
 				E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */,
 				E873DDF22586F45500207F99 /* NowPlayingController.swift */,
 				E873DDF5258711CB00207F99 /* ReviewQueueController.swift */,
+				E873DDF825871E6D00207F99 /* ErrorReportController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -246,6 +251,7 @@
 				E840A58D256DE2D2009F3C9E /* CocoaLumberjack */,
 				E8FBB74D257DC0DF007DB097 /* Connectivity */,
 				E873DDEA258078B100207F99 /* InAppSettingsKit */,
+				E873DDFC25883CEF00207F99 /* Toast */,
 			);
 			productName = "Gorilla Groove";
 			productReference = A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */;
@@ -280,6 +286,7 @@
 				E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */,
 				E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */,
 				E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */,
+				E873DDFB25883CEF00207F99 /* XCRemoteSwiftPackageReference "Toast-Swift" */,
 			);
 			productRefGroup = A89100EB23BD339D00D6EA2D /* Products */;
 			projectDirPath = "";
@@ -321,6 +328,7 @@
 				E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */,
 				A829AC0A23CA57AD0034AD69 /* TrackService.swift in Sources */,
 				E873DDF6258711CB00207F99 /* ReviewQueueController.swift in Sources */,
+				E873DDF925871E6D00207F99 /* ErrorReportController.swift in Sources */,
 				E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */,
 				E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */,
@@ -583,6 +591,14 @@
 				minimumVersion = 3.1.8;
 			};
 		};
+		E873DDFB25883CEF00207F99 /* XCRemoteSwiftPackageReference "Toast-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scalessec/Toast-Swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.1;
+			};
+		};
 		E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rwbutler/connectivity";
@@ -613,6 +629,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */;
 			productName = InAppSettingsKit;
+		};
+		E873DDFC25883CEF00207F99 /* Toast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E873DDFB25883CEF00207F99 /* XCRemoteSwiftPackageReference "Toast-Swift" */;
+			productName = Toast;
 		};
 		E8FBB74D257DC0DF007DB097 /* Connectivity */ = {
 			isa = XCSwiftPackageProductDependency;

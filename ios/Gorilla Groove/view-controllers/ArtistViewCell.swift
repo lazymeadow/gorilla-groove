@@ -13,7 +13,7 @@ class ArtistViewCell: UITableViewCell {
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
-        label.textColor = UIColor(named: "Table Text")
+        label.textColor = Colors.tableText
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

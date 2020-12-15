@@ -13,6 +13,19 @@ class Colors {
     static let whiteTransparent = UIColor("FFFFFF", 0.6)
     static let disabledWhite = UIColor("FFFFFF", 0.3)
     
+    static let tableTransition = UIColor(named: "Table Transition")
+    static let background = UIColor(named: "Background")
+    static let foreground = UIColor(named: "Foreground")
+    static let tableText = UIColor(named: "Table Text")
+    static let navControls = UIColor(named: "Nav Controls")
+
+    static let artistDisplay = UIColor(named: "Artist Display")
+    static let songDisplay = UIColor(named: "Song Display")
+    
+    static let playingSongtitle = UIColor(named: "Playing Song Title")
+    static let navControlsDivider = UIColor(named: "Nav Controls Divider")
+    static let navigationBackground = UIColor(named: "Navigation Background")
+    
     private init() { }
 }
 

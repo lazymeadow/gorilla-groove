@@ -25,6 +25,12 @@ class PlaylistsController : UITableViewController {
         playlists = PlaylistDao.getPlaylists(userId: ownId)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        GGNavLog.info("Loaded playlists view")
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return playlists.count
     }
