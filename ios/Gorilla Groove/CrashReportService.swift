@@ -178,7 +178,7 @@ class CrashReportService {
         }
                 
         let ownId = FileState.read(LoginState.self)!.id
-        let logPath = GGLogger.getMergedLogFilePath()
+        let logPath = GGLogger.createMergedLogFile()
         let dbPath = Database.getDbPath(ownId)
         
         do {

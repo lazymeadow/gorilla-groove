@@ -58,6 +58,7 @@
 		E873DDF6258711CB00207F99 /* ReviewQueueController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDF5258711CB00207F99 /* ReviewQueueController.swift */; };
 		E873DDF925871E6D00207F99 /* ErrorReportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDF825871E6D00207F99 /* ErrorReportController.swift */; };
 		E873DDFD25883CEF00207F99 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDFC25883CEF00207F99 /* Toast */; };
+		E873DE0025887A6A00207F99 /* LogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDFF25887A6A00207F99 /* LogViewController.swift */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
@@ -112,6 +113,7 @@
 		E873DDF22586F45500207F99 /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
 		E873DDF5258711CB00207F99 /* ReviewQueueController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQueueController.swift; sourceTree = "<group>"; };
 		E873DDF825871E6D00207F99 /* ErrorReportController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorReportController.swift; sourceTree = "<group>"; };
+		E873DDFF25887A6A00207F99 /* LogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewController.swift; sourceTree = "<group>"; };
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -177,6 +179,7 @@
 				E873DDF22586F45500207F99 /* NowPlayingController.swift */,
 				E873DDF5258711CB00207F99 /* ReviewQueueController.swift */,
 				E873DDF825871E6D00207F99 /* ErrorReportController.swift */,
+				E873DDFF25887A6A00207F99 /* LogViewController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -337,6 +340,7 @@
 				E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */,
 				E85966432423201100AA8727 /* ArtistViewController.swift in Sources */,
 				A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */,
+				E873DE0025887A6A00207F99 /* LogViewController.swift in Sources */,
 				E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */,
 				E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */,
 				E8C2ABE224E102A10050A01E /* User.swift in Sources */,

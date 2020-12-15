@@ -38,6 +38,7 @@ class ErrorReportController : UIViewController {
         lastReportLabel.numberOfLines = 0
         
         viewLogButton.setTitle("View Logs", for: .normal)
+        viewLogButton.addTarget(self, action: #selector(logViewPressed(sender:)), for: .touchUpInside)
         viewLogButton.backgroundColor = Colors.navControls
         viewLogButton.tintColor = Colors.foreground
         viewLogButton.layer.cornerRadius = 5
@@ -133,6 +134,15 @@ class ErrorReportController : UIViewController {
                 self.activitySpinner.stopAnimating()
             }
         }
+    }
+    
+    @objc func logViewPressed(sender: UIButton) {
+        let logViewController = LogViewController()
+        logViewController.modalPresentationStyle = .pageSheet
+        
+        // Have to wrap in a nav controller or else you don't have a navigation bar and it looks pretty weird
+        let vc = UINavigationController(rootViewController: logViewController)
+        self.present(vc, animated: true)
     }
 }
 

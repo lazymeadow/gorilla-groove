@@ -65,7 +65,7 @@ class GGLogger {
         let logLevel: String
     }
     
-    static func getMergedLogFilePath() -> URL {
+    static func createMergedLogFile() -> URL {
         let logFilePaths = fileLogger.logFileManager.sortedLogFilePaths
         let urls = logFilePaths.map { stringPath in
             URL(string: stringPath.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed)!)!
