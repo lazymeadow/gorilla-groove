@@ -75,7 +75,7 @@ class RootNavigationController : UITabBarController {
         self.moreNavigationController.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomContentHeight, right: 0)
         if let moreMenu = self.moreNavigationController.topViewController?.view as? UITableView {
             moreMenu.tableFooterView = UIView(frame: .zero)
-            moreMenu.tintColor = Colors.whiteTransparent
+            moreMenu.tintColor = Colors.tableText
         } else {
             GGLog.critical("Could not load More menu to customize!")
         }
