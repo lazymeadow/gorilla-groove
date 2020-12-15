@@ -13,6 +13,7 @@ class Colors {
     static let whiteTransparent = UIColor("FFFFFF", 0.6)
     static let disabledWhite = UIColor("FFFFFF", 0.3)
     
+    static let debugGrey = UIColor(named: "Debug Grey")!
     static let warningYellow = UIColor("FF8C00")
     static let dangerRed = UIColor("DC3545")
     

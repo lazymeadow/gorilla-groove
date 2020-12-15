@@ -37,9 +37,6 @@ class LogViewController : UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         GGNavLog.info("Loaded log view controller")
-        GGNavLog.warning("Test warning")
-        GGNavLog.error("Test error\nThis error contains a new line")
-        GGNavLog.info("Back to info log")
         activitySpinner.startAnimating()
         
         DispatchQueue.global().async {
@@ -84,6 +81,8 @@ class LogViewController : UIViewController {
                         color = Colors.warningYellow
                     } else if logLevel == "[error]" || logLevel == "[crit]" {
                         color = Colors.dangerRed
+                    } else if logLevel == "[debug]" {
+                        color = Colors.debugGrey
                     } else {
                         color = Colors.foreground
                     }
