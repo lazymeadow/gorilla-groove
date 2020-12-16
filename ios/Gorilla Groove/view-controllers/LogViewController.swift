@@ -52,7 +52,7 @@ class LogViewController : UIViewController {
             var color = Colors.foreground
             truncatedLogText
                 .split(separator: "\n")
-                .suffix(200) // Keep last 200 lines
+                .suffix(250) // Keep last 250 lines
                 .forEach { line in
                     // If this is not a new log line, but a continuation of a previous log line that contained \n characters
                     // (such as formatted JSON output or whatever), then use the same color as the last log and call it a day

@@ -3,7 +3,6 @@ import UIKit
 import InAppSettingsKit
 import AVFoundation
 
-// TODO need to save order of tabs https://stackoverflow.com/questions/62108702/swift-uitabbarcontroller-save-the-order-tab
 class RootNavigationController : UITabBarController {
     
     private let libraryController = MyLibraryController()
@@ -67,8 +66,16 @@ class RootNavigationController : UITabBarController {
             return controller
         }
         
+        self.delegate = self
+        restoreOrder()
+        
+        // Tell the tab bar to use the first VC as the "initial" one. Otherwise it'll use whatever VC was first in the above
+        // array, which will likely always be the libraryController. But if we do this we give the user the freedom to set
+        // their launch tab by setting it as the first one.
+        self.selectedIndex = 0
+        
         // This comment changes the color of the "Edit" button in the navbar. Not sure what color to make it right now.
-//        self.moreNavigationController.navigationBar.tintColor = Colors.secondary
+        // self.moreNavigationController.navigationBar.tintColor = Colors.secondary
         
         // The "more" navigation controller requires its own nonsense apparently. Without this, the controllers viewed
         // from within the navigation controller are too large and have hidden content.
@@ -82,7 +89,7 @@ class RootNavigationController : UITabBarController {
         
         view.addSubview(mediaControls.view)
         view.addSubview(middleBar)
-
+        
         mediaControls.view.translatesAutoresizingMaskIntoConstraints = false
         mediaControls.view.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         mediaControls.view.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
@@ -117,5 +124,41 @@ class RootNavigationController : UITabBarController {
         view.heightAnchor.constraint(equalToConstant: 1).isActive = true
         
         return view
+    }
+}
+
+// This contains all the code for dealing with persisting and loading the order of the VCs on the tab bar
+extension RootNavigationController: UITabBarControllerDelegate {
+    override func tabBar(_ tabBar: UITabBar, didEndCustomizing items: [UITabBarItem], changed: Bool) {
+        let order = getCurrentOrder()
+        saveOrder(order: order)
+    }
+    
+    private func getCurrentOrder() -> [Int] {
+        return self.viewControllers?.map { $0.tabBarItem.tag } ?? []
+    }
+    
+    private func saveOrder(order: [Int]) {
+        UserDefaults.standard.set(order, forKey: "TabBarItemsOrder")
+    }
+    
+    private func restoreOrder() {
+        guard let order = UserDefaults.standard.value(forKey: "TabBarItemsOrder") as? [Int] else { return }
+        
+        guard let controllers = self.viewControllers else {
+            GGLog.critical("Could not find controllers on UITabBarController to reorder!")
+            return
+        }
+        
+        let reorderedControllers: [UIViewController] = order.compactMap { tag in
+            if let controller = controllers.first(where: { $0.tabBarItem.tag == tag }) {
+                return controller
+            } else {
+                GGLog.warning("Could not find view controller with tag \(tag) while restoring tab bar layout. Was it removed?")
+                return nil
+            }
+        }
+        
+        self.setViewControllers(reorderedControllers, animated: false)
     }
 }
