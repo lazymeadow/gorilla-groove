@@ -9,6 +9,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         GGLogger.initialize()
         CrashReportService.initialize()
         
+        GGLog.info("\n \nApp was booted\n \n")
+        
         UINavigationBar.appearance().barTintColor = Colors.navigationBackground
         UINavigationBar.appearance().tintColor = Colors.primary
         UINavigationBar.appearance().isTranslucent = false

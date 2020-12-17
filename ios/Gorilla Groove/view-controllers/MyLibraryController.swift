@@ -6,13 +6,6 @@ class MyLibraryController: UITableViewController {
     @SettingsBundleStorage(key: "offline_mode_enabled")
     private var offlineModeEnabled: Bool
     
-    private let logoutButton = UIBarButtonItem(
-        title: "Logout",
-        style: .plain,
-        target: self,
-        action: #selector(logout)
-    )
-    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -27,39 +20,6 @@ class MyLibraryController: UITableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         GGNavLog.info("Loaded my library")
-
-        // Don't let people log out if they're in offline mode, as they wouldn't be able to log back in anyway. Safety measure.
-        self.navigationItem.rightBarButtonItem = offlineModeEnabled ? nil : logoutButton
-    }
-    
-    @objc func logout(_ sender: Any) {
-        // Call stop() before we actually clear out login state as this updates the server with our device
-        AudioPlayer.stop()
-        UserState.isLoggedIn = false
-
-        // TODO actually send the logout command to the API
-        HttpRequester.post("authentication/logout", EmptyResponse.self, nil) { _, statusCode, _ in
-            if (statusCode == 200) {
-                GGLog.info("Logout token deleted")
-            }
-        }
-        FileState.clear(LoginState.self)
-        WebSocket.disconnect()
-        
-        // Until we ditch the storyboard, have to navigate to the login view this way
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: "LoginController")
-        
-        // When I used the present() code, it would make the Sync view not load properly
-        // after someone logged out? It seems like setting the root view is the only way
-        // to navigate anywhere (outside a navigation controller) that doesn't have side effects...
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        appDelegate.window!.rootViewController = vc
-//        vc.modalPresentationStyle = .fullScreen
-//        vc.modalTransitionStyle = .crossDissolve
-//        self.present(vc, animated: true)
-        
-        Database.close()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

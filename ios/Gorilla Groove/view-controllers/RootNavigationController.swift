@@ -8,6 +8,8 @@ class RootNavigationController : UITabBarController {
     @SettingsBundleStorage(key: "launch_screen")
     private var launchScreenTag: Int
   
+    private let LOGOUT_TAG = 7
+    
     private lazy var tagToController: [Int: UIViewController] = {
         let libraryController = MyLibraryController()
         let nowPlayingController = NowPlayingController()
@@ -16,7 +18,8 @@ class RootNavigationController : UITabBarController {
         let appSettingsController = IASKAppSettingsViewController()
         let reviewQueueController = ReviewQueueController()
         let errorReportController = ErrorReportController()
-        
+        let logoutController = LogoutController()
+
         // Do NOT edit these tag values. They are used for keeping track of the order of the VCs in the tab bar, and changing the tags
         // would change how a user sees them. The tag is also used for the "launch_screen" setting value
         
@@ -28,6 +31,7 @@ class RootNavigationController : UITabBarController {
         
         reviewQueueController.tabBarItem = UITabBarItem(title: "Review Queue", image: UIImage(systemName: "headphones"), tag: 5)
         errorReportController.tabBarItem = UITabBarItem(title: "Problem Report", image: UIImage(systemName: "exclamationmark.triangle.fill"), tag: 6)
+        logoutController.tabBarItem = UITabBarItem(title: "Logout", image: UIImage(systemName: "arrow.down.right.square"), tag: LOGOUT_TAG)
         
         // The library adds a "Done" button as the right nav item. We don't need this
         appSettingsController.showDoneButton = false
@@ -39,7 +43,8 @@ class RootNavigationController : UITabBarController {
             playlistsController.tabBarItem.tag: playlistsController,
             appSettingsController.tabBarItem.tag: appSettingsController,
             reviewQueueController.tabBarItem.tag: reviewQueueController,
-            errorReportController.tabBarItem.tag: errorReportController
+            errorReportController.tabBarItem.tag: errorReportController,
+            logoutController.tabBarItem.tag: logoutController
         ]
     }()
     
@@ -63,10 +68,7 @@ class RootNavigationController : UITabBarController {
         self.tabBar.barTintColor = Colors.navControls
         self.tabBar.tintColor = Colors.secondary // Icon and text color when selected
         self.tabBar.unselectedItemTintColor = Colors.whiteTransparent
-        
-        // Globally change all nav bar item tint color
-        UINavigationBar.appearance().tintColor = Colors.primary
-        
+                
         self.viewControllers = getRestoredOrder().map { vc in
             // Most of the views have some form of navigation, so wrap them in a navigation controller.
             // Copied this off the interweb, but it might make more sense to just individually wrap the
@@ -79,6 +81,7 @@ class RootNavigationController : UITabBarController {
             
             return controller
         }
+        self.customizableViewControllers = self.viewControllers!.filter { $0.tabBarItem.tag != LOGOUT_TAG }
         
         self.delegate = self
         
@@ -187,6 +190,24 @@ extension RootNavigationController: UITabBarControllerDelegate {
                 GGLog.warning("Could not find view controller with tag \(tag) while restoring tab bar layout. Was it removed?")
                 return nil
             }
+        }
+        
+        if reorderedControllers.count != tagToController.values.count {
+            GGLog.warning("Reordered controller count did not match total controller count. Assuming controllers need to be added")
+            let currentTags = Set(order)
+            
+            tagToController.values.forEach { controller in
+                if !currentTags.contains(controller.tabBarItem.tag) {
+                    GGLog.info("Adding '\(controller.tabBarItem.title ?? "nil")' controller...")
+                    reorderedControllers.append(controller)
+                }
+            }
+            
+            // Keep the "sign out" controller at the bottom, always
+            reorderedControllers.removeAll() { $0.tabBarItem.tag == LOGOUT_TAG }
+            reorderedControllers.append(tagToController[LOGOUT_TAG]!)
+            
+            saveOrder(order: reorderedControllers.map { $0.tabBarItem.tag })
         }
         
         if let indexOfLaunchScreen = reorderedControllers.firstIndex(where: { vc in vc.tabBarItem.tag == launchScreenTag}) {

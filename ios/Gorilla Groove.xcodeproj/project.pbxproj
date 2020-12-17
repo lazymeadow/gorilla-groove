@@ -59,6 +59,7 @@
 		E873DDF925871E6D00207F99 /* ErrorReportController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDF825871E6D00207F99 /* ErrorReportController.swift */; };
 		E873DDFD25883CEF00207F99 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDFC25883CEF00207F99 /* Toast */; };
 		E873DE0025887A6A00207F99 /* LogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDFF25887A6A00207F99 /* LogViewController.swift */; };
+		E873DE03258AF97600207F99 /* LogoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DE02258AF97600207F99 /* LogoutController.swift */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
@@ -114,6 +115,7 @@
 		E873DDF5258711CB00207F99 /* ReviewQueueController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewQueueController.swift; sourceTree = "<group>"; };
 		E873DDF825871E6D00207F99 /* ErrorReportController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorReportController.swift; sourceTree = "<group>"; };
 		E873DDFF25887A6A00207F99 /* LogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewController.swift; sourceTree = "<group>"; };
+		E873DE02258AF97600207F99 /* LogoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoutController.swift; sourceTree = "<group>"; };
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -180,6 +182,7 @@
 				E873DDF5258711CB00207F99 /* ReviewQueueController.swift */,
 				E873DDF825871E6D00207F99 /* ErrorReportController.swift */,
 				E873DDFF25887A6A00207F99 /* LogViewController.swift */,
+				E873DE02258AF97600207F99 /* LogoutController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -354,6 +357,7 @@
 				E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */,
 				E86EB67A24EC9B7D0066CB4E /* Track.swift in Sources */,
 				E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */,
+				E873DE03258AF97600207F99 /* LogoutController.swift in Sources */,
 				A829AC2423CC2C1D0034AD69 /* TrackViewCell.swift in Sources */,
 				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
 				E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */,
