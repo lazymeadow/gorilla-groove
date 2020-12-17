@@ -69,7 +69,10 @@ class TrackService {
         }
         
         if offlineModeEnabled || retry > 3 {
-            GGLog.error("Persisting record of Track \(trackId) to update the API later")
+            if retry > 3 {
+                GGLog.error("Retry limit was reached!")
+            }
+            GGLog.info("Persisting record of Track \(trackId) to update the API later")
             var failedRequests = FileState.read(FailedListenRequests.self) ?? FailedListenRequests(requests: [])
             failedRequests.requests.append(postBody!)
             

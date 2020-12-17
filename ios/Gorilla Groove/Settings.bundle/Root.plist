@@ -208,6 +208,34 @@
 			<key>DefaultValue</key>
 			<false/>
 		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
+			<string>Misc</string>
+		</dict>
+		<dict>
+			<key>Titles</key>
+			<array>
+				<string>My Library</string>
+				<string>Playlists</string>
+				<string>Review Queue</string>
+			</array>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Launch Screen</string>
+			<key>Key</key>
+			<string>launch_screen</string>
+			<key>DefaultValue</key>
+			<integer>0</integer>
+			<key>Values</key>
+			<array>
+				<integer>0</integer>
+				<integer>3</integer>
+				<integer>5</integer>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

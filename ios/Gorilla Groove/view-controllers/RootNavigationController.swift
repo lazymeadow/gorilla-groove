@@ -5,14 +5,42 @@ import AVFoundation
 
 class RootNavigationController : UITabBarController {
     
-    private let libraryController = MyLibraryController()
-    private let nowPlayingController = NowPlayingController()
-    private let usersController = UsersController()
-    private let playlistsController = PlaylistsController()
-    private let appSettingsViewController = IASKAppSettingsViewController()
+    @SettingsBundleStorage(key: "launch_screen")
+    private var launchScreenTag: Int
+  
+    private lazy var tagToController: [Int: UIViewController] = {
+        let libraryController = MyLibraryController()
+        let nowPlayingController = NowPlayingController()
+        let usersController = UsersController()
+        let playlistsController = PlaylistsController()
+        let appSettingsController = IASKAppSettingsViewController()
+        let reviewQueueController = ReviewQueueController()
+        let errorReportController = ErrorReportController()
+        
+        libraryController.tabBarItem = UITabBarItem(title: "My Library", image: UIImage(systemName: "music.house.fill"), tag: 0)
+        nowPlayingController.tabBarItem = UITabBarItem(title: "Now Playing", image: UIImage(systemName: "music.note"), tag: 1)
+        usersController.tabBarItem = UITabBarItem(title: "Users", image: UIImage(systemName: "person.3.fill"), tag: 2)
+        playlistsController.tabBarItem = UITabBarItem(title: "Playlists", image: UIImage(systemName: "music.note.list"), tag: 3)
+        appSettingsController.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 4)
+        
+        reviewQueueController.tabBarItem = UITabBarItem(title: "Review Queue", image: UIImage(systemName: "headphones"), tag: 5)
+        errorReportController.tabBarItem = UITabBarItem(title: "Problem Report", image: UIImage(systemName: "exclamationmark.triangle.fill"), tag: 6)
+        
+        // The library adds a "Done" button as the right nav item. We don't need this
+        appSettingsController.showDoneButton = false
+        
+        return [
+            libraryController.tabBarItem.tag: libraryController,
+            nowPlayingController.tabBarItem.tag: nowPlayingController,
+            usersController.tabBarItem.tag: usersController,
+            playlistsController.tabBarItem.tag: playlistsController,
+            appSettingsController.tabBarItem.tag: appSettingsController,
+            reviewQueueController.tabBarItem.tag: reviewQueueController,
+            errorReportController.tabBarItem.tag: errorReportController
+        ]
+    }()
     
-    private let reviewQueueController = ReviewQueueController()
-    private let errorReportController = ErrorReportController()
+    private var movedLaunchScreen = false
     
     // This is the height of this block of unmoving content on the bottom of the screen- the media controls,
     // the tab bar, and the middle dividing bar. It seems like a pain in the ass to dynamically get the heights,
@@ -24,9 +52,6 @@ class RootNavigationController : UITabBarController {
         
         GGNavLog.info("Loaded root navigation")
         
-        // The library adds a "Done" button as the right nav item. We don't need this
-        appSettingsViewController.showDoneButton = false
-        
         let mediaControls = MediaControlsController()
         let middleBar = createMiddleBar()
         
@@ -36,24 +61,10 @@ class RootNavigationController : UITabBarController {
         self.tabBar.tintColor = Colors.secondary // Icon and text color when selected
         self.tabBar.unselectedItemTintColor = Colors.whiteTransparent
         
-        libraryController.tabBarItem = UITabBarItem(title: "My Library", image: UIImage(systemName: "music.house.fill"), tag: 0)
-        nowPlayingController.tabBarItem = UITabBarItem(title: "Now Playing", image: UIImage(systemName: "music.note"), tag: 1)
-        usersController.tabBarItem = UITabBarItem(title: "Users", image: UIImage(systemName: "person.3.fill"), tag: 2)
-        playlistsController.tabBarItem = UITabBarItem(title: "Playlists", image: UIImage(systemName: "music.note.list"), tag: 3)
-        appSettingsViewController.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 4)
+        // Do NOT edit these tag values. They are used for keeping track of the order of the VCs in the tab bar, and changing the tags
+        // would change how a user sees them. The tag is also used for the "launch_screen" setting value
         
-        reviewQueueController.tabBarItem = UITabBarItem(title: "Review Queue", image: UIImage(systemName: "headphones"), tag: 5)
-        errorReportController.tabBarItem = UITabBarItem(title: "Problem Report", image: UIImage(systemName: "exclamationmark.triangle.fill"), tag: 6)
-        
-        self.viewControllers = [
-            libraryController,
-            nowPlayingController,
-            usersController,
-            playlistsController,
-            appSettingsViewController,
-            reviewQueueController,
-            errorReportController
-        ].map { vc in
+        self.viewControllers = getRestoredOrder().map { vc in
             // Most of the views have some form of navigation, so wrap them in a navigation controller.
             // Copied this off the interweb, but it might make more sense to just individually wrap the
             // controllers that need it. Probably do that later.
@@ -67,19 +78,16 @@ class RootNavigationController : UITabBarController {
         }
         
         self.delegate = self
-        restoreOrder()
         
-        // Tell the tab bar to use the first VC as the "initial" one. Otherwise it'll use whatever VC was first in the above
-        // array, which will likely always be the libraryController. But if we do this we give the user the freedom to set
-        // their launch tab by setting it as the first one.
-        self.selectedIndex = 0
+        // Users can specify in settings which screen is their launch screen (defaults to My Library)
+        if let launchScreenIndex = self.viewControllers?.firstIndex(where: { vc in vc.tabBarItem.tag == launchScreenTag }) {
+            self.selectedIndex = launchScreenIndex
+        } else {
+            GGLog.error("Could not find launch screen for tag \(launchScreenTag)!")
+        }
         
-        // This comment changes the color of the "Edit" button in the navbar. Not sure what color to make it right now.
-        // self.moreNavigationController.navigationBar.tintColor = Colors.secondary
         
-        // The "more" navigation controller requires its own nonsense apparently. Without this, the controllers viewed
-        // from within the navigation controller are too large and have hidden content.
-        self.moreNavigationController.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomContentHeight, right: 0)
+        // Style the controller so it fits with the rest of the app
         if let moreMenu = self.moreNavigationController.topViewController?.view as? UITableView {
             moreMenu.tableFooterView = UIView(frame: .zero)
             moreMenu.tintColor = Colors.tableText
@@ -87,6 +95,13 @@ class RootNavigationController : UITabBarController {
             GGLog.critical("Could not load More menu to customize!")
         }
         
+        self.moreNavigationController.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: bottomContentHeight, right: 0)
+        
+        
+        // This comment changes the color of the "Edit" button in the navbar. Not sure what color to make it right now.
+        // self.moreNavigationController.navigationBar.tintColor = Colors.secondary
+        
+
         view.addSubview(mediaControls.view)
         view.addSubview(middleBar)
         
@@ -105,6 +120,7 @@ class RootNavigationController : UITabBarController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
         DispatchQueue.global().async {
             // Post the device before we kick off the sync. Sometimes the API needs to update data when we are on a new version
             // so this will make sure our first sync of the login will have the good stuff, instead of having to wait for the next sync.
@@ -114,6 +130,20 @@ class RootNavigationController : UITabBarController {
                 ServerSynchronizer.syncWithServer()
             }
         }
+        
+        if movedLaunchScreen {
+            guard let activeVcName = self.viewControllers?.first?.tabBarItem.title else {
+                GGLog.critical("Could not load active view controller when alerting user we changed their setup!")
+                return
+            }
+            
+            ViewUtil.showAlert(
+                title: "Tab Bar Changed",
+                message: "The '\(activeVcName)' tab is configured to be your default launch screen, but it was inside of the 'More' menu. It has been moved to be your first tab."
+            )
+
+        }
+        
     }
     
     private func createMiddleBar() -> UIView {
@@ -142,16 +172,14 @@ extension RootNavigationController: UITabBarControllerDelegate {
         UserDefaults.standard.set(order, forKey: "TabBarItemsOrder")
     }
     
-    private func restoreOrder() {
-        guard let order = UserDefaults.standard.value(forKey: "TabBarItemsOrder") as? [Int] else { return }
-        
-        guard let controllers = self.viewControllers else {
-            GGLog.critical("Could not find controllers on UITabBarController to reorder!")
-            return
+    private func getRestoredOrder() -> [UIViewController] {
+        guard let order = UserDefaults.standard.value(forKey: "TabBarItemsOrder") as? [Int] else {
+            // First time running the app (unless we had a bad error). Return the default configuration
+            return Array(tagToController.values)
         }
         
-        let reorderedControllers: [UIViewController] = order.compactMap { tag in
-            if let controller = controllers.first(where: { $0.tabBarItem.tag == tag }) {
+        var reorderedControllers: [UIViewController] = order.compactMap { tag in
+            if let controller = tagToController[tag] {
                 return controller
             } else {
                 GGLog.warning("Could not find view controller with tag \(tag) while restoring tab bar layout. Was it removed?")
@@ -159,6 +187,18 @@ extension RootNavigationController: UITabBarControllerDelegate {
             }
         }
         
-        self.setViewControllers(reorderedControllers, animated: false)
+        if let indexOfLaunchScreen = reorderedControllers.firstIndex(where: { vc in vc.tabBarItem.tag == launchScreenTag}) {
+            // If the controller is in the "more" menu, that is no bueno as it causes issues initializing the "more" menu's styling.
+            // It's also just highly weird that a user would want a launch screen that is nested inside of the "more" menu, so we
+            // are going to aggressively change their tabs on them and put their default screen as the first tab if it was in the "more" menu
+            if indexOfLaunchScreen > 3 {
+                reorderedControllers.swapAt(0, indexOfLaunchScreen)
+                movedLaunchScreen = true
+                
+                saveOrder(order: reorderedControllers.map { $0.tabBarItem.tag })
+            }
+        }
+        
+        return reorderedControllers
     }
 }

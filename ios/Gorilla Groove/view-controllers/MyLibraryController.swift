@@ -29,7 +29,7 @@ class MyLibraryController: UITableViewController {
         GGNavLog.info("Loaded my library")
 
         // Don't let people log out if they're in offline mode, as they wouldn't be able to log back in anyway. Safety measure.
-        self.navigationItem.leftBarButtonItem = offlineModeEnabled ? nil : logoutButton
+        self.navigationItem.rightBarButtonItem = offlineModeEnabled ? nil : logoutButton
     }
     
     @objc func logout(_ sender: Any) {
