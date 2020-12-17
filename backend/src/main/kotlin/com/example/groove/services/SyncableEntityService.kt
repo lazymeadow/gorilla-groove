@@ -3,6 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.*
 import com.example.groove.db.model.RemoteSyncable
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.User
 import com.example.groove.db.model.enums.SyncableEntityType
 import com.example.groove.dto.PageResponseDTO
 import com.example.groove.dto.EntityChangesDTO
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
+import kotlin.system.measureTimeMillis
 
 
 @Service
@@ -114,8 +116,27 @@ class SyncableEntityService(
 		)
 	}
 
+	fun getLastModifiedTimestamps(user: User, entityTypes: List<SyncableEntityType>): Map<SyncableEntityType, Timestamp> {
+		return entityTypes.map { entityType ->
+			val repository: RemoteSyncableDao = when (entityType) {
+				SyncableEntityType.TRACK -> trackRepository
+				SyncableEntityType.USER -> userRepository
+				SyncableEntityType.PLAYLIST -> playlistRepository
+				SyncableEntityType.PLAYLIST_TRACK -> playlistTrackRepository
+				SyncableEntityType.REVIEW_SOURCE -> reviewSourceRepository
+			}
+
+			var rval: Pair<SyncableEntityType, Timestamp>? = null
+			val time = measureTimeMillis {
+				rval = entityType to repository.getLastModifiedRow(user.id)
+			}
+			logger.info("$entityType took $time ms")
+			rval!!
+		}.toMap()
+	}
+
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 
 	// User entities have a lot of sensitive info in them built in as part of spring.

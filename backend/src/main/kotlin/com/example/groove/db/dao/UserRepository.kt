@@ -8,7 +8,7 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
 
-interface UserRepository : CrudRepository<User, Long> {
+interface UserRepository : CrudRepository<User, Long>, RemoteSyncableDao {
 	fun findByEmail(email: String): User?
 
 	@Query("""
@@ -24,4 +24,10 @@ interface UserRepository : CrudRepository<User, Long> {
 			@Param("maximum") maximum: Timestamp,
 			pageable: Pageable
 	): Page<User>
+
+	@Query("""
+			SELECT max(u.updatedAt)
+			FROM User u
+			""")
+	override fun getLastModifiedRow(userId: Long): Timestamp
 }

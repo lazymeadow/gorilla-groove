@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.db.model.enums.SyncableEntityType
 import com.example.groove.dto.*
 import com.example.groove.services.SyncableEntityService
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 
 import org.springframework.web.bind.annotation.*
@@ -29,6 +30,19 @@ class SyncController(
 				page = page,
 				size = size
 		)
+	}
+
+	@GetMapping("/last-modified")
+	fun getLastModifiedTimestamps(
+			@RequestParam("entity-types") entityTypes: List<SyncableEntityType>? = null
+	): LastModifiedResponseDTO {
+		val user = loadLoggedInUser()
+		logger.info("User ${user.name} is querying LMT")
+
+		return LastModifiedResponseDTO(syncableEntityService.getLastModifiedTimestamps(
+				user = user,
+				entityTypes = entityTypes ?: SyncableEntityType.values().asList()
+		))
 	}
 
 	companion object {

@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
 
-interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
+interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSyncableDao {
 	@Query("SELECT pt " +
 			"FROM PlaylistTrack pt " +
 			"WHERE pt.playlist = :playlist " +
@@ -55,4 +55,15 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long> {
 				@Param("maximum") maximum: Timestamp,
 				pageable: Pageable
 	): Page<PlaylistTrack>
+
+	@Query("""
+			SELECT max(pt.updatedAt)
+			FROM PlaylistTrack pt
+			WHERE pt.playlist.id IN (
+			  SELECT pu.playlist.id
+			  FROM PlaylistUser pu
+			  WHERE pu.user.id = :userId
+			)
+			""")
+	override fun getLastModifiedRow(userId: Long): Timestamp
 }
