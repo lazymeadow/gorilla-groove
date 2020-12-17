@@ -165,5 +165,5 @@ interface TrackRepository : CrudRepository<Track, Long>, RemoteSyncableDao {
 			FROM Track t
 			WHERE t.user.id = :userId
 			""")
-	override fun getLastModifiedRow(userId: Long): Timestamp
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }

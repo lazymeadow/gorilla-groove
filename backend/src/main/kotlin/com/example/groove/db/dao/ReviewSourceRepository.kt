@@ -35,5 +35,5 @@ interface ReviewSourceRepository : CrudRepository<ReviewSource, Long>, RemoteSyn
 			JOIN rs.subscribedUsers u
 			WHERE u.id = :userId
 			""")
-	override fun getLastModifiedRow(userId: Long): Timestamp
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }

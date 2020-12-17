@@ -126,12 +126,9 @@ class SyncableEntityService(
 				SyncableEntityType.REVIEW_SOURCE -> reviewSourceRepository
 			}
 
-			var rval: Pair<SyncableEntityType, Timestamp>? = null
-			val time = measureTimeMillis {
-				rval = entityType to repository.getLastModifiedRow(user.id)
-			}
-			logger.info("$entityType took $time ms")
-			rval!!
+			// We return 1970 if there hasn't been anything. Could return null instead but
+			// it'll just make things more inconvenient for clients than returning the minimum date...
+			entityType to (repository.getLastModifiedRow(user.id) ?: Timestamp(0))
 		}.toMap()
 	}
 

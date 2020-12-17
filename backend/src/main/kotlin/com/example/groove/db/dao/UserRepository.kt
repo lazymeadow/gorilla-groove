@@ -29,5 +29,5 @@ interface UserRepository : CrudRepository<User, Long>, RemoteSyncableDao {
 			SELECT max(u.updatedAt)
 			FROM User u
 			""")
-	override fun getLastModifiedRow(userId: Long): Timestamp
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }

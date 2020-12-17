@@ -41,5 +41,5 @@ interface PlaylistRepository : CrudRepository<Playlist, Long>, RemoteSyncableDao
 			  WHERE pu.user.id = :userId
 			)
 			""")
-	override fun getLastModifiedRow(userId: Long): Timestamp
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }
