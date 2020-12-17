@@ -17,6 +17,9 @@ class RootNavigationController : UITabBarController {
         let reviewQueueController = ReviewQueueController()
         let errorReportController = ErrorReportController()
         
+        // Do NOT edit these tag values. They are used for keeping track of the order of the VCs in the tab bar, and changing the tags
+        // would change how a user sees them. The tag is also used for the "launch_screen" setting value
+        
         libraryController.tabBarItem = UITabBarItem(title: "My Library", image: UIImage(systemName: "music.house.fill"), tag: 0)
         nowPlayingController.tabBarItem = UITabBarItem(title: "Now Playing", image: UIImage(systemName: "music.note"), tag: 1)
         usersController.tabBarItem = UITabBarItem(title: "Users", image: UIImage(systemName: "person.3.fill"), tag: 2)
@@ -61,8 +64,8 @@ class RootNavigationController : UITabBarController {
         self.tabBar.tintColor = Colors.secondary // Icon and text color when selected
         self.tabBar.unselectedItemTintColor = Colors.whiteTransparent
         
-        // Do NOT edit these tag values. They are used for keeping track of the order of the VCs in the tab bar, and changing the tags
-        // would change how a user sees them. The tag is also used for the "launch_screen" setting value
+        // Globally change all nav bar item tint color
+        UINavigationBar.appearance().tintColor = Colors.primary
         
         self.viewControllers = getRestoredOrder().map { vc in
             // Most of the views have some form of navigation, so wrap them in a navigation controller.
@@ -85,7 +88,6 @@ class RootNavigationController : UITabBarController {
         } else {
             GGLog.error("Could not find launch screen for tag \(launchScreenTag)!")
         }
-        
         
         // Style the controller so it fits with the rest of the app
         if let moreMenu = self.moreNavigationController.topViewController?.view as? UITableView {
