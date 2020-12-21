@@ -11,9 +11,7 @@ class TrackService {
         artist: String? = nil,
         sortOverrideKey: String? = nil,
         sortAscending: Bool = true
-    ) -> Array<Track> {
-        let ownId = FileState.read(LoginState.self)!.id
-        
+    ) -> Array<Track> {        
         var sorts = [(String, Bool, Bool)]()
         
         // Sort differently depending on how we are trying to load things
@@ -29,7 +27,6 @@ class TrackService {
         }
         
         return TrackDao.getTracks(
-            userId: ownId,
             album: album,
             artist: artist,
             isHidden: false,

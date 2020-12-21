@@ -12,7 +12,7 @@ class HttpRequester {
     @SettingsBundleStorage(key: "offline_mode_enabled")
     private static var offlineModeEnabled: Bool
     
-    static let logger = GGLogger(category: "network")
+    private static let logger = GGLogger(category: "network")
     
     static func get<T: Codable>(
         _ url: String,
@@ -29,6 +29,29 @@ class HttpRequester {
             handleResponse(data, type, response, error, callback)
         }
         dataTask.resume()
+    }
+    
+    static func getSync<T: Codable>(
+        _ url: String,
+        _ type: T.Type
+    ) -> (T?, Int, String?) {
+        let session = URLSession(configuration: .default)
+        guard let request = getBaseRequest("GET", url) else {
+            return (nil, STATUS_ABORTED, nil)
+        }
+        
+        logger.debug("GET \(request.url!.absoluteString)")
+        let semaphore = DispatchSemaphore(value: 0)
+        var rval: (T?, Int, String?) = (nil, -1, nil)
+                
+        let dataTask = session.dataTask(with: request) { data, response, error in
+            rval = handleResponse(data, type, response, error)
+            semaphore.signal()
+        }
+        dataTask.resume()
+        semaphore.wait()
+        
+        return rval
     }
     
     static func put<T: Codable>(
@@ -155,26 +178,22 @@ class HttpRequester {
         _ data: Data?,
         _ type: T.Type,
         _ response: URLResponse?,
-        _ error: Error?,
-        _ callback: ResponseHandler<T>?
-    ) {
+        _ error: Error?
+    ) -> (T?, Int, String?) {
         guard let httpResponse = response as? HTTPURLResponse else {
             logger.error("error: not a valid http response")
-            callback?(nil, -1, error as! String?)
-            return
+            return (nil, -1, error as! String?)
         }
         
         if (httpResponse.statusCode >= 300 || httpResponse.statusCode < 200) {
             let dataError = data?.toString() ?? ""
             logger.error("Non 2xx received! Code: \(httpResponse.statusCode). Error: \(dataError)")
-            callback?(nil, httpResponse.statusCode, error as! String?)
-            return
+            return (nil, httpResponse.statusCode, error as! String?)
         }
         
         // We aren't expecting the server to give us anything, so don't bother decoding
         if (type == EmptyResponse.self) {
-            callback?(nil, httpResponse.statusCode, error as! String?)
-            return
+            return (nil, httpResponse.statusCode, error as! String?)
         }
         
         let decoder = JSONDecoder()
@@ -182,16 +201,28 @@ class HttpRequester {
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         decoder.dateDecodingStrategy = .formatted(dateFormatter)
         
-        guard let decodedData = try? decoder.decode(T.self, from: data!) else {
+        do {
+            let decodedData = try decoder.decode(T.self, from: data!)
+            return (decodedData, httpResponse.statusCode, error as! String?)
+        } catch {
             let loggedData = String(data: data!, encoding: .utf8) ?? "--Unparsable--"
             let errorString = "Could not parse HTTP response into expected type \(type)! Response: \(loggedData)"
+            logger.error("Parse exception: \(error.localizedDescription)")
             logger.critical(errorString)
             
-            callback?(nil, httpResponse.statusCode, errorString)
-            return
+            return (nil, httpResponse.statusCode, errorString)
         }
-        
-        callback?(decodedData, httpResponse.statusCode, error as! String?)
+    }
+    
+    static private func handleResponse<T: Codable>(
+        _ data: Data?,
+        _ type: T.Type,
+        _ response: URLResponse?,
+        _ error: Error?,
+        _ callback: ResponseHandler<T>?
+    ) {
+        let (parsedData, responseCode, error) = handleResponse(data, type, response, error)
+        callback?(parsedData, responseCode, error)
     }
     
     static func download(

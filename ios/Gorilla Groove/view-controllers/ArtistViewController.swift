@@ -62,9 +62,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
         cell.animateSelectionColor()
         
-        let ownId = FileState.read(LoginState.self)!.id
-
-        let albums = TrackDao.getAlbums(userId: ownId, artist: cell.artist!, isSongCached: offlineModeEnabled ? true : nil)
+        let albums = TrackDao.getAlbums(artist: cell.artist!, isSongCached: offlineModeEnabled ? true : nil)
         
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {

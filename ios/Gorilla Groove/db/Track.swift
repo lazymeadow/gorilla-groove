@@ -18,7 +18,7 @@ public class Track : Entity {
     public var playCount: Int
     public var releaseYear: Int?
     public var trackNumber: Int?
-    public var userId: Int
+    public var userId: Int = 0 // Keeping this hardcoded to 0 for now because you only download your own songs and that might never change
     public var songCachedAt: Date?
     public var artCachedAt: Date?
     public var thumbnailCachedAt: Date?
@@ -63,7 +63,6 @@ public class Track : Entity {
         playCount: Int,
         releaseYear: Int?,
         trackNumber: Int?,
-        userId: Int,
         songCachedAt: Date?,
         artCachedAt: Date?,
         thumbnailCachedAt: Date?,
@@ -90,7 +89,6 @@ public class Track : Entity {
         self.playCount = playCount
         self.releaseYear = releaseYear
         self.trackNumber = trackNumber
-        self.userId = userId
         self.songCachedAt = songCachedAt
         self.artCachedAt = artCachedAt
         self.thumbnailCachedAt = thumbnailCachedAt
@@ -120,7 +118,6 @@ public class Track : Entity {
             playCount: dict["playCount"] as! Int,
             releaseYear: dict["releaseYear"] as? Int,
             trackNumber: dict["trackNumber"] as? Int,
-            userId: dict["userId"] as! Int,
             songCachedAt: (dict["songCachedAt"] as? Int)?.toDate(),
             artCachedAt: (dict["artCachedAt"] as? Int)?.toDate(),
             thumbnailCachedAt: (dict["thumbnailCachedAt"] as? Int)?.toDate(),
@@ -135,7 +132,6 @@ public class Track : Entity {
 
 public class TrackDao : BaseDao<Track> {
     static func getTracks(
-        userId: Int,
         album: String? = nil,
         artist: String? = nil,
         isHidden: Bool? = nil,
@@ -167,9 +163,8 @@ public class TrackDao : BaseDao<Track> {
         let query = """
             SELECT *
             FROM track t
-            WHERE user_id = \(userId)
+            WHERE in_review = \(inReview)
             \(isHidden.asSqlParam("AND is_hidden ="))
-            AND in_review = \(inReview)
             \(artist.asSqlParam("AND artist ="))
             \(album.asSqlParam("AND album ="))
             \(isCachedQuery)
@@ -203,7 +198,6 @@ public class TrackDao : BaseDao<Track> {
     }
     
     static func getArtists(
-        userId: Int,
         isSongCached: Bool? = nil
     ) -> Array<String> {
         var isCachedQuery = ""
@@ -214,8 +208,7 @@ public class TrackDao : BaseDao<Track> {
         let artistRows = Database.query("""
             SELECT artist
             FROM track
-            WHERE user_id = \(userId)
-            AND is_hidden = FALSE
+            WHERE is_hidden = FALSE
             \(isCachedQuery)
             GROUP BY artist COLLATE NOCASE
             ORDER BY artist COLLATE NOCASE ASC
@@ -225,7 +218,6 @@ public class TrackDao : BaseDao<Track> {
     }
     
     static func getAlbums(
-        userId: Int,
         artist: String? = nil,
         isSongCached: Bool? = nil
     ) -> Array<Album> {
@@ -237,8 +229,7 @@ public class TrackDao : BaseDao<Track> {
         let artistRows = Database.query("""
             SELECT id, album, art_cached_at
             FROM track
-            WHERE user_id = \(userId)
-            AND is_hidden = FALSE
+            WHERE is_hidden = FALSE
             \(isCachedQuery)
             \(artist.asSqlParam("AND artist ="))
             GROUP BY album

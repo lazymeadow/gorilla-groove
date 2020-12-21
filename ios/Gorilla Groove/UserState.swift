@@ -20,13 +20,6 @@ class UserState {
         return newUser
     }
     
-    static func updateUserSync(_ newSyncDate: Date) {
-        var user = getOwnUser()
-        user.lastSync = newSyncDate
-        
-        UserDao.save(user)
-    }
-    
     static func postCurrentDevice(
         onComplete: @escaping () -> Void
     ) {

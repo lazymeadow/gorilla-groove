@@ -41,13 +41,12 @@ class ViewController: UIViewController {
         Database.openDatabase(userId: userId)
 
         // If this is the first time this user has logged in, we want to sync in their library
-        let user = UserState.getOwnUser()
         let newView: UIViewController = {
-            if (user.lastSync == nil) {
-                GGLog.info("First time logging in with user \(user.name)")
+            if (ServerSynchronizer.lastSync == Date.minimum()) {
+                GGLog.info("First time logging in")
                 return SyncController()
             } else {
-                GGLog.info("Logged in with in with user \(user.name) that has already synced")
+                GGLog.info("Logged in with in with user that has already synced")
                 return RootNavigationController()
             }
         }()

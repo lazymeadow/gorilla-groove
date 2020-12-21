@@ -29,8 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             GGLog.debug("User was previously logged in")
             Database.openDatabase(userId: loginState.id)
 
-            let user = UserState.getOwnUser()
-            if (user.lastSync == nil) {
+            if (ServerSynchronizer.lastSync == Date.minimum()) {
                 if AppDelegate.getAppVersion() == "1.3.1.1" {
                     GGLog.info("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
                     window!.rootViewController = SyncController()

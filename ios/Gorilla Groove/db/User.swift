@@ -4,7 +4,6 @@ public struct User : Entity {
     public typealias T = User
     
     public var id: Int
-    public var lastSync: Date?
     public var name: String
     public var lastLogin: Date?
     public var createdAt: Date
@@ -12,7 +11,6 @@ public struct User : Entity {
     public static func fromDict(_ dict: [String : Any?]) -> User {
         return User(
             id: dict["id"] as! Int,
-            lastSync: (dict["lastSync"] as? Int)?.toDate(),
             name: dict["name"] as! String,
             lastLogin: (dict["lastLogin"] as? Int)?.toDate(),
             createdAt: (dict["createdAt"] as! Int).toDate()

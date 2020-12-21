@@ -148,17 +148,17 @@ class SyncController: UIViewController {
                     }
                 }()
                 
-                let syncSection: SyncSection = try! {
-                    if (type == "track") {
-                        return self.librarySection!
-                    } else if (type == "playlist") {
-                        return self.playlistSection!
-                    } else if (type == "user") {
-                        return self.userSection!
-                    } else {
-                        throw "Unimplemented entity type was synced!"
-                    }
-                }()
+                let syncSection: SyncSection
+                if (type == .track) {
+                    syncSection =  self.librarySection!
+                } else if (type == .playlistTrack) {
+                    syncSection = self.playlistSection!
+                } else if (type == .user) {
+                    syncSection = self.userSection!
+                } else {
+                    // Not all types that we sync are shown on this screen. It's ok
+                    return
+                }
                 
                 syncSection.progressBar.setValue(percentDone, animated: true)
                 

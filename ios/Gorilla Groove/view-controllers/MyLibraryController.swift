@@ -76,18 +76,14 @@ class MyLibraryController: UITableViewController {
     }
     
     @objc private func loadArtistView() {
-        let ownId = FileState.read(LoginState.self)!.id
-
-        let artists = TrackDao.getArtists(userId: ownId, isSongCached: offlineModeEnabled ? true : nil)
+        let artists = TrackDao.getArtists(isSongCached: offlineModeEnabled ? true : nil)
 
         let view = ArtistViewController("Artist", artists)
         self.navigationController!.pushViewController(view, animated: true)
     }
     
     @objc private func loadAlbumView() {
-        let ownId = FileState.read(LoginState.self)!.id
-
-        let albums = TrackDao.getAlbums(userId: ownId, isSongCached: offlineModeEnabled ? true : nil)
+        let albums = TrackDao.getAlbums(isSongCached: offlineModeEnabled ? true : nil)
 
         let view = AlbumViewController("Album", albums, nil)
         self.navigationController!.pushViewController(view, animated: true)

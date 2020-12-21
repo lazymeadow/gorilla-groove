@@ -20,7 +20,7 @@ class Database {
         if openResult == SQLITE_OK {
             logger.info("Successfully opened connection to database at \(path)")
             
-            migrate()
+            migrate(userId)
             
             if (getDbVersion() == 4) {
                 logger.info("User is on a flawed DB version and needs a forced migration")
@@ -122,9 +122,9 @@ class Database {
         return query("SELECT version FROM db_version", logCrit: false)[safe: 0]?["version"] as? Int ?? 0
     }
     
-    static private func migrate() {
+    static private func migrate(_ userId: Int) {
         let currentVersion = getDbVersion()
-        let targetVersion = 8
+        let targetVersion = 9
         
         logger.info("Existing DB is using version: \(currentVersion)")
 
@@ -242,9 +242,70 @@ class Database {
             executeOrFail("ALTER TABLE track ADD started_on_device INT NULL;")
         }
         
+        if currentVersion < 9 {
+            logger.info("Creating table sync_status")
+            executeOrFail("""
+                CREATE TABLE "sync_status" (
+                    "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    "sync_type"    TEXT NOT NULL,
+                    "last_synced"    INTEGER NOT NULL,
+                    "last_sync_attempted"    INTEGER NOT NULL
+                );
+            """)
+            
+            let lastSync = (query("SELECT last_sync FROM user WHERE id = \(userId)")[safe: 0]?["last_sync"] as? Int) ?? 0
+            
+            // Only needed to migrate existing users. If a record does not exist at runtime, it will be created.
+            // If we do not migrate, then old users will attempt to sync everything again which is no bueno
+            logger.info("Inserting new records into sync_status with last sync of \(lastSync)")
+            executeOrFail("""
+                INSERT INTO sync_status (sync_type, last_synced, last_sync_attempted) VALUES
+                ('TRACK', \(lastSync), \(lastSync)),
+                ('PLAYLIST', \(lastSync), \(lastSync)),
+                ('PLAYLIST_TRACK', \(lastSync), \(lastSync)),
+                ('USER', \(lastSync), \(lastSync));
+            """)
+            
+            // We're moving this data point to a more precise location in the sync_status table and no longer need this
+            logger.info("Dropping last_sync from user table")
+            
+            executeOrFail("""
+                ALTER TABLE "user" RENAME TO "user_old";
+            """)
+            executeOrFail("""
+                CREATE TABLE "user" AS SELECT id, name, last_login, created_at FROM user_old;
+            """)
+            executeOrFail("""
+                DROP TABLE user_old
+            """)
+            
+            // This was never correct. I did it originally to get around multiple users on the same phone, but I since
+            // changed my mind and now each user gets their own DB. So this incorrect column will now be dropped. If the
+            // day comes that I actually allow complex playlist user management, I'll need a join table anyway as playlists
+            // are a many to many relationship
+            logger.info("Dropping user_id from playlist table")
+            executeOrFail("""
+                ALTER TABLE "playlist" RENAME TO "playlist_old";
+            """)
+            executeOrFail("""
+                CREATE TABLE "playlist" AS SELECT id, name, created_at, updated_at FROM playlist_old;
+            """)
+            executeOrFail("""
+                DROP TABLE playlist_old
+            """)
+            
+            logger.info("Creating table review_source")
+            executeOrFail("""
+                CREATE TABLE "review_source" (
+                    "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    "source_type"    TEXT NOT NULL,
+                    "display_name"    TEXT NOT NULL
+                );
+            """)
+        }
         
         executeOrFail("UPDATE db_version SET version = \(targetVersion)")
-        logger.info("Datbase was upgraded to version \(targetVersion)")
+        logger.info("Database was upgraded to version \(targetVersion)")
     }
     
     private static func executeOrFail(_ sql: String) {

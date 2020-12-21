@@ -152,11 +152,8 @@ class OfflineStorageService {
         
         logger.info("New cache limit of \(maxOfflineStorageBytes) is too small for current cache of \(currentBytesStored). Beginning cache purge of \(bytesToPurge) bytes")
         
-        let ownId = FileState.read(LoginState.self)!.id
-
         // Ordered by the last time they were played, with the first one being the track played the LEAST recently.
         let tracksToMaybePurge = TrackDao.getTracks(
-            userId: ownId,
             offlineAvailability: offlineAvailability,
             isCached: true,
             sorts: [("started_on_device", true, false)],
@@ -277,16 +274,13 @@ class OfflineStorageService {
         }
     }
     
-    private static func downloadAlwaysOfflineMusicInternal() {
-        let ownId = FileState.read(LoginState.self)!.id
-        
+    private static func downloadAlwaysOfflineMusicInternal() {        
         logger.debug("Checking if always offline music should be downloaded...")
         if !shouldDownloadMusic() {
             return
         }
         
         let tracksNeedingCache = TrackDao.getTracks(
-            userId: ownId,
             offlineAvailability: .AVAILABLE_OFFLINE,
             isCached: false,
             sorts: [("filesize_song_mp3", true, false)]

@@ -2,6 +2,7 @@ import Foundation
 import CocoaLumberjackSwift
 
 let GGLog = GGLogger(category: "standard")
+let GGSyncLog = GGLogger(category: "sync")
 let GGNavLog = GGLogger(category: "navigation")
 
 class GGLogger {

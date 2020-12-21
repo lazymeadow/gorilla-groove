@@ -20,9 +20,7 @@ class PlaylistsController : UITableViewController {
         // Remove extra table row lines that have no content
         view.tableFooterView = UIView(frame: .zero)
         
-        let ownId = FileState.read(LoginState.self)!.id
-
-        playlists = PlaylistDao.getPlaylists(userId: ownId)
+        playlists = PlaylistDao.getPlaylists()
     }
     
     override func viewDidAppear(_ animated: Bool) {

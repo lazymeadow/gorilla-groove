@@ -126,7 +126,7 @@ public protocol Entity : Decodable {
     static func fromDict(_ dict: [String: Any?]) -> T
 }
 
-extension Int {
+public extension Int {
     func toBool() -> Bool {
         switch self {
         case 0:
@@ -147,9 +147,13 @@ extension Int {
     }
 }
 
-extension Date {
+public extension Date {
     func toEpochTime() -> Int {
         return (Int(self.timeIntervalSince1970 * 1000))
+    }
+    
+    static func minimum() -> Date {
+        return 0.toDate()
     }
 }
 
