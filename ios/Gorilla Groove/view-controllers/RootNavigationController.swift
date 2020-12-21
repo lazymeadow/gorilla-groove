@@ -48,6 +48,20 @@ class RootNavigationController : UITabBarController {
         ]
     }()
     
+    // Tried to just use tagToController.values but Swift has no LinkedHashMap equivalent unfortunately so the order is random
+    private lazy var defaultOrderedControllers: [UIViewController] = {
+        return [
+            tagToController[0]!,
+            tagToController[1]!,
+            tagToController[2]!,
+            tagToController[3]!,
+            tagToController[4]!,
+            tagToController[5]!,
+            tagToController[6]!,
+            tagToController[LOGOUT_TAG]!
+        ]
+    }()
+    
     private var movedLaunchScreen = false
     
     // This is the height of this block of unmoving content on the bottom of the screen- the media controls,
@@ -174,13 +188,14 @@ extension RootNavigationController: UITabBarControllerDelegate {
     }
     
     private func saveOrder(order: [Int]) {
+        GGLog.info("User changed order of Tab Bar items. Saving new order")
         UserDefaults.standard.set(order, forKey: "TabBarItemsOrder")
     }
     
     private func getRestoredOrder() -> [UIViewController] {
         guard let order = UserDefaults.standard.value(forKey: "TabBarItemsOrder") as? [Int] else {
             // First time running the app (unless we had a bad error). Return the default configuration
-            return Array(tagToController.values)
+            return defaultOrderedControllers
         }
         
         var reorderedControllers: [UIViewController] = order.compactMap { tag in

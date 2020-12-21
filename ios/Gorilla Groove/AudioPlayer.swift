@@ -169,7 +169,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         playPlayerItem(playerItem)
     }
     
-    private static func playPlayerItem(_ playerItem: AVPlayerItem) {
+    static func playPlayerItem(_ playerItem: AVPlayerItem) {
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
         MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
@@ -213,14 +213,33 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
         GGLog.info("Track \(trackId) is saved")
     }
     
+    private var playbackStalledTrackId: Int?
+    
     func playerItemReadyToPlay(_ playerItem: CachingPlayerItem) {
         // The description of CachingPlayerItem says this is called after pre-buffering. I believe I have something set up
         // to auto-play after that, so this might be pointless. But I am curious if it is invoked after playback stalls.
-        GGLog.debug("Player item ready to play")
+        let songCacheItem = playerItem as! SongCachingPlayerItem
+        GGLog.debug("Player item ready to play for track ID \(songCacheItem.trackId)")
+        
+        // Doesn't matter if it was stalled or not. If the most recent stall was not for this track, don't worry about stalls anymore.
+        // If a different track finished than the one that stalled, that would just be weird. Though maybe it could happen.
+        if songCacheItem.trackId != playbackStalledTrackId {
+            playbackStalledTrackId = nil
+        }
+        
+        // Could be a number of things wrong with this. The struggle I have right now is that, even after a stalled item says
+        // that it is "ready to play", just pushing "play" again does not cause it to play. Hopefully just resetting the item
+        // reference here will make it work. Also a potential issue in that it could have audio start playing that the user
+        // wanted to pause. Need to see how it works in practice. Might need a new Bool to remember a user's "intent" to be playing.
+        if songCacheItem.trackId == playbackStalledTrackId {
+            AudioPlayer.playPlayerItem(songCacheItem)
+        }
     }
     
     func playerItemPlaybackStalled(_ playerItem: CachingPlayerItem) {
-        GGLog.warning("Player item playback was stalled")
+        let songCacheItem = playerItem as! SongCachingPlayerItem
+        GGLog.warning("Player item playback was stalled for track ID \(songCacheItem.trackId)")
+        playbackStalledTrackId = songCacheItem.trackId
     }
 }
 
