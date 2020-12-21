@@ -9,7 +9,7 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
 
-interface PlaylistRepository : CrudRepository<Playlist, Long> {
+interface PlaylistRepository : CrudRepository<Playlist, Long>, RemoteSyncableDao {
 	@Query("""
 			SELECT p
 			FROM Playlist p
@@ -31,4 +31,15 @@ interface PlaylistRepository : CrudRepository<Playlist, Long> {
 			@Param("maximum") maximum: Timestamp,
 			pageable: Pageable
 	): Page<Playlist>
+
+	@Query("""
+			SELECT max(p.updatedAt)
+			FROM Playlist p
+			WHERE p.id IN (
+			  SELECT pu.playlist.id
+			  FROM PlaylistUser pu
+			  WHERE pu.user.id = :userId
+			)
+			""")
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }

@@ -1,5 +1,6 @@
 package com.example.groove.db.dao
 
+import com.example.groove.db.model.RemoteSyncable
 import com.example.groove.db.model.Track
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -9,7 +10,7 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
 
-interface TrackRepository : CrudRepository<Track, Long> {
+interface TrackRepository : CrudRepository<Track, Long>, RemoteSyncableDao {
 	@Query("""
 			SELECT t
 			FROM Track t
@@ -158,4 +159,11 @@ interface TrackRepository : CrudRepository<Track, Long> {
 			@Param("userId") userId: Long,
 			@Param("reviewSourceIds") reviewSourceIds: List<Long>
 	): List<Array<Long>>
+
+	@Query("""
+			SELECT max(t.updatedAt)
+			FROM Track t
+			WHERE t.user.id = :userId
+			""")
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }

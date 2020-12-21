@@ -9,7 +9,7 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
 
-interface ReviewSourceRepository : CrudRepository<ReviewSource, Long> {
+interface ReviewSourceRepository : CrudRepository<ReviewSource, Long>, RemoteSyncableDao {
 	fun findBySubscribedUsers(user: User): List<ReviewSource>
 
 	@Query("""
@@ -28,4 +28,12 @@ interface ReviewSourceRepository : CrudRepository<ReviewSource, Long> {
 			@Param("maximum") maximum: Timestamp,
 			pageable: Pageable
 	): Page<ReviewSource>
+
+	@Query("""
+			SELECT max(rs.updatedAt)
+			FROM ReviewSource rs
+			JOIN rs.subscribedUsers u
+			WHERE u.id = :userId
+			""")
+	override fun getLastModifiedRow(userId: Long): Timestamp?
 }
