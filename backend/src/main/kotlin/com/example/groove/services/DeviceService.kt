@@ -109,7 +109,7 @@ class DeviceService(
 	}
 
 	private fun migrateDeviceIfNeeded(device: Device, newVersion: String) {
-		val iosMigrationVersion = "2.0.0.1"
+		val iosMigrationVersion = "2.1.0.1"
 
 		if (device.deviceType == DeviceType.IPHONE) {
 			// A smart person would check if the prior version was lower than this, and then do the migration.
