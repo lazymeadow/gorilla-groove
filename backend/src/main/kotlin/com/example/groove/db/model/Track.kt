@@ -88,7 +88,6 @@ data class Track(
 		@JoinColumn(name = "review_source_id")
 		var reviewSource: ReviewSource? = null,
 
-		@JsonIgnore
 		@Column(name = "last_reviewed")
 		var lastReviewed: Timestamp? = null,
 
