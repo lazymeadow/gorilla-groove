@@ -37,6 +37,8 @@
 		E8588F71258EB31B00ACA919 /* ReviewSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F70258EB31B00ACA919 /* ReviewSource.swift */; };
 		E8588F74258EB54600ACA919 /* ReviewSourceSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F73258EB54600ACA919 /* ReviewSourceSynchronizer.swift */; };
 		E8588F7D259032E600ACA919 /* StandardSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F7C259032E600ACA919 /* StandardSynchronizer.swift */; };
+		E8588F84259159C600ACA919 /* IconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F83259159C600ACA919 /* IconView.swift */; };
+		E8588F882595841D00ACA919 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F872595841D00ACA919 /* Toast.swift */; };
 		E85966432423201100AA8727 /* ArtistViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966422423201100AA8727 /* ArtistViewController.swift */; };
 		E85966452423207B00AA8727 /* ArtistViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966442423207B00AA8727 /* ArtistViewCell.swift */; };
 		E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */; };
@@ -103,6 +105,8 @@
 		E8588F70258EB31B00ACA919 /* ReviewSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSource.swift; sourceTree = "<group>"; };
 		E8588F73258EB54600ACA919 /* ReviewSourceSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewSourceSynchronizer.swift; sourceTree = "<group>"; };
 		E8588F7C259032E600ACA919 /* StandardSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardSynchronizer.swift; sourceTree = "<group>"; };
+		E8588F83259159C600ACA919 /* IconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconView.swift; sourceTree = "<group>"; };
+		E8588F872595841D00ACA919 /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		E85966422423201100AA8727 /* ArtistViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistViewController.swift; sourceTree = "<group>"; };
 		E85966442423207B00AA8727 /* ArtistViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistViewCell.swift; sourceTree = "<group>"; };
 		E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableSearchAugmenter.swift; sourceTree = "<group>"; };
@@ -201,6 +205,7 @@
 				E873DDF825871E6D00207F99 /* ErrorReportController.swift */,
 				E873DDFF25887A6A00207F99 /* LogViewController.swift */,
 				E873DE02258AF97600207F99 /* LogoutController.swift */,
+				E8588F83259159C600ACA919 /* IconView.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -249,6 +254,7 @@
 				E840A57D256C88C2009F3C9E /* CrashReportService.swift */,
 				E840A587256DA19F009F3C9E /* GGLog.swift */,
 				E840A5902575EA26009F3C9E /* OfflineStorageService.swift */,
+				E8588F872595841D00ACA919 /* Toast.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -359,6 +365,7 @@
 				E86EB67C24ECA3F80066CB4E /* Playlist.swift in Sources */,
 				E85966492440021200AA8727 /* UIExtensions.swift in Sources */,
 				E83B012124CE82F600C2C5E4 /* Database.swift in Sources */,
+				E8588F84259159C600ACA919 /* IconView.swift in Sources */,
 				E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */,
 				E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */,
 				E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */,
@@ -394,6 +401,7 @@
 				E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */,
 				E86EB67A24EC9B7D0066CB4E /* Track.swift in Sources */,
 				E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */,
+				E8588F882595841D00ACA919 /* Toast.swift in Sources */,
 				E873DE03258AF97600207F99 /* LogoutController.swift in Sources */,
 				A829AC2423CC2C1D0034AD69 /* TrackViewCell.swift in Sources */,
 				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
@@ -562,7 +570,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -583,7 +591,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;

@@ -1,6 +1,7 @@
 import Foundation
 
 public class ReviewSource : Entity {
+    
     public var id: Int
     public var sourceType: SourceType
     public var displayName: String
@@ -25,9 +26,9 @@ public class ReviewSource : Entity {
 }
 
 public class ReviewSourceDao : BaseDao<ReviewSource> {
-//    static func getPlaylists(userId: Int) -> Array<Playlist> {
-//        return queryEntities("SELECT * FROM playlist WHERE user_id = \(userId) ORDER BY name COLLATE NOCASE ASC")
-//    }
+    static func getSources() -> Array<ReviewSource> {
+        return queryEntities("SELECT * FROM review_source")
+    }
 }
 
 public enum SourceType: String, Codable, DbEnum, CaseIterable {

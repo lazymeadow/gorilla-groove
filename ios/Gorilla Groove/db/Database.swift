@@ -302,6 +302,10 @@ class Database {
                     "display_name"    TEXT NOT NULL
                 );
             """)
+            
+            logger.info("Adding review_source_id and last_reviewed to Track table")
+            executeOrFail("ALTER TABLE track ADD review_source_id INT NULL;")
+            executeOrFail("ALTER TABLE track ADD last_reviewed INT NULL;")
         }
         
         executeOrFail("UPDATE db_version SET version = \(targetVersion)")

@@ -208,6 +208,7 @@ class OfflineStorageService {
     static var backgroundDownloadInterrupted: Bool = false
     
     static func downloadAlwaysOfflineMusic() {
+        GGLog.debug("Running offline music download routine")
         if Thread.isMainThread {
             fatalError("Do not attempt to download music on the main thread!")
         }

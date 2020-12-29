@@ -83,7 +83,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         if album.artCached {
             if let artData = CacheService.getCachedData(trackId: album.trackIdForArt, cacheType: .thumbnail) {
-                let art = UIImage.init(data: artData)
+                let art = UIImage(data: artData)
                 album.art = art
                 albumViewCell.album = album
                 return

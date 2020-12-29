@@ -17,19 +17,6 @@ class TableViewCell<T>: UITableViewCell {
     }
 }
 
-
-extension UITableViewCell {
-    func animateSelectionColor() {
-        UIView.animate(withDuration: 0.12, animations: {
-            self.backgroundColor = Colors.tableTransition
-        }) { (finished) in
-            UIView.animate(withDuration: 0.12, animations: {
-                self.backgroundColor = Colors.background
-            })
-        }
-    }
-}
-
 extension UIView {
     func animateTint(color: UIColor, timeInterval: Double = 0.12) {
         self.tintAdjustmentMode = .normal
@@ -39,6 +26,21 @@ extension UIView {
         }) { (finished) in
             UIView.animate(withDuration: timeInterval, animations: {
                 self.tintColor = startingColor
+            })
+        }
+    }
+    
+    func animateSelectionColor() {
+        animateBackgroundColor(color: Colors.tableTransition)
+    }
+    
+    func animateBackgroundColor(color: UIColor, timeInterval: Double = 0.12) {
+        let startingColor = self.backgroundColor
+        UIView.animate(withDuration: 0.12, animations: {
+            self.backgroundColor = color
+        }) { (finished) in
+            UIView.animate(withDuration: 0.12, animations: {
+                self.backgroundColor = startingColor
             })
         }
     }

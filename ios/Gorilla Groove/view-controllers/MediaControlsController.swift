@@ -245,7 +245,7 @@ class MediaControlsController: UIViewController {
         let horizontalWrap = wrapView(icon, isWidth: true)
         let wrapper = wrapView(horizontalWrap, isWidth: false)
         wrapper.tintColor = .white
-                
+        
         return wrapper
     }
     
@@ -450,7 +450,7 @@ extension UIImage {
         let url = URL(string: urlString)!
         
         do {
-            let data = try Data.init(contentsOf: url)
+            let data = try Data(contentsOf: url)
             return UIImage(data: data)
         } catch {
             GGLog.error("\(error.localizedDescription)")

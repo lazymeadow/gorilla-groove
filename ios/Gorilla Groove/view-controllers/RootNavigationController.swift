@@ -29,7 +29,7 @@ class RootNavigationController : UITabBarController {
         playlistsController.tabBarItem = UITabBarItem(title: "Playlists", image: UIImage(systemName: "music.note.list"), tag: 3)
         appSettingsController.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 4)
         
-        reviewQueueController.tabBarItem = UITabBarItem(title: "Review Queue", image: UIImage(systemName: "headphones"), tag: 5)
+        reviewQueueController.tabBarItem = UITabBarItem(title: ReviewQueueController.title, image: UIImage(systemName: "headphones"), tag: 5)
         errorReportController.tabBarItem = UITabBarItem(title: "Problem Report", image: UIImage(systemName: "exclamationmark.triangle.fill"), tag: 6)
         logoutController.tabBarItem = UITabBarItem(title: "Logout", image: UIImage(systemName: "arrow.down.right.square"), tag: LOGOUT_TAG)
         
@@ -53,10 +53,10 @@ class RootNavigationController : UITabBarController {
         return [
             tagToController[0]!,
             tagToController[1]!,
-            tagToController[2]!,
+            tagToController[5]!,
             tagToController[3]!,
             tagToController[4]!,
-            tagToController[5]!,
+            tagToController[2]!,
             tagToController[6]!,
             tagToController[LOGOUT_TAG]!
         ]
@@ -82,7 +82,7 @@ class RootNavigationController : UITabBarController {
         self.tabBar.barTintColor = Colors.navControls
         self.tabBar.tintColor = Colors.secondary // Icon and text color when selected
         self.tabBar.unselectedItemTintColor = Colors.whiteTransparent
-                
+        
         self.viewControllers = getRestoredOrder().map { vc in
             // Most of the views have some form of navigation, so wrap them in a navigation controller.
             // Copied this off the interweb, but it might make more sense to just individually wrap the
@@ -146,7 +146,14 @@ class RootNavigationController : UITabBarController {
             UserState.postCurrentDevice() {
                 // No need to do this in a blocking way. It shouldn't be syncing all that much stuff.
                 // If we block, there is a second delay or so before we can start using the app no matter what.
-                ServerSynchronizer.syncWithServer()
+                let syncsPerformed = ServerSynchronizer.syncWithServer()
+                
+                // Only do it if tracks weren't synced, as that sync will kick off the process anyway
+                if !syncsPerformed.contains(.track) {
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 8.0) {
+                        OfflineStorageService.downloadAlwaysOfflineMusic()
+                    }
+                }
             }
         }
         

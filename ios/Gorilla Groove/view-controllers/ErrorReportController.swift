@@ -12,7 +12,7 @@ class ErrorReportController : UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "Error Reporting"
+        self.title = "Problem Report"
         
         // The background is already the "background" color, because it inherits. But without explicitly setting
         // the background, some of the "more" menu's table lines bleed over during the transition and it looks ugly

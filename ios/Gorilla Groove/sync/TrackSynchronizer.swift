@@ -2,6 +2,8 @@ import Foundation
 
 class TrackSynchronizer {
 
+    private static weak var reviewQueueController: ReviewQueueController? = nil
+    
     static func sync(
         _ syncStatus: SyncStatus,
         _ maximum: Int,
@@ -41,8 +43,17 @@ class TrackSynchronizer {
         
         guard let content = entityResponse?.content else { return (-1, false) }
         
+        var newInReviewTracks: Array<Track> = []
+        var modifiedInReviewTracks: Array<Track> = []
+        var deletedInReviewTracks: Array<Track> = []
+
         for newTrackResponse in content.new {
-            TrackDao.save(newTrackResponse.asTrack())
+            let newTrack = newTrackResponse.asTrack()
+            TrackDao.save(newTrack)
+            
+            if newTrack.inReview {
+                newInReviewTracks.append(newTrack)
+            }
             
             GGSyncLog.info("Added new track with ID: \(newTrackResponse.id)")
         }
@@ -86,9 +97,23 @@ class TrackSynchronizer {
                 thumbnailCachedAt: newThumbnailCachedAt
             )
             TrackDao.save(updatedTrack)
+            
+            // A track SHOULD never go from not being in review, to being in review. But w/e. Sometimes I do weird stuff with the DB manually
+            if oldTrack.inReview || updatedTrack.inReview {
+                modifiedInReviewTracks.append(updatedTrack)
+            }
         }
-        
+
         for deletedId in content.removed {
+            guard let deletedTrack = TrackDao.findById(deletedId) else {
+                GGSyncLog.warning("Deleted track with ID: \(deletedId) but it was already deleted. Making sure data is deleted from disk")
+                CacheService.deleteAllData(trackId: deletedId)
+                continue
+            }
+            if deletedTrack.inReview {
+                deletedInReviewTracks.append(deletedTrack)
+            }
+            
             TrackDao.delete(deletedId)
             CacheService.deleteAllData(trackId: deletedId)
             
@@ -108,7 +133,23 @@ class TrackSynchronizer {
             OfflineStorageService.downloadAlwaysOfflineMusic()
         }
         
+        if !newInReviewTracks.isEmpty || !deletedInReviewTracks.isEmpty || !modifiedInReviewTracks.isEmpty {
+            if let vc = reviewQueueController {
+                vc.handleTrackChanges(
+                    new: newInReviewTracks,
+                    updated: modifiedInReviewTracks,
+                    deleted: deletedInReviewTracks
+                )
+            } else {
+                GGLog.debug("Review queue tracks were synced but the review queue controller was not registered")
+            }
+        }
+        
         return (pagesToFetch, true)
+    }
+    
+    static func registerReviewQueueController(_ vc: ReviewQueueController) {
+        reviewQueueController = vc
     }
 }
 
@@ -136,6 +177,8 @@ struct TrackResponse: Codable {
     let filesizeSongMp3: Int
     let filesizeArtPng: Int
     let filesizeThumbnail64x64Png: Int
+    let reviewSourceId: Int?
+    let lastReviewed: Date?
     
     func asTrack(songCachedAt: Date? = nil, artCachedAt: Date? = nil, thumbnailCachedAt: Date? = nil) -> Track {
         return Track(
@@ -150,6 +193,7 @@ struct TrackResponse: Codable {
             inReview: inReview,
             lastPlayed: lastPlayed,
             startedOnDevice: nil,
+            lastReviewed: lastReviewed,
             length: length,
             name: name,
             note: note,
@@ -163,7 +207,8 @@ struct TrackResponse: Codable {
             filesizeSongOgg: filesizeSongOgg,
             filesizeSongMp3: filesizeSongMp3,
             filesizeArtPng: filesizeArtPng,
-            filesizeThumbnailPng: filesizeThumbnail64x64Png
+            filesizeThumbnailPng: filesizeThumbnail64x64Png,
+            reviewSourceId: reviewSourceId
         )
     }
 }

@@ -54,6 +54,55 @@ class NowPlayingTracks {
         playTrack(currentTrack!)
     }
     
+    static func removeTracks(_ trackIds: Set<Int>) {
+        if trackIds.isEmpty { return }
+        
+        GGLog.info("Removing track IDs from Now Playing: \(trackIds)")
+        
+        var indexesRemovedBeforeCurrentlyPlayed = 0
+        let idsToRemove = Set(trackIds)
+        
+        var newPlayingTracks: Array<Track> = []
+        
+        for index in nowPlayingTracks.indices {
+            let track = nowPlayingTracks[index]
+            if idsToRemove.contains(track.id) {
+                if index < nowPlayingIndex {
+                    indexesRemovedBeforeCurrentlyPlayed += 1
+                }
+            } else {
+                newPlayingTracks.append(track)
+            }
+        }
+        
+        nowPlayingTracks = newPlayingTracks
+        nowPlayingIndex = nowPlayingIndex - indexesRemovedBeforeCurrentlyPlayed
+        
+        if let currentId = currentTrack?.id, idsToRemove.contains(currentId) {
+            GGLog.warning("The currently played track is being removed from Now Playing")
+            currentTrack = nowPlayingTracks[safe: nowPlayingIndex]
+            
+            if nowPlayingTracks.isEmpty {
+                nowPlayingIndex = -1
+            } else if nowPlayingIndex >= nowPlayingTracks.count {
+                nowPlayingIndex = nowPlayingTracks.count - 1
+            }
+            
+            if currentTrack == nil {
+                // If there is no current track, just make sure the player is paused
+                AudioPlayer.pause()
+            }
+            
+            // If we were playing the track that got removed, start the next track up
+            if let currentTrack = currentTrack, !AudioPlayer.isPaused {
+                GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
+                playTrack(currentTrack)
+            } else {
+                notifyListeners()
+            }
+        }
+    }
+    
     // This is used to determine cache eviction policy.
     private static func updateStartedOnDevice(_ track: Track) {
         // The reason for marking this on start, and not at the same 60% listened that we normally do,

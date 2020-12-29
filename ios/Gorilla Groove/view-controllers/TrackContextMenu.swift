@@ -47,13 +47,13 @@ class TrackContextMenu {
         
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
             ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive) {
-                let request = UpdateTrackRequest(trackIds: [track.id], hidden: track.isHidden)
+                let request = UpdateTrackRequest(trackIds: [track.id])
                 HttpRequester.delete("track", request) { _, statusCode, _ in
                     if statusCode.isSuccessful() {
                         onAction(nil)
                         ServerSynchronizer.syncWithServer()
                     } else {
-                        ViewUtil.showAlert(message: "Failed to delete the track!")
+                        Toast.show("Failed to delete the track!")
                     }
                 }
             }

@@ -12,6 +12,7 @@ public class Track : Entity {
     public var inReview: Bool
     public var lastPlayed: Date?
     public var startedOnDevice: Date?
+    public var lastReviewed: Date?
     public var length: Int
     public var name: String
     public var note: String?
@@ -27,6 +28,7 @@ public class Track : Entity {
     public var filesizeSongMp3: Int
     public var filesizeArtPng: Int
     public var filesizeThumbnailPng: Int
+    public var reviewSourceId: Int?
     
     public var cacheSize: Int {
         get {
@@ -44,6 +46,12 @@ public class Track : Entity {
             }
         }
     }
+    
+    public var hasAlbumArt: Bool {
+        get {
+            return filesizeArtPng > 0
+        }
+    }
 
     public init(
         id: Int,
@@ -57,6 +65,7 @@ public class Track : Entity {
         inReview: Bool,
         lastPlayed: Date?,
         startedOnDevice: Date?,
+        lastReviewed: Date?,
         length: Int,
         name: String,
         note: String?,
@@ -70,7 +79,8 @@ public class Track : Entity {
         filesizeSongOgg: Int,
         filesizeSongMp3: Int,
         filesizeArtPng: Int,
-        filesizeThumbnailPng: Int
+        filesizeThumbnailPng: Int,
+        reviewSourceId: Int?
     ) {
         self.id = id
         self.album = album
@@ -83,6 +93,7 @@ public class Track : Entity {
         self.inReview = inReview
         self.lastPlayed = lastPlayed
         self.startedOnDevice = startedOnDevice
+        self.lastReviewed = lastReviewed
         self.length = length
         self.name = name
         self.note = note
@@ -97,6 +108,7 @@ public class Track : Entity {
         self.filesizeSongMp3 = filesizeSongMp3
         self.filesizeArtPng = filesizeArtPng
         self.filesizeThumbnailPng = filesizeThumbnailPng
+        self.reviewSourceId = reviewSourceId
     }
     
     public static func fromDict(_ dict: [String : Any?]) -> Track {
@@ -112,6 +124,7 @@ public class Track : Entity {
             inReview: (dict["inReview"] as! Int).toBool(),
             lastPlayed: (dict["lastPlayed"] as? Int)?.toDate(),
             startedOnDevice: (dict["startedOnDevice"] as? Int)?.toDate(),
+            lastReviewed: (dict["lastReviewed"] as? Int)?.toDate(),
             length: dict["length"] as! Int,
             name: dict["name"] as! String,
             note: dict["note"] as? String,
@@ -125,7 +138,8 @@ public class Track : Entity {
             filesizeSongOgg: dict["filesizeSongOgg"] as! Int,
             filesizeSongMp3: dict["filesizeSongMp3"] as! Int,
             filesizeArtPng: dict["filesizeArtPng"] as! Int,
-            filesizeThumbnailPng: dict["filesizeThumbnailPng"] as! Int
+            filesizeThumbnailPng: dict["filesizeThumbnailPng"] as! Int,
+            reviewSourceId: dict["reviewSourceId"] as? Int
         )
     }
 }
@@ -260,7 +274,7 @@ public class TrackDao : BaseDao<Track> {
         }
         
         if !Database.execute("UPDATE track SET \(cacheColumn) = \(cacheString) WHERE id = \(trackId)") {
-            GGLog.critical("Failed to set cachedAt for track \(trackId)")
+            GGLog.error("Failed to set \(cacheColumn) to \(cacheString) for track \(trackId)")
         }
     }
     
@@ -268,7 +282,7 @@ public class TrackDao : BaseDao<Track> {
         let playedString = date?.toEpochTime().toString() ?? "null"
 
         if !Database.execute("UPDATE track SET started_on_device = \(playedString) WHERE id = \(trackId)") {
-            GGLog.critical("Failed to set startedOnDevice for track \(trackId)!")
+            GGLog.error("Failed to set startedOnDevice for track \(trackId)!")
         }
     }
     
@@ -357,6 +371,10 @@ public class TrackDao : BaseDao<Track> {
         }
         
         return storageRequired
+    }
+    
+    static func getUnreviewedTracks() -> Array<Track> {
+        return queryEntities("SELECT * FROM track WHERE in_review = 1 ORDER BY last_reviewed ASC")
     }
 }
 

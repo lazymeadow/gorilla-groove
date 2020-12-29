@@ -18,7 +18,7 @@ class ServerSynchronizer {
     }()
     
     @discardableResult
-    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) -> Bool {
+    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) -> Set<SyncType> {
         if Thread.isMainThread {
             fatalError("Do not sync on the main thread!")
         }
@@ -26,21 +26,20 @@ class ServerSynchronizer {
         GGSyncLog.info("Initiating sync with server...")
         if syncRunning {
             GGSyncLog.info("Sync already running. Not syncing")
-            return false
+            return Set()
         }
         
         if offlineModeEnabled {
             GGSyncLog.debug("Not syncing as we are in offline mode")
-            return false
+            return Set()
         }
-                
+        
         if abortIfRecentlySynced {
-            if let diff = Calendar.current.dateComponents([.minute], from: lastSync, to: Date()).minute, diff > 10 {
+            if let diff = Calendar.current.dateComponents([.minute], from: lastSync, to: Date()).minute, diff >= 5 {
                 GGSyncLog.debug("Last sync was old enough to do a new sync")
-            }
-            else {
+            } else {
                 GGSyncLog.debug("Last sync was too recent. Not syncing")
-                return false
+                return Set()
             }
         }
 
@@ -58,15 +57,16 @@ class ServerSynchronizer {
         if status < 200 || status >= 300 {
             GGSyncLog.error("Could not get last modified times from the API. Not syncing")
             syncRunning = false
-            return false
+            return Set()
         }
         
         guard let lastModifiedTimestamps = lastModifiedResponse?.lastModifiedTimestamps else {
             GGSyncLog.error("Unable to parse last modified timestamps from the API. Not syncing")
             syncRunning = false
-            return false
+            return Set()
         }
         
+        var syncsPerformed: Set<SyncType> = Set()
         var semaphores: [DispatchSemaphore] = []
         
         SyncType.allCases.forEach { syncType in
@@ -100,6 +100,7 @@ class ServerSynchronizer {
                         GGSyncLog.error("Unable to completely sync entity \(syncStatus.syncType). Not saving sync date")
                     } else {
                         syncStatus.lastSynced = newDate
+                        syncsPerformed.insert(syncType)
                         SyncStatusDao.save(syncStatus)
                     }
                     
@@ -126,7 +127,7 @@ class ServerSynchronizer {
             TrackService.retryFailedListens()
         }
         
-        return true
+        return syncsPerformed
     }
 }
 
