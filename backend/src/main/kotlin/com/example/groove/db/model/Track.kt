@@ -88,7 +88,6 @@ data class Track(
 		@JoinColumn(name = "review_source_id")
 		var reviewSource: ReviewSource? = null,
 
-		@JsonIgnore
 		@Column(name = "last_reviewed")
 		var lastReviewed: Timestamp? = null,
 
@@ -120,6 +119,7 @@ data class Track(
 ) : RemoteSyncable {
 
 	// TODO this is temporary until the clients update to use "addedToLibrary" instead!
+	@Suppress("unused")
 	@JsonProperty("createdAt")
 	@Transient
 	fun fakeCreatedAt(): Timestamp? = addedToLibrary
@@ -133,4 +133,9 @@ data class Track(
 	val sampleRate: Long = 0
 
 	val hasArt: Boolean get() = filesizeArtPng > 0
+
+	// JsonIgnoring the main entity as we don't need to return all that data for every track.
+	// But the ID is still handy to have so clients know which source a track is on
+	@Suppress("unused")
+	val reviewSourceId: Long? get() = reviewSource?.id
 }

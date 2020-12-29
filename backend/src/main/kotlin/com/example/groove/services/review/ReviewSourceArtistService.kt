@@ -28,8 +28,6 @@ class ReviewSourceArtistService(
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository,
-		private val imageService: ImageService,
-		private val songIngestionService: SongIngestionService,
 		private val reviewQueueSocketHandler: ReviewQueueSocketHandler,
 		private val environment: Environment,
 		private val s3Properties: S3Properties
@@ -261,9 +259,5 @@ class ReviewSourceArtistService(
 
 	companion object {
 		private val logger = logger()
-
-		// When we are checking if a YouTube video is valid for a given Spotify song, we want to make sure
-		// that the song lengths more or less agree. This is the tolerance for that check
-		private const val SORT_LENGTH_IDENTIFICATION_TOLERANCE = 4
 	}
 }

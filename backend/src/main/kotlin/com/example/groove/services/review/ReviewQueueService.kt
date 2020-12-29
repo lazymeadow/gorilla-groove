@@ -85,8 +85,11 @@ class ReviewQueueService(
 		track.assertValidReviewTrack(trackId)
 
 		track!!.inReview = false
-		track.addedToLibrary = now()
-		track.lastReviewed = track.addedToLibrary
+
+		val now = now()
+		track.addedToLibrary = now
+		track.updatedAt = now
+		track.lastReviewed = now
 
 		trackRepository.save(track)
 	}
@@ -96,7 +99,9 @@ class ReviewQueueService(
 		val track = trackRepository.get(trackId)
 		track.assertValidReviewTrack(trackId)
 
-		track!!.lastReviewed = now()
+		val now = now()
+		track!!.lastReviewed = now
+		track.updatedAt = now
 		trackRepository.save(track)
 	}
 
@@ -148,7 +153,7 @@ class ReviewQueueService(
 	}
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 }
 

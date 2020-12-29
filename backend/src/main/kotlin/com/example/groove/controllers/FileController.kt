@@ -120,14 +120,9 @@ class FileController(
 		}
 
 		val returnedArtLink = if (artLink.isEmpty()) {
-			// FIXME Need to update iOS to be able to handle empty / null album art
-			if (user.currentAuthToken!!.device!!.deviceType == DeviceType.IPHONE && user.id != 4L) {
-				"https://gorillagroove.net/api/somethingfake"
-			} else {
-				// We get back an empty string if it's invalid for laziness reasons.
-				// But we want to return null to consumers as it's the right thing to do.
-				null
-			}
+			// We get back an empty string if it's invalid for laziness reasons.
+			// But we want to return null to consumers as it's the right thing to do.
+			null
 		} else {
 			artLink
 		}
