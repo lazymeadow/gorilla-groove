@@ -97,6 +97,6 @@ class ReviewQueueController(
 	data class ArtistSubscriptionDTO(val artistName: String)
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 }

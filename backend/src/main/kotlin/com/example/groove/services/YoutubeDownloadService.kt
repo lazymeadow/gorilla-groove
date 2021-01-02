@@ -110,7 +110,7 @@ class YoutubeDownloadService(
 		// order to read in this information and find the video we want to actually download
 		val pb = ProcessBuilder(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
-				"ytsearch$videosToSearch:\"$searchTerm\"",
+				"\"ytsearch$videosToSearch:$searchTerm\"",
 				"--skip-download",
 				"--dump-json",
 				"--no-cache-dir"

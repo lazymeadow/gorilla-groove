@@ -1,12 +1,7 @@
 package com.example.groove.services.review
 
-import com.example.groove.db.dao.ReviewSourceRepository
-import com.example.groove.db.dao.ReviewSourceUserRecommendRepository
-import com.example.groove.db.dao.TrackRepository
-import com.example.groove.db.dao.UserRepository
-import com.example.groove.db.model.ReviewSource
-import com.example.groove.db.model.ReviewSourceUserRecommend
-import com.example.groove.db.model.Track
+import com.example.groove.db.dao.*
+import com.example.groove.db.model.*
 import com.example.groove.services.TrackService
 import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
@@ -23,8 +18,8 @@ class ReviewQueueService(
 		private val trackRepository: TrackRepository,
 		private val userRepository: UserRepository,
 		private val reviewSourceUserRecommendRepository: ReviewSourceUserRecommendRepository,
+		private val reviewSourceUserRepository: ReviewSourceUserRepository,
 		private val trackService: TrackService,
-		private val reviewSourceRepository: ReviewSourceRepository,
 		private val reviewQueueSocketHandler: ReviewQueueSocketHandler
 ) {
 	@Transactional
@@ -62,8 +57,8 @@ class ReviewQueueService(
 				?: ReviewSourceUserRecommend(user = currentUser).also { reviewSourceUserRecommendRepository.save(it) }
 
 		if (!reviewSource.isUserSubscribed(targetUser)) {
-			reviewSource.subscribedUsers.add(targetUser)
-			reviewSourceUserRecommendRepository.save(reviewSource)
+			val reviewSourceUser = ReviewSourceUser(reviewSource = reviewSource, user = targetUser)
+			reviewSourceUserRepository.save(reviewSourceUser)
 		}
 
 		tracks.forEach { track ->
@@ -121,35 +116,27 @@ class ReviewQueueService(
 	fun getAllQueueSourcesForCurrentUser(): List<ReviewSourceWithCount> {
 		val user = loadLoggedInUser()
 
-		val sources =  reviewSourceRepository.findBySubscribedUsers(user)
-		val sourceIds = sources.map { it.id }
+		val userSourceAssociations = reviewSourceUserRepository.findActiveByUser(user)
+		val sourceIds = userSourceAssociations.map { it.reviewSource.id }
 		val test = trackRepository.getTrackCountsForReviewSources(user.id, sourceIds)
 
 		val sourceIdToCount = test.map { it.first() to it.last() }.toMap()
 
-		return sources.map { ReviewSourceWithCount(it, sourceIdToCount[it.id] ?: 0) }
+		return userSourceAssociations.map { ReviewSourceWithCount(it.toSyncDTO(), sourceIdToCount[it.reviewSource.id] ?: 0) }
 	}
 
 	@Transactional
 	fun deleteReviewSource(sourceId: Long) {
 		val user = loadLoggedInUser()
-		val existingSource = reviewSourceRepository.get(sourceId)
-				?: throw IllegalArgumentException("No review source with ID $sourceId found")
 
-		val existingIndex = existingSource.subscribedUsers.indexOfFirst { it.id == user.id }
-		if (existingIndex == -1) {
-			throw IllegalArgumentException("No review source with ID $sourceId found")
-		}
+		val existingAssociation = reviewSourceUserRepository.findByUserAndSource(sourceId = sourceId, userId = user.id)
+				?: throw IllegalArgumentException("No review source found with ID $sourceId")
 
-		existingSource.subscribedUsers.removeAt(existingIndex)
-		if (existingSource.subscribedUsers.isEmpty()) {
-			existingSource.deleted = true
-			existingSource.updatedAt = now()
-		}
+		existingAssociation.deleted = true
+		existingAssociation.updatedAt = now()
+		reviewSourceUserRepository.save(existingAssociation)
 
-		reviewSourceRepository.save(existingSource)
-
-		trackRepository.deleteTracksInReviewForSource(userId = user.id, reviewSourceId = existingSource.id)
+		trackRepository.deleteTracksInReviewForSource(userId = user.id, reviewSourceId = existingAssociation.reviewSource.id)
 	}
 
 	companion object {
@@ -158,7 +145,7 @@ class ReviewQueueService(
 }
 
 class ReviewSourceWithCount(
-		val reviewSource: ReviewSource,
+		val reviewSource: ReviewSourceUserDTO,
 
 		@Suppress("unused")
 		val trackCount: Long

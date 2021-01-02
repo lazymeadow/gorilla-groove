@@ -10,4 +10,7 @@ interface RemoteSyncable {
 	var updatedAt: Timestamp
 
 	var deleted: Boolean
+
+	// This is actually what gets returned to the mobile apps, with any cruft trimmed out
+	fun toSyncDTO(): Any { return this }
 }

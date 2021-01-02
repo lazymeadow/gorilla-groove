@@ -2,9 +2,11 @@ package com.example.groove.services.review
 
 import com.example.groove.db.dao.ReviewSourceArtistDownloadRepository
 import com.example.groove.db.dao.ReviewSourceArtistRepository
+import com.example.groove.db.dao.ReviewSourceUserRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.ReviewSourceArtist
 import com.example.groove.db.model.ReviewSourceArtistDownload
+import com.example.groove.db.model.ReviewSourceUser
 import com.example.groove.db.model.User
 import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
@@ -12,19 +14,20 @@ import com.example.groove.properties.S3Properties
 import com.example.groove.services.*
 import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.firstAndRest
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.minusWeeks
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ReviewSourceArtistService(
 		private val spotifyApiClient: SpotifyApiClient,
 		private val reviewSourceArtistRepository: ReviewSourceArtistRepository,
 		private val reviewSourceArtistDownloadRepository: ReviewSourceArtistDownloadRepository,
+		private val reviewSourceUserRepository: ReviewSourceUserRepository,
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository,
@@ -33,7 +36,6 @@ class ReviewSourceArtistService(
 		private val s3Properties: S3Properties
 ) {
 	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
-	@Transactional
 	fun downloadNewSongs() {
 		// Dev computers sometimes need to turn on 'awsStoreInS3' to run scripts against prod data, and if these
 		// jobs run while that is active, they will overwrite data in S3. This is an added protection against that.
@@ -48,17 +50,12 @@ class ReviewSourceArtistService(
 
 		allSources.forEach { source ->
 			logger.info("Checking for new songs for artist: ${source.artistName} ...")
-			val users = source.subscribedUsers
-
-			if (source.deleted) {
-				logger.info("Review source ${source.artistName} was deleted. Skipping")
+			if (!source.isActive()) {
+				logger.info("Review source for artist ${source.artistName} is not active. Skipping")
 				return@forEach
 			}
 
-			if (users.isEmpty()) {
-				logger.error("No users were set up for review source ${source.artistName}. Skipping")
-				return@forEach
-			}
+			val users = source.getActiveUsers()
 
 			// Spotify song releases have "day" granularity, so don't include a time component.
 			// Also, Spotify might not always get songs on their service right when they are new, so
@@ -75,12 +72,12 @@ class ReviewSourceArtistService(
 			// songs we've already seen by a given artist
 			val existingSongDiscoveries = reviewSourceArtistDownloadRepository.findByReviewSource(source)
 			val discoveredSongNameToDownloadAttempt = existingSongDiscoveries.map {
-				it.trackName to it
+				it.trackName.toLowerCase() to it
 			}.toMap()
 
 			val oneWeekAgo = now().minusWeeks(1)
 			val songsToDownload = newSongs.filter { newSong ->
-				discoveredSongNameToDownloadAttempt[newSong.name]?.let { artistDownload ->
+				discoveredSongNameToDownloadAttempt[newSong.name.toLowerCase()]?.let { artistDownload ->
 					// If the download was successful a prior time, exclude it from the songs to download
 					if (artistDownload.downloadedAt != null) {
 						return@filter false
@@ -114,7 +111,7 @@ class ReviewSourceArtistService(
 
 	// Now we need to find a match on YouTube to download...
 	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, songsToDownload: List<MetadataResponseDTO>, users: List<User>): Int {
-		val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
+		val (firstUser, otherUsers) = users.firstAndRest()
 
 		var downloadCount = 0
 
@@ -158,7 +155,7 @@ class ReviewSourceArtistService(
 
 			// Sometimes YoutubeDL can have issues. Don't cascade fail all downloads because of it
 			val track = try {
-				youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
+				youtubeDownloadService.downloadSong(firstUser, downloadDTO)
 			} catch (e: Exception) {
 				logger.error("Failed to download from YouTube for ${song.artist} - ${song.name}!", e)
 
@@ -219,21 +216,34 @@ class ReviewSourceArtistService(
 	fun subscribeToArtist(artistName: String): Pair<Boolean, List<String>> {
 		val currentUser = loadLoggedInUser()
 
-		// First, check if the artist is already subscribed to by someone else
+		// First, check if the artist already exists. Someone may have subscribed to them earlier
 		reviewSourceArtistRepository.findByArtistName(artistName)?.let { existing ->
 			if (existing.isUserSubscribed(currentUser)) {
 				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
 			}
 
-			// If this source was previously deleted, re-enable it and update the time to search from to now
-			if (existing.deleted) {
-				existing.deleted = false
+			// If this source was previously unused, re-enable it and update the time to search from to now
+			if (existing.getActiveUsers().isEmpty()) {
+				logger.info("Source for $artistName already exists but has no subscribed users. Resetting its 'searchNewerThan'")
 				existing.updatedAt = now()
 				existing.searchNewerThan = now()
+
+				reviewSourceArtistRepository.save(existing)
 			}
 
-			existing.subscribedUsers.add(currentUser)
-			reviewSourceArtistRepository.save(existing)
+			// If the source already existed, then the association might as well
+			reviewSourceUserRepository.findByUserAndSource(userId = currentUser.id, sourceId = existing.id)?.let { sourceAssociation ->
+				// Association was previously deleted. Just re-enable it and return early
+				sourceAssociation.deleted = false
+				sourceAssociation.updatedAt = now()
+				reviewSourceUserRepository.save(sourceAssociation)
+
+				return true to emptyList()
+			}
+
+			val reviewSourceUser = ReviewSourceUser(reviewSource = existing, user = currentUser)
+			reviewSourceUserRepository.save(reviewSourceUser)
+
 			return true to emptyList()
 		}
 
@@ -251,8 +261,10 @@ class ReviewSourceArtistService(
 		// Cool cool cool we found an artist in spotify. Now just save it.
 		// Hard-code "searchNewerThan" to now() until we are not throttled by YouTube and can search unlimited
 		val source = ReviewSourceArtist(artistId = foundArtist.id, artistName = foundArtist.name, searchNewerThan = now())
-		source.subscribedUsers.add(currentUser)
 		reviewSourceArtistRepository.save(source)
+
+		val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = currentUser)
+		reviewSourceUserRepository.save(reviewSourceUser)
 
 		return true to emptyList()
 	}

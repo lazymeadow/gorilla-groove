@@ -14,33 +14,34 @@ abstract class ReviewSource(
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		@Access(AccessType.FIELD) // This (and the open modifier) let this ID be accessed lazily without fetching the entire entity
-		override val id: Long = 0,
+		open val id: Long = 0,
 
 		@JsonIgnore
-		@ManyToMany
-		@JoinTable(
-				name = "review_source_user",
-				joinColumns = [JoinColumn(name = "review_source_id")],
-				inverseJoinColumns = [JoinColumn(name = "user_id")])
-		open var subscribedUsers: MutableList<User> = mutableListOf(),
+		@OneToMany(mappedBy = "reviewSource", fetch = FetchType.LAZY)
+		open val reviewSourceUsers: List<ReviewSourceUser> = mutableListOf(),
 
 		@Column(name = "source_type")
 		open val sourceType: ReviewSourceType,
 
 		@Column(name = "created_at")
-		override val createdAt: Timestamp = now(),
+		open val createdAt: Timestamp = now(),
 
 		@JsonIgnore
 		@Column(name = "updated_at")
-		override var updatedAt: Timestamp = now(),
-
-		@JsonIgnore
-		@Column(columnDefinition = "BIT")
-		override var deleted: Boolean = false
-): RemoteSyncable {
+		open var updatedAt: Timestamp = now()
+) {
 	abstract val displayName: String
 
 	fun isUserSubscribed(user: User): Boolean {
-		return subscribedUsers.find { it.id == user.id } != null
+		val userSource = reviewSourceUsers.find { it.user.id == user.id } ?: return false
+		return !userSource.deleted
+	}
+
+	fun isActive(): Boolean {
+		return reviewSourceUsers.isNotEmpty() && reviewSourceUsers.any { !it.deleted }
+	}
+
+	fun getActiveUsers(): List<User> {
+		return reviewSourceUsers.filterNot { it.deleted }.map { it.user }
 	}
 }

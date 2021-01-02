@@ -61,3 +61,7 @@ fun Map<String, String>.toHeaders(): HttpHeaders {
 fun URIBuilder.toUnencodedString(): String {
 	return this.toString().urlDecode()
 }
+
+fun<T> Collection<T>.firstAndRest(): Pair<T, List<T>> {
+	return this.first() to this.drop(1)
+}

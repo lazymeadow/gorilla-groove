@@ -106,7 +106,6 @@ object ModelBuilder {
 			lastLogin: Timestamp = now(),
 			deleted: Boolean = false,
 			partyDevices: MutableList<Device> = mutableListOf(),
-			reviewSources: MutableList<ReviewSource> = mutableListOf(),
 			currentAuthToken: UserToken? = null
 	) = User(
 			id = id,
@@ -116,7 +115,6 @@ object ModelBuilder {
 			lastLogin = lastLogin,
 			deleted = deleted,
 			partyDevices = partyDevices,
-			reviewSources = reviewSources,
 			currentAuthToken = currentAuthToken
 	)
 

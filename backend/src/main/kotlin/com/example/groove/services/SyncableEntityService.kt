@@ -17,7 +17,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
-import kotlin.system.measureTimeMillis
 
 
 @Service
@@ -26,7 +25,7 @@ class SyncableEntityService(
 		private val userRepository: UserRepository,
 		private val playlistRepository: PlaylistRepository,
 		private val playlistTrackRepository: PlaylistTrackRepository,
-		private val reviewSourceRepository: ReviewSourceRepository
+		private val reviewSourceUserRepository: ReviewSourceUserRepository
 ) {
 
 	@Transactional(readOnly = true)
@@ -85,7 +84,7 @@ class SyncableEntityService(
 				)
 			}
 
-			SyncableEntityType.REVIEW_SOURCE -> reviewSourceRepository.getReviewSourcesUpdatedBetweenTimestamp(
+			SyncableEntityType.REVIEW_SOURCE -> reviewSourceUserRepository.getReviewSourcesUpdatedBetweenTimestamp(
 					userId = loadLoggedInUser().id,
 					minimum = minimum,
 					maximum = maximum,
@@ -97,13 +96,13 @@ class SyncableEntityService(
 	}
 
 	private fun getEntitiesToSync(entities: Page<out RemoteSyncable>, minimum: Timestamp): RemoteSyncResponseDTO {
-		val (deletedEntities, aliveTracks) = entities.partition { it.deleted }
-		val (newEntities, modifiedEntities) = aliveTracks.partition { it.createdAt > minimum }
+		val (deletedEntities, aliveEntities) = entities.partition { it.deleted }
+		val (newEntities, modifiedEntities) = aliveEntities.partition { it.createdAt > minimum }
 
 		return RemoteSyncResponseDTO(
 				content = EntityChangesDTO(
-						new = newEntities,
-						modified = modifiedEntities,
+						new = newEntities.map { it.toSyncDTO() },
+						modified = modifiedEntities.map { it.toSyncDTO() },
 						removed = deletedEntities.map { it.id }
 				),
 				pageable = PageResponseDTO(
@@ -123,7 +122,7 @@ class SyncableEntityService(
 				SyncableEntityType.USER -> userRepository
 				SyncableEntityType.PLAYLIST -> playlistRepository
 				SyncableEntityType.PLAYLIST_TRACK -> playlistTrackRepository
-				SyncableEntityType.REVIEW_SOURCE -> reviewSourceRepository
+				SyncableEntityType.REVIEW_SOURCE -> reviewSourceUserRepository
 			}
 
 			// We return 1970 if there hasn't been anything. Could return null instead but

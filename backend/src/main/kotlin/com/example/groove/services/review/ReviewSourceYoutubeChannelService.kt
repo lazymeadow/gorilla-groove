@@ -1,7 +1,9 @@
 package com.example.groove.services.review
 
+import com.example.groove.db.dao.ReviewSourceUserRepository
 import com.example.groove.db.dao.ReviewSourceYoutubeChannelRepository
 import com.example.groove.db.dao.TrackRepository
+import com.example.groove.db.model.ReviewSourceUser
 import com.example.groove.db.model.ReviewSourceYoutubeChannel
 import com.example.groove.db.model.User
 import com.example.groove.dto.YoutubeDownloadDTO
@@ -12,6 +14,7 @@ import com.example.groove.services.YoutubeChannelInfo
 import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.services.socket.ReviewQueueSocketHandler
 import com.example.groove.util.DateUtils.now
+import com.example.groove.util.firstAndRest
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.splitFirst
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional
 class ReviewSourceYoutubeChannelService(
 		private val youtubeApiClient: YoutubeApiClient,
 		private val reviewSourceYoutubeChannelRepository: ReviewSourceYoutubeChannelRepository,
+		private val reviewSourceUserRepository: ReviewSourceUserRepository,
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val trackService: TrackService,
 		private val trackRepository: TrackRepository,
@@ -47,17 +51,13 @@ class ReviewSourceYoutubeChannelService(
 
 		allSources.forEach { source ->
 			logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
-			val users = source.subscribedUsers
 
-			if (source.deleted) {
-				logger.info("Review source ${source.channelName} was deleted. Skipping")
+			if (!source.isActive()) {
+				logger.info("Review source for channel ${source.channelName} is not active. Skipping")
 				return@forEach
 			}
 
-			if (users.isEmpty()) {
-				logger.error("No users were set up for review source with ID: ${source.channelName}. Skipping")
-				return@forEach
-			}
+			val users = source.getActiveUsers()
 
 			// We establish our own upper limit. In the very unlikely, though possible, event that a video
 			// is uploaded between us creating this timestamp, and the request getting to YouTube, we need
@@ -70,7 +70,8 @@ class ReviewSourceYoutubeChannelService(
 					.filter { it.publishedAt > source.lastSearched && it.publishedAt < searchedTime}
 			logger.info("Found ${newVideos.size} new video(s) for channel: ${source.channelName}")
 
-			val (firstUser, otherUsers) = users.partition { it.id == users.first().id }
+
+			val (firstUser, otherUsers) = users.firstAndRest()
 
 			var addedVideos = 0
 			newVideos.forEach saveLoop@ { video ->
@@ -88,7 +89,7 @@ class ReviewSourceYoutubeChannelService(
 						artist = artist,
 						cropArtToSquare = true
 				)
-				val track = youtubeDownloadService.downloadSong(firstUser.first(), downloadDTO)
+				val track = youtubeDownloadService.downloadSong(firstUser, downloadDTO)
 				track.reviewSource = source
 				track.inReview = true
 				track.lastReviewed = now()
@@ -168,15 +169,27 @@ class ReviewSourceYoutubeChannelService(
 				throw IllegalArgumentException("User ${ownUser.name} is already subscribed to ${reviewSource.channelName}!")
 			}
 
-			if (reviewSource.deleted) {
-				logger.info("$channelId (${reviewSource.channelName}) already exists but was deleted. Resetting its last searched")
-				reviewSource.deleted = false
+			if (reviewSource.getActiveUsers().isEmpty()) {
+				logger.info("$channelId (${reviewSource.channelName}) already exists but has no subscribed users. Resetting its last searched")
 				reviewSource.updatedAt = now()
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
+
+				reviewSourceYoutubeChannelRepository.save(reviewSource)
+
+				// If the source already existed, then the association might as well
+				reviewSourceUserRepository.findByUserAndSource(userId = ownUser.id, sourceId = reviewSource.id)?.let { sourceAssociation ->
+					// Association was previously deleted. Just re-enable it and return early
+					sourceAssociation.deleted = false
+					sourceAssociation.updatedAt = now()
+					reviewSourceUserRepository.save(sourceAssociation)
+
+					return
+				}
 			}
 
-			reviewSource.subscribedUsers.add(ownUser)
-			reviewSourceYoutubeChannelRepository.save(reviewSource)
+			val reviewSourceUser = ReviewSourceUser(reviewSource = reviewSource, user = ownUser)
+			reviewSourceUserRepository.save(reviewSourceUser)
+
 			return
 		}
 
@@ -193,27 +206,40 @@ class ReviewSourceYoutubeChannelService(
 				throw IllegalArgumentException("User ${user.name} is already subscribed to ${reviewSource.channelName}! (${reviewSource.channelId})")
 			}
 
-			if (reviewSource.deleted) {
-				logger.info("${reviewSource.channelName} already exists but was deleted. Resetting its last searched")
-				reviewSource.deleted = false
+			if (reviewSource.getActiveUsers().isEmpty()) {
+				logger.info("${reviewSource.channelName} already exists but has no subscribed users. Resetting its last searched")
 				reviewSource.updatedAt = now()
 				reviewSource.lastSearched = now() // This review source was inactive, so reset its lastSearched as if it was created new
+
+				reviewSourceYoutubeChannelRepository.save(reviewSource)
+
+				// If the source already existed, then the association might as well
+				reviewSourceUserRepository.findByUserAndSource(userId = user.id, sourceId = reviewSource.id)?.let { sourceAssociation ->
+					// Association was previously deleted. Just re-enable it and return early
+					sourceAssociation.deleted = false
+					sourceAssociation.updatedAt = now()
+					reviewSourceUserRepository.save(sourceAssociation)
+
+					return
+				}
 			}
 
-			reviewSource.subscribedUsers.add(user)
-			reviewSourceYoutubeChannelRepository.save(reviewSource)
+			val reviewSourceUser = ReviewSourceUser(reviewSource = reviewSource, user = user)
+			reviewSourceUserRepository.save(reviewSourceUser)
+
 			return
 		}
 
 		logger.info("Channel ${channelInfo.title} is new. Saving a new record")
-		ReviewSourceYoutubeChannel(channelId = channelInfo.id, channelName = channelInfo.title).also {
-			it.subscribedUsers.add(user)
-			reviewSourceYoutubeChannelRepository.save(it)
-		}
+		val newSource = ReviewSourceYoutubeChannel(channelId = channelInfo.id, channelName = channelInfo.title)
+		reviewSourceYoutubeChannelRepository.save(newSource)
+
+		val reviewSourceUser = ReviewSourceUser(reviewSource = newSource, user = user)
+		reviewSourceUserRepository.save(reviewSourceUser)
 	}
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 
 		const val MAX_VIDEO_LENGTH = 15 * 60 // 15 minutes
 	}

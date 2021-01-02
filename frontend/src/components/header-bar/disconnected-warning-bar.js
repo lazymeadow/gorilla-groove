@@ -24,6 +24,10 @@ export default function DisconnectedWarningBar() {
 		}
 	} else if (isConnected) {
 		// We fall into this block if we are not currently connected, but our current state thinks we are.
+		if (shouldPanic) {
+			setShouldPanic(false);
+		}
+
 		setTimeout(() => {
 			// If we still aren't connected, then update so the banner will show to the user
 			if (!socketContext.isConnected) {

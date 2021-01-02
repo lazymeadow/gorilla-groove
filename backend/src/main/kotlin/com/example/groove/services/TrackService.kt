@@ -38,7 +38,6 @@ class TrackService(
 		private val youtubeDownloadService: YoutubeDownloadService,
 		private val playlistService: PlaylistService,
 		private val imageService: ImageService,
-		private val trackHistoryService: TrackHistoryService,
 		private val trackLinkRepository: TrackLinkRepository
 ) {
 
@@ -340,6 +339,7 @@ class TrackService(
 			reviewSource: ReviewSource,
 			setAsCopied: Boolean = false
 	): Track {
+		logger.info("Making a copy of track ${track.id} for user ${user.name} to review")
 		return track.copy(
 				id = 0,
 				user = user,

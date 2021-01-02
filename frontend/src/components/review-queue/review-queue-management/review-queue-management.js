@@ -71,7 +71,9 @@ function AddNewSourceModal() {
 
 	const reviewQueueContext = useContext(ReviewQueueContext);
 
-	const subscribe = () => {
+	const subscribe = e => {
+		e.preventDefault();
+
 		if (reviewQueueInput.trim().length === 0) {
 			return;
 		}
@@ -139,41 +141,43 @@ function AddNewSourceModal() {
 				closeFunction={() => { setModalOpen(false) }}
 			>
 				<div id="add-new-source-modal" className="p-relative">
-					<LoadingSpinner visible={loading} small={true}/>
-					<h2 className="text-center">Add Review Source</h2>
-					<div className="text-center">
-						<label>Source Type</label>
-						<select
-							id="review-queue-type-select"
-							value={selectedSourceType}
-							onChange={e => setSelectedSourceType(e.target.value)}
-						>
-							<option value={ReviewSourceType.ARTIST}>Artist</option>
-							<option value={ReviewSourceType.YOUTUBE_CHANNEL}>YouTube Channel</option>
-						</select>
-					</div>
+					<form onSubmit={subscribe}>
+						<LoadingSpinner visible={loading} small={true}/>
+						<h2 className="text-center">Add Review Source</h2>
+						<div className="text-center">
+							<label>Source Type</label>
+							<select
+								id="review-queue-type-select"
+								value={selectedSourceType}
+								onChange={e => setSelectedSourceType(e.target.value)}
+							>
+								<option value={ReviewSourceType.ARTIST}>Artist</option>
+								<option value={ReviewSourceType.YOUTUBE_CHANNEL}>YouTube Channel</option>
+							</select>
+						</div>
 
-					<hr/>
+						<hr/>
 
-					<div>
-						<label htmlFor="review-queue-input">
-							{ selectedSourceType === ReviewSourceType.ARTIST ? 'Artist Name' : 'Channel or User URL' }
-						</label>
-						<input
-							id="review-queue-input"
-							className="d-block full-width"
-							value={reviewQueueInput}
-							onChange={e => setReviewQueueInput(e.target.value)}
-							placeholder={selectedSourceType === ReviewSourceType.ARTIST
-								? 'Alestorm'
-								: 'https://www.youtube.com/user/MrSuicideSheep'
-							}
-						/>
-					</div>
+						<div>
+							<label htmlFor="review-queue-input">
+								{ selectedSourceType === ReviewSourceType.ARTIST ? 'Artist Name' : 'Channel or User URL' }
+							</label>
+							<input
+								id="review-queue-input"
+								className="d-block full-width"
+								value={reviewQueueInput}
+								onChange={e => setReviewQueueInput(e.target.value)}
+								placeholder={selectedSourceType === ReviewSourceType.ARTIST
+									? 'Alestorm'
+									: 'https://www.youtube.com/user/MrSuicideSheep'
+								}
+							/>
+						</div>
 
-					<div className="text-center">
-						<button id="create-review-source-button" onClick={subscribe}>Create Review Source</button>
-					</div>
+						<div className="text-center">
+							<button id="create-review-source-button">Create Review Source</button>
+						</div>
+					</form>
 				</div>
 			</Modal>
 		</div>

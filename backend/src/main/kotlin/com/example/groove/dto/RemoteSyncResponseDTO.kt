@@ -1,6 +1,5 @@
 package com.example.groove.dto
 
-import com.example.groove.db.model.RemoteSyncable
 import com.example.groove.db.model.enums.SyncableEntityType
 import java.sql.Timestamp
 
@@ -14,8 +13,8 @@ data class LastModifiedResponseDTO(
 )
 
 data class EntityChangesDTO(
-		val new: List<RemoteSyncable>,
-		val modified: List<RemoteSyncable>,
+		val new: List<Any>,
+		val modified: List<Any>,
 		val removed: List<Long>
 )
 
