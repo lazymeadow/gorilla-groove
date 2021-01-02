@@ -51,6 +51,7 @@ interface ReviewSourceUserRepository : CrudRepository<ReviewSourceUser, Long>, R
 	@Query("""
 			SELECT max(rsu.updatedAt)
 			FROM ReviewSourceUser rsu
-			WHERE rsu.id = :userId
+			WHERE rsu.user.id = :userId
 			""")
-	override fun getLastModifiedRow(userId: Long): Timestamp?}
+	override fun getLastModifiedRow(userId: Long): Timestamp?
+}
