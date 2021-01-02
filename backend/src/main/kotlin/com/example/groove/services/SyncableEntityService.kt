@@ -103,7 +103,7 @@ class SyncableEntityService(
 				content = EntityChangesDTO(
 						new = newEntities.map { it.toSyncDTO() },
 						modified = modifiedEntities.map { it.toSyncDTO() },
-						removed = deletedEntities.map { it.id }
+						removed = deletedEntities.map { it.toSyncDTO().id }
 				),
 				pageable = PageResponseDTO(
 						offset = entities.pageable.offset,

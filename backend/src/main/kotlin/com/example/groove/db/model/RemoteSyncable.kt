@@ -2,8 +2,8 @@ package com.example.groove.db.model
 
 import java.sql.Timestamp
 
-interface RemoteSyncable {
-	val id: Long
+interface RemoteSyncable : SyncDTO {
+	override val id: Long
 
 	val createdAt: Timestamp
 
@@ -12,5 +12,9 @@ interface RemoteSyncable {
 	var deleted: Boolean
 
 	// This is actually what gets returned to the mobile apps, with any cruft trimmed out
-	fun toSyncDTO(): Any { return this }
+	fun toSyncDTO(): SyncDTO { return this }
+}
+
+interface SyncDTO {
+	val id: Long
 }

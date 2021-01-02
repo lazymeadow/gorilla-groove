@@ -50,9 +50,9 @@ class ReviewSourceUser(
 }
 
 class ReviewSourceUserDTO(
-		val id: Long,
+		override val id: Long,
 		val offlineAvailabilityType: OfflineAvailabilityType,
 		val sourceType: ReviewSourceType,
 		val displayName: String,
 		val updatedAt: Timestamp
-)
+) : SyncDTO
