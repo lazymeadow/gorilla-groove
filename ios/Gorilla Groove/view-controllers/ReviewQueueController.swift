@@ -102,17 +102,17 @@ class ReviewQueueController : UIViewController {
 
         self.view.backgroundColor = Colors.background
         
-        NowPlayingTracks.addTrackChangeObserver { _ in self.handleTrackChange() }
+        NowPlayingTracks.addTrackChangeObserver { newTrack in self.handleTrackChange(newTrack) }
         
         NSLayoutConstraint.activate([
-            collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            collectionView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            collectionView.heightAnchor.constraint(equalToConstant: (collectionView.collectionViewLayout as! UICollectionViewFlowLayout).itemSize.height),
-            
             queueSelectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             queueSelectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            queueSelectionView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
+            queueSelectionView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            
+            collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            collectionView.topAnchor.constraint(equalTo: queueSelectionView.bottomAnchor, constant: 15),
+            collectionView.heightAnchor.constraint(equalToConstant: (collectionView.collectionViewLayout as! UICollectionViewFlowLayout).itemSize.height),
             
             activitySpinner.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: -26),
             activitySpinner.centerXAnchor.constraint(equalTo: collectionView.centerXAnchor),
@@ -125,6 +125,12 @@ class ReviewQueueController : UIViewController {
 
         if self.selectedSourceId == nil {
             initData()
+        } else if let currentTrack = NowPlayingTracks.currentTrack, currentTrack.inReview, currentTrack.reviewSourceId == self.selectedSourceId {
+            if let index = self.visibleTracks.index(where: { $0.id == currentTrack.id }) {
+                self.collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: false)
+            } else {
+                GGLog.critical("Could not find index to scroll to despite current played track being in review for this source!")
+            }
         }
     }
     
@@ -321,7 +327,6 @@ extension ReviewQueueController: UICollectionViewDataSource {
     // has a property called "isPrefetchingEnabled", which seems good. So this cell will preemptively request album art.
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "trackCell", for: indexPath) as! ReviewTrackCollectionCell
-        cell.tableIndex = indexPath.row
         
         let track = self.visibleTracks[indexPath.item]
         cell.track = track
@@ -337,14 +342,29 @@ extension ReviewQueueController: UICollectionViewDataSource {
         GGNavLog.info("User tapped Play Active Song")
         let cell = sender.reviewTrackCell
         
-        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: cell.tableIndex)
+        let trackIndex = visibleTracks.index { $0.id == cell.track!.id }!
+        
+        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: trackIndex)
         
         cell.updatePlayButton()
     }
     
-    private func handleTrackChange() {
+    private func handleTrackChange(_ newTrack: Track?) {
+        guard let newTrack = newTrack else { return }
+        
+        guard let visibleCell = self.visibleCell else { return }
+        
+        let currentTrackIndex = visibleTracks.index { $0.id == visibleCell.track?.id }
+        let nextTrackIndex = visibleTracks.index { $0.id == newTrack.id }
+        
         DispatchQueue.main.async {
-            self.visibleCell?.updatePlayButton()
+            // If the track that just started is the one to the right of the visible cell, then scroll that into view
+            if currentTrackIndex != nil && currentTrackIndex! + 1 == nextTrackIndex {
+                self.collectionView.scrollToNextItem()
+            } else {
+                // Otherwise, just make sure the play button of our current cell is correct
+                visibleCell.updatePlayButton()
+            }
         }
     }
     
@@ -441,8 +461,6 @@ fileprivate extension UITapGestureRecognizer {
 
 class ReviewTrackCollectionCell : UICollectionViewCell {
     
-    var tableIndex: Int = -1
-
     var track: Track? {
         didSet {
             albumArtView.image = nil
@@ -736,5 +754,17 @@ class ReviewSourceCell: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+    }
+}
+
+// https://stackoverflow.com/a/50023133/13175115
+extension UICollectionView {
+    func scrollToNextItem() {
+        let contentOffset = CGFloat(floor(self.contentOffset.x + self.bounds.size.width))
+        self.moveToFrame(contentOffset: contentOffset)
+    }
+    
+    func moveToFrame(contentOffset : CGFloat) {
+        self.setContentOffset(CGPoint(x: contentOffset, y: self.contentOffset.y), animated: true)
     }
 }

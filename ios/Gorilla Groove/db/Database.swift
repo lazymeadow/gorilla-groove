@@ -299,7 +299,8 @@ class Database {
                 CREATE TABLE "review_source" (
                     "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     "source_type"    TEXT NOT NULL,
-                    "display_name"    TEXT NOT NULL
+                    "display_name"    TEXT NOT NULL,
+                    "offline_availability"    TEXT NOT NULL
                 );
             """)
             

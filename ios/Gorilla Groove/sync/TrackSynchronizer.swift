@@ -172,7 +172,7 @@ struct TrackResponse: Codable {
     let note: String?
     let songUpdatedAt: Date?
     let artUpdatedAt: Date?
-    let offlineAvailability: OfflineAvailabilityType
+    let offlineAvailability: String
     let filesizeSongOgg: Int
     let filesizeSongMp3: Int
     let filesizeArtPng: Int
@@ -203,7 +203,7 @@ struct TrackResponse: Codable {
             songCachedAt: songCachedAt,
             artCachedAt: artCachedAt,
             thumbnailCachedAt: thumbnailCachedAt,
-            offlineAvailability: offlineAvailability,
+            offlineAvailability: OfflineAvailabilityType(rawValue: offlineAvailability) ?? .UNKNOWN,
             filesizeSongOgg: filesizeSongOgg,
             filesizeSongMp3: filesizeSongMp3,
             filesizeArtPng: filesizeArtPng,
