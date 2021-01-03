@@ -46,7 +46,7 @@ class ReviewQueueController : UIViewController {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = Colors.navigationBackground
-        
+                
         view.addSubview(activeSourceLabel)
         view.addSubview(rightChevron)
         
@@ -67,7 +67,7 @@ class ReviewQueueController : UIViewController {
     }()
     
     private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
+        let layout = ReviewQueueFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
 
         layout.scrollDirection = .horizontal
@@ -83,11 +83,6 @@ class ReviewQueueController : UIViewController {
         collectionView.alwaysBounceVertical = true
         collectionView.alwaysBounceVertical = false
         
-        // Only want one track visible at a time, so make the item size be the same as the screen width
-        let screenWidth = self.view.frame.size.width
-        let collectionViewHeight = screenWidth + 30
-        layout.itemSize = CGSize(width: screenWidth, height: collectionViewHeight)
-        
         return collectionView
     }()
     
@@ -95,8 +90,10 @@ class ReviewQueueController : UIViewController {
         super.viewDidLoad()
         
         self.title = ReviewQueueController.title
-        
+        let selectionBottomBorder = createBorder()
+
         self.view.addSubview(queueSelectionView)
+        self.view.addSubview(selectionBottomBorder)
         self.view.addSubview(collectionView)
         self.view.addSubview(activitySpinner)
 
@@ -109,16 +106,28 @@ class ReviewQueueController : UIViewController {
             queueSelectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
             queueSelectionView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
             
+            selectionBottomBorder.topAnchor.constraint(equalTo: queueSelectionView.bottomAnchor),
+            selectionBottomBorder.heightAnchor.constraint(equalToConstant: 0.3), // Idk why, but 0.3 makes it look right. Much lower and it's invisible, at 0.5 it's darker than the navigation bar shadow
+            selectionBottomBorder.leftAnchor.constraint(equalTo: queueSelectionView.leftAnchor),
+            selectionBottomBorder.rightAnchor.constraint(equalTo: queueSelectionView.rightAnchor),
+
             collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            collectionView.topAnchor.constraint(equalTo: queueSelectionView.bottomAnchor, constant: 15),
-            collectionView.heightAnchor.constraint(equalToConstant: (collectionView.collectionViewLayout as! UICollectionViewFlowLayout).itemSize.height),
+            collectionView.topAnchor.constraint(equalTo: selectionBottomBorder.bottomAnchor, constant: 15),
+            collectionView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
             
             activitySpinner.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: -26),
             activitySpinner.centerXAnchor.constraint(equalTo: collectionView.centerXAnchor),
         ])
     }
     
+    private func createBorder() -> UIView {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = UINavigationBarAppearance().shadowColor
+        
+        return view
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -308,6 +317,17 @@ class ReviewQueueController : UIViewController {
                 self.collectionView.reloadData()
             }
         }
+    }
+}
+
+class ReviewQueueFlowLayout: UICollectionViewFlowLayout {
+    override func prepare() {
+        super.prepare()
+        
+        guard let collectionView = self.collectionView else { return }
+        
+        // Only want one track visible at a time, so make the item size be the same as the screen width
+        self.itemSize = CGSize(width: collectionView.frame.width, height: collectionView.frame.height)
     }
 }
 
@@ -542,7 +562,7 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
     let startPlayView: UIView = {
         let playButton = IconView("play.fill", weight: .light, scale: .large, multiplier: 6.0)
         playButton.translatesAutoresizingMaskIntoConstraints = false
-        playButton.tintColor = Colors.foreground
+        playButton.tintColor = Colors.white
         
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -582,6 +602,8 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
         super.init(frame: .zero)
         
         let actionRow = createActionsRow()
+        
+        self.backgroundColor = Colors.background
         
         self.contentView.addSubview(albumArtView)
         self.contentView.addSubview(songTextLabel)
@@ -732,28 +754,67 @@ class ReviewSourceCell: UITableViewCell {
         icon.tintColor = Colors.primary
         return icon
     }()
+        
+    private let countBadgeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "27"
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        label.sizeToFit()
+        label.textColor = Colors.foreground
+        
+        return label
+    }()
+    
+    private lazy var countBadgeContainer: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(countBadgeLabel)
+        
+        countBadgeLabel.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+        countBadgeLabel.heightAnchor.constraint(equalTo: view.heightAnchor).isActive = true
+
+        view.backgroundColor = Colors.primary
+        view.layer.cornerRadius = ReviewSourceCell.badgeSize / 2
+        
+        return view
+    }()
+    
+    private static let badgeSize: CGFloat = 28
     
     func checkIfSelected(activeSourceId: Int) {
         isCheckedImage.isHidden = activeSourceId != reviewSource!.id
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         self.contentView.addSubview(nameLabel)
         self.contentView.addSubview(isCheckedImage)
+        self.contentView.addSubview(countBadgeContainer)
         
         NSLayoutConstraint.activate([
             self.contentView.heightAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: 22),
-            nameLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 16),
-            nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
-            isCheckedImage.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
+            
+            isCheckedImage.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
             isCheckedImage.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            
+            nameLabel.trailingAnchor.constraint(equalTo: countBadgeContainer.leadingAnchor, constant: 16),
+            nameLabel.leadingAnchor.constraint(equalTo: isCheckedImage.trailingAnchor),
+            nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+
+            countBadgeContainer.widthAnchor.constraint(equalToConstant: ReviewSourceCell.badgeSize),
+            countBadgeContainer.heightAnchor.constraint(equalToConstant: ReviewSourceCell.badgeSize),
+            countBadgeContainer.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -10),
+            countBadgeContainer.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
         ])
     }
     
     required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
