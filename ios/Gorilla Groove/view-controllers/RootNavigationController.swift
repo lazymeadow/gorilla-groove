@@ -196,6 +196,7 @@ extension RootNavigationController: UITabBarControllerDelegate {
     
     private func saveOrder(order: [Int]) {
         GGLog.info("User changed order of Tab Bar items. Saving new order")
+        
         UserDefaults.standard.set(order, forKey: "TabBarItemsOrder")
     }
     
@@ -225,10 +226,6 @@ extension RootNavigationController: UITabBarControllerDelegate {
                 }
             }
             
-            // Keep the "sign out" controller at the bottom, always
-            reorderedControllers.removeAll() { $0.tabBarItem.tag == LOGOUT_TAG }
-            reorderedControllers.append(tagToController[LOGOUT_TAG]!)
-            
             saveOrder(order: reorderedControllers.map { $0.tabBarItem.tag })
         }
         
@@ -243,6 +240,10 @@ extension RootNavigationController: UITabBarControllerDelegate {
                 saveOrder(order: reorderedControllers.map { $0.tabBarItem.tag })
             }
         }
+        
+        // Keep the "sign out" controller at the bottom, always
+        reorderedControllers.removeAll() { $0.tabBarItem.tag == LOGOUT_TAG }
+        reorderedControllers.append(tagToController[LOGOUT_TAG]!)
         
         return reorderedControllers
     }
