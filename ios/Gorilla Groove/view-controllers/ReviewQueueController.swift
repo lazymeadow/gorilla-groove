@@ -176,8 +176,10 @@ class ReviewQueueController : UIViewController {
     }
     
     @objc func willEnterForeground() {
-        viewWillAppear(false)
-        viewDidAppear(false)
+        if self.viewIfLoaded?.window != nil {
+            viewWillAppear(false)
+            viewDidAppear(false)
+        }
     }
     
     private func initData() {
