@@ -395,18 +395,15 @@ extension ReviewQueueController: UICollectionViewDataSource {
     private func handleTrackChange(_ newTrack: Track?) {
         guard let newTrack = newTrack else { return }
         
-        // There won't be a visible cell if someone has been on the lock screen for a couple songs
+        // There won't be a visible cell if someone has been on the lock screen
         guard let visibleCell = self.visibleCell else { return }
         
-        let currentTrackIndex = visibleTracks.index { $0.id == visibleCell.track?.id }
         let nextTrackIndex = visibleTracks.index { $0.id == newTrack.id }
         
         DispatchQueue.main.async {
-            // If the track that just started is the one to the right of the visible cell, then scroll that into view
-            if currentTrackIndex != nil && currentTrackIndex! + 1 == nextTrackIndex {
-                self.collectionView.scrollToNextItem()
+            if let index = nextTrackIndex {
+                self.collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
             } else {
-                // Otherwise, just make sure the play button of our current cell is correct
                 visibleCell.updatePlayButton()
             }
         }
@@ -851,17 +848,5 @@ class ReviewSourceCell: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-}
-
-// https://stackoverflow.com/a/50023133/13175115
-extension UICollectionView {
-    func scrollToNextItem() {
-        let contentOffset = CGFloat(floor(self.contentOffset.x + self.bounds.size.width))
-        self.moveToFrame(contentOffset: contentOffset)
-    }
-    
-    func moveToFrame(contentOffset : CGFloat) {
-        self.setContentOffset(CGPoint(x: contentOffset, y: self.contentOffset.y), animated: true)
     }
 }
