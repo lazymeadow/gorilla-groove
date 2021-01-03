@@ -135,7 +135,7 @@ class NowPlayingTracks {
         let (existingSongData, existingArtData) = getCachedData(track)
         if let existingSongData = existingSongData {
             GGLog.debug("Song data for track \(track.id) is already cached. Playing from offline storage")
-            AudioPlayer.playSongData(existingSongData)
+            AudioPlayer.playSongData(existingSongData, track: track)
             updateStartedOnDevice(track)
         }
         if let existingArtData = existingArtData {
@@ -197,7 +197,7 @@ class NowPlayingTracks {
             if fetchSong {
                 // If no song link was fetched despite us asking for one, then something went really wrong and we shouldn't continue.
                 guard let songLink = trackLinks.songLink else { return }
-                AudioPlayer.playNewLink(songLink, trackId: track.id, shouldCache: shouldCache)
+                AudioPlayer.playNewLink(songLink, track: track, shouldCache: shouldCache)
                 updateStartedOnDevice(track)
             }
             

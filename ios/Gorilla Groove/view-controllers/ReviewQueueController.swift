@@ -148,7 +148,8 @@ class ReviewQueueController : UIViewController {
         GGNavLog.info("Loaded review queue")
         
         TrackSynchronizer.registerReviewQueueController(self)
-
+        AudioPlayer.registerReviewQueueController(self)
+        
         // During big changes thinga can get out of sync (like adding review sources). This is truly just me being way too
         // lazy to want to keep things in sync myself. It doesn't NEED to be handled like this. But syncing review sources
         // is such a rare thing that I'm ok with being heavy-handed in my approach here for the sake of my own sanity.
@@ -405,7 +406,7 @@ extension ReviewQueueController: UICollectionViewDataSource {
         }
     }
     
-    @objc func accept(sender: UITapGestureRecognizer) {
+    @objc func accept(sender: UITapGestureRecognizer? = nil) {
         GGNavLog.info("User tapped approve")
         activitySpinner.startAnimating()
         
@@ -415,28 +416,29 @@ extension ReviewQueueController: UICollectionViewDataSource {
         }
         
         HttpRequester.post("review-queue/track/\(track.id)/approve", EmptyResponse.self, nil) { response, statusCode, _ in
-            DispatchQueue.main.async {
-                self.activitySpinner.stopAnimating()
-            }
-            
             if !statusCode.isSuccessful() {
-                Toast.show("Track could not be approved")
+                DispatchQueue.main.async {
+                    self.activitySpinner.stopAnimating()
+                    Toast.show("Track could not be approved")
+                }
                 return
             }
-            
-            Toast.show("\(track.name) was approved")
             
             // Temporarily update the Track in the DB. When we sync we'll update it again, but just keep our local state good until then.
             track.inReview = false
             track.addedToLibrary = Date()
             
-            self.handleTrackChanges(updated: [track], playNext: true)
+            DispatchQueue.main.async {
+                Toast.show("\(track.name) was approved")
+                self.activitySpinner.stopAnimating()
+                self.handleTrackChanges(updated: [track], playNext: true)
+            }
             
             TrackDao.save(track)
         }
     }
     
-    @objc func reject(sender: UITapGestureRecognizer) {
+    @objc func reject(sender: UITapGestureRecognizer? = nil) {
         GGNavLog.info("User tapped reject")
         
         activitySpinner.startAnimating()
@@ -448,18 +450,19 @@ extension ReviewQueueController: UICollectionViewDataSource {
         
         let request = UpdateTrackRequest(trackIds: [track.id])
         HttpRequester.delete("track", request) { _, statusCode, _ in
-            DispatchQueue.main.async {
-                self.activitySpinner.stopAnimating()
-            }
-            
             if !statusCode.isSuccessful() {
-                Toast.show("Track could not be rejected")
+                DispatchQueue.main.async {
+                    self.activitySpinner.stopAnimating()
+                    Toast.show("Track could not be rejected")
+                }
                 return
             }
             
-            Toast.show("\(track.name) was rejected")
-                        
-            self.handleTrackChanges(deleted: [track], playNext: true)
+            DispatchQueue.main.async {
+                Toast.show("\(track.name) was rejected")
+                self.activitySpinner.stopAnimating()
+                self.handleTrackChanges(deleted: [track], playNext: true)
+            }
             
             TrackDao.delete(track.id)
         }
