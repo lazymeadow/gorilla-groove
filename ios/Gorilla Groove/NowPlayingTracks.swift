@@ -54,7 +54,7 @@ class NowPlayingTracks {
         playTrack(currentTrack!)
     }
     
-    static func removeTracks(_ trackIds: Set<Int>) {
+    static func removeTracks(_ trackIds: Set<Int>, playNext: Bool? = nil) {
         if trackIds.isEmpty { return }
         
         GGLog.info("Removing track IDs from Now Playing: \(trackIds)")
@@ -94,9 +94,13 @@ class NowPlayingTracks {
             }
             
             // If we were playing the track that got removed, start the next track up
-            if let currentTrack = currentTrack, !AudioPlayer.isPaused {
-                GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
-                playTrack(currentTrack)
+            if let currentTrack = currentTrack, playNext != false {
+                if playNext == true || !AudioPlayer.isPaused {
+                    GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
+                    playTrack(currentTrack)
+                } else {
+                    notifyListeners()
+                }
             } else {
                 notifyListeners()
             }

@@ -89,6 +89,16 @@ class ReviewQueueController : UIViewController {
         super.viewDidLoad()
         
         self.title = ReviewQueueController.title
+        
+        // viewDidAppear is not called when the app is unlocked, but we need to update the UI to the current song
+        // if the song changed while the phone was locked. So add an observer for it.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+
         let selectionBottomBorder = createBorder()
 
         self.view.addSubview(queueSelectionView)
@@ -130,7 +140,7 @@ class ReviewQueueController : UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
         if self.selectedSourceId == nil {
             initData()
         } else if let currentTrack = NowPlayingTracks.currentTrack, currentTrack.inReview, currentTrack.reviewSourceId == self.selectedSourceId {
@@ -163,6 +173,11 @@ class ReviewQueueController : UIViewController {
                 (cell as! ReviewTrackCollectionCell).updatePlayButton()
             }
         }
+    }
+    
+    @objc func willEnterForeground() {
+        viewWillAppear(false)
+        viewDidAppear(false)
     }
     
     private func initData() {
@@ -205,21 +220,26 @@ class ReviewQueueController : UIViewController {
         // Iterate over all the sources that need review, and pick a default.
         // Order goes User Recommend -> Artist -> YT Channel to put the more interesting sources first
         let sourceByType = Dictionary(grouping: self.reviewSourcesNeedingReview, by: { $0.sourceType })
+        var newSourceId: Int? = nil
         for sourceType in [SourceType.USER_RECOMMEND, .ARTIST, .YOUTUBE_CHANNEL] {
             if let firstSourceForType = sourceByType[sourceType]?.first {
-                self.selectedSourceId = firstSourceForType.id
+                newSourceId = firstSourceForType.id
                 break
             }
         }
         
-        if let sourceId = self.selectedSourceId {
+        if let newSourceId = newSourceId {
             DispatchQueue.main.async {
-                self.setActiveSource(sourceId)
+                self.setActiveSource(newSourceId)
             }
         }
     }
     
     func setActiveSource(_ sourceId: Int) {
+        if self.selectedSourceId == sourceId {
+            return
+        }
+        
         self.selectedSourceId = sourceId
         let source = self.sourceIdToSource[sourceId]!
         self.visibleTracks = self.tracksForSource[sourceId] ?? []
@@ -228,6 +248,8 @@ class ReviewQueueController : UIViewController {
         activeSourceLabel.sizeToFit()
         
         collectionView.reloadData()
+        
+        self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
     }
     
     
@@ -254,7 +276,7 @@ class ReviewQueueController : UIViewController {
         new: Array<Track> = [],
         updated: Array<Track> = [],
         deleted: Array<Track> = [],
-        playNext: Bool = false
+        playNext: Bool? = nil
     ) {
         GGLog.info("Handling track changes to current controller state. Currently loaded review source is \(self.selectedSourceId ?? -1)")
         
@@ -308,7 +330,7 @@ class ReviewQueueController : UIViewController {
             return !(tracksForSource[source.id] ?? []).isEmpty
         }
         
-        NowPlayingTracks.removeTracks(trackIdsToRemove)
+        NowPlayingTracks.removeTracks(trackIdsToRemove, playNext: playNext)
         
         if self.selectedSourceId == nil || visibleTracks.isEmpty {
             self.setDefaultActiveSource()
@@ -373,6 +395,7 @@ extension ReviewQueueController: UICollectionViewDataSource {
     private func handleTrackChange(_ newTrack: Track?) {
         guard let newTrack = newTrack else { return }
         
+        // There won't be a visible cell if someone has been on the lock screen for a couple songs
         guard let visibleCell = self.visibleCell else { return }
         
         let currentTrackIndex = visibleTracks.index { $0.id == visibleCell.track?.id }
@@ -395,22 +418,11 @@ extension ReviewQueueController: UICollectionViewDataSource {
         }
     }
     
-    var visibleTrack: Track? {
-        get {
-            guard let visibleCell = visibleCell else {
-                GGLog.error("Could not get visible cell from collection view!")
-                return nil
-            }
-            
-            return visibleCell.track
-        }
-    }
-    
     @objc func accept(sender: UITapGestureRecognizer? = nil) {
         GGNavLog.info("User tapped approve")
         activitySpinner.startAnimating()
         
-        guard let track = visibleTrack else {
+        guard let track = NowPlayingTracks.currentTrack else {
             Toast.show("Track could not be approved")
             return
         }
@@ -431,7 +443,7 @@ extension ReviewQueueController: UICollectionViewDataSource {
             DispatchQueue.main.async {
                 Toast.show("\(track.name) was approved")
                 self.activitySpinner.stopAnimating()
-                self.handleTrackChanges(updated: [track], playNext: true)
+                self.handleTrackChanges(updated: [track])
             }
             
             TrackDao.save(track)
@@ -443,10 +455,15 @@ extension ReviewQueueController: UICollectionViewDataSource {
         
         activitySpinner.startAnimating()
         
-        guard let track = visibleTrack else {
+        guard let track = NowPlayingTracks.currentTrack else {
             Toast.show("Track could not be rejected")
             return
         }
+        
+        let playNext = !AudioPlayer.isPaused
+        
+        // If someone rejects a song, they don't like it, and we probably should stop subjecting them to the song
+        AudioPlayer.pause()
         
         let request = UpdateTrackRequest(trackIds: [track.id])
         HttpRequester.delete("track", request) { _, statusCode, _ in
@@ -461,7 +478,7 @@ extension ReviewQueueController: UICollectionViewDataSource {
             DispatchQueue.main.async {
                 Toast.show("\(track.name) was rejected")
                 self.activitySpinner.stopAnimating()
-                self.handleTrackChanges(deleted: [track], playNext: true)
+                self.handleTrackChanges(deleted: [track], playNext: playNext)
             }
             
             TrackDao.delete(track.id)
