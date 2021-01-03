@@ -393,12 +393,10 @@ extension ReviewQueueController: UICollectionViewDataSource {
     }
     
     private func handleTrackChange(_ newTrack: Track?) {
-        guard let newTrack = newTrack else { return }
-        
         // There won't be a visible cell if someone has been on the lock screen
         guard let visibleCell = self.visibleCell else { return }
         
-        let nextTrackIndex = visibleTracks.index { $0.id == newTrack.id }
+        let nextTrackIndex = visibleTracks.index { $0.id == newTrack?.id }
         
         DispatchQueue.main.async {
             if let index = nextTrackIndex {
@@ -707,11 +705,6 @@ class PickReviewSourceController : UIViewController, UITableViewDataSource, UITa
         tableView.tableFooterView = UIView(frame: .zero)
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-    }
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return reviewSources.count
     }
@@ -822,7 +815,7 @@ class ReviewSourceCell: UITableViewCell {
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-
+        
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         self.contentView.addSubview(nameLabel)
@@ -838,7 +831,7 @@ class ReviewSourceCell: UITableViewCell {
             nameLabel.trailingAnchor.constraint(equalTo: countBadgeContainer.leadingAnchor, constant: 16),
             nameLabel.leadingAnchor.constraint(equalTo: isCheckedImage.trailingAnchor),
             nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
-
+            
             countBadgeContainer.widthAnchor.constraint(equalToConstant: ReviewSourceCell.badgeSize),
             countBadgeContainer.heightAnchor.constraint(equalToConstant: ReviewSourceCell.badgeSize),
             countBadgeContainer.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -10),
