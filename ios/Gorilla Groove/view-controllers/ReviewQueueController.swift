@@ -80,7 +80,6 @@ class ReviewQueueController : UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.register(ReviewTrackCollectionCell.self, forCellWithReuseIdentifier: "trackCell")
-        collectionView.alwaysBounceVertical = true
         collectionView.alwaysBounceVertical = false
         
         return collectionView
@@ -238,7 +237,8 @@ class ReviewQueueController : UIViewController {
         let vc = PickReviewSourceController(
             activeSourceId: self.selectedSourceId!,
             reviewSources: self.reviewSourcesNeedingReview,
-            reviewQueueController: self
+            reviewQueueController: self,
+            tracksForSource: tracksForSource
         )
         vc.modalPresentationStyle = .fullScreen
         
@@ -652,16 +652,23 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
 
 
 class PickReviewSourceController : UIViewController, UITableViewDataSource, UITableViewDelegate {
-    let tableView = UITableView()
-
-    let reviewSources: Array<ReviewSource>
-    var activeSourceId: Int
-    let reviewQueueController: ReviewQueueController
+    private let tableView = UITableView()
     
-    init(activeSourceId: Int, reviewSources: Array<ReviewSource> = [], reviewQueueController: ReviewQueueController) {
-        self.reviewSources = reviewSources
+    private let reviewSources: Array<ReviewSource>
+    private var activeSourceId: Int
+    private let reviewQueueController: ReviewQueueController
+    private let tracksForSource: [Int: [Track]]
+    
+    init(
+        activeSourceId: Int,
+        reviewSources: Array<ReviewSource>,
+        reviewQueueController: ReviewQueueController,
+        tracksForSource: [Int: [Track]]
+    ) {
+        self.reviewSources = reviewSources.sorted { $0.displayName < $1.displayName }
         self.activeSourceId = activeSourceId
         self.reviewQueueController = reviewQueueController
+        self.tracksForSource = tracksForSource
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -697,6 +704,7 @@ class PickReviewSourceController : UIViewController, UITableViewDataSource, UITa
         let reviewSource = reviewSources[indexPath.row]
         
         cell.reviewSource = reviewSource
+        cell.count = tracksForSource[reviewSource.id]!.count
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
         cell.addGestureRecognizer(tapGesture)
@@ -740,6 +748,15 @@ class ReviewSourceCell: UITableViewCell {
         }
     }
     
+    var count: Int = 0 {
+        didSet {
+            countBadgeLabel.text = String(count)
+            if count > 99 {
+                countBadgeLabel.text = "99"
+            }
+        }
+    }
+    
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 18)
@@ -757,7 +774,6 @@ class ReviewSourceCell: UITableViewCell {
         
     private let countBadgeLabel: UILabel = {
         let label = UILabel()
-        label.text = "27"
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         
