@@ -117,7 +117,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
 
             if let vc = reviewQueueController {
                 DispatchQueue.main.async {
-                    vc.accept()
+                    vc.acceptFromLockScreen()
                 }
             } else {
                 GGLog.error("User liked the current song but no review queue controller was registered!")
@@ -130,7 +130,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
             
             if let vc = reviewQueueController {
                 DispatchQueue.main.async {
-                    vc.reject()
+                    vc.rejectFromLockScreen()
                 }
             } else {
                 GGLog.error("User disliked the current song but no review queue controller was registered!")

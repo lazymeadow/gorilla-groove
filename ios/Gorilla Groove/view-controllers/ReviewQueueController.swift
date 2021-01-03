@@ -85,6 +85,31 @@ class ReviewQueueController : UIViewController {
         return collectionView
     }()
     
+    private let noTracksView: UIView = {
+        let view = UIView()
+        
+        view.backgroundColor = Colors.background
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "No more tracks to review"
+        label.font = label.font.withSize(20)
+        label.textColor = Colors.foreground
+        label.textAlignment = .center
+        label.sizeToFit()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
+            label.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 10),
+            label.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
+        ])
+        
+        return view
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -105,7 +130,11 @@ class ReviewQueueController : UIViewController {
         self.view.addSubview(selectionBottomBorder)
         self.view.addSubview(collectionView)
         self.view.addSubview(activitySpinner)
+        
+        self.view.addSubview(noTracksView)
 
+        noTracksView.isHidden = true
+        
         self.view.backgroundColor = Colors.background
         
         NowPlayingTracks.addTrackChangeObserver { newTrack in self.handleTrackChange(newTrack) }
@@ -127,6 +156,9 @@ class ReviewQueueController : UIViewController {
             
             activitySpinner.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: -26),
             activitySpinner.centerXAnchor.constraint(equalTo: collectionView.centerXAnchor),
+            
+            noTracksView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
+            noTracksView.heightAnchor.constraint(equalTo: self.view.heightAnchor),
         ])
     }
     
@@ -230,14 +262,20 @@ class ReviewQueueController : UIViewController {
             }
         }
         
-        if let newSourceId = newSourceId {
-            DispatchQueue.main.async {
-                self.setActiveSource(newSourceId)
-            }
+        DispatchQueue.main.async {
+            self.setActiveSource(newSourceId)
         }
     }
     
-    func setActiveSource(_ sourceId: Int) {
+    func setActiveSource(_ sourceId: Int?) {
+        guard let sourceId = sourceId else {
+            noTracksView.isHidden = false
+            self.selectedSourceId = nil
+            return
+        }
+        
+        noTracksView.isHidden = true
+        
         if self.selectedSourceId == sourceId {
             return
         }
@@ -253,7 +291,6 @@ class ReviewQueueController : UIViewController {
         
         self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
     }
-    
     
     @objc func pickSource(tapGestureRecognizer: UITapGestureRecognizer) {
         GGNavLog.info("User tapped Pick Source")
@@ -377,8 +414,8 @@ extension ReviewQueueController: UICollectionViewDataSource {
         cell.track = track
         
         cell.startPlayView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(playActiveSong(sender:))))
-        cell.rejectIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(reject(sender:))))
-        cell.acceptIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(accept(sender:))))
+        cell.rejectIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(rejectInternally(sender:))))
+        cell.acceptIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(acceptInternally(sender:))))
 
         return cell
     }
@@ -415,14 +452,39 @@ extension ReviewQueueController: UICollectionViewDataSource {
         }
     }
     
-    @objc func accept(sender: UITapGestureRecognizer? = nil) {
-        GGNavLog.info("User tapped approve")
-        activitySpinner.startAnimating()
-        
+    var visibleTrack: Track? {
+        get {
+            guard let visibleCell = visibleCell else {
+                GGLog.error("Could not get visible cell from collection view!")
+                return nil
+            }
+            
+            return visibleCell.track
+        }
+    }
+    
+    func acceptFromLockScreen() {
         guard let track = NowPlayingTracks.currentTrack else {
-            Toast.show("Track could not be approved")
+            GGLog.critical("A track was accepted from the lock screen but it could not be found")
             return
         }
+        
+        accept(track)
+    }
+    
+    @objc private func acceptInternally(sender: UITapGestureRecognizer) {
+        guard let track = visibleTrack else {
+            Toast.show("Track could not be approved")
+            GGLog.critical("A track was accepted internally but could not be found")
+            return
+        }
+        
+        accept(track)
+    }
+    
+    private func accept(_ track: Track) {
+        GGNavLog.info("User tapped approve")
+        activitySpinner.startAnimating()
         
         HttpRequester.post("review-queue/track/\(track.id)/approve", EmptyResponse.self, nil) { response, statusCode, _ in
             if !statusCode.isSuccessful() {
@@ -447,15 +509,29 @@ extension ReviewQueueController: UICollectionViewDataSource {
         }
     }
     
-    @objc func reject(sender: UITapGestureRecognizer? = nil) {
+    func rejectFromLockScreen() {
+        guard let track = NowPlayingTracks.currentTrack else {
+            GGLog.critical("A track was accepted from the lock screen but it could not be found")
+            return
+        }
+        
+        reject(track)
+    }
+    
+    @objc private func rejectInternally(sender: UITapGestureRecognizer) {
+        guard let track = visibleTrack else {
+            Toast.show("Track could not be rejected")
+            GGLog.critical("A track was rejected internally but could not be found")
+            return
+        }
+        
+        reject(track)
+    }
+    
+    private func reject(_ track: Track) {
         GGNavLog.info("User tapped reject")
         
         activitySpinner.startAnimating()
-        
-        guard let track = NowPlayingTracks.currentTrack else {
-            Toast.show("Track could not be rejected")
-            return
-        }
         
         let playNext = !AudioPlayer.isPaused
         
