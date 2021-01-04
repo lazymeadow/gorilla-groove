@@ -149,6 +149,11 @@ class AudioPlayer : CachingPlayerItemDelegate {
         rcc.likeCommand.isEnabled = false
         rcc.dislikeCommand.isEnabled = false
         
+        rcc.likeCommand.localizedTitle = "Approve"
+        rcc.dislikeCommand.localizedTitle = "Reject"
+        rcc.likeCommand.localizedShortTitle = "Approve"
+        rcc.dislikeCommand.localizedShortTitle = "Reject"
+
         // I noticed that if playback is paused (by say, unplugging your phone from aux), the notification area
         // would, for some weird reason, say that the time was 0 seconds. This fix doesn't seem ideal, but at least
         // it's better than it was. The progress bar can still jump around a bit to the correct position though.
