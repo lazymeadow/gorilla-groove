@@ -33,24 +33,24 @@ class StandardSynchronizer<T: Entity, E: SyncResponseData, dao: BaseDao<T>> {
             EntityChangeResponse<E>.self
         )
         if (status < 200 || status >= 300 || entityResponse == nil) {
-            GGSyncLog.info("Failed to sync new \(T.self) data!")
+            GGSyncLog.error("Failed to sync new \(T.self) data!")
             
             return (-1, false)
         }
         
         for new in entityResponse!.content.new {
             dao.save(new.asEntity() as! T)
-            GGSyncLog.info("Adding new \(T.self) with ID: \(new.id)")
+            GGSyncLog.debug("Adding new \(T.self) with ID: \(new.id)")
         }
         
         for modified in entityResponse!.content.modified {
             dao.save(modified.asEntity() as! T)
-            GGSyncLog.info("Updating existing \(T.self) with ID: \(modified.id)")
+            GGSyncLog.debug("Updating existing \(T.self) with ID: \(modified.id)")
         }
         
         for deletedId in entityResponse!.content.removed {
             dao.delete(deletedId)
-            GGSyncLog.info("Deleting \(T.self) with ID: \(deletedId)")
+            GGSyncLog.debug("Deleting \(T.self) with ID: \(deletedId)")
         }
         
         pagesToFetch = entityResponse!.pageable.totalPages

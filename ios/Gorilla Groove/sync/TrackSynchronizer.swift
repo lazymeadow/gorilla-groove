@@ -55,12 +55,12 @@ class TrackSynchronizer {
                 newInReviewTracks.append(newTrack)
             }
             
-            GGSyncLog.info("Added new track with ID: \(newTrackResponse.id)")
+            GGSyncLog.debug("Added new track with ID: \(newTrackResponse.id)")
         }
         
         for modifiedTrackResponse in content.modified {
             let modifiedTrackId = modifiedTrackResponse.id
-            GGSyncLog.info("Modifying track with ID \(modifiedTrackId)")
+            GGSyncLog.debug("Modifying track with ID \(modifiedTrackId)")
             let oldTrack = TrackDao.findById(modifiedTrackId)!
             
             // Check if our caches are invalidated for this track
@@ -106,7 +106,7 @@ class TrackSynchronizer {
 
         for deletedId in content.removed {
             guard let deletedTrack = TrackDao.findById(deletedId) else {
-                GGSyncLog.warning("Deleted track with ID: \(deletedId) but it was already deleted. Making sure data is deleted from disk")
+                GGSyncLog.info("Deleted track with ID: \(deletedId) but it was already deleted. Making sure data is deleted from disk")
                 CacheService.deleteAllData(trackId: deletedId)
                 continue
             }
@@ -117,7 +117,7 @@ class TrackSynchronizer {
             TrackDao.delete(deletedId)
             CacheService.deleteAllData(trackId: deletedId)
             
-            GGSyncLog.info("Deleted track with ID: \(deletedId)")
+            GGSyncLog.debug("Deleted track with ID: \(deletedId)")
         }
         
         pagesToFetch = entityResponse!.pageable.totalPages
