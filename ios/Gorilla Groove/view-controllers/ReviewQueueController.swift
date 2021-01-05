@@ -536,7 +536,9 @@ extension ReviewQueueController: UICollectionViewDataSource {
         let playNext = !AudioPlayer.isPaused
         
         // If someone rejects a song, they don't like it, and we probably should stop subjecting them to the song
-        AudioPlayer.pause()
+        if track.id == NowPlayingTracks.currentTrack?.id {
+            AudioPlayer.pause()
+        }
         
         let request = UpdateTrackRequest(trackIds: [track.id])
         HttpRequester.delete("track", request) { _, statusCode, _ in
