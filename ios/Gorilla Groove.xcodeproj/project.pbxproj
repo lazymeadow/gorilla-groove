@@ -53,6 +53,7 @@
 		E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DDA23DE4F99006BD7EE /* SyncController.swift */; };
 		E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50E923E2736D00029D7C /* RootNavigationController.swift */; };
 		E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */; };
+		E85B598125A1BF390071496D /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598025A1BF390071496D /* NotificationService.swift */; };
 		E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E864D82F2564B5B8008C2C4C /* LocationService.swift */; };
 		E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */; };
 		E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1C23E9572A005B84EB /* UsersController.swift */; };
@@ -121,6 +122,7 @@
 		E85A4DDA23DE4F99006BD7EE /* SyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncController.swift; sourceTree = "<group>"; };
 		E85A50E923E2736D00029D7C /* RootNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootNavigationController.swift; sourceTree = "<group>"; };
 		E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsControllers.swift; sourceTree = "<group>"; };
+		E85B598025A1BF390071496D /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		E864D82F2564B5B8008C2C4C /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSynchronizer.swift; sourceTree = "<group>"; };
 		E86AFF1C23E9572A005B84EB /* UsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsersController.swift; sourceTree = "<group>"; };
@@ -255,6 +257,7 @@
 				E840A587256DA19F009F3C9E /* GGLog.swift */,
 				E840A5902575EA26009F3C9E /* OfflineStorageService.swift */,
 				E8588F872595841D00ACA919 /* Toast.swift */,
+				E85B598025A1BF390071496D /* NotificationService.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -367,6 +370,7 @@
 				E83B012124CE82F600C2C5E4 /* Database.swift in Sources */,
 				E8588F84259159C600ACA919 /* IconView.swift in Sources */,
 				E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */,
+				E85B598125A1BF390071496D /* NotificationService.swift in Sources */,
 				E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */,
 				E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */,
 				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,

@@ -78,7 +78,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let cell = tableView.dequeueReusableCell(withIdentifier: "songCell", for: indexPath) as! TrackViewCell
         let track = visibleTracks[indexPath.row]
         
-        cell.tableIndex = indexPath.row
         cell.track = track
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
@@ -98,8 +97,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! TrackViewCell
         
+        let tableIndex = tableView.indexPath(for: cell)!
+
         cell.animateSelectionColor()
-        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: cell.tableIndex)
+        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
         
         if let search = self.navigationItem.searchController {
             search.searchBar.delegate!.searchBarTextDidEndEditing!(search.searchBar)

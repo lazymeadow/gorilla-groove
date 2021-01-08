@@ -46,7 +46,7 @@ class ReviewQueueController : UIViewController {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = Colors.navigationBackground
-        
+                
         view.addSubview(activeSourceLabel)
         view.addSubview(rightChevron)
         
@@ -67,7 +67,7 @@ class ReviewQueueController : UIViewController {
     }()
     
     private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
+        let layout = ReviewQueueFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
 
         layout.scrollDirection = .horizontal
@@ -80,15 +80,34 @@ class ReviewQueueController : UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.register(ReviewTrackCollectionCell.self, forCellWithReuseIdentifier: "trackCell")
-        collectionView.alwaysBounceVertical = true
         collectionView.alwaysBounceVertical = false
         
-        // Only want one track visible at a time, so make the item size be the same as the screen width
-        let screenWidth = self.view.frame.size.width
-        let collectionViewHeight = screenWidth + 30
-        layout.itemSize = CGSize(width: screenWidth, height: collectionViewHeight)
-        
         return collectionView
+    }()
+    
+    private let noTracksView: UIView = {
+        let view = UIView()
+        
+        view.backgroundColor = Colors.background
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "No more tracks to review"
+        label.font = label.font.withSize(20)
+        label.textColor = Colors.foreground
+        label.textAlignment = .center
+        label.sizeToFit()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            label.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
+            label.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 10),
+            label.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
+        ])
+        
+        return view
     }()
     
     override func viewDidLoad() {
@@ -96,35 +115,72 @@ class ReviewQueueController : UIViewController {
         
         self.title = ReviewQueueController.title
         
+        // viewDidAppear is not called when the app is unlocked, but we need to update the UI to the current song
+        // if the song changed while the phone was locked. So add an observer for it.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+
+        let selectionBottomBorder = createBorder()
+
         self.view.addSubview(queueSelectionView)
+        self.view.addSubview(selectionBottomBorder)
         self.view.addSubview(collectionView)
         self.view.addSubview(activitySpinner)
+        
+        self.view.addSubview(noTracksView)
 
+        noTracksView.isHidden = true
+        
         self.view.backgroundColor = Colors.background
         
-        NowPlayingTracks.addTrackChangeObserver { _ in self.handleTrackChange() }
+        NowPlayingTracks.addTrackChangeObserver { newTrack in self.handleTrackChange(newTrack) }
         
         NSLayoutConstraint.activate([
-            collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            collectionView.topAnchor.constraint(equalTo: self.view.topAnchor),
-            collectionView.heightAnchor.constraint(equalToConstant: (collectionView.collectionViewLayout as! UICollectionViewFlowLayout).itemSize.height),
-            
             queueSelectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
             queueSelectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            queueSelectionView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
+            queueSelectionView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            
+            selectionBottomBorder.topAnchor.constraint(equalTo: queueSelectionView.bottomAnchor),
+            selectionBottomBorder.heightAnchor.constraint(equalToConstant: 0.3), // Idk why, but 0.3 makes it look right. Much lower and it's invisible, at 0.5 it's darker than the navigation bar shadow
+            selectionBottomBorder.leftAnchor.constraint(equalTo: queueSelectionView.leftAnchor),
+            selectionBottomBorder.rightAnchor.constraint(equalTo: queueSelectionView.rightAnchor),
+
+            collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            collectionView.topAnchor.constraint(equalTo: selectionBottomBorder.bottomAnchor, constant: 15),
+            collectionView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
             
             activitySpinner.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: -26),
             activitySpinner.centerXAnchor.constraint(equalTo: collectionView.centerXAnchor),
+            
+            noTracksView.widthAnchor.constraint(equalTo: self.view.widthAnchor),
+            noTracksView.heightAnchor.constraint(equalTo: self.view.heightAnchor),
         ])
     }
     
+    private func createBorder() -> UIView {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = UINavigationBarAppearance().shadowColor
+        
+        return view
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
         if self.selectedSourceId == nil {
             initData()
+        } else if let currentTrack = NowPlayingTracks.currentTrack, currentTrack.inReview, currentTrack.reviewSourceId == self.selectedSourceId {
+            if let index = self.visibleTracks.index(where: { $0.id == currentTrack.id }) {
+                self.collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: false)
+            } else {
+                GGLog.critical("Could not find index to scroll to despite current played track being in review for this source!")
+            }
         }
     }
     
@@ -134,7 +190,8 @@ class ReviewQueueController : UIViewController {
         GGNavLog.info("Loaded review queue")
         
         TrackSynchronizer.registerReviewQueueController(self)
-
+        AudioPlayer.registerReviewQueueController(self)
+        
         // During big changes thinga can get out of sync (like adding review sources). This is truly just me being way too
         // lazy to want to keep things in sync myself. It doesn't NEED to be handled like this. But syncing review sources
         // is such a rare thing that I'm ok with being heavy-handed in my approach here for the sake of my own sanity.
@@ -147,6 +204,13 @@ class ReviewQueueController : UIViewController {
             self.collectionView.visibleCells.forEach { cell in
                 (cell as! ReviewTrackCollectionCell).updatePlayButton()
             }
+        }
+    }
+    
+    @objc func willEnterForeground() {
+        if self.viewIfLoaded?.window != nil {
+            viewWillAppear(false)
+            viewDidAppear(false)
         }
     }
     
@@ -190,21 +254,32 @@ class ReviewQueueController : UIViewController {
         // Iterate over all the sources that need review, and pick a default.
         // Order goes User Recommend -> Artist -> YT Channel to put the more interesting sources first
         let sourceByType = Dictionary(grouping: self.reviewSourcesNeedingReview, by: { $0.sourceType })
+        var newSourceId: Int? = nil
         for sourceType in [SourceType.USER_RECOMMEND, .ARTIST, .YOUTUBE_CHANNEL] {
             if let firstSourceForType = sourceByType[sourceType]?.first {
-                self.selectedSourceId = firstSourceForType.id
+                newSourceId = firstSourceForType.id
                 break
             }
         }
         
-        if let sourceId = self.selectedSourceId {
-            DispatchQueue.main.async {
-                self.setActiveSource(sourceId)
-            }
+        DispatchQueue.main.async {
+            self.setActiveSource(newSourceId)
         }
     }
     
-    func setActiveSource(_ sourceId: Int) {
+    func setActiveSource(_ sourceId: Int?) {
+        guard let sourceId = sourceId else {
+            noTracksView.isHidden = false
+            self.selectedSourceId = nil
+            return
+        }
+        
+        noTracksView.isHidden = true
+        
+        if self.selectedSourceId == sourceId {
+            return
+        }
+        
         self.selectedSourceId = sourceId
         let source = self.sourceIdToSource[sourceId]!
         self.visibleTracks = self.tracksForSource[sourceId] ?? []
@@ -213,8 +288,9 @@ class ReviewQueueController : UIViewController {
         activeSourceLabel.sizeToFit()
         
         collectionView.reloadData()
+        
+        self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
     }
-    
     
     @objc func pickSource(tapGestureRecognizer: UITapGestureRecognizer) {
         GGNavLog.info("User tapped Pick Source")
@@ -223,7 +299,8 @@ class ReviewQueueController : UIViewController {
         let vc = PickReviewSourceController(
             activeSourceId: self.selectedSourceId!,
             reviewSources: self.reviewSourcesNeedingReview,
-            reviewQueueController: self
+            reviewQueueController: self,
+            tracksForSource: tracksForSource
         )
         vc.modalPresentationStyle = .fullScreen
         
@@ -238,7 +315,7 @@ class ReviewQueueController : UIViewController {
         new: Array<Track> = [],
         updated: Array<Track> = [],
         deleted: Array<Track> = [],
-        playNext: Bool = false
+        playNext: Bool? = nil
     ) {
         GGLog.info("Handling track changes to current controller state. Currently loaded review source is \(self.selectedSourceId ?? -1)")
         
@@ -292,7 +369,7 @@ class ReviewQueueController : UIViewController {
             return !(tracksForSource[source.id] ?? []).isEmpty
         }
         
-        NowPlayingTracks.removeTracks(trackIdsToRemove)
+        NowPlayingTracks.removeTracks(trackIdsToRemove, playNext: playNext)
         
         if self.selectedSourceId == nil || visibleTracks.isEmpty {
             self.setDefaultActiveSource()
@@ -302,6 +379,17 @@ class ReviewQueueController : UIViewController {
                 self.collectionView.reloadData()
             }
         }
+    }
+}
+
+class ReviewQueueFlowLayout: UICollectionViewFlowLayout {
+    override func prepare() {
+        super.prepare()
+        
+        guard let collectionView = self.collectionView else { return }
+        
+        // Only want one track visible at a time, so make the item size be the same as the screen width
+        self.itemSize = CGSize(width: collectionView.frame.width, height: collectionView.frame.height)
     }
 }
 
@@ -321,14 +409,13 @@ extension ReviewQueueController: UICollectionViewDataSource {
     // has a property called "isPrefetchingEnabled", which seems good. So this cell will preemptively request album art.
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "trackCell", for: indexPath) as! ReviewTrackCollectionCell
-        cell.tableIndex = indexPath.row
         
         let track = self.visibleTracks[indexPath.item]
         cell.track = track
         
         cell.startPlayView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(playActiveSong(sender:))))
-        cell.rejectIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(reject(sender:))))
-        cell.acceptIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(accept(sender:))))
+        cell.rejectIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(rejectInternally(sender:))))
+        cell.acceptIcon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(acceptInternally(sender:))))
 
         return cell
     }
@@ -337,14 +424,25 @@ extension ReviewQueueController: UICollectionViewDataSource {
         GGNavLog.info("User tapped Play Active Song")
         let cell = sender.reviewTrackCell
         
-        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: cell.tableIndex)
+        let trackIndex = visibleTracks.index { $0.id == cell.track!.id }!
+        
+        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: trackIndex)
         
         cell.updatePlayButton()
     }
     
-    private func handleTrackChange() {
+    private func handleTrackChange(_ newTrack: Track?) {
+        // There won't be a visible cell if someone has been on the lock screen
+        guard let visibleCell = self.visibleCell else { return }
+        
+        let nextTrackIndex = visibleTracks.index { $0.id == newTrack?.id }
+        
         DispatchQueue.main.async {
-            self.visibleCell?.updatePlayButton()
+            if let index = nextTrackIndex {
+                self.collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
+            } else {
+                visibleCell.updatePlayButton()
+            }
         }
     }
     
@@ -365,61 +463,96 @@ extension ReviewQueueController: UICollectionViewDataSource {
         }
     }
     
-    @objc func accept(sender: UITapGestureRecognizer) {
-        GGNavLog.info("User tapped approve")
-        activitySpinner.startAnimating()
-        
-        guard let track = visibleTrack else {
-            Toast.show("Track could not be approved")
+    func acceptFromLockScreen() {
+        guard let track = NowPlayingTracks.currentTrack else {
+            GGLog.critical("A track was accepted from the lock screen but it could not be found")
             return
         }
         
+        accept(track)
+    }
+    
+    @objc private func acceptInternally(sender: UITapGestureRecognizer) {
+        guard let track = visibleTrack else {
+            Toast.show("Track could not be approved")
+            GGLog.critical("A track was accepted internally but could not be found")
+            return
+        }
+        
+        accept(track)
+    }
+    
+    private func accept(_ track: Track) {
+        GGNavLog.info("User tapped approve")
+        activitySpinner.startAnimating()
+        
         HttpRequester.post("review-queue/track/\(track.id)/approve", EmptyResponse.self, nil) { response, statusCode, _ in
-            DispatchQueue.main.async {
-                self.activitySpinner.stopAnimating()
-            }
-            
             if !statusCode.isSuccessful() {
-                Toast.show("Track could not be approved")
+                DispatchQueue.main.async {
+                    self.activitySpinner.stopAnimating()
+                    Toast.show("Track could not be approved")
+                }
                 return
             }
-            
-            Toast.show("\(track.name) was approved")
             
             // Temporarily update the Track in the DB. When we sync we'll update it again, but just keep our local state good until then.
             track.inReview = false
             track.addedToLibrary = Date()
             
-            self.handleTrackChanges(updated: [track], playNext: true)
+            DispatchQueue.main.async {
+                Toast.show("\(track.name) was approved")
+                self.activitySpinner.stopAnimating()
+                self.handleTrackChanges(updated: [track])
+            }
             
             TrackDao.save(track)
         }
     }
     
-    @objc func reject(sender: UITapGestureRecognizer) {
+    func rejectFromLockScreen() {
+        guard let track = NowPlayingTracks.currentTrack else {
+            GGLog.critical("A track was accepted from the lock screen but it could not be found")
+            return
+        }
+        
+        reject(track)
+    }
+    
+    @objc private func rejectInternally(sender: UITapGestureRecognizer) {
+        guard let track = visibleTrack else {
+            Toast.show("Track could not be rejected")
+            GGLog.critical("A track was rejected internally but could not be found")
+            return
+        }
+        
+        reject(track)
+    }
+    
+    private func reject(_ track: Track) {
         GGNavLog.info("User tapped reject")
         
         activitySpinner.startAnimating()
         
-        guard let track = visibleTrack else {
-            Toast.show("Track could not be rejected")
-            return
-        }
+        let playNext = !AudioPlayer.isPaused
+        
+        // If someone rejects a song, they don't like it, and we probably should stop subjecting them to the song
+        AudioPlayer.pause()
         
         let request = UpdateTrackRequest(trackIds: [track.id])
         HttpRequester.delete("track", request) { _, statusCode, _ in
-            DispatchQueue.main.async {
-                self.activitySpinner.stopAnimating()
-            }
-            
             if !statusCode.isSuccessful() {
-                Toast.show("Track could not be rejected")
+                DispatchQueue.main.async {
+                    self.activitySpinner.stopAnimating()
+                    Toast.show("Track could not be rejected")
+                }
                 return
             }
             
-            Toast.show("\(track.name) was rejected")
-                        
-            self.handleTrackChanges(deleted: [track], playNext: true)
+            DispatchQueue.main.async {
+                Toast.show("\(track.name) was rejected")
+                self.activitySpinner.stopAnimating()
+                self.handleTrackChanges(deleted: [track], playNext: playNext)
+            }
             
             TrackDao.delete(track.id)
         }
@@ -441,8 +574,6 @@ fileprivate extension UITapGestureRecognizer {
 
 class ReviewTrackCollectionCell : UICollectionViewCell {
     
-    var tableIndex: Int = -1
-
     var track: Track? {
         didSet {
             albumArtView.image = nil
@@ -524,7 +655,7 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
     let startPlayView: UIView = {
         let playButton = IconView("play.fill", weight: .light, scale: .large, multiplier: 6.0)
         playButton.translatesAutoresizingMaskIntoConstraints = false
-        playButton.tintColor = Colors.foreground
+        playButton.tintColor = Colors.white
         
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -564,6 +695,8 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
         super.init(frame: .zero)
         
         let actionRow = createActionsRow()
+        
+        self.backgroundColor = Colors.background
         
         self.contentView.addSubview(albumArtView)
         self.contentView.addSubview(songTextLabel)
@@ -612,16 +745,23 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
 
 
 class PickReviewSourceController : UIViewController, UITableViewDataSource, UITableViewDelegate {
-    let tableView = UITableView()
-
-    let reviewSources: Array<ReviewSource>
-    var activeSourceId: Int
-    let reviewQueueController: ReviewQueueController
+    private let tableView = UITableView()
     
-    init(activeSourceId: Int, reviewSources: Array<ReviewSource> = [], reviewQueueController: ReviewQueueController) {
-        self.reviewSources = reviewSources
+    private let reviewSources: Array<ReviewSource>
+    private var activeSourceId: Int
+    private let reviewQueueController: ReviewQueueController
+    private let tracksForSource: [Int: [Track]]
+    
+    init(
+        activeSourceId: Int,
+        reviewSources: Array<ReviewSource>,
+        reviewQueueController: ReviewQueueController,
+        tracksForSource: [Int: [Track]]
+    ) {
+        self.reviewSources = reviewSources.sorted { $0.displayName < $1.displayName }
         self.activeSourceId = activeSourceId
         self.reviewQueueController = reviewQueueController
+        self.tracksForSource = tracksForSource
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -643,11 +783,6 @@ class PickReviewSourceController : UIViewController, UITableViewDataSource, UITa
         tableView.tableFooterView = UIView(frame: .zero)
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-    }
-    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return reviewSources.count
     }
@@ -657,6 +792,7 @@ class PickReviewSourceController : UIViewController, UITableViewDataSource, UITa
         let reviewSource = reviewSources[indexPath.row]
         
         cell.reviewSource = reviewSource
+        cell.count = tracksForSource[reviewSource.id]!.count
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
         cell.addGestureRecognizer(tapGesture)
@@ -700,6 +836,15 @@ class ReviewSourceCell: UITableViewCell {
         }
     }
     
+    var count: Int = 0 {
+        didSet {
+            countBadgeLabel.text = String(count)
+            if count > 99 {
+                countBadgeLabel.text = "99"
+            }
+        }
+    }
+    
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 18)
@@ -714,27 +859,65 @@ class ReviewSourceCell: UITableViewCell {
         icon.tintColor = Colors.primary
         return icon
     }()
+        
+    private let countBadgeLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        label.sizeToFit()
+        label.textColor = Colors.foreground
+        
+        return label
+    }()
+    
+    private lazy var countBadgeContainer: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(countBadgeLabel)
+        
+        countBadgeLabel.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+        countBadgeLabel.heightAnchor.constraint(equalTo: view.heightAnchor).isActive = true
+
+        view.backgroundColor = Colors.primary
+        view.layer.cornerRadius = ReviewSourceCell.badgeSize / 2
+        
+        return view
+    }()
+    
+    private static let badgeSize: CGFloat = 28
     
     func checkIfSelected(activeSourceId: Int) {
         isCheckedImage.isHidden = activeSourceId != reviewSource!.id
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         self.contentView.addSubview(nameLabel)
         self.contentView.addSubview(isCheckedImage)
+        self.contentView.addSubview(countBadgeContainer)
         
         NSLayoutConstraint.activate([
             self.contentView.heightAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: 22),
-            nameLabel.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 16),
-            nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
-            isCheckedImage.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
+            
+            isCheckedImage.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
             isCheckedImage.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            
+            nameLabel.trailingAnchor.constraint(equalTo: countBadgeContainer.leadingAnchor, constant: 16),
+            nameLabel.leadingAnchor.constraint(equalTo: isCheckedImage.trailingAnchor),
+            nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            
+            countBadgeContainer.widthAnchor.constraint(equalToConstant: ReviewSourceCell.badgeSize),
+            countBadgeContainer.heightAnchor.constraint(equalToConstant: ReviewSourceCell.badgeSize),
+            countBadgeContainer.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -10),
+            countBadgeContainer.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
         ])
     }
     
     required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
+        fatalError("init(coder:) has not been implemented")
     }
 }

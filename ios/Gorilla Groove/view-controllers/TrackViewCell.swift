@@ -52,8 +52,6 @@ class TrackViewCell: UITableViewCell {
         return label
     }()
     
-    var tableIndex: Int = -1
-
     func checkIfPlaying() {
         if (track != nil && track?.id == NowPlayingTracks.currentTrack?.id) {
             artistLabel.textColor = Colors.primary

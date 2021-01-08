@@ -19,6 +19,8 @@ class AudioPlayer : CachingPlayerItemDelegate {
     
     private static let audioPlayerCacheDelegate = AudioPlayerCacheDelegate()
     
+    private static weak var reviewQueueController: ReviewQueueController? = nil
+    
     static var isPaused: Bool {
         get {
             // Seems ridiculous that there isn't a built in helper for this
@@ -36,6 +38,10 @@ class AudioPlayer : CachingPlayerItemDelegate {
         get {
             return AudioPlayer.player.currentTime().seconds
         }
+    }
+    
+    static func registerReviewQueueController(_ vc: ReviewQueueController) {
+        reviewQueueController = vc
     }
     
     private init() { }
@@ -72,14 +78,20 @@ class AudioPlayer : CachingPlayerItemDelegate {
         let rcc = MPRemoteCommandCenter.shared()
 
         rcc.playCommand.addTarget { event in
+            GGNavLog.info("User played from the lock screen")
+
             AudioPlayer.play()
             return .success
         }
         rcc.pauseCommand.addTarget { event in
+            GGNavLog.info("User paused from the lock screen")
+
             AudioPlayer.pause()
             return .success
         }
         rcc.changePlaybackPositionCommand.addTarget { event in
+            GGNavLog.info("User manually adjusted playback position from the lock screen")
+
             let requestedSongTime = (event as! MPChangePlaybackPositionCommandEvent).positionTime
             seekTo(requestedSongTime)
 
@@ -89,11 +101,41 @@ class AudioPlayer : CachingPlayerItemDelegate {
             return .success
         }
         rcc.nextTrackCommand.addTarget { event in
+            GGNavLog.info("User tapped next track from the lock screen")
+
             NowPlayingTracks.playNext()
             return .success
         }
         rcc.previousTrackCommand.addTarget { event in
+            GGNavLog.info("User tapped previous track from the lock screen")
+
             NowPlayingTracks.playPrevious()
+            return .success
+        }
+        rcc.likeCommand.addTarget { event in
+            GGNavLog.info("User liked the current song from the lock screen")
+
+            if let vc = reviewQueueController {
+                DispatchQueue.main.async {
+                    vc.acceptFromLockScreen()
+                }
+            } else {
+                GGLog.error("User liked the current song but no review queue controller was registered!")
+            }
+            
+            return .success
+        }
+        rcc.dislikeCommand.addTarget { event in
+            GGNavLog.info("User disliked the current song from the lock screen")
+            
+            if let vc = reviewQueueController {
+                DispatchQueue.main.async {
+                    vc.rejectFromLockScreen()
+                }
+            } else {
+                GGLog.error("User disliked the current song but no review queue controller was registered!")
+            }
+            
             return .success
         }
         
@@ -104,8 +146,14 @@ class AudioPlayer : CachingPlayerItemDelegate {
         rcc.nextTrackCommand.isEnabled = true
         rcc.previousTrackCommand.isEnabled = true
         rcc.changePlaybackPositionCommand.isEnabled = true
+        rcc.likeCommand.isEnabled = false
+        rcc.dislikeCommand.isEnabled = false
         
-        
+        rcc.likeCommand.localizedTitle = "Approve"
+        rcc.dislikeCommand.localizedTitle = "Reject"
+        rcc.likeCommand.localizedShortTitle = "Approve"
+        rcc.dislikeCommand.localizedShortTitle = "Reject"
+
         // I noticed that if playback is paused (by say, unplugging your phone from aux), the notification area
         // would, for some weird reason, say that the time was 0 seconds. This fix doesn't seem ideal, but at least
         // it's better than it was. The progress bar can still jump around a bit to the correct position though.
@@ -155,25 +203,34 @@ class AudioPlayer : CachingPlayerItemDelegate {
         sendPlayEvent(nil)
     }
     
+    private static func setRatingEnabled(_ enabled: Bool) {
+        let rcc = MPRemoteCommandCenter.shared()
+        
+        rcc.likeCommand.isEnabled = enabled
+        rcc.dislikeCommand.isEnabled = enabled
+    }
+    
     // This will cache the song to disk while streaming it
-    static func playNewLink(_ link: String, trackId: Int, shouldCache: Bool) {
-        let playerItem = SongCachingPlayerItem(url: URL(string: link)!, trackId: trackId, shouldCache: shouldCache)
+    static func playNewLink(_ link: String, track: Track, shouldCache: Bool) {
+        let playerItem = SongCachingPlayerItem(url: URL(string: link)!, trackId: track.id, shouldCache: shouldCache)
         playerItem.delegate = audioPlayerCacheDelegate
 
-        playPlayerItem(playerItem)
+        playPlayerItem(playerItem, track)
     }
     
     // This plays a song that is already downloaded
-    static func playSongData(_ songData: Data) {
+    static func playSongData(_ songData: Data, track: Track) {
         let playerItem = CachingPlayerItem(data: songData, mimeType: "audio/mp3", fileExtension: "mp3")
-        playPlayerItem(playerItem)
+        playPlayerItem(playerItem, track)
     }
     
-    static func playPlayerItem(_ playerItem: AVPlayerItem) {
+    static func playPlayerItem(_ playerItem: AVPlayerItem, _ track: Track) {
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
         MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
 
+        setRatingEnabled(track.inReview)
+        
         sendPlayEvent(NowPlayingTracks.currentTrack)
     }
     
@@ -232,7 +289,11 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
         // reference here will make it work. Also a potential issue in that it could have audio start playing that the user
         // wanted to pause. Need to see how it works in practice. Might need a new Bool to remember a user's "intent" to be playing.
         if songCacheItem.trackId == playbackStalledTrackId {
-            AudioPlayer.playPlayerItem(songCacheItem)
+            if let track = TrackDao.findById(songCacheItem.trackId) {
+                AudioPlayer.playPlayerItem(songCacheItem, track)
+            } else {
+                GGLog.warning("Player item was ready to play a song that has been deleted")
+            }
         }
     }
     

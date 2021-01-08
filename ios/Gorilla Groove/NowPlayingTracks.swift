@@ -54,7 +54,7 @@ class NowPlayingTracks {
         playTrack(currentTrack!)
     }
     
-    static func removeTracks(_ trackIds: Set<Int>) {
+    static func removeTracks(_ trackIds: Set<Int>, playNext: Bool? = nil) {
         if trackIds.isEmpty { return }
         
         GGLog.info("Removing track IDs from Now Playing: \(trackIds)")
@@ -94,9 +94,13 @@ class NowPlayingTracks {
             }
             
             // If we were playing the track that got removed, start the next track up
-            if let currentTrack = currentTrack, !AudioPlayer.isPaused {
-                GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
-                playTrack(currentTrack)
+            if let currentTrack = currentTrack, playNext != false {
+                if playNext == true || !AudioPlayer.isPaused {
+                    GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
+                    playTrack(currentTrack)
+                } else {
+                    notifyListeners()
+                }
             } else {
                 notifyListeners()
             }
@@ -135,7 +139,7 @@ class NowPlayingTracks {
         let (existingSongData, existingArtData) = getCachedData(track)
         if let existingSongData = existingSongData {
             GGLog.debug("Song data for track \(track.id) is already cached. Playing from offline storage")
-            AudioPlayer.playSongData(existingSongData)
+            AudioPlayer.playSongData(existingSongData, track: track)
             updateStartedOnDevice(track)
         }
         if let existingArtData = existingArtData {
@@ -197,7 +201,7 @@ class NowPlayingTracks {
             if fetchSong {
                 // If no song link was fetched despite us asking for one, then something went really wrong and we shouldn't continue.
                 guard let songLink = trackLinks.songLink else { return }
-                AudioPlayer.playNewLink(songLink, trackId: track.id, shouldCache: shouldCache)
+                AudioPlayer.playNewLink(songLink, track: track, shouldCache: shouldCache)
                 updateStartedOnDevice(track)
             }
             

@@ -6,14 +6,16 @@ class ReviewSourceSynchronizer : StandardSynchronizer<ReviewSource, ReviewSource
 
 struct ReviewSourceResponse: SyncResponseData {
     let id: Int
-    let sourceType: SourceType
+    let sourceType: String
     let displayName: String
+    let offlineAvailabilityType: String
     
     func asEntity() -> Any {
         return ReviewSource(
             id: id,
-            sourceType: sourceType,
-            displayName: displayName
+            sourceType: SourceType(rawValue: sourceType) ?? .UNKNOWN,
+            displayName: displayName,
+            offlineAvailability: OfflineAvailabilityType(rawValue: offlineAvailabilityType) ?? .UNKNOWN
         )
     }
 }
