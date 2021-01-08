@@ -91,8 +91,8 @@ class SpotifyApiClient(
 		return matchingArtist?.id
 	}
 
-	fun searchArtistsByName(artist: String): List<SpotifyArtist> {
-		val startingUrl = createSpotifySearchUrl(artist, null, REQUEST_SIZE_LIMIT, "artist")
+	fun searchArtistsByName(artist: String, limit: Int = REQUEST_SIZE_LIMIT): List<SpotifyArtist> {
+		val startingUrl = createSpotifySearchUrl(artist, null, limit, "artist")
 
 		val result = restTemplate.querySpotify<SpotifyArtistSearchResponse>(startingUrl)
 

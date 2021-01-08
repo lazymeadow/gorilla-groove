@@ -53,8 +53,16 @@ class SearchController(
 		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name, limit = SPOTIFY_TRACK_LIMIT)
 	}
 
+	// Used to help suggest items to users while they are filling in forms
+	@GetMapping("/autocomplete/spotify/artist-name/{partial-name}")
+	fun autocompleteSpotifyArtistName(
+			@PathVariable("partial-name") partialName: String
+	): List<String> {
+		return spotifyApiClient.searchArtistsByName(partialName, limit = 10).map { it.name }
+	}
+
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 
 		private const val SPOTIFY_TRACK_LIMIT = 50
 	}
