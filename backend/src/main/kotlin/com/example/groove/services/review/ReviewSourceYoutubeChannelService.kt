@@ -49,74 +49,80 @@ class ReviewSourceYoutubeChannelService(
 
 		logger.info("Running Review Source Youtube Channel Downloader")
 
-		allSources.forEach { source ->
-			logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
-
-			if (!source.isActive()) {
-				logger.info("Review source for channel ${source.channelName} is not active. Skipping")
-				return@forEach
-			}
-
-			val users = source.getActiveUsers()
-
-			// We establish our own upper limit. In the very unlikely, though possible, event that a video
-			// is uploaded between us creating this timestamp, and the request getting to YouTube, we need
-			// to filter out the new videos or we will save it twice (since we would search for it
-			// again when we run this job the next time)
-			val searchedTime = now()
-			val newVideos = youtubeApiClient
-					.findVideos(channelId = source.channelId)
-					.videos
-					.filter { it.publishedAt > source.lastSearched && it.publishedAt < searchedTime}
-			logger.info("Found ${newVideos.size} new video(s) for channel: ${source.channelName}")
-
-
-			val (firstUser, otherUsers) = users.firstAndRest()
-
-			var addedVideos = 0
-			newVideos.forEach saveLoop@ { video ->
-				logger.info("Processing ${video.title}...")
-				// Some channels will put out mixes every now and then. I don't really want to download mixes automatically as they could be huge, and don't really fit the GG spirit of adding individual songs
-				if (video.duration > MAX_VIDEO_LENGTH) {
-					logger.info("Video ${video.title} from ${video.channelTitle} has a duration of ${video.duration} which exceeds our max allowed duration of $MAX_VIDEO_LENGTH. It will be skipped")
-					return@saveLoop
-				}
-
-				val (artist, name) = splitSongNameAndArtist(video.title)
-				val downloadDTO = YoutubeDownloadDTO(
-						url = video.videoUrl,
-						name = name,
-						artist = artist,
-						cropArtToSquare = true
-				)
-				val track = youtubeDownloadService.downloadSong(firstUser, downloadDTO)
-				track.reviewSource = source
-				track.inReview = true
-				track.lastReviewed = now()
-				trackRepository.save(track)
-
-
-				// The YT download service will save the Track for the user that downloads it.
-				// So for every other user make a copy of that track
-				otherUsers.forEach { otherUser ->
-					trackService.saveTrackForUserReview(otherUser, track, source)
-				}
-
-				addedVideos++
-				logger.info("Done with ${video.title}")
-			}
-
-			source.lastSearched = searchedTime
-			reviewSourceYoutubeChannelRepository.save(source)
-
-			if (addedVideos > 0) {
-				users.forEach { user ->
-					reviewQueueSocketHandler.broadcastNewReviewQueueContent(user.id, source, addedVideos)
-				}
-			}
-		}
+		allSources.forEach { processSource(it) }
 
 		logger.info("Review Source Youtube Channel Downloader complete")
+	}
+
+	// This process can take a really long time, and we need a transaction to avoid errors like
+	// "could not initialize proxy - no Session". However, I don't want one transaction because
+	// then if we have an issue everything gets rolled back. Function is public only to allow
+	// @Transactional annotation to work because it is a limitation of Spring Boot
+	fun processSource(source: ReviewSourceYoutubeChannel) {
+		logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
+
+		if (!source.isActive()) {
+			logger.info("Review source for channel ${source.channelName} is not active. Skipping")
+			return
+		}
+
+		val users = source.getActiveUsers()
+
+		// We establish our own upper limit. In the very unlikely, though possible, event that a video
+		// is uploaded between us creating this timestamp, and the request getting to YouTube, we need
+		// to filter out the new videos or we will save it twice (since we would search for it
+		// again when we run this job the next time)
+		val searchedTime = now()
+		val newVideos = youtubeApiClient
+				.findVideos(channelId = source.channelId)
+				.videos
+				.filter { it.publishedAt > source.lastSearched && it.publishedAt < searchedTime}
+		logger.info("Found ${newVideos.size} new video(s) for channel: ${source.channelName}")
+
+
+		val (firstUser, otherUsers) = users.firstAndRest()
+
+		var addedVideos = 0
+		newVideos.forEach saveLoop@ { video ->
+			logger.info("Processing ${video.title}...")
+			// Some channels will put out mixes every now and then. I don't really want to download mixes automatically as they could be huge, and don't really fit the GG spirit of adding individual songs
+			if (video.duration > MAX_VIDEO_LENGTH) {
+				logger.info("Video ${video.title} from ${video.channelTitle} has a duration of ${video.duration} which exceeds our max allowed duration of $MAX_VIDEO_LENGTH. It will be skipped")
+				return@saveLoop
+			}
+
+			val (artist, name) = splitSongNameAndArtist(video.title)
+			val downloadDTO = YoutubeDownloadDTO(
+					url = video.videoUrl,
+					name = name,
+					artist = artist,
+					cropArtToSquare = true
+			)
+			val track = youtubeDownloadService.downloadSong(firstUser, downloadDTO)
+			track.reviewSource = source
+			track.inReview = true
+			track.lastReviewed = now()
+			trackRepository.save(track)
+
+
+			// The YT download service will save the Track for the user that downloads it.
+			// So for every other user make a copy of that track
+			otherUsers.forEach { otherUser ->
+				trackService.saveTrackForUserReview(otherUser, track, source)
+			}
+
+			addedVideos++
+			logger.info("Done with ${video.title}")
+		}
+
+		source.lastSearched = searchedTime
+		reviewSourceYoutubeChannelRepository.save(source)
+
+		if (addedVideos > 0) {
+			users.forEach { user ->
+				reviewQueueSocketHandler.broadcastNewReviewQueueContent(user.id, source, addedVideos)
+			}
+		}
 	}
 
 	fun splitSongNameAndArtist(songInfo: String): Pair<String, String> {
