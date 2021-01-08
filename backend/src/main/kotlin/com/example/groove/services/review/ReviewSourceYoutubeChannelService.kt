@@ -244,6 +244,18 @@ class ReviewSourceYoutubeChannelService(
 		reviewSourceUserRepository.save(reviewSourceUser)
 	}
 
+	// The channel title for a YouTube channel is NOT unique, so we find the result that YouTube thinks is the most relevant
+	fun subscribeToChannelTitle(channelTitle: String) {
+		val user = loadLoggedInUser()
+		logger.info("Subscribing ${user.name} to channel by title $channelTitle...")
+
+		val channelSnippets = youtubeApiClient.findChannels(channelTitle).find {
+			it.channelTitle.toLowerCase() == channelTitle.toLowerCase()
+		} ?: throw java.lang.IllegalArgumentException("No channel found with title $channelTitle")
+
+		subscribeToChannelId(channelSnippets.channelId)
+	}
+
 	companion object {
 		private val logger = logger()
 

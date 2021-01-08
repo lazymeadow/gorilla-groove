@@ -61,6 +61,15 @@ class SearchController(
 		return spotifyApiClient.searchArtistsByName(partialName, limit = 10).map { it.name }
 	}
 
+	@GetMapping("/autocomplete/youtube/channel-name/{partial-name}")
+	fun autocompleteYoutubeChannelName(
+			@PathVariable("partial-name") partialName: String
+	): Set<String> {
+		// Linked so it preserves order- order is the YouTube given relevance and we don't want to discard it.
+		// However, channel titles are not unique and there is no benefit to returning 7 of the same name
+		return LinkedHashSet(youtubeApiClient.findChannels(partialName).map { it.channelTitle })
+	}
+
 	companion object {
 		private val logger = logger()
 

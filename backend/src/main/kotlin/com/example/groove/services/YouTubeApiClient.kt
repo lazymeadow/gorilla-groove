@@ -28,7 +28,7 @@ class YoutubeApiClient(
 
 		// YouTube doesn't return all the necessary data in its 'search' response. So we search and collect the IDS,
 		// then do a follow-up request with those IDs to get all the data we care about, while preserving video order.
-		val videoIds = searchYoutube(fixedSearchTerm, channelId)
+		val videoIds = searchVideos(fixedSearchTerm, channelId)
 		val videoInfo = getVideoInformation(videoIds)
 
 		val videos = videoInfo.filter {
@@ -51,15 +51,33 @@ class YoutubeApiClient(
 		return YoutubeApiResponse(videos)
 	}
 
-	// Return a list instead of a set, because the order we get them in is Youtube's relevance
-	private fun searchYoutube(searchTerm: String? = null, channelId: String? = null): List<String> {
+	fun findChannels(searchTerm: String): List<ChannelSearchSnippet> {
+		val fixedSearchTerm = searchTerm.replace("&", "")
+
 		val url = createSearchUrl(
-				"search",
-				searchTerm,
-				channelId,
-				mapOf(
+				route = "search",
+				searchTerm = fixedSearchTerm,
+				additionalParams = mapOf(
+						"part" to "snippet",
+						"type" to YoutubeSearchType.CHANNEL.apiName,
+						"order" to "relevance"
+				)
+		)
+
+		val response = searchUrl<RawChannelSearchResponse>(url)
+
+		return response.items.map { it.snippet }
+	}
+
+	// Return a list instead of a set, because the order we get them in is Youtube's relevance
+	private fun searchVideos(searchTerm: String? = null, channelId: String? = null): List<String> {
+		val url = createSearchUrl(
+				route = "search",
+				searchTerm = searchTerm,
+				channelId = channelId,
+				additionalParams = mapOf(
 						"part" to "id",
-						"type" to "video",
+						"type" to YoutubeSearchType.VIDEO.apiName,
 						"order" to if (searchTerm != null) "relevance" else "date"
 				)
 		)
@@ -176,6 +194,11 @@ class YoutubeApiClient(
 			val id: String
 	)
 
+	data class RawChannelSearchResponse(val items: List<RawYoutubeChannelSearchItem>)
+	data class RawYoutubeChannelSearchItem(val snippet: ChannelSearchSnippet)
+	// There is also a property called "title", though it seems identical to "channelTitle" in all my testing
+	data class ChannelSearchSnippet(val channelTitle: String, val channelId: String)
+
 	data class RawYoutubeSearchResponse(
 			val nextPageToken: String?, // Unused right now, but if we ever want to page through results we'll need it
 			val items: List<RawYoutubeSearchItem>
@@ -251,3 +274,8 @@ class YoutubeApiClient(
 }
 
 data class YoutubeChannelInfo(val title: String, val id: String)
+
+private enum class YoutubeSearchType(val apiName: String) {
+	VIDEO("video"),
+	CHANNEL("channel")
+}

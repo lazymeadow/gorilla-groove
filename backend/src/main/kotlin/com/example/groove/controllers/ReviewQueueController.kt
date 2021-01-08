@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 import org.springframework.web.bind.annotation.*
+import java.lang.IllegalArgumentException
 
 @RestController
 @RequestMapping("api/review-queue")
@@ -41,22 +42,28 @@ class ReviewQueueController(
 	fun subscribeToYoutubeChannel(@RequestBody body: YouTubeChannelSubscriptionDTO) {
 		val channelUrl = body.channelUrl
 
-		// Channel URL should conform to one of two patterns,
-		// https://www.youtube.com/channel/UCSXm6c-n6lsjtyjvdD0bFVw
-		// https://www.youtube.com/user/Liquicity
+		if (channelUrl != null) {
+			// Channel URL should conform to one of two patterns,
+			// https://www.youtube.com/channel/UCSXm6c-n6lsjtyjvdD0bFVw
+			// https://www.youtube.com/user/Liquicity
 
-		val regex = Regex("^https://www.youtube.com/(channel|user)/.+\$")
+			val regex = Regex("^https://www.youtube.com/(channel|user)/.+\$")
 
-		require(regex.matches(channelUrl)) {
-			"Invalid channel URL supplied! $channelUrl"
-		}
+			require(regex.matches(channelUrl)) {
+				"Invalid channel URL supplied! $channelUrl"
+			}
 
-		val searchTerm = channelUrl.split("/").last()
+			val identificationTerm = channelUrl.split("/").last()
 
-		if (channelUrl.contains("channel", ignoreCase = true)) {
-			reviewSourceYoutubeChannelService.subscribeToChannelId(searchTerm)
+			if (channelUrl.contains("channel", ignoreCase = true)) {
+				reviewSourceYoutubeChannelService.subscribeToChannelId(identificationTerm)
+			} else {
+				reviewSourceYoutubeChannelService.subscribeToUser(identificationTerm)
+			}
+		} else if (body.channelTitle != null) {
+			reviewSourceYoutubeChannelService.subscribeToChannelTitle(body.channelTitle)
 		} else {
-			reviewSourceYoutubeChannelService.subscribeToUser(searchTerm)
+			throw IllegalArgumentException("Either a channelTitle or a channelUrl must be supplied")
 		}
 	}
 
@@ -93,7 +100,10 @@ class ReviewQueueController(
 			val trackIds: List<Long>
 	)
 
-	data class YouTubeChannelSubscriptionDTO(val channelUrl: String)
+	data class YouTubeChannelSubscriptionDTO(
+			val channelUrl: String?,
+			val channelTitle: String? // This is the user-facing name. It is NOT unique
+	)
 	data class ArtistSubscriptionDTO(val artistName: String)
 
 	companion object {
