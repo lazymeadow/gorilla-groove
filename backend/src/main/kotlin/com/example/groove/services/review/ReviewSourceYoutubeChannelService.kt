@@ -151,7 +151,7 @@ class ReviewSourceYoutubeChannelService(
 		return finalArtist.trim() to finalTitle.trim()
 	}
 
-	fun subscribeToUser(youtubeName: String) {
+	fun subscribeToUser(youtubeName: String): ReviewSourceUser {
 		val ownUser = loadLoggedInUser()
 		logger.info("Subscribing ${ownUser.name} to channel $youtubeName")
 
@@ -161,10 +161,10 @@ class ReviewSourceYoutubeChannelService(
 		// Check if someone is already subscribed to this channel
 		// Need to grab ID first because name is unreliable
 
-		saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
+		return saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
 	}
 
-	fun subscribeToChannelId(channelId: String) {
+	fun subscribeToChannelId(channelId: String): ReviewSourceUser {
 		val ownUser = loadLoggedInUser()
 		logger.info("Subscribing ${ownUser.name} to channel $channelId")
 
@@ -189,23 +189,23 @@ class ReviewSourceYoutubeChannelService(
 					sourceAssociation.updatedAt = now()
 					reviewSourceUserRepository.save(sourceAssociation)
 
-					return
+					return sourceAssociation
 				}
 			}
 
 			val reviewSourceUser = ReviewSourceUser(reviewSource = reviewSource, user = ownUser)
 			reviewSourceUserRepository.save(reviewSourceUser)
 
-			return
+			return reviewSourceUser
 		}
 
 		val youtubeUserInfo = youtubeApiClient.getChannelInfoByChannelId(channelId)
 				?: throw IllegalArgumentException("Unable to find YouTube channel with id $channelId!")
 
-		saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
+		return saveAndSubscribeToChannel(youtubeUserInfo, ownUser)
 	}
 
-	private fun saveAndSubscribeToChannel(channelInfo: YoutubeChannelInfo, user: User) {
+	private fun saveAndSubscribeToChannel(channelInfo: YoutubeChannelInfo, user: User): ReviewSourceUser {
 		reviewSourceYoutubeChannelRepository.findByChannelId(channelInfo.id)?.let { reviewSource ->
 			logger.info("${reviewSource.channelName} (${reviewSource.channelId}) already exists")
 			if (reviewSource.isUserSubscribed(user)) {
@@ -226,14 +226,14 @@ class ReviewSourceYoutubeChannelService(
 					sourceAssociation.updatedAt = now()
 					reviewSourceUserRepository.save(sourceAssociation)
 
-					return
+					return sourceAssociation
 				}
 			}
 
 			val reviewSourceUser = ReviewSourceUser(reviewSource = reviewSource, user = user)
 			reviewSourceUserRepository.save(reviewSourceUser)
 
-			return
+			return reviewSourceUser
 		}
 
 		logger.info("Channel ${channelInfo.title} is new. Saving a new record")
@@ -242,18 +242,20 @@ class ReviewSourceYoutubeChannelService(
 
 		val reviewSourceUser = ReviewSourceUser(reviewSource = newSource, user = user)
 		reviewSourceUserRepository.save(reviewSourceUser)
+
+		return reviewSourceUser
 	}
 
 	// The channel title for a YouTube channel is NOT unique, so we find the result that YouTube thinks is the most relevant
-	fun subscribeToChannelTitle(channelTitle: String) {
+	fun subscribeToChannelTitle(channelTitle: String): ReviewSourceUser {
 		val user = loadLoggedInUser()
 		logger.info("Subscribing ${user.name} to channel by title $channelTitle...")
 
 		val channelSnippets = youtubeApiClient.findChannels(channelTitle).find {
 			it.channelTitle.toLowerCase() == channelTitle.toLowerCase()
-		} ?: throw java.lang.IllegalArgumentException("No channel found with title $channelTitle")
+		} ?: throw IllegalArgumentException("No channel found with title $channelTitle")
 
-		subscribeToChannelId(channelSnippets.channelId)
+		return subscribeToChannelId(channelSnippets.channelId)
 	}
 
 	companion object {

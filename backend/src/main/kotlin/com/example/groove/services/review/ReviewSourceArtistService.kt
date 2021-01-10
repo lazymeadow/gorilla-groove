@@ -222,7 +222,7 @@ class ReviewSourceArtistService(
 		return titleWords.all { lowerTitle.contains(it) }
 	}
 
-	fun subscribeToArtist(artistName: String): Pair<Boolean, List<String>> {
+	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
 		val currentUser = loadLoggedInUser()
 
 		// First, check if the artist already exists. Someone may have subscribed to them earlier
@@ -247,13 +247,13 @@ class ReviewSourceArtistService(
 				sourceAssociation.updatedAt = now()
 				reviewSourceUserRepository.save(sourceAssociation)
 
-				return true to emptyList()
+				return sourceAssociation to emptyList()
 			}
 
 			val reviewSourceUser = ReviewSourceUser(reviewSource = existing, user = currentUser)
 			reviewSourceUserRepository.save(reviewSourceUser)
 
-			return true to emptyList()
+			return reviewSourceUser to emptyList()
 		}
 
 		// Ok so nobody has subscribed to this artist before. We need to create a new one and add our user to it
@@ -265,7 +265,7 @@ class ReviewSourceArtistService(
 		// fix any typos or things of that nature
 		val targetName = artistName.toLowerCase()
 		val foundArtist = artists.find { it.name.toLowerCase() == targetName }
-				?: return false to artists.map { it.name }.take(5)
+				?: return null to artists.map { it.name }.take(5)
 
 		// Cool cool cool we found an artist in spotify. Now just save it.
 		// Hard-code "searchNewerThan" to now() until we are not throttled by YouTube and can search unlimited
@@ -275,7 +275,7 @@ class ReviewSourceArtistService(
 		val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = currentUser)
 		reviewSourceUserRepository.save(reviewSourceUser)
 
-		return true to emptyList()
+		return reviewSourceUser to emptyList()
 	}
 
 	companion object {

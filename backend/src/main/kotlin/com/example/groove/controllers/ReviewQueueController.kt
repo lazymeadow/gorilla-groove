@@ -1,5 +1,6 @@
 package com.example.groove.controllers
 
+import com.example.groove.db.model.ReviewSourceUserDTO
 import com.example.groove.db.model.enums.PermissionType
 import com.example.groove.services.UserService
 import com.example.groove.services.review.ReviewQueueService
@@ -12,7 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
 import org.springframework.web.bind.annotation.*
-import java.lang.IllegalArgumentException
+import kotlin.IllegalArgumentException
 
 @RestController
 @RequestMapping("api/review-queue")
@@ -39,10 +40,10 @@ class ReviewQueueController(
 	}
 
 	@PostMapping("/subscribe/youtube-channel")
-	fun subscribeToYoutubeChannel(@RequestBody body: YouTubeChannelSubscriptionDTO) {
+	fun subscribeToYoutubeChannel(@RequestBody body: YouTubeChannelSubscriptionDTO): ReviewSourceUserDTO {
 		val channelUrl = body.channelUrl
 
-		if (channelUrl != null) {
+		val source = if (channelUrl != null) {
 			// Channel URL should conform to one of two patterns,
 			// https://www.youtube.com/channel/UCSXm6c-n6lsjtyjvdD0bFVw
 			// https://www.youtube.com/user/Liquicity
@@ -65,23 +66,37 @@ class ReviewQueueController(
 		} else {
 			throw IllegalArgumentException("Either a channelTitle or a channelUrl must be supplied")
 		}
+
+		return source.toSyncDTO()
 	}
 
-	@PostMapping("/subscribe/artist")
-	fun subscribeToArtist(@RequestBody body: ArtistSubscriptionDTO): ResponseEntity<Map<String, List<String>>> {
+	// This is dumb but I want a different response body for Mobile than I do Web. Probably temporary (TM)
+	@PostMapping("/subscribe/artist-web")
+	fun subscribeToArtistFromWeb(@RequestBody body: ArtistSubscriptionDTO): ResponseEntity<Map<String, List<String>>> {
 		require(body.artistName.isNotBlank()) {
 			"Artist name must not be empty!"
 		}
 
-		val (success, possibleMatches) = reviewSourceArtistService.subscribeToArtist(body.artistName.trim())
+		val (userSource, possibleMatches) = reviewSourceArtistService.subscribeToArtist(body.artistName.trim())
 
-		return if (success) {
+		return if (userSource != null) {
 			ResponseEntity.ok(emptyMap())
 		} else {
 			ResponseEntity
 					.status(HttpStatus.BAD_REQUEST)
 					.body(mapOf("possibleMatches" to possibleMatches))
 		}
+	}
+
+	@PostMapping("/subscribe/artist")
+	fun subscribeToArtistFromMobile(@RequestBody body: ArtistSubscriptionDTO): ReviewSourceUserDTO {
+		require(body.artistName.isNotBlank()) {
+			"Artist name must not be empty!"
+		}
+
+		val (userSource, _) = reviewSourceArtistService.subscribeToArtist(body.artistName.trim())
+
+		return userSource?.toSyncDTO() ?: throw IllegalArgumentException("No Artist found with name ${body.artistName}!")
 	}
 
 	@PostMapping("/check-new-songs")
