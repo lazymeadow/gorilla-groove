@@ -200,20 +200,28 @@ class ReviewSourceArtistService(
 		val lowerTitle = this.title.toLowerCase()
 		val artist = song.artist.toLowerCase()
 
-		// Make sure the artist is in the title somewhere OR the channel name. If it isn't that seems like a bad sign
-		if (!lowerTitle.contains(artist) && !this.channelName.toLowerCase().contains(artist)) {
+		// Spotify can give us artists separated by commas that other places consider featured artists. So if we search
+		// for what Spotify gives us blindly like "Mitis, RORY" and all the videos on YT are "Mitis - .. (feat. RORY)"
+		// then we aren't going to find it. So split the artist on a comma and make sure all artists are represented
+		// somewhere in the title
+		val artistsFound = artist.split(",").all { individualArtist ->
+			lowerTitle.contains(individualArtist) || channelName.toLowerCase().contains(individualArtist)
+		}
+		if (!artistsFound) {
 			return false
 		}
 
 		// Now lastly we want to check that the song title is adequately represented in the video title. I ran into
 		// a lot of situations where titles were slightly different so a substring match wasn't viable. So I think
-		// a better approach is to check each word individually for representation, and get rid of words that have
-		// little value or little hope or being matched correctly
+		// a better approach is, like we now do with artists, check each word individually for representation, and
+		// additionally get rid of words that have little value or little hope or being matched correctly
 		val unimportantWords = setOf("with", "feat", "ft", "featuring")
 		val titleWords = this.title
 				.toLowerCase()
 				.replace("(", "")
 				.replace(")", "")
+				.replace("[", "")
+				.replace("]", "")
 				.replace(".", "")
 				.replace("-", "")
 				.split(" ")

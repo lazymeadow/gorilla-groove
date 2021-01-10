@@ -106,9 +106,8 @@ class YoutubeDownloadService(
 	fun searchYouTube(searchTerm: String, targetLength: Int): List<VideoProperties> {
 		logger.info("Searching YouTube for the term: '$searchTerm'")
 		val videosToSearch = 5
-		// This combination of arguments will have Youtube-DL not actually download the videos, but instead write the following
-		// 3 flags to standard out, video ID, duration, and name. We redirect standard out to a file to process it after, in
-		// order to read in this information and find the video we want to actually download
+		// This combination of arguments will have Youtube-DL not actually download the videos, but instead write the
+		// video details to standard out. We redirect standard out to a file to process it afterwards
 		val pb = ProcessBuilder(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
 				// ¯\_(ツ)_/¯ windows + java is stupid and removes the quotes unless there's two of them I GUESS?
