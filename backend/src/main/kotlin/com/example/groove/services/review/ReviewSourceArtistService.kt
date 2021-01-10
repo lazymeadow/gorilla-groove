@@ -270,9 +270,11 @@ fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponse
 	// then we aren't going to find it. So split the artist on a comma and make sure all artists are represented
 	// somewhere in the title
 	val artistsFound = artist.split(",").all { individualArtist ->
-		val found = lowerTitle.contains(individualArtist) || channelName.toLowerCase().contains(individualArtist)
+		val trimmedArtist = individualArtist.trim()
+
+		val found = lowerTitle.contains(trimmedArtist) || channelName.toLowerCase().contains(trimmedArtist)
 		if (!found) {
-			ReviewSourceArtistService.logger.info("The artist '$individualArtist' was not found")
+			ReviewSourceArtistService.logger.info("The artist '$trimmedArtist' was not found")
 		}
 		found
 	}
