@@ -223,7 +223,6 @@ class ReviewQueueController : UIViewController {
     @objc func editReviewSources() {
         GGNavLog.info("User tapped edit review sources")
         let vc = EditReviewSourcesController(
-            activeSourceId: self.selectedSourceId,
             reviewSources: self.allReviewSources,
             reviewQueueController: self
         )
@@ -282,6 +281,17 @@ class ReviewQueueController : UIViewController {
         
         DispatchQueue.main.async {
             self.setActiveSource(newSourceId)
+        }
+    }
+    
+    func removeSource(_ source: ReviewSource) {
+        allReviewSources = allReviewSources.filter { $0.id != source.id }
+        reviewSourcesNeedingReview = reviewSourcesNeedingReview.filter { $0.id != source.id }
+        tracksForSource[source.id] = nil
+        
+        if selectedSourceId == source.id {
+            selectedSourceId = nil
+            setDefaultActiveSource()
         }
     }
     

@@ -5,13 +5,11 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
     private let tableView = UITableView()
     
     private var reviewSourcesByType: [SourceType: [ReviewSource]]
-    private var activeSourceId: Int?
     private let reviewQueueController: ReviewQueueController
     
     private static let queueTypesToShow = Set([SourceType.YOUTUBE_CHANNEL, .ARTIST])
     
     init(
-        activeSourceId: Int?,
         reviewSources: Array<ReviewSource>,
         reviewQueueController: ReviewQueueController
     ) {
@@ -20,11 +18,20 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
             .sorted { $0.displayName.localizedCompare($1.displayName) == .orderedAscending }
             .groupBy { $0.sourceType }
         
-        self.activeSourceId = activeSourceId
         self.reviewQueueController = reviewQueueController
         
         super.init(nibName: nil, bundle: nil)
     }
+    
+    private let activitySpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
+        
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.hidesWhenStopped = true
+        spinner.color = Colors.foreground
+        
+        return spinner
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,6 +45,7 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
         )
         
         view.addSubview(tableView)
+        view.addSubview(activitySpinner)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -46,6 +54,8 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            activitySpinner.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            activitySpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
         
         tableView.dataSource = self
@@ -78,12 +88,43 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
             GGNavLog.info("User tapped cancel button")
         }))
-//        let vc = EditReviewSourcesController(
-//            reviewQueueController: self
-//        )
-//        vc.modalPresentationStyle = .fullScreen
-//
-//        self.navigationController!.pushViewController(vc, animated: true)
+        
+        ViewUtil.showAlert(alert)
+    }
+    
+    private func showEditMenu(_ source: ReviewSource) {
+        GGNavLog.info("User tapped a review source")
+        
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
+            GGNavLog.info("User tapped delete review source")
+            self.activitySpinner.startAnimating()
+            
+            GGLog.info("Deleting review source with ID \(source.id)")
+            
+            HttpRequester.delete("review-queue/\(source.id)") { _, statusCode, _ in
+                if !statusCode.isSuccessful() {
+                    DispatchQueue.main.async {
+                        Toast.show("Could not delete review source")
+                        self.activitySpinner.stopAnimating()
+                    }
+                    return
+                }
+                ReviewSourceDao.delete(source.id)
+                self.reviewQueueController.removeSource(source)
+
+                DispatchQueue.main.async {
+                    Toast.show("Review source deleted")
+                    self.activitySpinner.stopAnimating()
+                    self.reviewSourcesByType[source.sourceType]!.removeAll { $0.id == source.id }
+                    
+                    self.tableView.reloadData()
+                }
+            }
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
+            GGNavLog.info("User tapped cancel button")
+        }))
         
         ViewUtil.showAlert(alert)
     }
@@ -143,19 +184,14 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! EditReviewSourceCell
-//        let newSourceId = cell.reviewSource!.id
-        
         cell.animateSelectionColor()
         
-//        tableView.visibleCells.forEach { cell in
-//            (cell as! EditReviewSourceCell).checkIfSelected(activeSourceId: newSourceId)
-//        }
+        let source = cell.reviewSource!
+
+        GGNavLog.info("User tapped on review source with ID \(source.id)")
         
-//        reviewQueueController.setActiveSource(newSourceId)
-        
-//        navigationController!.popViewController(animated: true)
+        showEditMenu(source)
     }
-    
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

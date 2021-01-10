@@ -76,7 +76,7 @@ class HttpRequester {
     
     static func delete(
         _ url: String,
-        _ body: Encodable?,
+        _ body: Encodable? = nil,
         callback: @escaping ResponseHandler<EmptyResponse>
     ) {
         let session = URLSession(configuration: .default)

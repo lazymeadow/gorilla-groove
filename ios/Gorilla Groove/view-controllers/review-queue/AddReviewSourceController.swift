@@ -17,7 +17,7 @@ class AddReviewSourcesController : UIViewController {
         let field = AutoCompleteInputField()
         field.textField.font = field.textField.font!.withSize(22)
         
-        let placeholderText = sourceType == .ARTIST ? "Spotify Artist" : "YouTube Channel Name or URL"
+        let placeholderText = sourceType == .ARTIST ? "Spotify Artist" : "Channel Name or URL"
         field.textField.attributedPlaceholder = NSAttributedString(
             string: placeholderText,
             attributes: [NSAttributedString.Key.foregroundColor : Colors.inputLine]
