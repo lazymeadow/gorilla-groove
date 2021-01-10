@@ -43,6 +43,8 @@ class ReviewQueueController(
 	fun subscribeToYoutubeChannel(@RequestBody body: YouTubeChannelSubscriptionDTO): ReviewSourceUserDTO {
 		val channelUrl = body.channelUrl
 
+		logger.info("${loadLoggedInUser().name} is subscribing to YT channel $channelUrl")
+
 		val source = if (channelUrl != null) {
 			// Channel URL should conform to one of two patterns,
 			// https://www.youtube.com/channel/UCSXm6c-n6lsjtyjvdD0bFVw
@@ -73,6 +75,7 @@ class ReviewQueueController(
 	// This is dumb but I want a different response body for Mobile than I do Web. Probably temporary (TM)
 	@PostMapping("/subscribe/artist-web")
 	fun subscribeToArtistFromWeb(@RequestBody body: ArtistSubscriptionDTO): ResponseEntity<Map<String, List<String>>> {
+		logger.info("${loadLoggedInUser().name} is subscribing to artist ${body.artistName} from web")
 		require(body.artistName.isNotBlank()) {
 			"Artist name must not be empty!"
 		}
@@ -90,6 +93,7 @@ class ReviewQueueController(
 
 	@PostMapping("/subscribe/artist")
 	fun subscribeToArtistFromMobile(@RequestBody body: ArtistSubscriptionDTO): ReviewSourceUserDTO {
+		logger.info("${loadLoggedInUser().name} is subscribing to artist ${body.artistName} from mobile")
 		require(body.artistName.isNotBlank()) {
 			"Artist name must not be empty!"
 		}
