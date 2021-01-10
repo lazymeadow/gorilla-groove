@@ -31,7 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
             if (ServerSynchronizer.lastSync == Date.minimum()) {
                 if AppDelegate.getAppVersion() == "1.3.1.1" {
-                    GGLog.info("User is on 1.3.0.1 and needs to resync to fix a bug. Going to sync screen")
+                    GGLog.info("User is on 1.3.1.1 and needs to resync to fix a bug. Going to sync screen")
                     window!.rootViewController = SyncController()
                     UserState.isLoggedIn = true
                 } else {

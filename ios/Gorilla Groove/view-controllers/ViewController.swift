@@ -10,6 +10,7 @@ struct LoginRequest: Encodable {
     let password: String
     let deviceId: String
     let deviceType: String = "IPHONE"
+    let preferredDeviceName: String
     let version: String = AppDelegate.getAppVersion()
 }
 
@@ -64,7 +65,12 @@ class ViewController: UIViewController {
         self.view.endEditing(false)
         
         let deviceId = FileState.read(DeviceState.self)!.deviceId
-        let requestBody = LoginRequest(email: emailField.text!, password: passwordField.text!, deviceId: deviceId)
+        let requestBody = LoginRequest(
+            email: emailField.text!,
+            password: passwordField.text!,
+            deviceId: deviceId,
+            preferredDeviceName: UIDevice.current.name
+        )
         
         loginSpinner.isHidden = false
         HttpRequester.post("authentication/login", LoginState.self, requestBody, authenticated: false) { response, statusCode, _ in
