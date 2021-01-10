@@ -17,7 +17,7 @@ class AddReviewSourcesController : UIViewController {
         let field = AutoCompleteInputField()
         field.textField.font = field.textField.font!.withSize(22)
         
-        let placeholderText = sourceType == .ARTIST ? "Spotify Artist" : "YouTube Channel URL"
+        let placeholderText = sourceType == .ARTIST ? "Spotify Artist" : "YouTube Channel Name or URL"
         field.textField.attributedPlaceholder = NSAttributedString(
             string: placeholderText,
             attributes: [NSAttributedString.Key.foregroundColor : Colors.inputLine]
@@ -164,7 +164,9 @@ class AddReviewSourcesController : UIViewController {
             GGLog.debug("Requesting autocomplete info for text \(text)")
             
             inputField.loading = true
-            HttpRequester.get("search/autocomplete/spotify/artist-name/\(text)", AutocompleteResponse.self) { response, status, _ in
+            let urlPart = sourceType == .ARTIST ? "spotify/artist-name" : "youtube/channel-name"
+            
+            HttpRequester.get("search/autocomplete/\(urlPart)/\(text)", AutocompleteResponse.self) { response, status, _ in
                 DispatchQueue.main.async {
                     self.inputField.loading = false
                 }
@@ -202,48 +204,50 @@ class AddReviewSourcesController : UIViewController {
             let request = AddArtistSourceRequest(artistName: text)
             
             HttpRequester.post("review-queue/subscribe/artist", ReviewSourceResponse.self, request) { response, status, _ in
-                guard let newSource = response?.asEntity() as? ReviewSource, status.isSuccessful() else {
-                    DispatchQueue.main.async {
-                        Toast.show("Failed to subscribe to the artist")
-                        self.loading = false
-                    }
-                    GGLog.error("Could not create new review source!")
-                    return
-                }
-                
-                // This gets a little weird, but we add the review source because why not, right? We know we need it
-                ReviewSourceDao.save(newSource)
-                
-                // This is kind of a needless optimization to keep the ReviewQueueController from updating itself unnecessarily,
-                // since adding the source to the EditReviewController will tell the ReviewQueueController that it needs to refresh,
-                // and so will a sync. It doesn't really matter much if it actually succeeds or anything, though.
-                DispatchQueue.global().async {
-                    ServerSynchronizer.syncWithServer(syncTypes: [SyncType.reviewSource])
-                }
-                
-                DispatchQueue.main.async {
-                    Toast.show("Subscribed to \(text)")
-                    self.loading = false
-
-                    self.editReviewController.addSource(newSource)
-                    self.navigationController!.popViewController(animated: true)
-                }
+                self.handleAddResponse(response: response, status: status, text: text)
             }
+        } else if sourceType == .YOUTUBE_CHANNEL {
+            let isUrl = text.starts(with: "https:")
+            let request = AddYoutubeChannelRequest(
+                channelUrl: isUrl ? text : nil,
+                channelTitle: isUrl ? nil : text
+            )
+            HttpRequester.post("review-queue/subscribe/youtube-channel", ReviewSourceResponse.self, request) { response, status, _ in
+                self.handleAddResponse(response: response, status: status, text: text)
+            }
+        } else {
+            GGLog.critical("Attempted to add unrecognized source type \(sourceType)!")
         }
-//        let cell = sender.view as! EditReviewSourceCell
-//        let newSourceId = cell.reviewSource!.id
-        
-//        cell.animateSelectionColor()
-        
-//        tableView.visibleCells.forEach { cell in
-//            (cell as! EditReviewSourceCell).checkIfSelected(activeSourceId: newSourceId)
-//        }
-        
-//        reviewQueueController.setActiveSource(newSourceId)
-        
-//        navigationController!.popViewController(animated: true)
     }
     
+    private func handleAddResponse(response: ReviewSourceResponse?, status: Int, text: String) {
+        guard let newSource = response?.asEntity() as? ReviewSource, status.isSuccessful() else {
+            DispatchQueue.main.async {
+                Toast.show("Failed to subscribe to the \(self.sourceType == .ARTIST ? "artist" : "YouTube channel")")
+                self.loading = false
+            }
+            GGLog.error("Could not create new review source!")
+            return
+        }
+        
+        // This gets a little weird, but we add the review source because why not, right? We know we need it
+        ReviewSourceDao.save(newSource)
+        
+        // This is kind of a needless optimization to keep the ReviewQueueController from updating itself unnecessarily,
+        // since adding the source to the EditReviewController will tell the ReviewQueueController that it needs to refresh,
+        // and so will a sync. It doesn't really matter much if it actually succeeds or anything, though.
+        DispatchQueue.global().async {
+            ServerSynchronizer.syncWithServer(syncTypes: [SyncType.reviewSource])
+        }
+        
+        DispatchQueue.main.async {
+            Toast.show("Subscribed to \(text)")
+            self.loading = false
+
+            self.editReviewController.addSource(newSource)
+            self.navigationController!.popViewController(animated: true)
+        }
+    }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -251,5 +255,10 @@ class AddReviewSourcesController : UIViewController {
     
     struct AddArtistSourceRequest: Codable {
         let artistName: String
+    }
+    
+    struct AddYoutubeChannelRequest: Codable {
+        let channelUrl: String?
+        let channelTitle: String?
     }
 }
