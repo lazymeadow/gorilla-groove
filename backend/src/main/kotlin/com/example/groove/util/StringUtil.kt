@@ -1,10 +1,5 @@
 package com.example.groove.util
 
-
-fun String.blankAsNull(): String? {
-	return if (this.isBlank()) null else this
-}
-
 fun String.endWith(ending: String): String {
 	return if (this.endsWith(ending)) {
 		this
@@ -50,6 +45,7 @@ fun String.urlDecode(): String {
 			.replace("%3A", ":")
 			.replace("%22", "\"")
 			.replace("+", " ")
+			.replace("%26", "&")
 }
 
 fun String.splitFirst(delimiter: String): Pair<String, String> {

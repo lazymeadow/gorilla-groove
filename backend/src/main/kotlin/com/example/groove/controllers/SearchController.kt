@@ -53,9 +53,34 @@ class SearchController(
 		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name, limit = SPOTIFY_TRACK_LIMIT)
 	}
 
+	// Used to help suggest items to users while they are filling in forms
+	@GetMapping("/autocomplete/spotify/artist-name/{partial-name}")
+	fun autocompleteSpotifyArtistName(
+			@PathVariable("partial-name") partialName: String
+	): AutocompleteResponse {
+		return AutocompleteResponse(
+				// I'm not sure if these artist names are unique or not. Seems like they probably can't be, right?
+				// So put them into a Set
+				suggestions = spotifyApiClient.searchArtistsByName(partialName, limit = 10).map { it.name }.toSet()
+		)
+	}
+
+	@GetMapping("/autocomplete/youtube/channel-name/{partial-name}")
+	fun autocompleteYoutubeChannelName(
+			@PathVariable("partial-name") partialName: String
+	): AutocompleteResponse {
+		return AutocompleteResponse(
+				// Linked so it preserves order- order is the YouTube given relevance and we don't want to discard it.
+				// However, channel titles are not unique and there is no benefit to returning 7 of the same name
+				suggestions = LinkedHashSet(youtubeApiClient.findChannels(partialName).map { it.channelTitle })
+		)
+	}
+
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 
 		private const val SPOTIFY_TRACK_LIMIT = 50
 	}
+
+	data class AutocompleteResponse(val suggestions: Set<String>)
 }

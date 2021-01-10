@@ -81,7 +81,7 @@ function AddNewSourceModal() {
 		setLoading(true);
 
 		if (selectedSourceType === ReviewSourceType.ARTIST) {
-			Api.post('review-queue/subscribe/artist', { artistName: reviewQueueInput }).then(() => {
+			Api.post('review-queue/subscribe/artist-web', { artistName: reviewQueueInput }).then(() => {
 				reviewQueueContext.fetchReviewQueueSources().then(() => {
 					toast.success(`Successfully subscribed to ${reviewQueueInput}`);
 				}).catch(() => {

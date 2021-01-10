@@ -9,7 +9,9 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriComponentsBuilder
 import java.lang.RuntimeException
+import java.net.URI
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
@@ -42,7 +44,7 @@ class SpotifyApiClient(
 		return result.tracks.items.map { it.toMetadataResponseDTO() }
 	}
 
-	private inline fun<reified T> RestTemplate.querySpotify(url: String): T {
+	private inline fun<reified T> RestTemplate.querySpotify(url: URI): T {
 		val headers = mapOf("Authorization" to authHeader).toHeaders()
 
 		// Can be nice to log this to play with the API in a rest client
@@ -91,28 +93,33 @@ class SpotifyApiClient(
 		return matchingArtist?.id
 	}
 
-	fun searchArtistsByName(artist: String): List<SpotifyArtist> {
-		val startingUrl = createSpotifySearchUrl(artist, null, REQUEST_SIZE_LIMIT, "artist")
+	fun searchArtistsByName(artist: String, limit: Int = REQUEST_SIZE_LIMIT): List<SpotifyArtist> {
+		val startingUrl = createSpotifySearchUrl(artist, null, limit, "artist")
 
 		val result = restTemplate.querySpotify<SpotifyArtistSearchResponse>(startingUrl)
 
 		return result.artists.items
 	}
 
-	private fun createSpotifySearchUrl(artist: String, name: String?, limit: Int, searchType: String): String {
+	private fun createSpotifySearchUrl(artist: String, name: String?, limit: Int, searchType: String): URI {
 		val artistQuery = "artist:$artist"
 		val trackQuery = name?.let { "track:$name" }
 
 		val query = artistQuery + if (trackQuery == null) "" else " $trackQuery"
 
-		return URIBuilder()
+		val uri = URIBuilder()
 				.setScheme("https")
 				.setHost("api.spotify.com")
 				.setPath("v1/search")
 				.addParameter("limit", limit.toString())
 				.addParameter("type", searchType)
 				.addParameter("q", query)
-				.toUnencodedString()
+				.build()
+
+		// This is pretty stupid, but because URIBuilder already encodes things (can't tell it not to apparently),
+		// and RestTemplate ALSO wants to encode things, we get stuff that is double encoded. However, if we re-create
+		// the URI using this "build(encoded = true)" function, then RestTemplate knows not to encode it again. Dumb.
+		return UriComponentsBuilder.fromUri(uri).build(true).toUri()
 	}
 
 	data class SpotifyArtistSearchResponse(val artists: SpotifySearchItems<SpotifyArtist>)
@@ -174,7 +181,7 @@ class SpotifyApiClient(
 
 	// The albums returned by this do not have tracks included
 	fun getAlbumsIdsByArtistId(artistId: String): Set<String> {
-		val url = "https://api.spotify.com/v1/artists/$artistId/albums"
+		val url = URI("https://api.spotify.com/v1/artists/$artistId/albums")
 
 		val result = restTemplate.querySpotify<SpotifyAlbumResponse>(url)
 
@@ -183,7 +190,7 @@ class SpotifyApiClient(
 
 	// The albums returned by this do have tracks included
 	fun getTracksFromAlbumIds(artistId: String, artistName: String, albumIds: Set<String>): List<SpotifyTrack> {
-		val url = "https://api.spotify.com/v1/albums?ids=${albumIds.joinToString(",")}"
+		val url = URI("https://api.spotify.com/v1/albums?ids=${albumIds.joinToString(",")}")
 
 		val result = restTemplate.querySpotify<SpotifyAlbumBulkResponse>(url)
 

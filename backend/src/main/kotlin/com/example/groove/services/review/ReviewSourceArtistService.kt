@@ -21,6 +21,7 @@ import com.example.groove.util.minusWeeks
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ReviewSourceArtistService(
@@ -36,11 +37,12 @@ class ReviewSourceArtistService(
 		private val s3Properties: S3Properties
 ) {
 	@Scheduled(cron = "0 0 9 * * *") // 9 AM every day (UTC)
+	@Transactional
 	fun downloadNewSongs() {
 		// Dev computers sometimes need to turn on 'awsStoreInS3' to run scripts against prod data, and if these
 		// jobs run while that is active, they will overwrite data in S3. This is an added protection against that.
 		if (s3Properties.awsStoreInS3 && !environment.activeProfiles.contains("prod")) {
-			logger.info("S3 storage is on without the prod profile active. Not running YT Channel job")
+			logger.info("S3 storage is on without the prod profile active. Not running Artist job")
 			return
 		}
 
@@ -48,65 +50,72 @@ class ReviewSourceArtistService(
 
 		logger.info("Running Review Source Artist Downloader")
 
-		allSources.forEach { source ->
-			logger.info("Checking for new songs for artist: ${source.artistName} ...")
-			if (!source.isActive()) {
-				logger.info("Review source for artist ${source.artistName} is not active. Skipping")
-				return@forEach
-			}
-
-			val users = source.getActiveUsers()
-
-			// Spotify song releases have "day" granularity, so don't include a time component.
-			// Also, Spotify might not always get songs on their service right when they are new, so
-			// we can't really keep a rolling search. The way the API works right now we have to request
-			// everything every time by the artist anyway.... so just grab everything from the artist, unless
-			// the user specified only newer things than a certain date when creating the review source.
-			val searchNewerThan = source.searchNewerThan?.toLocalDateTime()?.toLocalDate()
-
-			val newSongs = spotifyApiClient.getSongsByArtist(source.artistName, source.artistId, searchNewerThan)
-			logger.info("Found ${newSongs.size} initial songs for artist: ${source.artistName}")
-
-			// We are going to be searching over the same music every night. Nothing we can do about it really.
-			// Just have to play around the way the Spotify API works. So we have to keep track manually on what
-			// songs we've already seen by a given artist
-			val existingSongDiscoveries = reviewSourceArtistDownloadRepository.findByReviewSource(source)
-			val discoveredSongNameToDownloadAttempt = existingSongDiscoveries.map {
-				it.trackName.toLowerCase() to it
-			}.toMap()
-
-			val oneWeekAgo = now().minusWeeks(1)
-			val songsToDownload = newSongs.filter { newSong ->
-				discoveredSongNameToDownloadAttempt[newSong.name.toLowerCase()]?.let { artistDownload ->
-					// If the download was successful a prior time, exclude it from the songs to download
-					if (artistDownload.downloadedAt != null) {
-						return@filter false
-					}
-
-					// Otherwise, we have attempted this download before and it failed. We should only retry
-					// once a week, as we have a limited quota and there's a good chance this was not a transient error
-					return@filter artistDownload.lastDownloadAttempt?.before(oneWeekAgo) ?: true
-				}
-
-				// Otherwise, this is a song we've never seen before. Add a record of it
-				ReviewSourceArtistDownload(
-						reviewSource = source,
-						trackName = newSong.name
-				).also { reviewSourceArtistDownloadRepository.save(it) }
-
-				return@filter true
-			}
-			logger.info("Attempting download on ${songsToDownload.size} ${source.artistName} songs")
-
-			val downloadCount = attemptDownloadFromYoutube(source, songsToDownload, users)
-			if (downloadCount > 0) {
-				users.forEach { user ->
-					reviewQueueSocketHandler.broadcastNewReviewQueueContent(user.id, source, downloadCount)
-				}
-			}
-		}
+		allSources.forEach { processSource(it) }
 
 		logger.info("Review Source Artist Downloader complete")
+	}
+
+	// This process can take a really long time, and we need a transaction to avoid errors like
+	// "could not initialize proxy - no Session". However, I don't want one transaction because
+	// then if we have an issue everything gets rolled back. Function is public only to allow
+	// @Transactional annotation to work because it is a limitation of Spring Boot
+	@Transactional
+	fun processSource(source: ReviewSourceArtist) {
+		logger.info("Checking for new songs for artist: ${source.artistName} ...")
+		if (!source.isActive()) {
+			logger.info("Review source for artist ${source.artistName} is not active. Skipping")
+			return
+		}
+
+		val users = source.getActiveUsers()
+
+		// Spotify song releases have "day" granularity, so don't include a time component.
+		// Also, Spotify might not always get songs on their service right when they are new, so
+		// we can't really keep a rolling search. The way the API works right now we have to request
+		// everything every time by the artist anyway.... so just grab everything from the artist, unless
+		// the user specified only newer things than a certain date when creating the review source.
+		val searchNewerThan = source.searchNewerThan?.toLocalDateTime()?.toLocalDate()
+
+		val newSongs = spotifyApiClient.getSongsByArtist(source.artistName, source.artistId, searchNewerThan)
+		logger.info("Found ${newSongs.size} initial songs for artist: ${source.artistName}")
+
+		// We are going to be searching over the same music every night. Nothing we can do about it really.
+		// Just have to play around the way the Spotify API works. So we have to keep track manually on what
+		// songs we've already seen by a given artist
+		val existingSongDiscoveries = reviewSourceArtistDownloadRepository.findByReviewSource(source)
+		val discoveredSongNameToDownloadAttempt = existingSongDiscoveries.map {
+			it.trackName.toLowerCase() to it
+		}.toMap()
+
+		val oneWeekAgo = now().minusWeeks(1)
+		val songsToDownload = newSongs.filter { newSong ->
+			discoveredSongNameToDownloadAttempt[newSong.name.toLowerCase()]?.let { artistDownload ->
+				// If the download was successful a prior time, exclude it from the songs to download
+				if (artistDownload.downloadedAt != null) {
+					return@filter false
+				}
+
+				// Otherwise, we have attempted this download before and it failed. We should only retry
+				// once a week, as we have a limited quota and there's a good chance this was not a transient error
+				return@filter artistDownload.lastDownloadAttempt?.before(oneWeekAgo) ?: true
+			}
+
+			// Otherwise, this is a song we've never seen before. Add a record of it
+			ReviewSourceArtistDownload(
+					reviewSource = source,
+					trackName = newSong.name
+			).also { reviewSourceArtistDownloadRepository.save(it) }
+
+			return@filter true
+		}
+		logger.info("Attempting download on ${songsToDownload.size} ${source.artistName} songs")
+
+		val downloadCount = attemptDownloadFromYoutube(source, songsToDownload, users)
+		if (downloadCount > 0) {
+			users.forEach { user ->
+				reviewQueueSocketHandler.broadcastNewReviewQueueContent(user.id, source, downloadCount)
+			}
+		}
 	}
 
 	// Now we need to find a match on YouTube to download...
@@ -213,7 +222,7 @@ class ReviewSourceArtistService(
 		return titleWords.all { lowerTitle.contains(it) }
 	}
 
-	fun subscribeToArtist(artistName: String): Pair<Boolean, List<String>> {
+	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
 		val currentUser = loadLoggedInUser()
 
 		// First, check if the artist already exists. Someone may have subscribed to them earlier
@@ -238,13 +247,13 @@ class ReviewSourceArtistService(
 				sourceAssociation.updatedAt = now()
 				reviewSourceUserRepository.save(sourceAssociation)
 
-				return true to emptyList()
+				return sourceAssociation to emptyList()
 			}
 
 			val reviewSourceUser = ReviewSourceUser(reviewSource = existing, user = currentUser)
 			reviewSourceUserRepository.save(reviewSourceUser)
 
-			return true to emptyList()
+			return reviewSourceUser to emptyList()
 		}
 
 		// Ok so nobody has subscribed to this artist before. We need to create a new one and add our user to it
@@ -256,7 +265,7 @@ class ReviewSourceArtistService(
 		// fix any typos or things of that nature
 		val targetName = artistName.toLowerCase()
 		val foundArtist = artists.find { it.name.toLowerCase() == targetName }
-				?: return false to artists.map { it.name }.take(5)
+				?: return null to artists.map { it.name }.take(5)
 
 		// Cool cool cool we found an artist in spotify. Now just save it.
 		// Hard-code "searchNewerThan" to now() until we are not throttled by YouTube and can search unlimited
@@ -266,7 +275,7 @@ class ReviewSourceArtistService(
 		val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = currentUser)
 		reviewSourceUserRepository.save(reviewSourceUser)
 
-		return true to emptyList()
+		return reviewSourceUser to emptyList()
 	}
 
 	companion object {
