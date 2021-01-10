@@ -30,6 +30,10 @@ class Colors {
     static let navControlsDivider = UIColor(named: "Nav Controls Divider")!
     static let navigationBackground = UIColor(named: "Navigation Background")!
     
+    static let textFieldBackground = UIColor(named: "Text Field Background")!
+    
+    static let inputLine = UIColor(named: "Login Line")!
+
     private init() { }
 }
 
@@ -41,18 +45,5 @@ extension UIColor {
         let blue = CGFloat(Int(hex[4..<6], radix: 16)!)
         
         self.init(red: red / 255.0, green: green / 255.0, blue: blue / 255.0, alpha: CGFloat(opacity))
-    }
-}
-
-extension String {
-    subscript(_ range: CountableRange<Int>) -> String {
-        let start = index(startIndex, offsetBy: max(0, range.lowerBound))
-        let end = index(startIndex, offsetBy: min(self.count, range.upperBound))
-        return String(self[start..<end])
-    }
-    
-    subscript(_ range: CountablePartialRangeFrom<Int>) -> String {
-        let start = index(startIndex, offsetBy: max(0, range.lowerBound))
-        return String(self[start...])
     }
 }

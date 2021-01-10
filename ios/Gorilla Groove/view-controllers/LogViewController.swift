@@ -112,39 +112,4 @@ class LogViewController : UIViewController {
     }
 }
 
-extension UITextView {
-    func scrollToBottom() {
-        let textCount: Int = text.count
-        guard textCount >= 1 else { return }
-        scrollRangeToVisible(NSRange(location: textCount - 1, length: 1))
-    }
-}
 
-extension String {
-    func index(from: Int) -> Index {
-        return self.index(startIndex, offsetBy: from)
-    }
-
-    func substring(from: Int) -> String {
-        let fromIndex = index(from: from)
-        return String(self[fromIndex...])
-    }
-
-    func substring(to: Int) -> String {
-        let toIndex = index(from: to)
-        return String(self[..<toIndex])
-    }
-
-    func substring(with r: Range<Int>) -> String {
-        let startIndex = index(from: r.lowerBound)
-        let endIndex = index(from: r.upperBound)
-        return String(self[startIndex..<endIndex])
-    }
-}
-
-extension NSRegularExpression {
-    func matches(_ string: String) -> Bool {
-        let range = NSRange(location: 0, length: string.utf16.count)
-        return firstMatch(in: string, options: [], range: range) != nil
-    }
-}

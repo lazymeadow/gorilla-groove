@@ -97,9 +97,3 @@ class MyLibraryController: UITableViewController {
         case DATE_ADDED
     }
 }
-
-extension String {
-    func toTitleCase() -> String {
-        return self.replacingOccurrences(of: "_", with: " ").capitalized
-    }
-}

@@ -39,17 +39,10 @@ class ErrorReportController : UIViewController {
         
         viewLogButton.setTitle("View Logs", for: .normal)
         viewLogButton.addTarget(self, action: #selector(logViewPressed(sender:)), for: .touchUpInside)
-        viewLogButton.backgroundColor = Colors.navControls
-        viewLogButton.tintColor = Colors.foreground
-        viewLogButton.layer.cornerRadius = 5
         viewLogButton.sizeToFit()
         
         sendButton.setTitle("Send Report", for: .normal)
         sendButton.addTarget(self, action: #selector(sendReportPressed(sender:)), for: .touchUpInside)
-        sendButton.backgroundColor = Colors.navControls
-        sendButton.tintColor = Colors.foreground
-        sendButton.adjustsImageWhenDisabled = true
-        sendButton.layer.cornerRadius = 5
         sendButton.sizeToFit()
         
         self.view.addSubview(heading)
@@ -73,12 +66,10 @@ class ErrorReportController : UIViewController {
         lastReportLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 10).isActive = true
         lastReportLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10).isActive = true
         
-        viewLogButton.translatesAutoresizingMaskIntoConstraints = false
         viewLogButton.topAnchor.constraint(equalTo: lastReportLabel.bottomAnchor, constant: 30).isActive = true
         viewLogButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 20).isActive = true
         viewLogButton.rightAnchor.constraint(equalTo: sendButton.leftAnchor, constant: -20).isActive = true
         
-        sendButton.translatesAutoresizingMaskIntoConstraints = false
         sendButton.topAnchor.constraint(equalTo: lastReportLabel.bottomAnchor, constant: 30).isActive = true
         sendButton.leftAnchor.constraint(equalTo: viewLogButton.rightAnchor, constant: 20).isActive = true
         sendButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20).isActive = true
@@ -194,5 +185,20 @@ class GGButton : UIButton {
             self.isEnabled = !isDisabled
             self.alpha = self.isEnabled ? 1.0 : 0.4
         }
+    }
+    
+    init() {
+        super.init(frame: .zero)
+        
+        self.backgroundColor = Colors.navControls
+        self.tintColor = Colors.foreground
+        self.adjustsImageWhenDisabled = true
+        self.layer.cornerRadius = 5
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

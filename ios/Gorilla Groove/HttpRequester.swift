@@ -134,18 +134,23 @@ class HttpRequester {
     
     static private func getBaseRequest(
         _ method: String,
-        _ url: String,
+        _ urlPart: String,
         body: Encodable? = nil,
         authenticated: Bool = true,
         asMultipartData: Bool = false
     ) -> URLRequest? {
         
         if offlineModeEnabled {
-            logger.debug("Offline mode is enabled. Not making http request to \(url)")
+            logger.debug("Offline mode is enabled. Not making http request to \(urlPart)")
             return nil
         }
         
-        let url = URL(string: self.baseUrl + url)!
+        let encodedPart = urlPart.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        
+        guard let url = URL(string: self.baseUrl + encodedPart) else {
+            GGLog.critical("Could not create URL! \(self.baseUrl + encodedPart)")
+            return nil
+        }
         var request : URLRequest = URLRequest(url: url)
         
         if authenticated {

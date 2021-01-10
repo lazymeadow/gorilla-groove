@@ -46,6 +46,9 @@
 		E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF023F0C6150095450E /* AlbumViewController.swift */; };
 		E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */; };
 		E8598FB6250B17D900D70E9F /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8598FB5250B17D900D70E9F /* WebSocket.swift */; };
+		E85A365E25AA318A005C4FDD /* AddReviewSourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A365D25AA318A005C4FDD /* AddReviewSourceController.swift */; };
+		E85A366125AA31B7005C4FDD /* AutocompleteInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */; };
+		E85A366425AA3395005C4FDD /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A366325AA3395005C4FDD /* Extensions.swift */; };
 		E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */; };
 		E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */; };
 		E85A4DD523D56D13006BD7EE /* UserState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD423D56D13006BD7EE /* UserState.swift */; };
@@ -54,6 +57,8 @@
 		E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50E923E2736D00029D7C /* RootNavigationController.swift */; };
 		E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */; };
 		E85B598125A1BF390071496D /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598025A1BF390071496D /* NotificationService.swift */; };
+		E85B598625A413C40071496D /* PickReviewSourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598525A413C40071496D /* PickReviewSourceController.swift */; };
+		E85B598925A4186E0071496D /* EditReviewSourcesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598825A4186E0071496D /* EditReviewSourcesController.swift */; };
 		E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E864D82F2564B5B8008C2C4C /* LocationService.swift */; };
 		E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */; };
 		E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1C23E9572A005B84EB /* UsersController.swift */; };
@@ -115,6 +120,9 @@
 		E8597AF023F0C6150095450E /* AlbumViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewController.swift; sourceTree = "<group>"; };
 		E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewCell.swift; sourceTree = "<group>"; };
 		E8598FB5250B17D900D70E9F /* WebSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
+		E85A365D25AA318A005C4FDD /* AddReviewSourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReviewSourceController.swift; sourceTree = "<group>"; };
+		E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutocompleteInputField.swift; sourceTree = "<group>"; };
+		E85A366325AA3395005C4FDD /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaControlsController.swift; sourceTree = "<group>"; };
 		E85A4DD223D537D0006BD7EE /* NowPlayingTracks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingTracks.swift; sourceTree = "<group>"; };
 		E85A4DD423D56D13006BD7EE /* UserState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserState.swift; sourceTree = "<group>"; };
@@ -123,6 +131,8 @@
 		E85A50E923E2736D00029D7C /* RootNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootNavigationController.swift; sourceTree = "<group>"; };
 		E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsControllers.swift; sourceTree = "<group>"; };
 		E85B598025A1BF390071496D /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		E85B598525A413C40071496D /* PickReviewSourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickReviewSourceController.swift; sourceTree = "<group>"; };
+		E85B598825A4186E0071496D /* EditReviewSourcesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditReviewSourcesController.swift; sourceTree = "<group>"; };
 		E864D82F2564B5B8008C2C4C /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSynchronizer.swift; sourceTree = "<group>"; };
 		E86AFF1C23E9572A005B84EB /* UsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsersController.swift; sourceTree = "<group>"; };
@@ -186,6 +196,7 @@
 		A829AC2223CC2B510034AD69 /* view-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				E85B598425A413950071496D /* review-queue */,
 				A89100EF23BD339D00D6EA2D /* ViewController.swift */,
 				A815B08723C2EE05003899B8 /* MyLibraryController.swift */,
 				A829AC2323CC2C1D0034AD69 /* TrackViewCell.swift */,
@@ -203,11 +214,11 @@
 				E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */,
 				E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */,
 				E873DDF22586F45500207F99 /* NowPlayingController.swift */,
-				E873DDF5258711CB00207F99 /* ReviewQueueController.swift */,
 				E873DDF825871E6D00207F99 /* ErrorReportController.swift */,
 				E873DDFF25887A6A00207F99 /* LogViewController.swift */,
 				E873DE02258AF97600207F99 /* LogoutController.swift */,
 				E8588F83259159C600ACA919 /* IconView.swift */,
+				E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -258,6 +269,7 @@
 				E840A5902575EA26009F3C9E /* OfflineStorageService.swift */,
 				E8588F872595841D00ACA919 /* Toast.swift */,
 				E85B598025A1BF390071496D /* NotificationService.swift */,
+				E85A366325AA3395005C4FDD /* Extensions.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -274,6 +286,17 @@
 				E8588F7C259032E600ACA919 /* StandardSynchronizer.swift */,
 			);
 			path = sync;
+			sourceTree = "<group>";
+		};
+		E85B598425A413950071496D /* review-queue */ = {
+			isa = PBXGroup;
+			children = (
+				E873DDF5258711CB00207F99 /* ReviewQueueController.swift */,
+				E85B598525A413C40071496D /* PickReviewSourceController.swift */,
+				E85B598825A4186E0071496D /* EditReviewSourcesController.swift */,
+				E85A365D25AA318A005C4FDD /* AddReviewSourceController.swift */,
+			);
+			path = "review-queue";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -382,6 +405,7 @@
 				A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */,
 				E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */,
 				E8588F6E258D1ADB00ACA919 /* UserSynchronizer.swift in Sources */,
+				E85A366425AA3395005C4FDD /* Extensions.swift in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				E8598FB6250B17D900D70E9F /* WebSocket.swift in Sources */,
 				E8588F74258EB54600ACA919 /* ReviewSourceSynchronizer.swift in Sources */,
@@ -403,10 +427,13 @@
 				E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */,
 				A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */,
 				E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */,
+				E85A366125AA31B7005C4FDD /* AutocompleteInputField.swift in Sources */,
+				E85B598625A413C40071496D /* PickReviewSourceController.swift in Sources */,
 				E86EB67A24EC9B7D0066CB4E /* Track.swift in Sources */,
 				E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */,
 				E8588F882595841D00ACA919 /* Toast.swift in Sources */,
 				E873DE03258AF97600207F99 /* LogoutController.swift in Sources */,
+				E85B598925A4186E0071496D /* EditReviewSourcesController.swift in Sources */,
 				A829AC2423CC2C1D0034AD69 /* TrackViewCell.swift in Sources */,
 				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
 				E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */,
@@ -419,6 +446,7 @@
 				E8588F7D259032E600ACA919 /* StandardSynchronizer.swift in Sources */,
 				E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */,
 				E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */,
+				E85A365E25AA318A005C4FDD /* AddReviewSourceController.swift in Sources */,
 				E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -147,16 +147,6 @@ public extension Int {
     }
 }
 
-public extension Date {
-    func toEpochTime() -> Int {
-        return (Int(self.timeIntervalSince1970 * 1000))
-    }
-    
-    static func minimum() -> Date {
-        return 0.toDate()
-    }
-}
-
 extension String {
     func escaped() -> String {
         return self.replacingOccurrences(of: "'", with: "''")

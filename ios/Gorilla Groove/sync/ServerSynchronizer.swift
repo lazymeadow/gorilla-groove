@@ -18,7 +18,12 @@ class ServerSynchronizer {
     }()
     
     @discardableResult
-    static func syncWithServer(pageCompleteCallback: PageCompleteCallback? = nil, abortIfRecentlySynced: Bool = false) -> Set<SyncType> {
+    static func syncWithServer(
+        syncTypes: [SyncType] = SyncType.allCases,
+        pageCompleteCallback: PageCompleteCallback? = nil,
+        abortIfRecentlySynced: Bool = false
+    ) -> Set<SyncType> {
+        
         if Thread.isMainThread {
             fatalError("Do not sync on the main thread!")
         }
@@ -48,13 +53,13 @@ class ServerSynchronizer {
         let newDate = Date()
         let maximum = newDate.toEpochTime()
        
-        var syncStatuses = SyncStatusDao.getStatusByTypes(SyncType.allCases)
-        SyncType.allCases.forEach { syncType in
+        var syncStatuses = SyncStatusDao.getStatusByTypes(syncTypes)
+        syncTypes.forEach { syncType in
             syncStatuses[syncType]!.lastSyncAttempted = newDate
         }
         
         let (lastModifiedResponse, status, _) = HttpRequester.getSync("sync/last-modified", LastModifiedTimes.self)
-        if status < 200 || status >= 300 {
+        if !status.isSuccessful() {
             GGSyncLog.error("Could not get last modified times from the API. Not syncing")
             syncRunning = false
             return Set()
@@ -69,7 +74,7 @@ class ServerSynchronizer {
         var syncsPerformed: Set<SyncType> = Set()
         var semaphores: [DispatchSemaphore] = []
         
-        SyncType.allCases.forEach { syncType in
+        syncTypes.forEach { syncType in
             var syncStatus = syncStatuses[syncType]!
             let lastSynced = syncStatus.lastSynced
             let lastModified = lastModifiedTimestamps[syncType.rawValue]!
@@ -117,8 +122,12 @@ class ServerSynchronizer {
             GGSyncLog.warning("Offline mode was enabled while we were syncing.")
         }
         
-        // Even if the sync is not entirely successful, we still want to update the last sync time so we dont just spam if there's an error
-        lastSync = newDate
+        // Don't update lastSync if we did a partial sync, as we could ignore syncing a particular endpoint for too long
+        if syncTypes.count == SyncType.allCases.count {
+            // Even if the sync is not entirely successful, we still want to update the last sync time so we dont just spam if there's an error
+            lastSync = newDate
+        }
+        
         syncRunning = false
 
         GGSyncLog.info("Sync finished")

@@ -549,15 +549,7 @@ fileprivate extension Int {
 }
 
 
-extension FileManager {
-    static func exists(_ path: URL) -> Bool {
-        return FileManager.default.fileExists(atPath: path.path)
-    }
-    
-    static func move(_ oldPath: URL, _ newPath: URL) {
-        try! FileManager.default.moveItem(atPath: oldPath.path, toPath: newPath.path)
-    }
-    
+fileprivate extension FileManager {
     static func systemFreeSizeBytes() -> Int64 {
         if let freeBytes = try? FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())[.systemFreeSize] as! Int64 {
             return freeBytes
