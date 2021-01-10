@@ -160,6 +160,8 @@ class DeviceService(
 		}
 
 		device.mergedDevice = targetDevice
+		device.originalMergedDeviceId = targetDevice.id
+
 		deviceRepository.save(device)
 
 		// Update all our old references so that they point to just one device- the one we merged into

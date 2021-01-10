@@ -23,6 +23,14 @@ data class TrackHistory(
 		@JoinColumn(name = "device_id")
 		val device: Device?,
 
+		// This column exists for record keeping. It's basically write-only. So no JPA mapping to a device or DB FKs.
+		// When a device is merged, the "device" column is updated to reflect the merged device so that the rest of the
+		// application can be made simpler. But if someone merges on accident, it can be useful to know what the original
+		// device was so that things can be manually undone if they need to be
+		@JsonIgnore
+		@Column(name = "original_device_id")
+		val originalDeviceId: Long?,
+
 		@JsonIgnore
 		@Column(name = "ip_address")
 		val ipAddress: String?,

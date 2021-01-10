@@ -43,11 +43,14 @@ export default function DisconnectedWarningBar() {
 	}
 
 	const alertClasses = isConnected ? 'd-none' : 'slide-down';
-	const color = shouldPanic ? '#F8D7DA' : 'FFF3CD';
 
 	// noinspection HtmlUnknownTarget
 	return (
-		<div id="disconnected-warning" style={{ backgroundColor: color }} className={alertClasses}>
+		<div
+			id="disconnected-warning"
+			style={{ backgroundColor: shouldPanic ? '#F8D7DA' : 'FFF3CD' }}
+			className={alertClasses}
+		>
 			<i className="fas fa-exclamation-triangle"/>
 			<div className="message-wrapper">
 				<div>Lost connection to the server</div>

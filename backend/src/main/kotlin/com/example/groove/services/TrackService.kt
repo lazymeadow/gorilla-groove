@@ -153,6 +153,7 @@ class TrackService(
 		val trackHistory = TrackHistory(
 				track = track,
 				device = device,
+				originalDeviceId = device.id,
 				ipAddress = remoteIp,
 				listenedInReview = track.inReview,
 				utcListenedAt = data.timeListenedAt.toInstant().toTimestamp(),
