@@ -26,6 +26,16 @@ class Device(
 		@JoinColumn(name = "merged_device_id")
 		var mergedDevice: Device? = null,
 
+		// This column exists for record keeping. It's basically write-only. So no JPA mapping to a device or DB FKs.
+		// When a device is merged, the "mergedDevice" column is updated to reflect the merged device so that the rest of the
+		// application can be made simpler. If a device is merged again, all the devices are updated again, so "mergedDevice"
+		// can stop being the same device that was originally merged. This can make data recovery and record keeping tricky,
+		// so keep the original ID around. This means we can always follow a trail to find how a device got mapped to another
+		// device, no matter how many merges took place to get there. We can then undo things manually if needed in the DB
+		@JsonIgnore
+		@Column(name = "original_merged_device_id")
+		var originalMergedDeviceId: Long? = null,
+
 		@JsonIgnore
 		@OneToMany(mappedBy = "mergedDevice", fetch = FetchType.LAZY)
 		val mergedDevices: List<Device> = mutableListOf(),

@@ -64,6 +64,7 @@ data class UserAuthenticationDTO(
 		val email: String,
 		val password: String,
 		val deviceId: String?, // This and other device stuff SHOULD be mandatory going forward. But all clients need to update
+		val preferredDeviceName: String?, // iPhones (and probably Android?) apps can read the phone's name. This is a better default than LOTR names
 		val version: String?,
 		val deviceType: DeviceType?
 )

@@ -40,6 +40,7 @@ class UuidAuthenticationService(
 					user = user,
 					deviceId = it,
 					deviceType = authDTO.deviceType!!,
+					preferredDeviceName = authDTO.preferredDeviceName,
 					version = authDTO.version!!,
 					ipAddress = ipAddress,
 					additionalData = null

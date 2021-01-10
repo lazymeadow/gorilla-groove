@@ -68,6 +68,7 @@ class DeviceService(
 			user: User,
 			deviceId: String,
 			deviceType: DeviceType,
+			preferredDeviceName: String? = null,
 			version: String,
 			ipAddress: String?,
 			additionalData: String?
@@ -77,7 +78,7 @@ class DeviceService(
 			Device(
 					user = user,
 					deviceId = deviceId,
-					deviceName = generateDefaultName(),
+					deviceName = preferredDeviceName ?: generateDefaultName(),
 					deviceType = deviceType,
 					applicationVersion = version,
 					lastIp = ipAddress ?: "0.0.0.0"
@@ -159,6 +160,8 @@ class DeviceService(
 		}
 
 		device.mergedDevice = targetDevice
+		device.originalMergedDeviceId = targetDevice.id
+
 		deviceRepository.save(device)
 
 		// Update all our old references so that they point to just one device- the one we merged into
