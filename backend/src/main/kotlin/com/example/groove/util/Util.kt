@@ -65,3 +65,9 @@ fun URIBuilder.toUnencodedString(): String {
 fun<T> Collection<T>.firstAndRest(): Pair<T, List<T>> {
 	return this.first() to this.drop(1)
 }
+
+fun isWindowsEnv(): Boolean {
+	return System.getProperty("os.name", "unknown")
+			.toLowerCase()
+			.contains("win")
+}

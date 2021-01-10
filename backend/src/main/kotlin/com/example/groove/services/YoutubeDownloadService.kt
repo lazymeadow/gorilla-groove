@@ -6,6 +6,7 @@ import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
 import com.example.groove.util.createMapper
+import com.example.groove.util.isWindowsEnv
 import com.example.groove.util.logger
 import com.fasterxml.jackson.annotation.JsonAlias
 import org.springframework.stereotype.Service
@@ -110,7 +111,8 @@ class YoutubeDownloadService(
 		// order to read in this information and find the video we want to actually download
 		val pb = ProcessBuilder(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
-				"\"ytsearch$videosToSearch:$searchTerm\"",
+				// ¯\_(ツ)_/¯ windows + java is stupid and removes the quotes unless there's two of them I GUESS?
+				if (isWindowsEnv()) "ytsearch$videosToSearch:\"\"$searchTerm\"\"" else "ytsearch$videosToSearch:\"$searchTerm\"",
 				"--skip-download",
 				"--dump-json",
 				"--no-cache-dir"
