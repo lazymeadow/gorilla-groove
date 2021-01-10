@@ -61,11 +61,10 @@ class ReviewSourceArtistService(
 	// @Transactional annotation to work because it is a limitation of Spring Boot
 	@Transactional
 	fun processSource(source: ReviewSourceArtist) {
-		logger.info("Checking for new songs for artist: ${source.artistName} ...")
 		if (!source.isActive()) {
-			logger.info("Review source for artist ${source.artistName} is not active. Skipping")
 			return
 		}
+		logger.info("Checking for new songs for artist: ${source.artistName} ...")
 
 		val users = source.getActiveUsers()
 

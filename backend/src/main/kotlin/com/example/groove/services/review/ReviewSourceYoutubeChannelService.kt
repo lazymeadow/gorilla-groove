@@ -59,12 +59,11 @@ class ReviewSourceYoutubeChannelService(
 	// then if we have an issue everything gets rolled back. Function is public only to allow
 	// @Transactional annotation to work because it is a limitation of Spring Boot
 	fun processSource(source: ReviewSourceYoutubeChannel) {
-		logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
-
 		if (!source.isActive()) {
-			logger.info("Review source for channel ${source.channelName} is not active. Skipping")
 			return
 		}
+
+		logger.info("Checking for new YouTube videos for channel: ${source.channelName} ...")
 
 		val users = source.getActiveUsers()
 
