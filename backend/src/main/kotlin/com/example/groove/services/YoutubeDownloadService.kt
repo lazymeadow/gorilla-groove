@@ -133,9 +133,15 @@ class YoutubeDownloadService(
 		outputFile.delete()
 
 		return fileContent.map { videoJson ->
-			mapper.readValue(videoJson, VideoProperties::class.java)
+			val video = mapper.readValue(videoJson, VideoProperties::class.java)
+			logger.info("Video found. Title: '${video.title}' Channel: '${video.channelName}'")
+			video
 		}.filter { videoProperties ->
-			abs(videoProperties.duration - targetLength) < SONG_LENGTH_IDENTIFICATION_TOLERANCE
+			val valid = abs(videoProperties.duration - targetLength) < SONG_LENGTH_IDENTIFICATION_TOLERANCE
+			if (!valid) {
+				logger.info("Video removed for bad target duration (targeted $targetLength, was ${videoProperties.duration}. Title: '${videoProperties.title}'")
+			}
+			valid
 		}
 	}
 
