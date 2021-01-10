@@ -158,6 +158,10 @@ class AddReviewSourcesController : UIViewController {
         if loading {
             return
         }
+        
+        if text.lowercased().hasPrefix("http") || text.lowercased().hasPrefix("www") {
+            return
+        }
                
         // No point in searching a single character is there
         if text.count > 1 {
@@ -170,18 +174,18 @@ class AddReviewSourcesController : UIViewController {
                 DispatchQueue.main.async {
                     self.inputField.loading = false
                 }
-
+                
                 guard let suggestions = response?.suggestions.takeFirst(5), status.isSuccessful() else {
                     GGLog.error("Failed to get autocomplete response!")
                     return
                 }
                 
                 DispatchQueue.main.async {
-                    self.inputField.autoCompleteData = suggestions
+                    if self.inputField.text == originalText {
+                        self.inputField.autoCompleteData = suggestions
+                    }
                 }
             }
-        } else {
-            inputField.loading = false
         }
     }
     
