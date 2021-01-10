@@ -18,6 +18,7 @@ import com.example.groove.util.firstAndRest
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.minusWeeks
+import com.google.common.annotations.VisibleForTesting
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -128,6 +129,8 @@ class ReviewSourceArtistService(
 					?: throw IllegalStateException("Could not locate an artist download with review source ID: ${source.id} and song name ${song.name}!")
 			val videos = youtubeDownloadService.searchYouTube("${song.artist} ${song.name}", targetLength = song.length)
 
+			logger.info("Checking for a match from ${videos.size} possible match(es)")
+
 			// There's a chance that our search yields no valid results, but youtube will pretty much always return
 			// us videos, even if they're a horrible match. Probably the best thing we can do is check the video title
 			// and duration to sanity check and make sure it is at least a decent match.
@@ -194,41 +197,6 @@ class ReviewSourceArtistService(
 		return downloadCount
 	}
 
-
-	private fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponseDTO): Boolean {
-		val lowerTitle = this.title.toLowerCase()
-		val artist = song.artist.toLowerCase()
-
-		// Spotify can give us artists separated by commas that other places consider featured artists. So if we search
-		// for what Spotify gives us blindly like "Mitis, RORY" and all the videos on YT are "Mitis - .. (feat. RORY)"
-		// then we aren't going to find it. So split the artist on a comma and make sure all artists are represented
-		// somewhere in the title
-		val artistsFound = artist.split(",").all { individualArtist ->
-			lowerTitle.contains(individualArtist) || channelName.toLowerCase().contains(individualArtist)
-		}
-		if (!artistsFound) {
-			return false
-		}
-
-		// Now lastly we want to check that the song title is adequately represented in the video title. I ran into
-		// a lot of situations where titles were slightly different so a substring match wasn't viable. So I think
-		// a better approach is, like we now do with artists, check each word individually for representation, and
-		// additionally get rid of words that have little value or little hope or being matched correctly
-		val unimportantWords = setOf("with", "feat", "ft", "featuring")
-		val titleWords = this.title
-				.toLowerCase()
-				.replace("(", "")
-				.replace(")", "")
-				.replace("[", "")
-				.replace("]", "")
-				.replace(".", "")
-				.replace("-", "")
-				.split(" ")
-				.filter { it.isNotBlank() && !unimportantWords.contains(it) }
-
-		return titleWords.all { lowerTitle.contains(it) }
-	}
-
 	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
 		val currentUser = loadLoggedInUser()
 
@@ -286,6 +254,53 @@ class ReviewSourceArtistService(
 	}
 
 	companion object {
-		private val logger = logger()
+		val logger = logger()
+	}
+}
+
+@VisibleForTesting
+fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponseDTO): Boolean {
+	val lowerTitle = this.title.toLowerCase()
+	val artist = song.artist.toLowerCase()
+
+	ReviewSourceArtistService.logger.info("Checking video with title: $lowerTitle")
+
+	// Spotify can give us artists separated by commas that other places consider featured artists. So if we search
+	// for what Spotify gives us blindly like "Mitis, RORY" and all the videos on YT are "Mitis - .. (feat. RORY)"
+	// then we aren't going to find it. So split the artist on a comma and make sure all artists are represented
+	// somewhere in the title
+	val artistsFound = artist.split(",").all { individualArtist ->
+		val found = lowerTitle.contains(individualArtist) || channelName.toLowerCase().contains(individualArtist)
+		if (!found) {
+			ReviewSourceArtistService.logger.info("The artist '$individualArtist' was not found")
+		}
+		found
+	}
+	if (!artistsFound) {
+		return false
+	}
+
+	// Now lastly we want to check that the song title is adequately represented in the video title. I ran into
+	// a lot of situations where titles were slightly different so a substring match wasn't viable. So I think
+	// a better approach is, like we now do with artists, check each word individually for representation, and
+	// additionally get rid of words that have little value or little hope or being matched correctly
+	val unimportantWords = setOf("with", "feat", "ft", "featuring")
+	val titleWords = this.title
+			.toLowerCase()
+			.replace("(", "")
+			.replace(")", "")
+			.replace("[", "")
+			.replace("]", "")
+			.replace(".", "")
+			.replace("-", "")
+			.split(" ")
+			.filter { it.isNotBlank() && !unimportantWords.contains(it) }
+
+	return titleWords.all { titleWord ->
+		val found = lowerTitle.contains(titleWord)
+		if (!found) {
+			ReviewSourceArtistService.logger.info("The title word '$titleWord' was not found")
+		}
+		found
 	}
 }
