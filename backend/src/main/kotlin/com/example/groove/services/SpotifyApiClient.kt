@@ -37,7 +37,20 @@ class SpotifyApiClient(
 
 	fun getMetadataByTrackArtistAndName(artist: String, name: String?, limit: Int): List<MetadataResponseDTO> {
 		val url = createSpotifySearchUrl(artist, name, limit, "track")
-		val result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
+		var result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
+
+		// Spotify searches don't agree with multi-artist searches a lot of the time. If this fails, there's a very
+		// good chance that it could succeed if we only take one artist out, and search with them alone.
+		if (result.tracks.items.isEmpty()) {
+			// These are the two most common ways of splitting up an artist- comma and ampersand
+			artist.findIndex { it == ',' || it == '&' }?.let { characterIndex ->
+				val firstArtist = artist.substring(0, characterIndex).trim()
+				logger.info("Could not find metadata for artist: '$artist', and name: '$name'. Trying again with only one artist: '$firstArtist'")
+
+				val secondTryUrl = createSpotifySearchUrl(firstArtist, name, limit, "track")
+				result = restTemplate.querySpotify(secondTryUrl)
+			}
+		}
 
 		// Assume spotify has good relevance on its search and just grab the first result
 		// (we already limited ourselves to 1 in the query parameter anyway)
