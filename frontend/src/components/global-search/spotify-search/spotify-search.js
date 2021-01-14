@@ -50,7 +50,7 @@ export default function SpotifySearch() {
 				setErrorEncountered(false);
 			}).catch(err => {
 				console.error(err);
-				toast.error("An error was encountered searching YouTube");
+				toast.error("An error was encountered searching Spotify");
 				setErrorEncountered(true);
 			}).finally(() => {
 				setLoading(false);

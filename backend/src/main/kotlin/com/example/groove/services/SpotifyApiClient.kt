@@ -35,20 +35,73 @@ class SpotifyApiClient(
 	private val authHeader: String
 		get() = "Bearer ${spotifyTokenManager.authenticationToken}"
 
-	fun getMetadataByTrackArtistAndName(artist: String, name: String?, limit: Int): List<MetadataResponseDTO> {
-		val url = createSpotifySearchUrl(artist, name, limit, "track")
-		var result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
+	// Spotify doesn't actually let us query by year, but I think it makes the most sense for the frontend
+	// to see things by year. So we "get around" this by querying multiple pages and sorting on our end. It won't
+	// be a complete picture unfortunately. But it should be good enough for most artists that have fewer than ~200 songs
+	fun getTracksForArtistSortedByYear(artist: String): List<MetadataResponseDTO> {
+		val allMetadata = mutableListOf<MetadataResponseDTO>()
+		for (i in 0..4) {
+			val page = getMetadataByTrackArtistAndName(
+					artist = artist,
+					offset = i * REQUEST_SIZE_LIMIT,
+					limit = REQUEST_SIZE_LIMIT,
+					allowBroadSearch = false
+			)
+
+			if (page.isEmpty()) {
+				break
+			}
+			allMetadata.addAll(page)
+		}
+
+		return allMetadata
+				// Spotify will pretty aggressively add artists that aren't what you searched for.
+				// e.g. if you search for LIONE you might get Lionezz or Lionel. Filter out the not-actual-matches
+				.filter { result ->
+					result.artist.split(",").any {
+						individualArtist -> individualArtist.trim().equals(artist, ignoreCase = true)
+					}
+				}
+				// There are a crapload of remixes on spotify. I only think that remixes make sense to see if the
+				// artist that you are interested in DID the remix. If the artist you are interested in had their
+				// music remixed by somebody else, then it seems safe to exclude from the search
+				.filter { result ->
+					if (result.name.contains("remix", ignoreCase = true)) {
+						// The best way I can tell to make sure our artist did the remix is to just make sure that our
+						// artist's name shows up somewhere in the title since that's where Spotify seems to credit things most reliably
+						result.name.contains(artist, ignoreCase = true)
+					} else {
+						true
+					}
+				}
+				.sortedByDescending { it.releaseYear }
+	}
+
+	fun getMetadataByTrackArtistAndName(
+			artist: String,
+			name: String? = null,
+			offset: Int = 0,
+			limit: Int = REQUEST_SIZE_LIMIT,
+			allowBroadSearch: Boolean = true
+	): List<MetadataResponseDTO> {
+		val url = createSpotifySearchUrl(
+				artist = artist,
+				name = name,
+				offset = offset,
+				limit = limit,
+				searchType = "track"
+		)
+		val result = restTemplate.querySpotify<SpotifyTrackSearchResponse>(url)
 
 		// Spotify searches don't agree with multi-artist searches a lot of the time. If this fails, there's a very
 		// good chance that it could succeed if we only take one artist out, and search with them alone.
-		if (result.tracks.items.isEmpty()) {
+		if (result.tracks.items.isEmpty() && allowBroadSearch) {
 			// These are the two most common ways of splitting up an artist- comma and ampersand
 			artist.findIndex { it == ',' || it == '&' }?.let { characterIndex ->
 				val firstArtist = artist.substring(0, characterIndex).trim()
 				logger.info("Could not find metadata for artist: '$artist', and name: '$name'. Trying again with only one artist: '$firstArtist'")
 
-				val secondTryUrl = createSpotifySearchUrl(firstArtist, name, limit, "track")
-				result = restTemplate.querySpotify(secondTryUrl)
+				return getMetadataByTrackArtistAndName(artist = firstArtist, name = name, offset = offset, limit = limit, allowBroadSearch = false)
 			}
 		}
 
@@ -89,6 +142,9 @@ class SpotifyApiClient(
 				?: getSpotifyArtistId(artist)
 				?: return emptyList()
 
+		// This particular function is concerned with making sure we get ALL tracks past a certain date. Because we can't
+		// actually sort an artist's songs by date, we have to get creative and first find all albums, since there are a lot fewer.
+		// Once we have the albums, we can see which ones are a new release, and ask spotify for tracks off of them to essentially filter by year.
 		val albumIds = getAlbumsIdsByArtistId(artistIdNotNull)
 		val allTracks = getTracksFromAlbumIds(artistIdNotNull, artist, albumIds)
 
@@ -107,14 +163,20 @@ class SpotifyApiClient(
 	}
 
 	fun searchArtistsByName(artist: String, limit: Int = REQUEST_SIZE_LIMIT): List<SpotifyArtist> {
-		val startingUrl = createSpotifySearchUrl(artist, null, limit, "artist")
+		val startingUrl = createSpotifySearchUrl(artist = artist, limit = limit, searchType = "artist")
 
 		val result = restTemplate.querySpotify<SpotifyArtistSearchResponse>(startingUrl)
 
 		return result.artists.items
 	}
 
-	private fun createSpotifySearchUrl(artist: String, name: String?, limit: Int, searchType: String): URI {
+	private fun createSpotifySearchUrl(
+			artist: String,
+			name: String? = null,
+			offset: Int = 0,
+			limit: Int = REQUEST_SIZE_LIMIT,
+			searchType: String
+	): URI {
 		val artistQuery = "artist:$artist"
 		val trackQuery = name?.let { "track:$name" }
 
@@ -124,6 +186,7 @@ class SpotifyApiClient(
 				.setScheme("https")
 				.setHost("api.spotify.com")
 				.setPath("v1/search")
+				.addParameter("offset", offset.toString())
 				.addParameter("limit", limit.toString())
 				.addParameter("type", searchType)
 				.addParameter("q", query)

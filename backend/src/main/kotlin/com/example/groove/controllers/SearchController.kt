@@ -42,7 +42,7 @@ class SearchController(
 	fun searchSpotifyByArtist(
 			@PathVariable("artist") artist: String
 	): List<MetadataResponseDTO> {
-		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = null, limit = SPOTIFY_TRACK_LIMIT)
+		return spotifyApiClient.getTracksForArtistSortedByYear(artist = artist)
 	}
 
 	@GetMapping("/spotify/artist/{artist}/name/{name}")
@@ -50,7 +50,7 @@ class SearchController(
 			@PathVariable("artist") artist: String,
 			@PathVariable("name") name: String
 	): List<MetadataResponseDTO> {
-		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name, limit = SPOTIFY_TRACK_LIMIT)
+		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name)
 	}
 
 	// Used to help suggest items to users while they are filling in forms
@@ -78,8 +78,6 @@ class SearchController(
 
 	companion object {
 		private val logger = logger()
-
-		private const val SPOTIFY_TRACK_LIMIT = 50
 	}
 
 	data class AutocompleteResponse(val suggestions: Set<String>)
