@@ -91,13 +91,14 @@ export class YoutubeDlModal extends React.Component {
 
 	render() {
 		return (
-			<form className="form-modal" onSubmit={this.submitDownloadForm.bind(this)}>
+			<form id="youtube-dl" className="form-modal" onSubmit={this.submitDownloadForm.bind(this)}>
 				<div className="flex-label">
 					<label htmlFor="song-url">URL</label>
 					<input id="song-url" name="song-url" type="text" required/>
 				</div>
 
 				<h4>Optional Metadata</h4>
+				<p className="subtext">An attempt to automatically parse metadata will be performed if fields are left empty</p>
 
 				<div className="flex-label">
 					<label htmlFor="song-name">Name</label>

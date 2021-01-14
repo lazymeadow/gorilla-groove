@@ -33,7 +33,6 @@ class YoutubeDownloadService(
 
 		// If the user does not provide overriding data, we can attempt to parse out the title / artist / year.
 		// Youtube-dl will put the additional bits of info into the file name if we give it params to do so.
-		// FOR REASONS I DO NOT UNDERSTAND, the "|" gets replaced with a "#" after it gets parsed??
 		val fileName = "$fileKey|%(title)s|%(uploader)s"
 
 		val filePath = fileStorageProperties.tmpDir + fileName
@@ -106,7 +105,8 @@ class YoutubeDownloadService(
 				"[Monstercat Release]",
 				"[Monstercat Lyric Video]",
 				"(Official Video)",
-				"[Copyright Free Electronic]"
+				"[Copyright Free Electronic]",
+				"(Original Music)"
 		)
 
 		var finalTitle = inputStr
@@ -117,13 +117,13 @@ class YoutubeDownloadService(
 		return finalTitle.trim()
 	}
 
-	// For some god forsaken reason, youtube-dl replaces the "|" I put into the title with "#".
-	// I just wanted a sentinel character man. This is super undocumented so I don't really want to
-	// mess around with finding a character they don't replace or whatever. So instead I'm just going
-	// to substring based off the #s. A video title could contain a # so it isn't safe to split
 	private fun String.parseDownloadedTitle(): Pair<String, String> {
-		// Example, 2ace8ebf-1692-4310-91f3-147f559bf7cf#alphabet shuffle#bill wurtz
-		val (title, uploader) = this.substringAfter("#").split("#")
+		// I use a pipe for a delimiter because it seems unlikely to be used in artist names. Though honestly there's probably
+		// a better character because it's a reserved character on Windows. So youtube-dl replaces it with a #
+		val delimiter = if (isWindowsEnv()) "#" else "|"
+
+		// Example, 2ace8ebf-1692-4310-91f3-147f559bf7cf|alphabet shuffle|bill wurtz
+		val (title, uploader) = this.substringAfter(delimiter).split(delimiter)
 		return stripYouTubeSpecificTerms(title) to uploader
 	}
 
