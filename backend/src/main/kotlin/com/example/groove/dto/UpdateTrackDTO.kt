@@ -74,7 +74,7 @@ class MetadataParseDTO(
 }
 
 // For Youtube DL ingestion method
-class YoutubeDownloadDTO(
+data class YoutubeDownloadDTO(
 		val url: String,
 		override val name: String? = null,
 		override val artist: String? = null,

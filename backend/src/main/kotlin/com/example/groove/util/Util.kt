@@ -66,6 +66,10 @@ fun<T> Collection<T>.firstAndRest(): Pair<T, List<T>> {
 	return this.first() to this.drop(1)
 }
 
+fun String.findIndex(lambda: (Char) -> Boolean): Int? {
+	return this.indexOfFirst { lambda(it) }.takeIf { it > -1 }
+}
+
 fun isWindowsEnv(): Boolean {
 	return System.getProperty("os.name", "unknown")
 			.toLowerCase()

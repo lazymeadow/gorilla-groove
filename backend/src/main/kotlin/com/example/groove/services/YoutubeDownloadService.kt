@@ -2,12 +2,12 @@ package com.example.groove.services
 
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.User
+import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.properties.YouTubeDlProperties
-import com.example.groove.util.createMapper
-import com.example.groove.util.isWindowsEnv
-import com.example.groove.util.logger
+import com.example.groove.services.enums.MetadataOverrideType
+import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonAlias
 import org.springframework.stereotype.Service
 import java.io.File
@@ -20,7 +20,8 @@ class YoutubeDownloadService(
 		private val songIngestionService: SongIngestionService,
 		private val fileStorageProperties: FileStorageProperties,
 		private val youTubeDlProperties: YouTubeDlProperties,
-		private val imageService: ImageService
+		private val imageService: ImageService,
+		private val metadataRequestService: MetadataRequestService
 ) {
 
 	val mapper = createMapper()
@@ -28,8 +29,14 @@ class YoutubeDownloadService(
 	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO): Track {
 		val url = youtubeDownloadDTO.url
 
-		val tmpFileName = UUID.randomUUID().toString()
-		val destination = fileStorageProperties.tmpDir + tmpFileName
+		val fileKey = UUID.randomUUID().toString()
+
+		// If the user does not provide overriding data, we can attempt to parse out the title / artist / year.
+		// Youtube-dl will put the additional bits of info into the file name if we give it params to do so.
+		// FOR REASONS I DO NOT UNDERSTAND, the "|" gets replaced with a "#" after it gets parsed??
+		val fileName = "$fileKey|%(title)s|%(uploader)s"
+
+		val filePath = fileStorageProperties.tmpDir + fileName
 
 		val pb = ProcessBuilder(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
@@ -38,32 +45,86 @@ class YoutubeDownloadService(
 				"--audio-format",
 				"vorbis",
 				"-o",
-				"$destination.ogg",
+				"$filePath.ogg",
 				"--no-cache-dir", // Ran into issues with YT giving us 403s unless we cleared cache often, so just ignore cache
-				"--write-thumbnail" // this started to plop things out as .webp. No way to pick the format right now and webp breaks image format conversion currently
+				"--write-thumbnail" // this started to plop things out as .webp randomly one day
 		)
 		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
 		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
 		val p = pb.start()
 		p.waitFor()
 
-		val newSong = File("$destination.ogg")
-		if (!newSong.exists()) {
+		// We prepended a unique prefix onto the file so that we could find it, since the full filename is not known
+		// given that youtube-dl dynamically generates it with metadata from the video.
+		val newSong = File(fileStorageProperties.tmpDir!!).listFiles()!!.find { file ->
+			file.name.startsWith(fileKey) && file.name.endsWith(".ogg")
+		}
+		if (newSong == null || !newSong.exists()) {
 			throw YouTubeDownloadException("Failed to download song from URL: $url")
 		}
 
-		val videoArt = chooseAlbumArt(youtubeDownloadDTO.artUrl, destination) ?: run {
+		val videoArt = chooseAlbumArt(youtubeDownloadDTO.artUrl, newSong.absolutePath) ?: run {
 			logger.error("Failed to download album art for song at URL: $url!")
 			null
 		}
 
-		// TODO Instead of passing the "url" in here, it would be cool to pass in the video title.
-		// Slightly complicates finding the file after we save it, though
-		val track = songIngestionService.convertAndSaveTrackForUser(youtubeDownloadDTO, user, newSong, videoArt, url)
+		val (videoTitle, uploaderName) = newSong.nameWithoutExtension.parseDownloadedTitle()
+
+		// If the video title already contains a dash, it's likely the artist
+		val titleToParse = if (videoTitle.containsAny(dashCharacters)) {
+			videoTitle
+		} else {
+			// Otherwise, the artist probably isn't in the title. The next best guess is the uploader
+			"$uploaderName - $videoTitle"
+		}
+
+		// The ingestion service will attempt to parse the title and artist from "titleToParse" if it isn't contained within the youtubeDownloadDTO
+		val track = songIngestionService.convertAndSaveTrackForUser(youtubeDownloadDTO, user, newSong, videoArt, titleToParse)
 
 		newSong.delete()
 
+		// But now that the video has been parsed and its data parsed, try to find the song on spotify too.
+		// That will give us the true best data possible, and we don't have to overwrite any user-provided data
+		val spotifyMetadataRequest = MetadataUpdateRequestDTO(
+				trackIds = listOf(track.id),
+				changeAlbum = MetadataOverrideType.IF_EMPTY,
+				changeAlbumArt = MetadataOverrideType.ALWAYS, // We should always get art from youtube, so gotta always replace
+				changeReleaseYear = MetadataOverrideType.IF_EMPTY,
+				changeTrackNumber = MetadataOverrideType.IF_EMPTY
+		)
+		metadataRequestService.requestTrackMetadata(spotifyMetadataRequest)
+
 		return track
+	}
+
+	// These are bits of pointless noise in some of the channels I use this on.
+	// I'd like to make this be something users can customize on the fly to suit their channels
+	fun stripYouTubeSpecificTerms(inputStr: String): String {
+		val thingsToStrip = setOf(
+				"(lyrics)",
+				"(lyric video)",
+				"[Monstercat Release]",
+				"[Monstercat Lyric Video]",
+				"(Official Video)",
+				"[Copyright Free Electronic]"
+		)
+
+		var finalTitle = inputStr
+		thingsToStrip.forEach { thingToStrip ->
+			finalTitle = finalTitle.replace(thingToStrip, "", ignoreCase = true)
+		}
+
+		return finalTitle.trim()
+	}
+
+	// For some god forsaken reason, youtube-dl replaces the "|" I put into the title with "#".
+	// I just wanted a sentinel character man. This is super undocumented so I don't really want to
+	// mess around with finding a character they don't replace or whatever. So instead I'm just going
+	// to substring based off the #s. A video title could contain a # so it isn't safe to split
+	private fun String.parseDownloadedTitle(): Pair<String, String> {
+		// Example, 2ace8ebf-1692-4310-91f3-147f559bf7cf#alphabet shuffle#bill wurtz
+		val (title, uploader) = this.substringAfter("#").split("#")
+		return stripYouTubeSpecificTerms(title) to uploader
 	}
 
 	// An override link can be provided for a download if we're coming from Spotify. However, if the link
@@ -91,9 +152,13 @@ class YoutubeDownloadService(
 		}
 	}
 
-	private fun findVideoArtOnDisk(fileDestinationWithoutExtension: String): File? {
+	private fun findVideoArtOnDisk(songFilePath: String): File? {
+		// For some dumb reason, in December 2020 youtube-dl changed and started using the song extension
+		// in the art name, which it wasn't doing for years before. So if the song has the name
+		// "song.ogg" the art will have the name "song.ogg.webp". Also the art format isn't consistent here, so
+		// we need to check for both webp and jpg, though it seems webp is what things are using now
 		listOf("webp", "jpg").forEach { extension ->
-			val newAlbumArt = File("$fileDestinationWithoutExtension.$extension")
+			val newAlbumArt = File("$songFilePath.$extension")
 			if (newAlbumArt.exists()) {
 				return newAlbumArt
 			}

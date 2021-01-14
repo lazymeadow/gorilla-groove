@@ -62,3 +62,10 @@ fun String.isUuid(): Boolean {
 	return uuidRegex.matches(this)
 }
 
+// Damn I'm lazy sometimes
+fun String.containsAny(subStrings: Set<String>): Boolean {
+	return subStrings.any { this.contains(it) }
+}
+
+// en dash, em dash, hyphen
+val dashCharacters = setOf("-", "—", "–")
