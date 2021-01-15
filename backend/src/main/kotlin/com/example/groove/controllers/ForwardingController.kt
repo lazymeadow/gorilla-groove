@@ -25,6 +25,11 @@ class ForwardingController {
 		return "forward:/"
 	}
 
+	@RequestMapping("/privacy-policy")
+	fun forwardPrivacyPolicy(): String {
+		return "forward:/"
+	}
+
 	@RequestMapping("/")
 	fun forwardSlash(): String {
 		return "forward:/index.html"

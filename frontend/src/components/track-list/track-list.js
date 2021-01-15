@@ -33,6 +33,8 @@ export class TrackList extends React.Component {
 				y: 0
 			}
 		};
+
+		this.handleScrollBound = this.handleScroll.bind(this);
 	}
 
 	componentDidMount() {
@@ -46,7 +48,7 @@ export class TrackList extends React.Component {
 			document.body.addEventListener('mousedown', this.handleEditStop.bind(this));
 			document.body.addEventListener('keydown', this.handleKeyPress.bind(this));
 			document.getElementsByClassName('border-layout-center')[0]
-				.addEventListener('scroll', this.handleScroll.bind(this));
+				.addEventListener('scroll', this.handleScrollBound);
 		}
 		tableBody.addEventListener('contextmenu', this.suppressContextMenu.bind(this));
 	}
@@ -54,11 +56,13 @@ export class TrackList extends React.Component {
 	componentWillUnmount() {
 		this.disableResize();
 
-		if (!this.props.trackView) {
+		if (this.props.trackView) {
+			// FIXME So I just found out that these don't remove the event handlers b/c .bind(this) makes a new function.
+			// Makes sense I guess. Currently too lazy to fix this everywhere. Only taking care of scroll handler for now
 			document.body.removeEventListener('mousedown', this.handleEditStop);
 			document.body.removeEventListener('keydown', this.handleKeyPress);
 			document.getElementsByClassName('border-layout-center')[0]
-				.removeEventListener('scroll', this.handleScroll);
+				.removeEventListener('scroll', this.handleScrollBound);
 		}
 
 		ReactDOM.findDOMNode(this).removeEventListener('mousedown', this.handleContextMenu.bind(this));

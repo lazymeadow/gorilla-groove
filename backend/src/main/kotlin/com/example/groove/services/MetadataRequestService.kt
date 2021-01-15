@@ -111,16 +111,18 @@ class MetadataRequestService(
 							|| track.name.isBlank()
 				}
 
-		return validTracks
-				.map {
-					val metadataResponse = spotifyApiClient.getMetadataByTrackArtistAndName(
-							artist = it!!.artist,
-							name = it.name,
-							limit = 1
-					).firstOrNull()
+		return validTracks.map {
+			logger.info("Checking Spotify Metadata for artist: ${it!!.artist}, name: ${it.name}")
+			val metadataResponse = spotifyApiClient.getMetadataByTrackArtistAndName(
+					artist = it.artist,
+					name = it.name,
+					limit = 1
+			).firstOrNull()
+			
+			logger.info("Metadata was ${if (metadataResponse == null) "not" else ""} found for search")
 
-					it to metadataResponse
-				}.filter { (_, metadataResponse) -> metadataResponse != null }
+			it to metadataResponse
+		}.filter { (_, metadataResponse) -> metadataResponse != null }
 				.map { it.first to it.second!! }
 	}
 

@@ -13,11 +13,8 @@ import com.example.groove.services.YoutubeApiClient
 import com.example.groove.services.YoutubeChannelInfo
 import com.example.groove.services.YoutubeDownloadService
 import com.example.groove.services.socket.ReviewQueueSocketHandler
+import com.example.groove.util.*
 import com.example.groove.util.DateUtils.now
-import com.example.groove.util.firstAndRest
-import com.example.groove.util.loadLoggedInUser
-import com.example.groove.util.logger
-import com.example.groove.util.splitFirst
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -125,29 +122,14 @@ class ReviewSourceYoutubeChannelService(
 	}
 
 	fun splitSongNameAndArtist(songInfo: String): Pair<String, String> {
-		val (finalArtist, rawTitle) = if (songInfo.contains("-")) {
-			songInfo.splitFirst("-")
-		} else {
-			"" to songInfo
-		}
+		val titleWithoutNoise = youtubeDownloadService.stripYouTubeSpecificTerms(songInfo)
 
-		// These are bits of pointless noise in some of the channels I use this on.
-		// I'd like to make this be something users can customize on the fly to suit their channels
-		val thingsToStrip = setOf(
-				"(lyrics)",
-				"(lyric video)",
-				"[Monstercat Release]",
-				"[Monstercat Lyric Video]",
-				"(Official Video)",
-				"[Copyright Free Electronic]"
-		)
-
-		var finalTitle = rawTitle
-		thingsToStrip.forEach { thingToStrip ->
-			finalTitle = finalTitle.replace(thingToStrip, "", ignoreCase = true)
-		}
-
-		return finalArtist.trim() to finalTitle.trim()
+		titleWithoutNoise.findIndex { dashCharacters.contains(it.toString()) }?.let { hyphenIndex ->
+			return Pair(
+					titleWithoutNoise.substring(hyphenIndex + 1).trim(),
+					titleWithoutNoise.substring(0, hyphenIndex).trim()
+			)
+		} ?: return "" to titleWithoutNoise
 	}
 
 	fun subscribeToUser(youtubeName: String): ReviewSourceUser {

@@ -2,6 +2,8 @@ package com.example.groove.services
 
 import com.example.groove.db.model.Track
 import com.example.groove.dto.MetadataParseDTO
+import com.example.groove.util.dashCharacters
+import com.example.groove.util.findIndex
 import com.example.groove.util.logger
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -78,8 +80,7 @@ class FileMetadataService {
 		}
 
 		// Maybe it's in the format of:  Artist - Title
-		if (originalFileName.contains("-")) {
-			val hyphenIndex = originalFileName.indexOfFirst { it == '-' }
+		originalFileName.findIndex { dashCharacters.contains(it.toString()) }?.let { hyphenIndex ->
 			return Pair(
 					originalFileName.substring(hyphenIndex + 1).trimExtension(),
 					originalFileName.substring(0, hyphenIndex).trim()
@@ -87,11 +88,10 @@ class FileMetadataService {
 		}
 
 		// Maybe it's in the format of:  Artist, Title
-		if (originalFileName.contains(",")) {
-			val hyphenIndex = originalFileName.indexOfFirst { it == ',' }
+		originalFileName.findIndex { it == ',' }?.let { commaIndex ->
 			return Pair(
-					originalFileName.substring(hyphenIndex + 1).trimExtension(),
-					originalFileName.substring(0, hyphenIndex).trim()
+					originalFileName.substring(commaIndex + 1).trimExtension(),
+					originalFileName.substring(0, commaIndex).trim()
 			)
 		}
 
