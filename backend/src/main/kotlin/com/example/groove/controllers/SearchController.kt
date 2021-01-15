@@ -4,6 +4,7 @@ import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.services.SpotifyApiClient
 import com.example.groove.services.YoutubeApiClient
 import com.example.groove.services.YoutubeDownloadService
+import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 
 import org.springframework.web.bind.annotation.*
@@ -22,6 +23,7 @@ class SearchController(
 		return youtubeApiClient.findVideos(term, limit = 6)
 	}
 
+	// This is currently used by clients to try to match a spotify song to a video on youtube
 	@GetMapping("/youtube/term/{term}/length/{length}")
 	fun findVideoForTermAndLength(
 			@PathVariable term: String,
@@ -41,15 +43,20 @@ class SearchController(
 	@GetMapping("/spotify/artist/{artist}")
 	fun searchSpotifyByArtist(
 			@PathVariable("artist") artist: String
-	): List<MetadataResponseDTO> {
-		return spotifyApiClient.getTracksForArtistSortedByYear(artist = artist)
+	): MetadataSearchResponse {
+		logger.info("User ${loadLoggedInUser().name} is searching spotify for the artist '$artist'")
+		return MetadataSearchResponse(
+				items = spotifyApiClient.getTracksForArtistSortedByYear(artist = artist)
+		)
 	}
 
+	// Do I still use this? I'm not sure I still use this
 	@GetMapping("/spotify/artist/{artist}/name/{name}")
 	fun searchSpotifyByArtistAndName(
 			@PathVariable("artist") artist: String,
 			@PathVariable("name") name: String
 	): List<MetadataResponseDTO> {
+		logger.info("User ${loadLoggedInUser().name} is searching spotify for the artist '$artist' and name '$name'")
 		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name)
 	}
 
@@ -58,6 +65,7 @@ class SearchController(
 	fun autocompleteSpotifyArtistName(
 			@PathVariable("partial-name") partialName: String
 	): AutocompleteResponse {
+		logger.info("User ${loadLoggedInUser().name} is querying spotify autocomplete data for the term '$partialName'")
 		return AutocompleteResponse(
 				// I'm not sure if these artist names are unique or not. Seems like they probably can't be, right?
 				// So put them into a Set
@@ -69,6 +77,7 @@ class SearchController(
 	fun autocompleteYoutubeChannelName(
 			@PathVariable("partial-name") partialName: String
 	): AutocompleteResponse {
+		logger.info("User ${loadLoggedInUser().name} is querying youtube autocomplete data for the term '$partialName'")
 		return AutocompleteResponse(
 				// Linked so it preserves order- order is the YouTube given relevance and we don't want to discard it.
 				// However, channel titles are not unique and there is no benefit to returning 7 of the same name
@@ -81,4 +90,5 @@ class SearchController(
 	}
 
 	data class AutocompleteResponse(val suggestions: Set<String>)
+	data class MetadataSearchResponse(val items: List<MetadataResponseDTO>)
 }

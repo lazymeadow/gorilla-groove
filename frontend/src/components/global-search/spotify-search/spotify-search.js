@@ -45,8 +45,8 @@ export default function SpotifySearch() {
 		if (musicFilterContext.searchTerm.length > 0) {
 			setLoading(true);
 			const term = encodeURIComponent(musicFilterContext.searchTerm);
-			Api.get('search/spotify/artist/' + term).then(tracks => {
-				setSpotifyTracks(tracks);
+			Api.get('search/spotify/artist/' + term).then(res => {
+				setSpotifyTracks(res.items);
 				setErrorEncountered(false);
 			}).catch(err => {
 				console.error(err);

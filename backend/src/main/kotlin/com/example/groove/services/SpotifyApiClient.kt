@@ -74,7 +74,7 @@ class SpotifyApiClient(
 						true
 					}
 				}
-				.sortedByDescending { it.releaseYear }
+				.sortedWith(compareBy({ -it.releaseYear }, { it.album }, { it.trackNumber }))
 	}
 
 	fun getMetadataByTrackArtistAndName(
