@@ -55,12 +55,17 @@ class SpotifyApiClient(
 		}
 
 		return allMetadata
+				.asSequence()
 				// Spotify will pretty aggressively add artists that aren't what you searched for.
 				// e.g. if you search for LIONE you might get Lionezz or Lionel. Filter out the not-actual-matches
 				.filter { result ->
 					result.artist.split(",").any {
 						individualArtist -> individualArtist.trim().equals(artist, ignoreCase = true)
 					}
+				}
+				// Mixed versions are gross. Not real full songs. I am making the executive decision that nobody should see these
+				.filterNot { result ->
+					result.name.contains("(mixed)", ignoreCase = true) || result.name.contains("(mix cut)", ignoreCase = true)
 				}
 				// There are a crapload of remixes on spotify. I only think that remixes make sense to see if the
 				// artist that you are interested in DID the remix. If the artist you are interested in had their
@@ -74,7 +79,12 @@ class SpotifyApiClient(
 						true
 					}
 				}
+				// Spotify can have duplicates apparently. No it isn't a result of paginating incorrectly as I originally
+				// thought I might be doing, as they have different "sourceIds". Everything else is the same. So exclude them
+				// by putting them into a Set
+				.toSet()
 				.sortedWith(compareBy({ -it.releaseYear }, { it.album }, { it.trackNumber }))
+				.toList()
 	}
 
 	fun getMetadataByTrackArtistAndName(
