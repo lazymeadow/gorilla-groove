@@ -1,6 +1,6 @@
 import Foundation
 
-public class Track : Entity {
+public class Track : Entity, ViewableTrackData {
     public var id: Int
     public var album: String
     public var artist: String

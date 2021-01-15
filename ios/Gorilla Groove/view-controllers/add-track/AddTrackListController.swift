@@ -58,12 +58,17 @@ class AddTrackListController: UIViewController, UITableViewDataSource, UITableVi
         
         cell.animateSelectionColor()
         
-        if cell.tableOption! == .YOUTUBE_DL {
-            let vc = DownloadFromYTController()
-            
-            vc.modalPresentationStyle = .fullScreen
-            self.navigationController!.pushViewController(vc, animated: true)
+        let vc: UIViewController
+        
+        switch cell.tableOption! {
+        case .YOUTUBE_DL:
+            vc = DownloadFromYTController()
+        case .SPOTIFY_SEARCH:
+            vc = AddFromSpotifyController()
         }
+        
+        vc.modalPresentationStyle = .fullScreen
+        self.navigationController!.pushViewController(vc, animated: true)
     }
 }
 

@@ -3,7 +3,7 @@ import Foundation
 
 class TrackViewCell: UITableViewCell {
 
-    var track: Track? {
+    var track: ViewableTrackData? {
         didSet {
             guard let track = track else {return}
             
@@ -104,4 +104,12 @@ class TrackViewCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
+}
+
+protocol ViewableTrackData {
+    var id: Int { get set }
+    var name: String { get set }
+    var artistString: String { get }
+    var album: String { get set }
+    var length: Int { get set }
 }
