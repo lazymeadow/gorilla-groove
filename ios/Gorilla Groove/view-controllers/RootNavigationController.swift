@@ -19,6 +19,7 @@ class RootNavigationController : UITabBarController {
         let reviewQueueController = ReviewQueueController()
         let errorReportController = ErrorReportController()
         let logoutController = LogoutController()
+        let addTrackListController = AddTrackListController()
 
         // Do NOT edit these tag values. They are used for keeping track of the order of the VCs in the tab bar, and changing the tags
         // would change how a user sees them. The tag is also used for the "launch_screen" setting value
@@ -32,7 +33,8 @@ class RootNavigationController : UITabBarController {
         reviewQueueController.tabBarItem = UITabBarItem(title: ReviewQueueController.title, image: UIImage(systemName: "headphones"), tag: 5)
         errorReportController.tabBarItem = UITabBarItem(title: "Problem Report", image: UIImage(systemName: "exclamationmark.triangle.fill"), tag: 6)
         logoutController.tabBarItem = UITabBarItem(title: "Logout", image: UIImage(systemName: "arrow.down.right.square"), tag: LOGOUT_TAG)
-        
+        addTrackListController.tabBarItem = UITabBarItem(title: AddTrackListController.title, image: UIImage(systemName: "plus"), tag: 8)
+
         // The library adds a "Done" button as the right nav item. We don't need this
         appSettingsController.showDoneButton = false
         
@@ -44,7 +46,8 @@ class RootNavigationController : UITabBarController {
             appSettingsController.tabBarItem.tag: appSettingsController,
             reviewQueueController.tabBarItem.tag: reviewQueueController,
             errorReportController.tabBarItem.tag: errorReportController,
-            logoutController.tabBarItem.tag: logoutController
+            logoutController.tabBarItem.tag: logoutController,
+            addTrackListController.tabBarItem.tag: addTrackListController
         ]
     }()
     
@@ -56,6 +59,7 @@ class RootNavigationController : UITabBarController {
             tagToController[5]!,
             tagToController[3]!,
             tagToController[4]!,
+            tagToController[8]!,
             tagToController[2]!,
             tagToController[6]!,
             tagToController[LOGOUT_TAG]!

@@ -32,8 +32,6 @@ class AddReviewSourcesController : UIViewController {
         let label = UILabel()
         label.font = label.font.withSize(11)
         label.textColor = Colors.inputLine
-        label.text = "Artist Name"
-        label.sizeToFit()
         label.translatesAutoresizingMaskIntoConstraints = false
         
         return label
@@ -131,6 +129,8 @@ class AddReviewSourcesController : UIViewController {
         super.viewDidAppear(animated)
         
         inputField.textField.becomeFirstResponder()
+        
+        GGNavLog.info("Loaded AddReviewSourceController")
     }
     
     @objc private func handleButtonTap() {
