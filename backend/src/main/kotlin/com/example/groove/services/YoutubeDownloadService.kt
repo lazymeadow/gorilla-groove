@@ -92,7 +92,7 @@ class YoutubeDownloadService(
 				changeReleaseYear = MetadataOverrideType.IF_EMPTY,
 				changeTrackNumber = MetadataOverrideType.IF_EMPTY
 		)
-		metadataRequestService.requestTrackMetadata(spotifyMetadataRequest)
+		metadataRequestService.requestTrackMetadata(spotifyMetadataRequest, user)
 
 		return track
 	}

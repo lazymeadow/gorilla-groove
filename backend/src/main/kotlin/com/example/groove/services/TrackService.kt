@@ -361,8 +361,8 @@ class TrackService(
 		}
 	}
 
-	fun saveFromYoutube(downloadDTO: YoutubeDownloadDTO): Track {
-		return youtubeDownloadService.downloadSong(loadLoggedInUser(), downloadDTO).also { newTrack ->
+	fun saveFromYoutube(downloadDTO: YoutubeDownloadDTO, user: User): Track {
+		return youtubeDownloadService.downloadSong(user, downloadDTO).also { newTrack ->
 			newTrack.addedToLibrary = newTrack.createdAt
 			trackRepository.save(newTrack)
 		}

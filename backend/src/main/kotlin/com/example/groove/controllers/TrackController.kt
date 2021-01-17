@@ -142,7 +142,7 @@ class TrackController(
 			throw IllegalArgumentException("Playlist downloads are not allowed")
 		}
 
-		return trackService.saveFromYoutube(youTubeDownloadDTO)
+		return trackService.saveFromYoutube(youTubeDownloadDTO, loadLoggedInUser())
 	}
 
 	@PostMapping("/trim")
@@ -189,7 +189,7 @@ class TrackController(
 
 	@PostMapping("/data-update-request")
 	fun dataUpdateRequest(@RequestBody metadataUpdateRequestDTO: MetadataUpdateRequestDTO): DataUpdateResponseDTO {
-		val (updatedTracks, failedTrackIds) =  metadataRequestService.requestTrackMetadata(metadataUpdateRequestDTO)
+		val (updatedTracks, failedTrackIds) =  metadataRequestService.requestTrackMetadata(metadataUpdateRequestDTO, loadLoggedInUser())
 
 		return DataUpdateResponseDTO(
 				successfulUpdates = updatedTracks,

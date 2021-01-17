@@ -3,6 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.User
 import com.example.groove.dto.MetadataDTO
 import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.services.enums.MetadataOverrideType
@@ -25,11 +26,11 @@ class MetadataRequestService(
 ) {
 
 	@Transactional
-	fun requestTrackMetadata(request: MetadataUpdateRequestDTO): Pair<List<Track>, List<Long>> {
+	fun requestTrackMetadata(request: MetadataUpdateRequestDTO, user: User): Pair<List<Track>, List<Long>> {
 		val trackIds = request.trackIds
 		val now = now()
 
-		val updatedSuccessTracks = findUpdatableTracks(trackIds).map { (track, metadataResponse) ->
+		val updatedSuccessTracks = findUpdatableTracks(trackIds, user).map { (track, metadataResponse) ->
 			if (track.album.shouldBeUpdated(request.changeAlbum)) {
 				track.album = metadataResponse.album
 				track.updatedAt = now
@@ -98,14 +99,12 @@ class MetadataRequestService(
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
 	}
 
-	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataDTO>> {
-		val currentUser = loadLoggedInUser()
-
+	private fun findUpdatableTracks(trackIds: List<Long>, user: User): List<Pair<Track, MetadataDTO>> {
 		val validTracks = trackIds
 				.map { trackRepository.get(it) }
 				.filterNot { track ->
 					track == null
-							|| track.user.id != currentUser.id
+							|| track.user.id != user.id
 							|| track.artist.isBlank()
 							|| track.name.isBlank()
 				}
