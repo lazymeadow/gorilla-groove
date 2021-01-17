@@ -1,6 +1,6 @@
 package com.example.groove.controllers
 
-import com.example.groove.dto.MetadataResponseDTO
+import com.example.groove.dto.MetadataDTO
 import com.example.groove.services.SpotifyApiClient
 import com.example.groove.services.YoutubeApiClient
 import com.example.groove.services.YoutubeDownloadService
@@ -24,14 +24,19 @@ class SearchController(
 	}
 
 	// This is currently used by clients to try to match a spotify song to a video on youtube
-	@GetMapping("/youtube/term/{term}/length/{length}")
+	@GetMapping("/youtube/artist/{artist}/track-name/{trackName}/length/{length}")
 	fun findVideoForTermAndLength(
-			@PathVariable term: String,
+			@PathVariable artist: String,
+			@PathVariable trackName: String,
 			@PathVariable length: Int
 	): YoutubeDownloadService.VideoProperties? {
-		val properties = youtubeDownloadService.searchYouTube(searchTerm = term, targetLength = length).firstOrNull()
+		val properties = youtubeDownloadService.searchYouTube(
+				artist = artist,
+				trackName = trackName,
+				targetLength = length
+		).firstOrNull()
 		if (properties == null) {
-			logger.info("Could not find a matching video for search term $term")
+			logger.info("Could not find a matching video for artist $artist, name $trackName, length $length")
 		}
 		// Youtube-DL is currently unreliable, so I've commented out the API client's implementation here as well
 //		return youtubeApiClient.findVideos(searchTerm = term)
@@ -55,7 +60,7 @@ class SearchController(
 	fun searchSpotifyByArtistAndName(
 			@PathVariable("artist") artist: String,
 			@PathVariable("name") name: String
-	): List<MetadataResponseDTO> {
+	): List<MetadataDTO> {
 		logger.info("User ${loadLoggedInUser().name} is searching spotify for the artist '$artist' and name '$name'")
 		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name)
 	}
@@ -90,5 +95,5 @@ class SearchController(
 	}
 
 	data class AutocompleteResponse(val suggestions: Set<String>)
-	data class MetadataSearchResponse(val items: List<MetadataResponseDTO>)
+	data class MetadataSearchResponse(val items: List<MetadataDTO>)
 }

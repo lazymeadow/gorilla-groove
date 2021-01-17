@@ -3,7 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
-import com.example.groove.dto.MetadataResponseDTO
+import com.example.groove.dto.MetadataDTO
 import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.*
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.IOException
 import java.net.URL
-import java.sql.Timestamp
 import javax.imageio.ImageIO
 
 @Service
@@ -99,7 +98,7 @@ class MetadataRequestService(
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
 	}
 
-	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataResponseDTO>> {
+	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataDTO>> {
 		val currentUser = loadLoggedInUser()
 
 		val validTracks = trackIds

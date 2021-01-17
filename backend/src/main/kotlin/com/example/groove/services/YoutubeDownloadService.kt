@@ -9,6 +9,7 @@ import com.example.groove.properties.YouTubeDlProperties
 import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.google.common.annotations.VisibleForTesting
 import org.springframework.stereotype.Service
 import java.io.File
 import java.util.*
@@ -168,7 +169,13 @@ class YoutubeDownloadService(
 	}
 
 	// target length is used to try to find videos that closely match what is found in Spotify
-	fun searchYouTube(searchTerm: String, targetLength: Int): List<VideoProperties> {
+	fun searchYouTube(
+			artist: String,
+			trackName: String,
+			targetLength: Int
+	): List<VideoProperties> {
+		val searchTerm = "$artist - $trackName"
+
 		logger.info("Searching YouTube for the term: '$searchTerm'")
 		val videosToSearch = 5
 		// This combination of arguments will have Youtube-DL not actually download the videos, but instead write the
@@ -202,11 +209,62 @@ class YoutubeDownloadService(
 			logger.info("Video found. Title: '${video.title}' Channel: '${video.channelName}'")
 			video
 		}.filter { videoProperties ->
-			val valid = abs(videoProperties.duration - targetLength) < SONG_LENGTH_IDENTIFICATION_TOLERANCE
-			if (!valid) {
-				logger.info("Video removed for bad target duration (targeted $targetLength, was ${videoProperties.duration}. Title: '${videoProperties.title}'")
+			videoProperties.isValidForSong(artist, trackName, targetLength)
+		}
+	}
+
+	@VisibleForTesting
+	fun VideoProperties.isValidForSong(artist: String, trackName: String, targetLength: Int): Boolean {
+		logger.info("Checking video with title: ${this.title}")
+
+		val validLength = abs(this.duration - targetLength) < SONG_LENGTH_IDENTIFICATION_TOLERANCE
+		if (!validLength) {
+			logger.info("Video removed for bad target duration (targeted $targetLength, was ${this.duration}. Title: '${this.title}'")
+			return false
+		}
+
+		val lowerTitle = this.title.toLowerCase()
+		val lowerArtist = artist.toLowerCase()
+
+		// Spotify can give us artists separated by commas that other places consider featured artists. So if we search
+		// for what Spotify gives us blindly like "Mitis, RORY" and all the videos on YT are "Mitis - .. (feat. RORY)"
+		// then we aren't going to find it. So split the artist on a comma and make sure all artists are represented
+		// somewhere in the title
+		val artistsFound = lowerArtist.split(",").all { individualArtist ->
+			val trimmedArtist = individualArtist.trim()
+
+			val found = lowerTitle.contains(trimmedArtist) || channelName.toLowerCase().contains(trimmedArtist)
+			if (!found) {
+				logger.info("The artist '$trimmedArtist' was not found")
 			}
-			valid
+			found
+		}
+		if (!artistsFound) {
+			return false
+		}
+
+		// Now lastly we want to check that the song title is adequately represented in the video title. I ran into
+		// a lot of situations where titles were slightly different so a substring match wasn't viable. So I think
+		// a better approach is, like we now do with artists, check each word individually for representation, and
+		// additionally get rid of words that have little value or little hope or being matched correctly
+		val unimportantWords = setOf("with", "feat", "ft", "featuring")
+		val titleWords = this.title
+				.toLowerCase()
+				.replace("(", "")
+				.replace(")", "")
+				.replace("[", "")
+				.replace("]", "")
+				.replace(".", "")
+				.replace("-", "")
+				.split(" ")
+				.filter { it.isNotBlank() && !unimportantWords.contains(it) }
+
+		return titleWords.all { titleWord ->
+			val found = lowerTitle.contains(titleWord)
+			if (!found) {
+				logger.info("The title word '$titleWord' was not found")
+			}
+			found
 		}
 	}
 

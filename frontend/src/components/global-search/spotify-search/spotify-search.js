@@ -96,8 +96,11 @@ export default function SpotifySearch() {
 		} else {
 			setActiveVideoSourceId(spotifyTrack.sourceId);
 			setActiveVideoState(YoutubeVideoState.BUFFERING);
-			const term = encodeURIComponent(spotifyTrack.artist + ' ' + spotifyTrack.name);
-			Api.get(`search/youtube/term/${term}/length/${spotifyTrack.length}`).then(res => {
+
+			const artist = encodeURIComponent(spotifyTrack.artist);
+			const trackName = encodeURIComponent(spotifyTrack.name);
+
+			Api.get(`search/youtube/artist/${artist}/track-name/${trackName}/length/${spotifyTrack.length}`).then(res => {
 				spotifyIdToYoutubeUrl[spotifyTrack.sourceId] = res.videoUrl;
 				if (res && res.id) {
 					setActiveVideo(res);

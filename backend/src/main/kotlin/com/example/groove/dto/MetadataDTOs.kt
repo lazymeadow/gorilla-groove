@@ -3,7 +3,7 @@ package com.example.groove.dto
 import com.example.groove.db.model.Track
 import com.example.groove.services.enums.MetadataOverrideType
 
-data class MetadataResponseDTO (
+data class MetadataDTO (
 		val sourceId: String,
 		val name: String,
 		val artist: String,
@@ -23,7 +23,7 @@ data class MetadataResponseDTO (
 		if (this === other) return true
 		if (javaClass != other?.javaClass) return false
 
-		other as MetadataResponseDTO
+		other as MetadataDTO
 
 		if (name != other.name) return false
 		if (artist != other.artist) return false
