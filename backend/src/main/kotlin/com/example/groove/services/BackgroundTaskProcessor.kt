@@ -29,7 +29,19 @@ class BackgroundTaskProcessor(
 ) {
 
 	private val userIdToTasks = ConcurrentHashMap<Long, MutableList<BackgroundTaskItem>>()
+	private val activeUserProcesses = ConcurrentHashMap.newKeySet<Long>()
+
 	private val om = createMapper()
+
+	fun addPlaylist(url: String): List<BackgroundTaskItem> {
+		val videoIds = youtubeDownloadService.getVideoIdsOnPlaylist(url)
+
+		return videoIds.map { videoId ->
+			val youtubeDownloadDTO = YoutubeDownloadDTO(url = YoutubeApiClient.VIDEO_URL + videoId)
+
+			addBackgroundTask(YT_DOWNLOAD, youtubeDownloadDTO)
+		}
+	}
 
 	fun addBackgroundTask(type: BackgroundProcessType, payload: Any): BackgroundTaskItem {
 		val currentUser = loadLoggedInUser()
@@ -58,10 +70,14 @@ class BackgroundTaskProcessor(
 		// If the size == 1, it means it was empty before.
 		// If the size was greater than 1, then it means that background tasks are already being processed for this user.
 		// We don't need to kick off another thread
-		if (itemsForUser.size == 1) {
-			thread {
-				logger.info("Starting new background process thread for user ${currentUser.name}")
-				processBackgroundTasksForUser(currentUser)
+		synchronized(this) {
+			if (!activeUserProcesses.contains(currentUser.id)) {
+				activeUserProcesses.add(currentUser.id)
+
+				thread {
+					logger.info("Starting new background process thread for user ${currentUser.name}")
+					processBackgroundTasksForUser(currentUser)
+				}
 			}
 		}
 
@@ -76,47 +92,63 @@ class BackgroundTaskProcessor(
 
 			logger.info("Processing background task item with type ${task.type} for user ${user.name}")
 
-			task.status = BackgroundProcessStatus.RUNNING
-			backgroundTaskItemRepository.save(task)
+			try {
+				processTaskInternal(task, user)
+			} catch (e: Throwable) {
+				logger.error("Could not process background task with ID: ${task.id}", e)
 
-			when (task.type) {
-				YT_DOWNLOAD -> {
-					val payload = om.readKClass(task.payload, YoutubeDownloadDTO::class)
-					trackService.saveFromYoutube(payload, user)
+				task.status = BackgroundProcessStatus.FAILED
+				backgroundTaskItemRepository.save(task)
+			}
+		}
 
-					task.status = BackgroundProcessStatus.COMPLETE
+		synchronized(this) {
+			activeUserProcesses.remove(user.id)
+			logger.info("Done processing background tasks for user ${user.name}")
+		}
+	}
+
+	private fun processTaskInternal(task: BackgroundTaskItem, user: User) {
+		task.status = BackgroundProcessStatus.RUNNING
+		backgroundTaskItemRepository.save(task)
+
+		when (task.type) {
+			YT_DOWNLOAD -> {
+				val payload = om.readKClass(task.payload, YoutubeDownloadDTO::class)
+				trackService.saveFromYoutube(payload, user)
+
+				task.status = BackgroundProcessStatus.COMPLETE
+				backgroundTaskItemRepository.save(task)
+			}
+			NAMED_IMPORT -> {
+				val metadata = om.readKClass(task.payload, MetadataDTO::class)
+
+				val video = youtubeDownloadService.searchYouTube(
+						artist = metadata.artist,
+						trackName = metadata.name,
+						targetLength = metadata.length
+				).firstOrNull()
+
+				if (video == null) {
+					task.status = BackgroundProcessStatus.FAILED
 					backgroundTaskItemRepository.save(task)
+					return
 				}
-				NAMED_IMPORT -> {
-					val metadata = om.readKClass(task.payload, MetadataDTO::class)
 
-					val video = youtubeDownloadService.searchYouTube(
-							artist = metadata.artist,
-							trackName = metadata.name,
-							targetLength = metadata.length
-					).firstOrNull()
+				val downloadDto = YoutubeDownloadDTO(
+						url = video.videoUrl,
+						name = metadata.name,
+						artist = metadata.artist,
+						album = metadata.album,
+						trackNumber = metadata.trackNumber,
+						releaseYear = metadata.releaseYear,
+						artUrl = metadata.albumArtLink
+				)
 
-					if (video == null) {
-						task.status = BackgroundProcessStatus.FAILED
-						backgroundTaskItemRepository.save(task)
-						continue
-					}
+				trackService.saveFromYoutube(downloadDto, user)
 
-					val downloadDto = YoutubeDownloadDTO(
-							url = video.videoUrl,
-							name = metadata.name,
-							artist = metadata.artist,
-							album = metadata.album,
-							trackNumber = metadata.trackNumber,
-							releaseYear = metadata.releaseYear,
-							artUrl = metadata.albumArtLink
-					)
-
-					trackService.saveFromYoutube(downloadDto, user)
-
-					task.status = BackgroundProcessStatus.COMPLETE
-					backgroundTaskItemRepository.save(task)
-				}
+				task.status = BackgroundProcessStatus.COMPLETE
+				backgroundTaskItemRepository.save(task)
 			}
 		}
 	}

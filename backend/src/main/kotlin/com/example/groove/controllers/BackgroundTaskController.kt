@@ -29,23 +29,26 @@ class BackgroundTaskController(
 	}
 
 	@PostMapping("/youtube-dl")
-    fun enqueueYoutubeDl(@RequestBody body: YoutubeDownloadDTO): BackgroundTaskItem {
-			if (body.url.contains("&list")) {
-				throw IllegalArgumentException("Playlist downloads are not allowed")
-			}
+    fun enqueueYoutubeDl(@RequestBody body: YoutubeDownloadDTO): BackgroundTaskResponse {
+		val tasks = if (body.url.contains("&list")) {
+			backgroundTaskProcessor.addPlaylist(body.url)
+		} else {
+			listOf(backgroundTaskProcessor.addBackgroundTask(type = BackgroundProcessType.YT_DOWNLOAD, payload = body))
+		}
 
-			return backgroundTaskProcessor.addBackgroundTask(
-					type = BackgroundProcessType.YT_DOWNLOAD,
-					payload = body
-			)
+		return BackgroundTaskResponse(newTasks = tasks)
     }
 
 	// This is a download based off a prior request to get Metadata from probably the SearchController
 	@PostMapping("/metadata-dl")
-	fun enqueueNamedDl(@RequestBody body: MetadataDTO): BackgroundTaskItem {
-		return backgroundTaskProcessor.addBackgroundTask(
+	fun enqueueNamedDl(@RequestBody body: MetadataDTO): BackgroundTaskResponse {
+		val task = backgroundTaskProcessor.addBackgroundTask(
 				type = BackgroundProcessType.NAMED_IMPORT,
 				payload = body
 		)
+
+		return BackgroundTaskResponse(newTasks = listOf(task))
 	}
+
+	data class BackgroundTaskResponse(val newTasks: List<BackgroundTaskItem>)
 }

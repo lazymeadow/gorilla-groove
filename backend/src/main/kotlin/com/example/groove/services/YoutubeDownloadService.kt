@@ -11,9 +11,12 @@ import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.google.common.annotations.VisibleForTesting
 import org.springframework.stereotype.Service
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.util.*
 import kotlin.math.abs
+import kotlin.streams.toList
 
 
 @Service
@@ -29,6 +32,11 @@ class YoutubeDownloadService(
 
 	fun downloadSong(user: User, youtubeDownloadDTO: YoutubeDownloadDTO): Track {
 		val url = youtubeDownloadDTO.url
+
+		if (url.contains("&list")) {
+			// If downloading a playlist, it needs to first be parsed for video IDs and split into multiple calls to this function
+			throw IllegalArgumentException("Direct playlist downloads are not allowed")
+		}
 
 		val fileKey = UUID.randomUUID().toString()
 
@@ -266,6 +274,26 @@ class YoutubeDownloadService(
 			}
 			found
 		}
+	}
+
+	fun getVideoIdsOnPlaylist(url: String): List<String> {
+		val pb = ProcessBuilder(
+				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
+				"-i", // this ignores errors, such as a video not being found
+				"--skip-download",
+				"--get-id",
+				"--no-cache-dir",
+				url
+		)
+
+		logger.info(pb.command().joinToString(" "))
+		val p = pb.start()
+
+		val reader = BufferedReader(InputStreamReader(p.inputStream))
+
+		p.waitFor()
+
+		return reader.lines().toList()
 	}
 
 	@Suppress("unused")
