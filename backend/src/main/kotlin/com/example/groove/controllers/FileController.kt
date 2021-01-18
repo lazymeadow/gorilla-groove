@@ -41,7 +41,7 @@ class FileController(
 		// FIXME file.name does not appear to be anything useful
 		logger.info("Beginning file upload: ${file.name}")
 
-		var track: Track? = null
+		var track: Track?
 		val timeToUpload = measureTimeMillis {
 			track = songIngestionService.storeSongForUser(file, loadLoggedInUser())
 		}

@@ -250,7 +250,7 @@ class SpotifyApiClient(
 	)
 
 	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataDTO {
-		val biggestImageUrl = this.album!!.images.maxBy { it.height }!!.url
+		val biggestImageUrl = this.album!!.images.maxByOrNull { it.height }!!.url
 
 		return MetadataDTO(
 				sourceId = this.id,
@@ -299,7 +299,7 @@ class SpotifyApiClient(
 		// We can get the same song multiple times from different albums. They have different track IDs however
 		val nameToTracks = nonRemixTracks.groupBy { it.name }
 		return nameToTracks.values.map { duplicateTracks ->
-			duplicateTracks.minBy { it.album!!.releaseDate.toDate().toEpochDay() }!!
+			duplicateTracks.minByOrNull { it.album!!.releaseDate.toDate().toEpochDay() }!!
 		}
 	}
 
