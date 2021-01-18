@@ -3,7 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.BackgroundTaskItemRepository
 import com.example.groove.db.model.BackgroundTaskItem
 import com.example.groove.db.model.User
-import com.example.groove.db.model.enums.BackgroundProcessStatus
+import com.example.groove.db.model.enums.BackgroundProcessStatus.*
 import com.example.groove.db.model.enums.BackgroundProcessType
 import com.example.groove.db.model.enums.BackgroundProcessType.*
 import com.example.groove.dto.MetadataDTO
@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.PostConstruct
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
@@ -65,7 +66,7 @@ class BackgroundTaskProcessor(
 
 		val backgroundTaskItem = BackgroundTaskItem(
 				originatingDevice = currentUser.currentAuthToken!!.device!!,
-				status = BackgroundProcessStatus.PENDING,
+				status = PENDING,
 				user = currentUser,
 				type = type,
 				payload = om.writeValueAsString(payload),
@@ -117,7 +118,7 @@ class BackgroundTaskProcessor(
 			} catch (e: Throwable) {
 				logger.error("Could not process background task with ID: ${task.id}", e)
 
-				task.status = BackgroundProcessStatus.FAILED
+				task.status = FAILED
 				backgroundTaskItemRepository.save(task)
 			}
 		}
@@ -129,7 +130,7 @@ class BackgroundTaskProcessor(
 	}
 
 	private fun processTaskInternal(task: BackgroundTaskItem, user: User) {
-		task.status = BackgroundProcessStatus.RUNNING
+		task.status = RUNNING
 		backgroundTaskItemRepository.save(task)
 
 		backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task)
@@ -139,7 +140,7 @@ class BackgroundTaskProcessor(
 				val payload = om.readKClass(task.payload, YoutubeDownloadDTO::class)
 				val track = trackService.saveFromYoutube(payload, user)
 
-				task.status = BackgroundProcessStatus.COMPLETE
+				task.status = COMPLETE
 				backgroundTaskItemRepository.save(task)
 
 				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
@@ -154,7 +155,7 @@ class BackgroundTaskProcessor(
 				).firstOrNull()
 
 				if (video == null) {
-					task.status = BackgroundProcessStatus.FAILED
+					task.status = FAILED
 					backgroundTaskItemRepository.save(task)
 
 					backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task)
@@ -173,7 +174,7 @@ class BackgroundTaskProcessor(
 
 				val track = trackService.saveFromYoutube(downloadDto, user)
 
-				task.status = BackgroundProcessStatus.COMPLETE
+				task.status = COMPLETE
 				backgroundTaskItemRepository.save(task)
 
 				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
@@ -196,9 +197,33 @@ class BackgroundTaskProcessor(
 
 	fun getUnfinishedTasksForUser(user: User): List<BackgroundTaskItem> {
 		return backgroundTaskItemRepository.findWhereStatusIsIn(
-				statuses = listOf(BackgroundProcessStatus.PENDING, BackgroundProcessStatus.RUNNING),
+				statuses = listOf(PENDING, RUNNING),
 				userId = user.id
 		)
+	}
+
+	@PostConstruct
+	fun loadSavedPendingTasks() {
+		val unfinishedTasks = backgroundTaskItemRepository.findWhereStatusIsIn(listOf(PENDING, RUNNING), userId = null)
+
+		// If the server was interrupted while something was running, then it probably needs to be restarted
+		val runningTasks = unfinishedTasks.filter { it.status == RUNNING }
+		runningTasks.forEach { it.status = PENDING }
+		backgroundTaskItemRepository.saveAll(runningTasks)
+
+		// Now we have only pending tasks. Assign the tasks to the state of this service and kick off processing
+		synchronized(this) {
+			val idToTasks = unfinishedTasks.groupBy { it.user.id }
+			idToTasks.forEach { (userId, tasksForUser) ->
+				val user = tasksForUser.first().user
+
+				userIdToTasks[userId] = tasksForUser.toMutableList()
+				activeUserProcesses.add(userId)
+
+				logger.info("User ${user.name} had ${tasksForUser.size} previously unfinished task(s). Starting to process them...")
+				thread { processBackgroundTasksForUser(user) }
+			}
+		}
 	}
 
 	companion object {

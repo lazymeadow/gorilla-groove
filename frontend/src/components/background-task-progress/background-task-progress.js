@@ -1,11 +1,5 @@
-import React, {useContext, useState, useEffect} from 'react';
-import {Modal} from "../modal/modal";
-import {toast} from "react-toastify";
-import {LoadingSpinner} from "../loading-spinner/loading-spinner";
-import {Api} from "../../api";
-import {UserContext} from "../../services/user-provider";
+import React, {useContext, useEffect, Fragment} from 'react';
 import {BackgroundTaskContext} from "../../services/background-task-provider";
-
 
 export default function BackgroundTaskProgress() {
 	const taskContext = useContext(BackgroundTaskContext);
@@ -14,19 +8,41 @@ export default function BackgroundTaskProgress() {
 
 	let percent = 0;
 	if (total > 0) {
-		percent = parseInt(taskContext.unfinishedTasks.length / total * 100)
+		percent = parseInt(taskContext.finishedTasks.length / total * 100)
 	}
 
 	useEffect(() => {
 		taskContext.reloadBackgroundTasks();
 	}, []);
 
+	const floatingWindowClass = total > 0 ? '' : 'display-none';
+
+	const allTasks = taskContext.finishedTasks.concat(taskContext.unfinishedTasks);
+
 	return (
 		<div id="background-task-progress">
-			<progress className="overall-upload-progress" value={percent} max="100"/>
-			<div className="count-overlay">
-				{taskContext.finishedTasks.length} / {total}
-			</div>
+			{ taskContext.unfinishedTasks.length > 0
+				? <>
+					<progress className="overall-upload-progress" value={percent} max="100"/>
+					<div className="count-overlay">
+						Processing {taskContext.finishedTasks.length + 1} of {total}
+					</div>
+
+					<div className={`floating-window ${floatingWindowClass}`}>
+						<div className="progress-grid">
+							<div className="grid-head">Download</div>
+							<div className="grid-head">Status</div>
+							{ allTasks.map(task =>
+								<Fragment key={task.id}>
+									<div className="grid-item">{task.description}</div>
+									<div className="grid-item">{task.status}</div>
+								</Fragment>
+							)}
+						</div>
+					</div>
+				</>
+				: null
+			}
 		</div>
 	)
 }

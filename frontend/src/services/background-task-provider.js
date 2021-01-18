@@ -32,11 +32,16 @@ export class BackgroundTaskProvider extends React.Component {
 
 			Api.get(`track/${trackId}`).then(track => {
 				musicContext.addUploadToExistingLibraryView(track);
-				toast.success(`'${task.description}' was downloaded successfully`)
+				toast.success(`'${track.name}' was downloaded successfully`)
 			});
 		} else if (task.status === BackgroundTaskStatus.FAILED) {
 			newFinishedTasks.push(task);
 			toast.error(`Failed to download video: '${task.description}'`)
+		}
+
+		// If we're done processing tasks, wipe out everything
+		if (newUnfinishedTasks.length === 0) {
+			newFinishedTasks = [];
 		}
 
 		this.setState({
@@ -47,7 +52,7 @@ export class BackgroundTaskProvider extends React.Component {
 
 	reloadBackgroundTasks() {
 		Api.get('background-task/unfinished').then(res => {
-			this.setState({ tasks: res.items });
+			this.setState({ unfinishedTasks: res.items });
 		}).catch(err => {
 			console.log(err);
 		});

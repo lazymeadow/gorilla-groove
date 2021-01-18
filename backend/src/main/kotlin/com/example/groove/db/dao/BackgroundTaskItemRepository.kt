@@ -19,11 +19,11 @@ interface BackgroundTaskItemRepository : CrudRepository<BackgroundTaskItem, Long
 	@Query("""
 			SELECT bti
 			FROM BackgroundTaskItem bti
-			WHERE bti.user.id = :userId
+			WHERE (:userId IS NULL OR bti.user.id = :userId)
 			AND status IN (:statuses)
 		""")
 	fun findWhereStatusIsIn(
 			@Param("statuses") statuses: List<BackgroundProcessStatus>,
-			@Param("userId") userId: Long
+			@Param("userId") userId: Long?
 	): List<BackgroundTaskItem>
 }

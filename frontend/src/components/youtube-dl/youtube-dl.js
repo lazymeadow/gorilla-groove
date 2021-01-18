@@ -43,11 +43,6 @@ export class YoutubeDlModal extends React.Component {
 		const trackNumber = document.getElementById('song-track-number').value;
 		const genre = document.getElementById('song-genre').value;
 
-		if (url.includes("&list")) {
-			toast.error("Playlist downloads are not supported");
-			return;
-		}
-
 		const params = {
 			url: url,
 			cropArtToSquare: this.state.cropArtToSquare
