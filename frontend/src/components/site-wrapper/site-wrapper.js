@@ -9,6 +9,7 @@ import {PlaylistProvider} from "../../services/playlist-provider";
 import {PlaybackProvider, PlaybackContext} from "../../services/playback-provider";
 import {DeviceProvider} from "../../services/device-provider";
 import {ReviewQueueProvider, ReviewQueueContext} from "../../services/review-queue-provider";
+import {BackgroundTaskProvider, BackgroundTaskContext} from "../../services/background-task-provider";
 
 export default function SiteWrapper() {
 
@@ -17,37 +18,43 @@ export default function SiteWrapper() {
 			<ReviewQueueContext.Consumer>
 				{reviewQueueContext =>
 					<PlaylistProvider>
-						<PlaybackProvider>
-							<PlaybackContext.Consumer>
-								{playbackContext =>
-									<UserProvider>
-										<DeviceProvider>
-											{/*Wrap the music context in the music filter context so it has a reference*/}
-											<MusicFilterProvider>
-												<MusicFilterContext.Consumer>
-													{musicFilterContext =>
-														<MusicProvider filterContext={musicFilterContext}>
-															<MusicContext.Consumer>
-																{musicContext =>
-																	<SocketProvider
-																		musicContext={musicContext}
-																		playbackContext={playbackContext}
-																		reviewQueueContext={reviewQueueContext}
-																	>
-																		<ToastContainer autoClose={5000} hideProgressBar={true} transition={Slide}/>
-																		<PageRouter/>
-																	</SocketProvider>
+						<BackgroundTaskProvider>
+							<BackgroundTaskContext.Consumer>
+								{backgroundTaskContext =>
+									<PlaybackProvider>
+										<PlaybackContext.Consumer>
+											{playbackContext =>
+												<UserProvider>
+													<DeviceProvider>
+														<MusicFilterProvider>
+															<MusicFilterContext.Consumer>
+																{musicFilterContext =>
+																	<MusicProvider filterContext={musicFilterContext}>
+																		<MusicContext.Consumer>
+																			{musicContext =>
+																				<SocketProvider
+																					musicContext={musicContext}
+																					playbackContext={playbackContext}
+																					reviewQueueContext={reviewQueueContext}
+																					backgroundTaskContext={backgroundTaskContext}
+																				>
+																					<ToastContainer autoClose={5000} hideProgressBar={true} transition={Slide}/>
+																					<PageRouter/>
+																				</SocketProvider>
+																			}
+																		</MusicContext.Consumer>
+																	</MusicProvider>
 																}
-															</MusicContext.Consumer>
-														</MusicProvider>
-													}
-												</MusicFilterContext.Consumer>
-											</MusicFilterProvider>
-										</DeviceProvider>
-									</UserProvider>
+															</MusicFilterContext.Consumer>
+														</MusicFilterProvider>
+													</DeviceProvider>
+												</UserProvider>
+											}
+										</PlaybackContext.Consumer>
+									</PlaybackProvider>
 								}
-							</PlaybackContext.Consumer>
-						</PlaybackProvider>
+							</BackgroundTaskContext.Consumer>
+						</BackgroundTaskProvider>
 					</PlaylistProvider>
 				}
 			</ReviewQueueContext.Consumer>

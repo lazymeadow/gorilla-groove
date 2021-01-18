@@ -16,16 +16,20 @@ class BackgroundTaskController(
 ) {
 
 	@GetMapping("/unfinished")
-    fun getUnfinishedTasks(): List<BackgroundTaskItem> {
-		return backgroundTaskProcessor.getUnfinishedTasksForUser(loadLoggedInUser())
+    fun getUnfinishedTasks(): BackgroundTaskResponse {
+		return BackgroundTaskResponse(
+				items = backgroundTaskProcessor.getUnfinishedTasksForUser(loadLoggedInUser())
+		)
     }
 
 	@GetMapping
-	fun getTasksWithIds(@RequestParam("ids") ids: Set<Long>): List<BackgroundTaskItem> {
+	fun getTasksWithIds(@RequestParam("ids") ids: Set<Long>): BackgroundTaskResponse {
 		require(ids.isNotEmpty()) {
 			"At least one ID is required to get task status"
 		}
-		return backgroundTaskProcessor.getTasksForUserWithIds(ids, loadLoggedInUser())
+		return BackgroundTaskResponse(
+				items = backgroundTaskProcessor.getTasksForUserWithIds(ids, loadLoggedInUser())
+		)
 	}
 
 	@PostMapping("/youtube-dl")
@@ -36,7 +40,7 @@ class BackgroundTaskController(
 			listOf(backgroundTaskProcessor.addBackgroundTask(type = BackgroundProcessType.YT_DOWNLOAD, payload = body))
 		}
 
-		return BackgroundTaskResponse(newTasks = tasks)
+		return BackgroundTaskResponse(items = tasks)
     }
 
 	// This is a download based off a prior request to get Metadata from probably the SearchController
@@ -47,8 +51,8 @@ class BackgroundTaskController(
 				payload = body
 		)
 
-		return BackgroundTaskResponse(newTasks = listOf(task))
+		return BackgroundTaskResponse(items = listOf(task))
 	}
 
-	data class BackgroundTaskResponse(val newTasks: List<BackgroundTaskItem>)
+	data class BackgroundTaskResponse(val items: List<BackgroundTaskItem>)
 }

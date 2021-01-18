@@ -133,7 +133,7 @@ class SongIngestionService(
 			art: File?,
 			originalFileName: String
 	): Track {
-		logger.info("Saving file ${song.name} for user ${user.name}")
+		logger.info("Saving file $originalFileName for user ${user.name}")
 
 		val oggFile = ffmpegService.convertTrack(song, AudioFormat.OGG)
 		// iOS does not support OGG playback. So at least for now, we have to store everything in both formats...

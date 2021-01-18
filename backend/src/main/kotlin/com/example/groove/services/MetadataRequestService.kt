@@ -117,7 +117,7 @@ class MetadataRequestService(
 					limit = 1
 			).firstOrNull()
 			
-			logger.info("Metadata was ${if (metadataResponse == null) "not" else ""} found for search")
+			logger.info("Metadata was ${if (metadataResponse == null) "not " else ""}found for search")
 
 			it to metadataResponse
 		}.filter { (_, metadataResponse) -> metadataResponse != null }

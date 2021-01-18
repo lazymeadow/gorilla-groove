@@ -9,6 +9,7 @@ import com.example.groove.db.model.enums.BackgroundProcessType.*
 import com.example.groove.dto.MetadataDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.exception.ResourceNotFoundException
+import com.example.groove.services.socket.BackgroundTaskSocketHandler
 import com.example.groove.util.createMapper
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
@@ -25,7 +26,8 @@ import kotlin.reflect.cast
 class BackgroundTaskProcessor(
 		private val backgroundTaskItemRepository: BackgroundTaskItemRepository,
 		private val trackService: TrackService,
-		private val youtubeDownloadService: YoutubeDownloadService
+		private val youtubeDownloadService: YoutubeDownloadService,
+		private val backgroundTaskSocketHandler: BackgroundTaskSocketHandler
 ) {
 
 	private val userIdToTasks = ConcurrentHashMap<Long, MutableList<BackgroundTaskItem>>()
@@ -34,27 +36,45 @@ class BackgroundTaskProcessor(
 	private val om = createMapper()
 
 	fun addPlaylist(url: String): List<BackgroundTaskItem> {
-		val videoIds = youtubeDownloadService.getVideoIdsOnPlaylist(url)
+		val videoProperties = youtubeDownloadService.getVideoPropertiesOnPlaylist(url)
 
-		return videoIds.map { videoId ->
-			val youtubeDownloadDTO = YoutubeDownloadDTO(url = YoutubeApiClient.VIDEO_URL + videoId)
+		return videoProperties.map { properties ->
+			val youtubeDownloadDTO = YoutubeDownloadDTO(url = YoutubeApiClient.VIDEO_URL + properties.id)
 
-			addBackgroundTask(YT_DOWNLOAD, youtubeDownloadDTO)
+			addBackgroundTask(YT_DOWNLOAD, youtubeDownloadDTO, properties.title)
 		}
 	}
 
-	fun addBackgroundTask(type: BackgroundProcessType, payload: Any): BackgroundTaskItem {
+	fun addBackgroundTask(type: BackgroundProcessType, payload: Any, descriptionOverride: String? = null): BackgroundTaskItem {
 		val currentUser = loadLoggedInUser()
+
+		val description = descriptionOverride ?: when (type) {
+			YT_DOWNLOAD -> {
+				payload as YoutubeDownloadDTO
+				if (payload.name != null && payload.artist != null) {
+					"${payload.name} - ${payload.artist}"
+				} else {
+					payload.name ?: payload.url
+				}
+			}
+			NAMED_IMPORT -> {
+				payload as MetadataDTO
+				"${payload.name} - ${payload.artist}"
+			}
+		}
 
 		val backgroundTaskItem = BackgroundTaskItem(
 				originatingDevice = currentUser.currentAuthToken!!.device!!,
 				status = BackgroundProcessStatus.PENDING,
 				user = currentUser,
 				type = type,
-				payload = om.writeValueAsString(payload)
+				payload = om.writeValueAsString(payload),
+				description = description
 		)
 
 		backgroundTaskItemRepository.save(backgroundTaskItem)
+
+		backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(backgroundTaskItem)
 
 		synchronized(this) {
 			if (userIdToTasks[currentUser.id] == null) {
@@ -112,13 +132,17 @@ class BackgroundTaskProcessor(
 		task.status = BackgroundProcessStatus.RUNNING
 		backgroundTaskItemRepository.save(task)
 
+		backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task)
+
 		when (task.type) {
 			YT_DOWNLOAD -> {
 				val payload = om.readKClass(task.payload, YoutubeDownloadDTO::class)
-				trackService.saveFromYoutube(payload, user)
+				val track = trackService.saveFromYoutube(payload, user)
 
 				task.status = BackgroundProcessStatus.COMPLETE
 				backgroundTaskItemRepository.save(task)
+
+				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
 			}
 			NAMED_IMPORT -> {
 				val metadata = om.readKClass(task.payload, MetadataDTO::class)
@@ -132,6 +156,8 @@ class BackgroundTaskProcessor(
 				if (video == null) {
 					task.status = BackgroundProcessStatus.FAILED
 					backgroundTaskItemRepository.save(task)
+
+					backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task)
 					return
 				}
 
@@ -145,10 +171,12 @@ class BackgroundTaskProcessor(
 						artUrl = metadata.albumArtLink
 				)
 
-				trackService.saveFromYoutube(downloadDto, user)
+				val track = trackService.saveFromYoutube(downloadDto, user)
 
 				task.status = BackgroundProcessStatus.COMPLETE
 				backgroundTaskItemRepository.save(task)
+
+				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
 			}
 		}
 	}

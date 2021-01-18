@@ -78,12 +78,11 @@ export class YoutubeDlModal extends React.Component {
 		this.props.setDownloading(true);
 		this.props.closeFunction();
 
-		Api.post('track/youtube-dl', params).then(track => {
-			this.context.addUploadToExistingLibraryView(track);
-			toast.success(`YouTube song downloaded successfully`);
+		Api.post('background-task/youtube-dl', params).then(() => {
+			toast.info(`YouTube download started`);
 		}).catch(error => {
 			console.error(error);
-			toast.error('The download from YouTube failed');
+			toast.error('The download could not be started');
 		}).finally(() => {
 			this.props.setDownloading(false);
 		});

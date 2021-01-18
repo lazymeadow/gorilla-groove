@@ -19,6 +19,7 @@ import GlobalSearch from "../global-search/global-search";
 import ReviewQueue from "../review-queue/review-queue";
 import {ReviewQueueContext} from "../../services/review-queue-provider";
 import SpotifySearch from "../global-search/spotify-search/spotify-search";
+import BackgroundTaskProgress from "../background-task-progress/background-task-progress";
 
 export default function SiteLayout(props) {
 	const [centerView, setCenterView] = useState(CenterView.TRACKS);
@@ -113,7 +114,10 @@ export default function SiteLayout(props) {
 				<AlbumArt artLink={musicContext.playedAlbumArtUrl}/>
 			</div>
 			<div className="border-layout-south">
-				<PlaybackControls/>
+				<div className="p-relative flex-between full-height">
+					<PlaybackControls/>
+					<BackgroundTaskProgress/>
+				</div>
 			</div>
 			<div className="border-layout-southeast">
 				<SiteStats/>

@@ -6,5 +6,5 @@ enum class BackgroundProcessType {
 }
 
 enum class BackgroundProcessStatus {
-	PENDING, RUNNING, COMPLETE, FAILED
+	PENDING, RUNNING, COMPLETE, FAILED, NONE
 }

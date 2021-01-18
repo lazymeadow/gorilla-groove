@@ -82,18 +82,13 @@ class FileMetadataService {
 		// Maybe it's in the format of:  Artist - Title
 		originalFileName.findIndex { dashCharacters.contains(it.toString()) }?.let { hyphenIndex ->
 			return Pair(
-					originalFileName.substring(hyphenIndex + 1).trimExtension(),
+					originalFileName.substring(hyphenIndex + 1).trimKnownExtension(),
 					originalFileName.substring(0, hyphenIndex).trim()
 			)
 		}
 
-		// Maybe it's in the format of:  Artist, Title
-		originalFileName.findIndex { it == ',' }?.let { commaIndex ->
-			return Pair(
-					originalFileName.substring(commaIndex + 1).trimExtension(),
-					originalFileName.substring(0, commaIndex).trim()
-			)
-		}
+		// At one point I had logic in here to parse based off a comma, since some of Bryan's music was in that format.
+		// But I think it's probably more error prone than it is useful to keep around for everybody
 
 		return originalFileName.trimExtension() to ""
 	}
@@ -108,6 +103,22 @@ class FileMetadataService {
 
 	private fun String.trimExtension(): String {
 		return this.split('.').first().trim()
+	}
+
+	// There are some instances where we don't easily know if a string has an extension or not.
+	// This can cause problems with trimming things like (feat. billy) where ". billy" is thought
+	// to be an extension. So this is a safer version that only trims likely extensions.
+	private fun String.trimKnownExtension(): String {
+		val knownExtensions = listOf("ogg", "mp3", "png", "webp", "wav", "mp4", "m4a")
+		val hasKnownExtension = knownExtensions.any { extension ->
+			this.endsWith(extension)
+		}
+
+		return if (hasKnownExtension) {
+			this.trimExtension()
+		} else {
+			this
+		}
 	}
 
 	fun addMetadataToFile(song: File, track: Track, albumArt: File?) {

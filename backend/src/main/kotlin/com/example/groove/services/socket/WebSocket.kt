@@ -170,7 +170,7 @@ interface SocketHandler<T> {
 }
 
 enum class EventType {
-	NOW_PLAYING, REMOTE_PLAY, REVIEW_QUEUE, CONNECTION_ESTABLISHED
+	NOW_PLAYING, REMOTE_PLAY, REVIEW_QUEUE, CONNECTION_ESTABLISHED, BACKGROUND_TASK
 }
 
 inline fun <reified T : Any> T.merge(other: T?): T {

@@ -11,12 +11,9 @@ import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.google.common.annotations.VisibleForTesting
 import org.springframework.stereotype.Service
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
 import java.util.*
 import kotlin.math.abs
-import kotlin.streams.toList
 
 
 @Service
@@ -100,9 +97,9 @@ class YoutubeDownloadService(
 				changeReleaseYear = MetadataOverrideType.IF_EMPTY,
 				changeTrackNumber = MetadataOverrideType.IF_EMPTY
 		)
-		metadataRequestService.requestTrackMetadata(spotifyMetadataRequest, user)
+		val (successTracks, _) = metadataRequestService.requestTrackMetadata(spotifyMetadataRequest, user)
 
-		return track
+		return successTracks.firstOrNull() ?: track
 	}
 
 	// These are bits of pointless noise in some of the channels I use this on.
@@ -197,8 +194,7 @@ class YoutubeDownloadService(
 				"--no-cache-dir"
 		)
 
-		val tmpFileName = UUID.randomUUID().toString()
-		val destination = fileStorageProperties.tmpDir + tmpFileName
+		val destination = fileStorageProperties.tmpDir + UUID.randomUUID().toString()
 
 		val outputFile = File(destination)
 		pb.redirectOutput(outputFile)
@@ -276,24 +272,34 @@ class YoutubeDownloadService(
 		}
 	}
 
-	fun getVideoIdsOnPlaylist(url: String): List<String> {
+	fun getVideoPropertiesOnPlaylist(url: String): List<VideoProperties> {
 		val pb = ProcessBuilder(
 				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
-				"-i", // this ignores errors, such as a video not being found
+				"-i", // this ignores errors, such as a video not being found somewhere on the playlist
 				"--skip-download",
-				"--get-id",
+				"--dump-json",
 				"--no-cache-dir",
 				url
 		)
 
+		val destination = fileStorageProperties.tmpDir + UUID.randomUUID().toString()
+
+		val outputFile = File(destination)
+		pb.redirectOutput(outputFile)
+		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
+
 		logger.info(pb.command().joinToString(" "))
 		val p = pb.start()
-
-		val reader = BufferedReader(InputStreamReader(p.inputStream))
-
 		p.waitFor()
 
-		return reader.lines().toList()
+		val fileContent = outputFile.useLines { it.toList() }
+		outputFile.delete()
+
+		return fileContent.map { videoJson ->
+			val video = mapper.readValue(videoJson, VideoProperties::class.java)
+			logger.info("Video found. Title: '${video.title}' Channel: '${video.channelName}'")
+			video
+		}
 	}
 
 	@Suppress("unused")
