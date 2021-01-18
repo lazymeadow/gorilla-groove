@@ -15,10 +15,6 @@ class FileStorageProperties {
     val tmpDir: String? = null
 		get() = (field ?: "${rootStorageLocation!!}tmp").endWith("/")
 
-	@Value("\${file.apk.download.path:#{null}}")
-	val apkDownloadDir: String? = null
-		get() = (field ?: rootStorageLocation!!).endWith("/")
-
 	@Value("\${spring.data.music.location:#{null}}")
 	val musicDirectoryLocation: String? = null
 		get() = (field ?: "${rootStorageLocation!!}music").endWith("/")

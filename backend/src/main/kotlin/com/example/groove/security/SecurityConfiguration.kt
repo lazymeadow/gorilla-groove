@@ -45,7 +45,6 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/api/user-invite-link/public/**"), // Unauthenticated users need to request the full details of their invite link
 			AntPathRequestMatcher("/api/user/public/**"), // Unauthenticated users need to be able to create their own accounts
 			AntPathRequestMatcher("/api/file/track-link/*"),
-			AntPathRequestMatcher("/api/file/download-apk**"),
 			AntPathRequestMatcher("/api/track/preview/public/*"),
 			AntPathRequestMatcher("/api/version**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
