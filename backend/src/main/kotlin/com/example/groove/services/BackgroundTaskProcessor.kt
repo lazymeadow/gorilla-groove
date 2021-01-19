@@ -141,6 +141,10 @@ class BackgroundTaskProcessor(
 				val track = trackService.saveFromYoutube(payload, user)
 
 				task.status = COMPLETE
+				// Now that the track is downloaded, we can update the description to be the most optimal it can be.
+				// Straight YT downloads set the "description" as just the URL which isn't great. At least now if
+				// a client gets the most up to date version, they'll have a good description to show the user on complete
+				task.description = "${track.name} - ${track.artist}"
 				backgroundTaskItemRepository.save(task)
 
 				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)

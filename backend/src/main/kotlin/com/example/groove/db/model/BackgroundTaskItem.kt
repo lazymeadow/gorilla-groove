@@ -35,7 +35,7 @@ class BackgroundTaskItem(
 		val payload: String,
 
 		@Column
-		val description: String,
+		var description: String,
 
 		@Column(name = "created_at")
 		val createdAt: Timestamp = now(),
