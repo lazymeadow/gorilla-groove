@@ -328,6 +328,8 @@ class MediaControlsController: UIViewController {
         self.timeListened += timeElapsed
         handlePotentialSongListen()
         
+        // This really doesn't belong in the CONTROLS file, does it Ayrton. Probably should move to a listener in NowPlayingTracks.
+        // There is an event AVPlayerItemDidPlayToEndTime that probably makes sense to use instead of checking the percent as well.
         if (percentDone >= 1.0) {
             NowPlayingTracks.playNext()
         }

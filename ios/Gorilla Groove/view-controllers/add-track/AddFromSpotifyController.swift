@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import AVKit
 
 class AddFromSpotifyController : UIViewController {
         
@@ -246,12 +247,19 @@ struct SpotifyTrack: ViewableTrackData {
 
 class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSource, UITableViewDelegate {
     
-    private let spotifyItems: [SpotifyTrack]
     private let tableView = UITableView()
     
     private let years: [Int]
     private var tracksByYear: [Int: [SpotifyTrack]]
-
+    
+    private var playingId: Int? = nil
+    
+    private var player: AVPlayer = {
+        // See the comment in AudioPlayer.swift for more info on why this is split out like this
+        // https://stackoverflow.com/a/57829394/13175115
+        AVPlayer()
+    }()
+    
     private let activitySpinner: UIActivityIndicatorView = {
         let spinner = UIActivityIndicatorView()
         
@@ -263,12 +271,19 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
     }()
     
     fileprivate init(spotifyItems: [SpotifyTrack]) {
-        self.spotifyItems = spotifyItems
+        var spotifyItems = spotifyItems
+        // Assign a temporary ID to the items so we can highlight the playing row (and maybe other stuff later)
+        for i in 0..<spotifyItems.count {
+            spotifyItems[i].id = i
+        }
         
-        self.tracksByYear = spotifyItems.groupBy { $0.releaseYear }
-        self.years = tracksByYear.keys.sorted { $0 > $1 }
+        tracksByYear = spotifyItems.groupBy { $0.releaseYear }
+        years = tracksByYear.keys.sorted { $0 > $1 }
         
         super.init(nibName: nil, bundle: nil)
+        
+        player.automaticallyWaitsToMinimizeStalling = true
+        player.volume = 1.0
     }
     
     override func viewDidLoad() {
@@ -316,6 +331,7 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         let track = tracksByYear[year]![indexPath.row]
         
         cell.track = track
+        cell.checkIfPlaying(idToCheckAgainst: playingId)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
@@ -334,15 +350,36 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         showEditMenu(track)
     }
     
-    private func showEditMenu(_ source: SpotifyTrack) {
+    private func showEditMenu(_ track: SpotifyTrack) {
         GGNavLog.info("User tapped a review source")
         
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
-            GGNavLog.info("User tapped delete review source")
+        
+        let title = track.previewUrl == nil ? "No Preview Available" : "Play Preview"
+        alert.addAction(UIAlertAction(title: title, style: .default, handler: { (_) in
+            GGNavLog.info("User tapped play preview on '\(track.artist) - \(track.name)'")
+            
+            if let urlStr = track.previewUrl, let url = URL(string: urlStr) {
+                AudioPlayer.pause()
+                
+                let playerItem = AVPlayerItem(url: url)
+                self.player.replaceCurrentItem(with: playerItem)
+                self.player.play()
+                
+                self.playingId = track.id
+                
+                DispatchQueue.main.async {
+                    self.tableView.visibleCells.forEach { cell in
+                        (cell as! TrackViewCell).checkIfPlaying(idToCheckAgainst: self.playingId)
+                    }
+                }
+            }
+        }))
+        alert.addAction(UIAlertAction(title: "Import to Library", style: .destructive, handler: { (_) in
+            GGNavLog.info("User tapped import to library on '\(track.artist) - \(track.name)'")
             self.activitySpinner.startAnimating()
         }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: { (_) in
             GGNavLog.info("User tapped cancel button")
         }))
         

@@ -82,10 +82,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         cell.track = track
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
         
-        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(bringUpSongContextMenu(sender:)))
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(bringUpSongContextMenu))
         cell.addGestureRecognizer(longPressGesture)
             
         return cell

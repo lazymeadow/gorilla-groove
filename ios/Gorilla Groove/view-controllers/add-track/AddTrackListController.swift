@@ -8,10 +8,50 @@ class AddTrackListController: UIViewController, UITableViewDataSource, UITableVi
     private var tableItems = TableOption.allCases
     private let tableView = UITableView()
     
+    private let taskProgressLabel: UILabel = {
+        let label = UILabel()
+        
+        label.textColor = Colors.foreground
+        label.font = label.font.withSize(15)
+        label.textAlignment = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+                
+        return label
+    }()
+    
+    private lazy var taskProgressView: UIView = {
+//        let rightChevron = IconView("chevron.right", weight: .medium)
+//        rightChevron.translatesAutoresizingMaskIntoConstraints = false
+//        rightChevron.tintColor = Colors.foreground
+        
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = Colors.navigationBackground
+                
+        view.addSubview(taskProgressLabel)
+//        view.addSubview(rightChevron)
+        
+        NSLayoutConstraint.activate([
+//            view.heightAnchor.constraint(equalTo: taskProgressLabel.heightAnchor, constant: 20),
+            taskProgressLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            taskProgressLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15),
+//            rightChevron.rightAnchor.constraint(equalTo: view.rightAnchor),
+//            rightChevron.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+//
+//        view.addGestureRecognizer(UITapGestureRecognizer(
+//            target: self,
+//            action: #selector(pickSource(tapGestureRecognizer:))
+//        ))
+        
+        return view
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.addSubview(tableView)
+        view.addSubview(taskProgressView)
         
         self.title = AddTrackListController.title
         
@@ -21,15 +61,48 @@ class AddTrackListController: UIViewController, UITableViewDataSource, UITableVi
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            tableView.bottomAnchor.constraint(equalTo: taskProgressView.topAnchor),
+            taskProgressView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            taskProgressView.rightAnchor.constraint(equalTo: view.rightAnchor),
+            taskProgressView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            taskProgressView.heightAnchor.constraint(equalToConstant: 0), // For later manipulation
         ])
-        
-        tableView.keyboardDismissMode = .onDrag
-        
+                
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(AddTrackListCell.self, forCellReuseIdentifier: "addListCell")
         tableView.tableFooterView = UIView(frame: .zero)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        BackgroundTaskService.registerAddTrackController(self)
+        
+        recalculateProgressText()
+    }
+    
+    func recalculateProgressText() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async {
+                self.recalculateProgressText()
+            }
+            return
+        }
+        
+        let heightConstraint = self.taskProgressView.constraints.filter({ $0.firstAttribute == .height }).first!
+        
+        let tasks = BackgroundTaskService.tasks
+        if tasks.isEmpty {
+            taskProgressLabel.text = ""
+            heightConstraint.constant = 0
+        } else {
+            heightConstraint.constant = 30
+            
+            let finishedTasks = tasks.filter { $0.status == .COMPLETE || $0.status == .FAILED }
+
+            taskProgressLabel.text = "Processing \(finishedTasks.count + 1) of \(tasks.count) downloads..."
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {

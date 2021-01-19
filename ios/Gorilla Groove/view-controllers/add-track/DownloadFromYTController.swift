@@ -25,15 +25,6 @@ class DownloadFromYTController : UIViewController {
         return field
     }()
     
-    private let inputCaption: UILabel = {
-        let label = UILabel()
-        label.font = label.font.withSize(11)
-        label.textColor = Colors.inputLine
-        label.translatesAutoresizingMaskIntoConstraints = false
-        
-        return label
-    }()
-    
     private let bottomInputLine: UIView = {
         let view = UIView()
         
@@ -69,14 +60,11 @@ class DownloadFromYTController : UIViewController {
         super.viewDidLoad()
         
         self.title = "Download from YouTube"
-        
-        inputCaption.text = "Playlist downloads are not supported"
-        
+                
         self.view.backgroundColor = Colors.background
         
         self.view.addSubview(submitButton)
         self.view.addSubview(bottomInputLine)
-        self.view.addSubview(inputCaption)
         self.view.addSubview(inputField)
         self.view.addSubview(activitySpinner)
         
@@ -90,14 +78,10 @@ class DownloadFromYTController : UIViewController {
             bottomInputLine.heightAnchor.constraint(equalToConstant: 1),
             bottomInputLine.topAnchor.constraint(equalTo: inputField.bottomAnchor, constant: 5),
             
-            inputCaption.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            inputCaption.leadingAnchor.constraint(equalTo: inputField.leadingAnchor, constant: 0),
-            inputCaption.topAnchor.constraint(equalTo: bottomInputLine.topAnchor, constant: 10),
-            
             submitButton.leadingAnchor.constraint(equalTo: bottomInputLine.leadingAnchor),
             submitButton.trailingAnchor.constraint(equalTo: bottomInputLine.trailingAnchor),
             submitButton.heightAnchor.constraint(equalToConstant: 50),
-            submitButton.topAnchor.constraint(equalTo: inputCaption.bottomAnchor, constant: 75),
+            submitButton.topAnchor.constraint(equalTo: bottomInputLine.bottomAnchor, constant: 75),
             
             activitySpinner.centerXAnchor.constraint(equalTo: bottomInputLine.centerXAnchor),
             activitySpinner.bottomAnchor.constraint(equalTo: submitButton.topAnchor, constant: -10),
@@ -129,28 +113,24 @@ class DownloadFromYTController : UIViewController {
         
         let request = DownloadYTVideoRequest(url: text)
         
-        HttpRequester.post("track/youtube-dl", TrackResponse.self, request) { response, status, _ in
-            guard let newTrack = response?.asTrack(), status.isSuccessful() else {
+        HttpRequester.post("background-task/youtube-dl", BackgroundTaskResponse.self, request) { response, status, _ in
+            guard let taskResponse = response, status.isSuccessful() else {
                 DispatchQueue.main.async {
-                    Toast.show("Failed to download video")
+                    Toast.show("Failed to start download")
                     self.loading = false
                 }
-                GGLog.error("Could not download video!")
+                GGLog.error("Could not start video download!")
                 return
             }
-            
-            TrackDao.save(newTrack)
-            
-            DispatchQueue.global().async {
-                ServerSynchronizer.syncWithServer(syncTypes: [SyncType.track])
-            }
-            
+                        
             DispatchQueue.main.async {
-                Toast.show("Downloaded video")
+                Toast.show("Download started")
                 self.loading = false
 
                 self.navigationController!.popViewController(animated: true)
             }
+            
+            BackgroundTaskService.addBackgroundTasks(taskResponse.items)
         }
     }
     

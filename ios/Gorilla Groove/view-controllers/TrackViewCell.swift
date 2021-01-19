@@ -2,7 +2,7 @@ import UIKit
 import Foundation
 
 class TrackViewCell: UITableViewCell {
-
+    
     var track: ViewableTrackData? {
         didSet {
             guard let track = track else {return}
@@ -18,7 +18,7 @@ class TrackViewCell: UITableViewCell {
             albumLabel.sizeToFit()
         }
     }
-
+    
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
@@ -52,8 +52,8 @@ class TrackViewCell: UITableViewCell {
         return label
     }()
     
-    func checkIfPlaying() {
-        if (track != nil && track?.id == NowPlayingTracks.currentTrack?.id) {
+    func checkIfPlaying(idToCheckAgainst: Int? = NowPlayingTracks.currentTrack?.id) {
+        if (track != nil && track?.id == idToCheckAgainst) {
             artistLabel.textColor = Colors.primary
             nameLabel.textColor = Colors.playingSongtitle
             albumLabel.textColor = Colors.primary
