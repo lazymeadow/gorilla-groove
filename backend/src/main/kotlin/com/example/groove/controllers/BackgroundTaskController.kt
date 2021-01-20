@@ -47,6 +47,10 @@ class BackgroundTaskController(
 	// This is a download based off a prior request to get Metadata from probably the SearchController
 	@PostMapping("/metadata-dl")
 	fun enqueueNamedDl(@RequestBody body: MetadataImportRequestDTO): BackgroundTaskResponse {
+		require(!body.addToReview || body.artistQueueName != null) {
+			"If adding to review, the artistQueueName is required"
+		}
+
 		val task = backgroundTaskProcessor.addBackgroundTask(
 				type = BackgroundProcessType.NAMED_IMPORT,
 				payload = body

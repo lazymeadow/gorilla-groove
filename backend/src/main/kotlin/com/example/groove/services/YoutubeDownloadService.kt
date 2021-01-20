@@ -143,10 +143,10 @@ class YoutubeDownloadService(
 
 			if (overrideArt == null) {
 				if (videoArt == null) {
-					logger.error("Could not grab the override album art link ${overrideArtLink}! Using video thumbnail instead (if it exists)")
+					logger.error("Could not grab the override album art link ${overrideArtLink}! The video thumbnail also could not be found!")
 					null
 				} else {
-					logger.error("Could not grab the override album art link ${overrideArtLink}! The video thumbnail also could not be found!")
+					logger.error("Could not grab the override album art link ${overrideArtLink}! Using the video thumbnail instead")
 					videoArt
 				}
 			} else {

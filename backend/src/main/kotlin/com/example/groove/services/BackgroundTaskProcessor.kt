@@ -183,7 +183,18 @@ class BackgroundTaskProcessor(
 
 				val track = trackService.saveFromYoutube(downloadDto, user)
 				if (metadata.addToReview) {
-					val association = reviewSourceArtistService.addInactiveArtist(metadata.artist, user)
+					val association = try {
+						reviewSourceArtistService.addInactiveArtist(metadata.artistQueueName!!, user)
+					} catch (e: Throwable) {
+						logger.error("Could not find spotify artist for name '${metadata.artistQueueName!!}'. Deleting track and failing task")
+						trackService.deleteTracks(user, listOf(track.id))
+
+						task.status = FAILED
+						backgroundTaskItemRepository.save(task)
+
+						backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
+						return
+					}
 					track.inReview = true
 					track.addedToLibrary = null
 					track.reviewSource = association.reviewSource

@@ -21,6 +21,7 @@ class MetadataImportRequestDTO (
 		override val trackNumber: Int,
 		override val albumArtLink: String,
 		override val length: Int,
+		val artistQueueName: String?,
 		val addToReview: Boolean = false
 ) : MetadataDTO
 
