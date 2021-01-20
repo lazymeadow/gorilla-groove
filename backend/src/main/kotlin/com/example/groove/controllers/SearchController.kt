@@ -1,6 +1,6 @@
 package com.example.groove.controllers
 
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.services.SpotifyApiClient
 import com.example.groove.services.YoutubeApiClient
 import com.example.groove.services.YoutubeDownloadService
@@ -60,7 +60,7 @@ class SearchController(
 	fun searchSpotifyByArtistAndName(
 			@PathVariable("artist") artist: String,
 			@PathVariable("name") name: String
-	): List<MetadataDTO> {
+	): List<MetadataResponseDTO> {
 		logger.info("User ${loadLoggedInUser().name} is searching spotify for the artist '$artist' and name '$name'")
 		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name)
 	}
@@ -95,5 +95,5 @@ class SearchController(
 	}
 
 	data class AutocompleteResponse(val suggestions: Set<String>)
-	data class MetadataSearchResponse(val items: List<MetadataDTO>)
+	data class MetadataSearchResponse(val items: List<MetadataResponseDTO>)
 }

@@ -1,6 +1,6 @@
 package com.example.groove.services
 
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.properties.SpotifyApiProperties
 import com.example.groove.util.*
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -38,8 +38,8 @@ class SpotifyApiClient(
 	// Spotify doesn't actually let us query by year, but I think it makes the most sense for the frontend
 	// to see things by year. So we "get around" this by querying multiple pages and sorting on our end. It won't
 	// be a complete picture unfortunately. But it should be good enough for most artists that have fewer than ~200 songs
-	fun getTracksForArtistSortedByYear(artist: String): List<MetadataDTO> {
-		val allMetadata = mutableListOf<MetadataDTO>()
+	fun getTracksForArtistSortedByYear(artist: String): List<MetadataResponseDTO> {
+		val allMetadata = mutableListOf<MetadataResponseDTO>()
 		for (i in 0..4) {
 			val page = getMetadataByTrackArtistAndName(
 					artist = artist,
@@ -93,7 +93,7 @@ class SpotifyApiClient(
 			offset: Int = 0,
 			limit: Int = REQUEST_SIZE_LIMIT,
 			allowBroadSearch: Boolean = true
-	): List<MetadataDTO> {
+	): List<MetadataResponseDTO> {
 		val url = createSpotifySearchUrl(
 				artist = artist,
 				name = name,
@@ -147,7 +147,7 @@ class SpotifyApiClient(
 			artist: String,
 			artistId: String? = null,
 			fromDate: LocalDate? = null
-	): List<MetadataDTO> {
+	): List<MetadataResponseDTO> {
 		val artistIdNotNull = artistId // Save ourselves a call to spotify if we already know the ID
 				?: getSpotifyArtistId(artist)
 				?: return emptyList()
@@ -249,10 +249,10 @@ class SpotifyApiClient(
 			val name: String
 	)
 
-	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataDTO {
+	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO {
 		val biggestImageUrl = this.album!!.images.maxByOrNull { it.height }!!.url
 
-		return MetadataDTO(
+		return MetadataResponseDTO(
 				sourceId = this.id,
 				name = this.name,
 				artist = this.artists.joinToString { it.name },

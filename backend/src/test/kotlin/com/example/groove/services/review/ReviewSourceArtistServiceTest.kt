@@ -1,8 +1,7 @@
 package com.example.groove.services.review
 
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.services.YoutubeDownloadService
-import com.example.groove.shouldBe
 import org.junit.jupiter.api.Test
 
 class ReviewSourceArtistServiceTest {
@@ -25,7 +24,7 @@ class ReviewSourceArtistServiceTest {
 			videoUrl = ""
 	)
 
-	private fun createSong(name: String, artist: String, length: Int) = MetadataDTO(
+	private fun createSong(name: String, artist: String, length: Int) = MetadataResponseDTO(
 			name = name,
 			artist = artist,
 			length = length,

@@ -2,7 +2,8 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.BackgroundTaskItem
 import com.example.groove.db.model.enums.BackgroundProcessType
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataImportRequestDTO
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.BackgroundTaskProcessor
 import com.example.groove.util.loadLoggedInUser
@@ -45,7 +46,7 @@ class BackgroundTaskController(
 
 	// This is a download based off a prior request to get Metadata from probably the SearchController
 	@PostMapping("/metadata-dl")
-	fun enqueueNamedDl(@RequestBody body: MetadataDTO): BackgroundTaskResponse {
+	fun enqueueNamedDl(@RequestBody body: MetadataImportRequestDTO): BackgroundTaskResponse {
 		val task = backgroundTaskProcessor.addBackgroundTask(
 				type = BackgroundProcessType.NAMED_IMPORT,
 				payload = body

@@ -8,7 +8,7 @@ import com.example.groove.db.model.ReviewSourceArtist
 import com.example.groove.db.model.ReviewSourceArtistDownload
 import com.example.groove.db.model.ReviewSourceUser
 import com.example.groove.db.model.User
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.*
@@ -118,7 +118,7 @@ class ReviewSourceArtistService(
 	}
 
 	// Now we need to find a match on YouTube to download...
-	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, songsToDownload: List<MetadataDTO>, users: List<User>): Int {
+	private fun attemptDownloadFromYoutube(source: ReviewSourceArtist, songsToDownload: List<MetadataResponseDTO>, users: List<User>): Int {
 		val (firstUser, otherUsers) = users.firstAndRest()
 
 		var downloadCount = 0
@@ -188,41 +188,11 @@ class ReviewSourceArtistService(
 		return downloadCount
 	}
 
-	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
-		val currentUser = loadLoggedInUser()
-
-		// First, check if the artist already exists. Someone may have subscribed to them earlier
-		reviewSourceArtistRepository.findByArtistName(artistName)?.let { existing ->
-			if (existing.isUserSubscribed(currentUser)) {
-				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
-			}
-
-			// If this source was previously unused, re-enable it and update the time to search from to now
-			if (existing.getActiveUsers().isEmpty()) {
-				logger.info("Source for $artistName already exists but has no subscribed users. Resetting its 'searchNewerThan'")
-				existing.updatedAt = now()
-				existing.searchNewerThan = now()
-
-				reviewSourceArtistRepository.save(existing)
-			}
-
-			// If the source already existed, then the association might as well
-			reviewSourceUserRepository.findByUserAndSource(userId = currentUser.id, sourceId = existing.id)?.let { sourceAssociation ->
-				// Association was previously deleted. Just re-enable it and return early
-				sourceAssociation.deleted = false
-				sourceAssociation.updatedAt = now()
-				reviewSourceUserRepository.save(sourceAssociation)
-
-				return sourceAssociation to emptyList()
-			}
-
-			val reviewSourceUser = ReviewSourceUser(reviewSource = existing, user = currentUser)
-			reviewSourceUserRepository.save(reviewSourceUser)
-
-			return reviewSourceUser to emptyList()
+	fun createOrFindArtistReviewSource(artistName: String): Pair<ReviewSourceArtist?, List<String>> {
+		val existingSource = reviewSourceArtistRepository.findByArtistName(artistName)
+		if (existingSource != null) {
+			return existingSource to emptyList()
 		}
-
-		// Ok so nobody has subscribed to this artist before. We need to create a new one and add our user to it
 
 		// Start by finding the artists Spotify gives us based off the name
 		val artists = spotifyApiClient.searchArtistsByName(artistName)
@@ -238,10 +208,64 @@ class ReviewSourceArtistService(
 		val source = ReviewSourceArtist(artistId = foundArtist.id, artistName = foundArtist.name, searchNewerThan = now())
 		reviewSourceArtistRepository.save(source)
 
-		val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = currentUser)
-		reviewSourceUserRepository.save(reviewSourceUser)
+		return source to emptyList()
+	}
 
-		return reviewSourceUser to emptyList()
+	fun addUserToSource(source: ReviewSourceArtist, user: User, addingAsSubscription: Boolean): ReviewSourceUser {
+		if (addingAsSubscription && source.isUserSubscribed(user)) {
+			throw IllegalArgumentException("User is already subscribed to artist ${source.artistName}!")
+		}
+
+		val association = reviewSourceUserRepository.findByUserAndSource(userId = user.id, sourceId = source.id) ?: run {
+			logger.info("${user.name} was not previously subscribed to ${source.artistName}. Adding an association")
+			val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = user, active = addingAsSubscription)
+			reviewSourceUser.active = false
+
+			reviewSourceUser
+		}
+
+		association.deleted = false
+		if (addingAsSubscription) {
+			association.active = true
+		}
+
+		reviewSourceUserRepository.save(association)
+
+		return association
+	}
+
+	fun addInactiveArtist(artistName: String, user: User): ReviewSourceUser {
+		val source = createOrFindArtistReviewSource(artistName).first ?: run {
+			logger.warn("User ${user.name} tried to add an inactive artist with name '$artistName' but it was not found")
+			throw IllegalArgumentException("No artist with name '$artistName' found!")
+		}
+
+		return addUserToSource(source, user, addingAsSubscription = false)
+	}
+
+	// This function was written with a rather web-centric view in mind with the returning a list of possible things
+	// that the artist could have been and I now hate it. I'd rather get web using the autocomplete endpoints to verify
+	// that an artist exists, and then remove all this extra crap with the List<String>
+	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
+		val currentUser = loadLoggedInUser()
+
+		val (source, suggestions) = createOrFindArtistReviewSource(artistName)
+		if (source == null) {
+			return source to suggestions
+		}
+
+		// If this source was previously unused, re-enable it and update the time to search from to now
+		if (source.getActiveUsers().isEmpty()) {
+			logger.info("Source for $artistName has no subscribed users. Resetting its 'searchNewerThan'")
+			source.updatedAt = now()
+			source.searchNewerThan = now()
+
+			reviewSourceArtistRepository.save(source)
+		}
+
+		val association = addUserToSource(source, currentUser, addingAsSubscription = true)
+
+		return association to emptyList()
 	}
 
 	companion object {

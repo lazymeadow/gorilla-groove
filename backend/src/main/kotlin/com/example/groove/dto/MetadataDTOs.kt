@@ -3,17 +3,38 @@ package com.example.groove.dto
 import com.example.groove.db.model.Track
 import com.example.groove.services.enums.MetadataOverrideType
 
-data class MetadataDTO (
+interface MetadataDTO {
+	val name: String
+	val artist: String
+	val album: String
+	val releaseYear: Int
+	val trackNumber: Int
+	val albumArtLink: String
+	val length: Int
+}
+
+class MetadataImportRequestDTO (
+		override val name: String,
+		override val artist: String,
+		override val album: String,
+		override val releaseYear: Int,
+		override val trackNumber: Int,
+		override val albumArtLink: String,
+		override val length: Int,
+		val addToReview: Boolean = false
+) : MetadataDTO
+
+class MetadataResponseDTO (
 		val sourceId: String,
-		val name: String,
-		val artist: String,
-		val album: String,
-		val releaseYear: Int,
-		val trackNumber: Int,
-		val albumArtLink: String,
-		val length: Int,
+		override val name: String,
+		override val artist: String,
+		override val album: String,
+		override val releaseYear: Int,
+		override val trackNumber: Int,
+		override val albumArtLink: String,
+		override val length: Int,
 		val previewUrl: String? // Not all tracks have this. Quite a few don't, actually
-) {
+) : MetadataDTO {
 	// Spotify can have duplicates that have all the same fields, but a different "sourceId".
 	// Idk why this is. All I know is it's dumb. I am going to consider a song to be a duplicate
 	// if the name, artist, and length are all the same. You could arguably add "album" as well,
@@ -23,7 +44,7 @@ data class MetadataDTO (
 		if (this === other) return true
 		if (javaClass != other?.javaClass) return false
 
-		other as MetadataDTO
+		other as MetadataResponseDTO
 
 		if (name != other.name) return false
 		if (artist != other.artist) return false

@@ -1,15 +1,18 @@
 package com.example.groove.services
 
 import com.example.groove.db.dao.BackgroundTaskItemRepository
+import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.BackgroundTaskItem
 import com.example.groove.db.model.User
 import com.example.groove.db.model.enums.BackgroundProcessStatus.*
 import com.example.groove.db.model.enums.BackgroundProcessType
 import com.example.groove.db.model.enums.BackgroundProcessType.*
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataImportRequestDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.exception.ResourceNotFoundException
+import com.example.groove.services.review.ReviewSourceArtistService
 import com.example.groove.services.socket.BackgroundTaskSocketHandler
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.createMapper
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
@@ -28,7 +31,9 @@ class BackgroundTaskProcessor(
 		private val backgroundTaskItemRepository: BackgroundTaskItemRepository,
 		private val trackService: TrackService,
 		private val youtubeDownloadService: YoutubeDownloadService,
-		private val backgroundTaskSocketHandler: BackgroundTaskSocketHandler
+		private val backgroundTaskSocketHandler: BackgroundTaskSocketHandler,
+		private val reviewSourceArtistService: ReviewSourceArtistService,
+		private val trackRepository: TrackRepository
 ) {
 
 	private val userIdToTasks = ConcurrentHashMap<Long, MutableList<BackgroundTaskItem>>()
@@ -59,7 +64,7 @@ class BackgroundTaskProcessor(
 				}
 			}
 			NAMED_IMPORT -> {
-				payload as MetadataDTO
+				payload as MetadataImportRequestDTO
 				"${payload.name} - ${payload.artist}"
 			}
 		}
@@ -150,7 +155,7 @@ class BackgroundTaskProcessor(
 				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
 			}
 			NAMED_IMPORT -> {
-				val metadata = om.readKClass(task.payload, MetadataDTO::class)
+				val metadata = om.readKClass(task.payload, MetadataImportRequestDTO::class)
 
 				val video = youtubeDownloadService.searchYouTube(
 						artist = metadata.artist,
@@ -177,6 +182,14 @@ class BackgroundTaskProcessor(
 				)
 
 				val track = trackService.saveFromYoutube(downloadDto, user)
+				if (metadata.addToReview) {
+					val association = reviewSourceArtistService.addInactiveArtist(metadata.artist, user)
+					track.inReview = true
+					track.addedToLibrary = null
+					track.reviewSource = association.reviewSource
+					track.updatedAt = now()
+					trackRepository.save(track)
+				}
 
 				task.status = COMPLETE
 				backgroundTaskItemRepository.save(task)

@@ -4,7 +4,7 @@ import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.db.model.User
-import com.example.groove.dto.MetadataDTO
+import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.services.enums.MetadataOverrideType
 import com.example.groove.util.*
@@ -92,14 +92,14 @@ class MetadataRequestService(
 
 		val file = fileUtils.createTemporaryFile(".png")
 		artImage.writeToFile(file, "png")
-		logger.info("Writing new album art for track $track to storage...")
+		logger.info("Writing new album art for track ${track.id} to storage...")
 		songIngestionService.storeAlbumArtForTrack(file, track, false)
 		file.delete()
 
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
 	}
 
-	private fun findUpdatableTracks(trackIds: List<Long>, user: User): List<Pair<Track, MetadataDTO>> {
+	private fun findUpdatableTracks(trackIds: List<Long>, user: User): List<Pair<Track, MetadataResponseDTO>> {
 		val validTracks = trackIds
 				.map { trackRepository.get(it) }
 				.filterNot { track ->
