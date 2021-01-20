@@ -15,6 +15,7 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
     ) {
         self.reviewSourcesByType = reviewSources
             .filter { EditReviewSourcesController.queueTypesToShow.contains($0.sourceType) }
+            .filter { $0.active }
             .sorted { $0.displayName.localizedCompare($1.displayName) == .orderedAscending }
             .groupBy { $0.sourceType }
         

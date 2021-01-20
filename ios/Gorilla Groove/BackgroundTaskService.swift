@@ -57,6 +57,7 @@ class BackgroundTaskService {
 
                 if item.status == .FAILED {
                     DispatchQueue.main.async {
+                        GGLog.error("Failed to download '\(item.description)'")
                         Toast.show("Failed to download '\(item.description)'")
                     }
                     idToTask[item.id] = nil
@@ -66,16 +67,16 @@ class BackgroundTaskService {
             synchronized(lock) {
                 let allDone = idToTask.values.allSatisfy { $0.status == .COMPLETE }
                 GGLog.debug("Polling is \(allDone ? "done" : "not done")")
-                if allDone && !items.isEmpty {
+                if allDone {
                     let completedTasks = idToTask.values
                     
-                    ServerSynchronizer.syncWithServer(syncTypes: [.track], abortIfRecentlySynced: false)
+                    ServerSynchronizer.syncWithServer(syncTypes: [.track, .reviewSource], abortIfRecentlySynced: false)
                     
                     DispatchQueue.main.async {
-                        if completedTasks.count > 1 {
-                            Toast.show("Finished downloading \(completedTasks.count) items")
-                        } else {
+                        if completedTasks.count == 1 {
                             Toast.show("Finished downloading '\(completedTasks.first!.description)'")
+                        } else if completedTasks.count > 1 {
+                            Toast.show("Finished downloading \(completedTasks.count) items")
                         }
                     }
                     

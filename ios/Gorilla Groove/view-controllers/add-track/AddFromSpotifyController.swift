@@ -187,7 +187,10 @@ class AddFromSpotifyController : UIViewController {
             }
             
             DispatchQueue.main.async {
-                let vc = AddFromSpotifyTrackListController(spotifyItems: items.map { $0.toViewableTrack() })
+                let vc = AddFromSpotifyTrackListController(
+                    spotifyItems: items.map { $0.toViewableTrack() },
+                    searchTerm: text
+                )
                 vc.modalPresentationStyle = .fullScreen
                 self.navigationController!.pushViewController(vc, animated: true)
             }
@@ -243,6 +246,34 @@ struct SpotifyTrack: ViewableTrackData {
     let albumArtLink: String
     var length: Int
     let previewUrl: String?
+    
+    func toImportRequest(addToReview: Bool, artistQueueName: String?) -> SpotifyImportRequest {
+        return SpotifyImportRequest(
+            name: self.name,
+            artist: self.artist,
+            album: self.album,
+            releaseYear: self.releaseYear,
+            trackNumber: self.trackNumber,
+            albumArtLink: self.albumArtLink,
+            length: self.length,
+            previewUrl: self.previewUrl,
+            addToReview: addToReview,
+            artistQueueName: artistQueueName
+        )
+    }
+}
+
+struct SpotifyImportRequest : Codable {
+    var name: String
+    let artist: String
+    var album: String
+    let releaseYear: Int
+    let trackNumber: Int
+    let albumArtLink: String
+    var length: Int
+    let previewUrl: String?
+    let addToReview: Bool
+    let artistQueueName: String?
 }
 
 class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -251,6 +282,7 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
     
     private let years: [Int]
     private var tracksByYear: [Int: [SpotifyTrack]]
+    private let searchTerm: String
     
     private var playingId: Int? = nil
     
@@ -270,7 +302,7 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         return spinner
     }()
     
-    fileprivate init(spotifyItems: [SpotifyTrack]) {
+    fileprivate init(spotifyItems: [SpotifyTrack], searchTerm: String) {
         var spotifyItems = spotifyItems
         // Assign a temporary ID to the items so we can highlight the playing row (and maybe other stuff later)
         for i in 0..<spotifyItems.count {
@@ -279,11 +311,13 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         
         tracksByYear = spotifyItems.groupBy { $0.releaseYear }
         years = tracksByYear.keys.sorted { $0 > $1 }
-        
+        self.searchTerm = searchTerm
+
         super.init(nibName: nil, bundle: nil)
         
         player.automaticallyWaitsToMinimizeStalling = true
         player.volume = 1.0
+        
     }
     
     override func viewDidLoad() {
@@ -375,15 +409,45 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
                 }
             }
         }))
-        alert.addAction(UIAlertAction(title: "Import to Library", style: .destructive, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Import to Library", style: .default, handler: { _ in
             GGNavLog.info("User tapped import to library on '\(track.artist) - \(track.name)'")
-            self.activitySpinner.startAnimating()
+            
+            self.importToLibrary(track: track, addToReview: false)
+        }))
+        alert.addAction(UIAlertAction(title: "Import to Review Queue", style: .default, handler: { _ in
+            GGNavLog.info("User tapped import to review queue on '\(track.artist) - \(track.name)'")
+            
+            self.importToLibrary(track: track, addToReview: true, artistQueueName: self.searchTerm)
         }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: { (_) in
             GGNavLog.info("User tapped cancel button")
         }))
         
         ViewUtil.showAlert(alert)
+    }
+    
+    private func importToLibrary(track: SpotifyTrack, addToReview: Bool, artistQueueName: String? = nil) {
+        self.activitySpinner.startAnimating()
+        
+        let request = track.toImportRequest(addToReview: addToReview, artistQueueName: artistQueueName)
+        
+        HttpRequester.post("background-task/metadata-dl", BackgroundTaskResponse.self, request) { response, status, _ in
+            guard let taskResponse = response, status.isSuccessful() else {
+                DispatchQueue.main.async {
+                    Toast.show("Failed to start import")
+                    self.activitySpinner.stopAnimating()
+                }
+                GGLog.error("Could not start spotify import!")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                Toast.show("Import started")
+                self.activitySpinner.stopAnimating()
+            }
+            
+            BackgroundTaskService.addBackgroundTasks(taskResponse.items)
+        }
     }
     
     required init?(coder: NSCoder) {

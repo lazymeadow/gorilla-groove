@@ -6,17 +6,20 @@ public class ReviewSource : Entity {
     public var sourceType: SourceType
     public var displayName: String
     public var offlineAvailability: OfflineAvailabilityType
+    public var active: Bool
     
     public init(
         id: Int,
         sourceType: SourceType,
         displayName: String,
-        offlineAvailability: OfflineAvailabilityType
+        offlineAvailability: OfflineAvailabilityType,
+        active: Bool
     ) {
         self.id = id
         self.sourceType = sourceType
         self.displayName = displayName
         self.offlineAvailability = offlineAvailability
+        self.active = active
     }
     
     public static func fromDict(_ dict: [String : Any?]) -> ReviewSource {
@@ -24,7 +27,8 @@ public class ReviewSource : Entity {
             id: dict["id"] as! Int,
             sourceType: SourceType(rawValue: dict["sourceType"] as! String) ?? .UNKNOWN,
             displayName: dict["displayName"] as! String,
-            offlineAvailability: OfflineAvailabilityType(rawValue: dict["offlineAvailability"] as! String) ?? .UNKNOWN
+            offlineAvailability: OfflineAvailabilityType(rawValue: dict["offlineAvailability"] as! String) ?? .UNKNOWN,
+            active: (dict["active"] as! Int).toBool()
         )
     }
 }

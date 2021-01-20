@@ -124,7 +124,7 @@ class Database {
     
     static private func migrate(_ userId: Int) {
         let currentVersion = getDbVersion()
-        let targetVersion = 9
+        let targetVersion = 10
         
         logger.info("Existing DB is using version: \(currentVersion)")
 
@@ -308,6 +308,12 @@ class Database {
             executeOrFail("ALTER TABLE track ADD review_source_id INT NULL;")
             executeOrFail("ALTER TABLE track ADD last_reviewed INT NULL;")
         }
+        
+        if currentVersion < 10 {
+            logger.info("Adding 'active' column to 'review_source'")
+            executeOrFail("ALTER TABLE review_source ADD active INT NOT NULL DEFAULT 1;")
+        }
+        
         
         executeOrFail("UPDATE db_version SET version = \(targetVersion)")
         logger.info("Database was upgraded to version \(targetVersion)")
