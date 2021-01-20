@@ -105,6 +105,11 @@ export class SocketProvider extends React.Component {
 		toast.info(toastMessage, { autoClose: 30000 });
 	}
 
+	handleBackgroundTaskMessage(message) {
+		console.log(message);
+		this.props.backgroundTaskContext.handleTaskChange(message.task, message.trackId, this.props.musicContext);
+	}
+
 	connectToSocket() {
 		// Avoid sending a new connection on logout / login
 		if (!isLoggedIn()) {
@@ -122,6 +127,7 @@ export class SocketProvider extends React.Component {
 				case EventType.NOW_PLAYING: return this.handleNowListeningMessage(data);
 				case EventType.REMOTE_PLAY: return this.handleRemotePlayMessage(data);
 				case EventType.REVIEW_QUEUE: return this.handleReviewQueueMessage(data);
+				case EventType.BACKGROUND_TASK: return this.handleBackgroundTaskMessage(data);
 				case EventType.CONNECTION_ESTABLISHED: return console.info(data.message);
 			}
 		};
@@ -230,5 +236,6 @@ const EventType = Object.freeze({
 	NOW_PLAYING: 'NOW_PLAYING',
 	REMOTE_PLAY: 'REMOTE_PLAY',
 	REVIEW_QUEUE: 'REVIEW_QUEUE',
-	CONNECTION_ESTABLISHED: 'CONNECTION_ESTABLISHED'
+	CONNECTION_ESTABLISHED: 'CONNECTION_ESTABLISHED',
+	BACKGROUND_TASK: 'BACKGROUND_TASK',
 });

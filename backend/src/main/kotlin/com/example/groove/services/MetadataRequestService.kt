@@ -3,6 +3,7 @@ package com.example.groove.services
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
+import com.example.groove.db.model.User
 import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.MetadataUpdateRequestDTO
 import com.example.groove.services.enums.MetadataOverrideType
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.IOException
 import java.net.URL
-import java.sql.Timestamp
 import javax.imageio.ImageIO
 
 @Service
@@ -26,11 +26,11 @@ class MetadataRequestService(
 ) {
 
 	@Transactional
-	fun requestTrackMetadata(request: MetadataUpdateRequestDTO): Pair<List<Track>, List<Long>> {
+	fun requestTrackMetadata(request: MetadataUpdateRequestDTO, user: User): Pair<List<Track>, List<Long>> {
 		val trackIds = request.trackIds
 		val now = now()
 
-		val updatedSuccessTracks = findUpdatableTracks(trackIds).map { (track, metadataResponse) ->
+		val updatedSuccessTracks = findUpdatableTracks(trackIds, user).map { (track, metadataResponse) ->
 			if (track.album.shouldBeUpdated(request.changeAlbum)) {
 				track.album = metadataResponse.album
 				track.updatedAt = now
@@ -92,21 +92,19 @@ class MetadataRequestService(
 
 		val file = fileUtils.createTemporaryFile(".png")
 		artImage.writeToFile(file, "png")
-		logger.info("Writing new album art for track $track to storage...")
+		logger.info("Writing new album art for track ${track.id} to storage...")
 		songIngestionService.storeAlbumArtForTrack(file, track, false)
 		file.delete()
 
 		trackLinkRepository.forceExpireLinksByTrackId(track.id)
 	}
 
-	private fun findUpdatableTracks(trackIds: List<Long>): List<Pair<Track, MetadataResponseDTO>> {
-		val currentUser = loadLoggedInUser()
-
+	private fun findUpdatableTracks(trackIds: List<Long>, user: User): List<Pair<Track, MetadataResponseDTO>> {
 		val validTracks = trackIds
 				.map { trackRepository.get(it) }
 				.filterNot { track ->
 					track == null
-							|| track.user.id != currentUser.id
+							|| track.user.id != user.id
 							|| track.artist.isBlank()
 							|| track.name.isBlank()
 				}
@@ -119,7 +117,7 @@ class MetadataRequestService(
 					limit = 1
 			).firstOrNull()
 			
-			logger.info("Metadata was ${if (metadataResponse == null) "not" else ""} found for search")
+			logger.info("Metadata was ${if (metadataResponse == null) "not " else ""}found for search")
 
 			it to metadataResponse
 		}.filter { (_, metadataResponse) -> metadataResponse != null }

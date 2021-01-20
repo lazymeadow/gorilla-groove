@@ -41,7 +41,7 @@ class FileController(
 		// FIXME file.name does not appear to be anything useful
 		logger.info("Beginning file upload: ${file.name}")
 
-		var track: Track? = null
+		var track: Track?
 		val timeToUpload = measureTimeMillis {
 			track = songIngestionService.storeSongForUser(file, loadLoggedInUser())
 		}
@@ -60,31 +60,6 @@ class FileController(
 		fileUtils.writeFileToServlet(file, response, audioFormat.contentType)
 
 		file.delete()
-	}
-
-	@GetMapping("/download-apk")
-	fun downloadApk(): ResponseEntity<Resource> {
-		val path = fileStorageProperties.apkDownloadDir
-				?: throw IllegalStateException("No APK location has been configured!")
-
-		val apkFile = File(path)
-
-		if (!apkFile.exists()) {
-			throw IllegalStateException("No APK exists at the specified location '$path'!")
-		}
-
-		val resource = ByteArrayResource(
-				Files.readAllBytes(Paths.get(apkFile.absolutePath))
-		)
-
-		val headers = HttpHeaders()
-		headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=groove.apk")
-
-		return ResponseEntity.ok()
-				.headers(headers)
-				.contentLength(apkFile.length())
-				.contentType(MediaType.parseMediaType("application/octet-stream"))
-				.body(resource)
 	}
 
 	@PostMapping("/link/{trackId}")

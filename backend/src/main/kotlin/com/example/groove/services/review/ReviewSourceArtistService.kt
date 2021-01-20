@@ -18,7 +18,6 @@ import com.example.groove.util.firstAndRest
 import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 import com.example.groove.util.minusWeeks
-import com.google.common.annotations.VisibleForTesting
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -127,17 +126,13 @@ class ReviewSourceArtistService(
 		songsToDownload.forEach { song ->
 			val artistDownload = reviewSourceArtistDownloadRepository.findByReviewSourceAndTrackName(source, song.name)
 					?: throw IllegalStateException("Could not locate an artist download with review source ID: ${source.id} and song name ${song.name}!")
-			val videos = youtubeDownloadService.searchYouTube("${song.artist} ${song.name}", targetLength = song.length)
+			val video = youtubeDownloadService.searchYouTube(
+					artist = song.artist,
+					trackName = song.name,
+					targetLength = song.length
+			).firstOrNull()
 
-			logger.info("Checking for a match from ${videos.size} possible match(es)")
-
-			// There's a chance that our search yields no valid results, but youtube will pretty much always return
-			// us videos, even if they're a horrible match. Probably the best thing we can do is check the video title
-			// and duration to sanity check and make sure it is at least a decent match.
-			// Better to NOT find something than to find a video which isn't correct for something like this...
-			val validVideos = videos.filter { it.isValidForSong(song) }
-
-			if (validVideos.isEmpty()) {
+			if (video == null) {
 				logger.warn("Could not find a valid YouTube download for ${song.artist} - ${song.name}")
 
 				artistDownload.lastDownloadAttempt = now()
@@ -145,10 +140,6 @@ class ReviewSourceArtistService(
 
 				return@forEach
 			}
-
-			// For now, just rely on YouTube's relevance to give us the best result (so take the first one).
-			// Might be better to try to exclude music videos and stuff later, though the time checking might help already.
-			val video = validVideos.first()
 
 			logger.info("Found a valid match. YouTube video title: ${video.title}")
 			val downloadDTO = YoutubeDownloadDTO(
@@ -197,41 +188,11 @@ class ReviewSourceArtistService(
 		return downloadCount
 	}
 
-	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
-		val currentUser = loadLoggedInUser()
-
-		// First, check if the artist already exists. Someone may have subscribed to them earlier
-		reviewSourceArtistRepository.findByArtistName(artistName)?.let { existing ->
-			if (existing.isUserSubscribed(currentUser)) {
-				throw IllegalArgumentException("User is already subscribed to artist $artistName!")
-			}
-
-			// If this source was previously unused, re-enable it and update the time to search from to now
-			if (existing.getActiveUsers().isEmpty()) {
-				logger.info("Source for $artistName already exists but has no subscribed users. Resetting its 'searchNewerThan'")
-				existing.updatedAt = now()
-				existing.searchNewerThan = now()
-
-				reviewSourceArtistRepository.save(existing)
-			}
-
-			// If the source already existed, then the association might as well
-			reviewSourceUserRepository.findByUserAndSource(userId = currentUser.id, sourceId = existing.id)?.let { sourceAssociation ->
-				// Association was previously deleted. Just re-enable it and return early
-				sourceAssociation.deleted = false
-				sourceAssociation.updatedAt = now()
-				reviewSourceUserRepository.save(sourceAssociation)
-
-				return sourceAssociation to emptyList()
-			}
-
-			val reviewSourceUser = ReviewSourceUser(reviewSource = existing, user = currentUser)
-			reviewSourceUserRepository.save(reviewSourceUser)
-
-			return reviewSourceUser to emptyList()
+	fun createOrFindArtistReviewSource(artistName: String): Pair<ReviewSourceArtist?, List<String>> {
+		val existingSource = reviewSourceArtistRepository.findByArtistName(artistName)
+		if (existingSource != null) {
+			return existingSource to emptyList()
 		}
-
-		// Ok so nobody has subscribed to this artist before. We need to create a new one and add our user to it
 
 		// Start by finding the artists Spotify gives us based off the name
 		val artists = spotifyApiClient.searchArtistsByName(artistName)
@@ -247,62 +208,68 @@ class ReviewSourceArtistService(
 		val source = ReviewSourceArtist(artistId = foundArtist.id, artistName = foundArtist.name, searchNewerThan = now())
 		reviewSourceArtistRepository.save(source)
 
-		val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = currentUser)
-		reviewSourceUserRepository.save(reviewSourceUser)
+		return source to emptyList()
+	}
 
-		return reviewSourceUser to emptyList()
+	fun addUserToSource(source: ReviewSourceArtist, user: User, addingAsSubscription: Boolean): ReviewSourceUser {
+		if (addingAsSubscription && source.isUserSubscribed(user)) {
+			throw IllegalArgumentException("User is already subscribed to artist ${source.artistName}!")
+		}
+
+		val association = reviewSourceUserRepository.findByUserAndSource(userId = user.id, sourceId = source.id) ?: run {
+			logger.info("${user.name} was not previously subscribed to ${source.artistName}. Adding an association")
+			val reviewSourceUser = ReviewSourceUser(reviewSource = source, user = user, active = addingAsSubscription)
+			reviewSourceUser.active = false
+
+			reviewSourceUser
+		}
+
+		association.deleted = false
+		if (addingAsSubscription) {
+			association.active = true
+		}
+
+		reviewSourceUserRepository.save(association)
+
+		return association
+	}
+
+	fun addInactiveArtist(artistName: String, user: User): ReviewSourceUser {
+		val source = createOrFindArtistReviewSource(artistName).first ?: run {
+			logger.warn("User ${user.name} tried to add an inactive artist with name '$artistName' but it was not found")
+			throw IllegalArgumentException("No artist with name '$artistName' found!")
+		}
+
+		return addUserToSource(source, user, addingAsSubscription = false)
+	}
+
+	// This function was written with a rather web-centric view in mind with the returning a list of possible things
+	// that the artist could have been and I now hate it. I'd rather get web using the autocomplete endpoints to verify
+	// that an artist exists, and then remove all this extra crap with the List<String>
+	fun subscribeToArtist(artistName: String): Pair<ReviewSourceUser?, List<String>> {
+		val currentUser = loadLoggedInUser()
+
+		val (source, suggestions) = createOrFindArtistReviewSource(artistName)
+		if (source == null) {
+			return source to suggestions
+		}
+
+		// If this source was previously unused, re-enable it and update the time to search from to now
+		if (source.getActiveUsers().isEmpty()) {
+			logger.info("Source for $artistName has no subscribed users. Resetting its 'searchNewerThan'")
+			source.updatedAt = now()
+			source.searchNewerThan = now()
+
+			reviewSourceArtistRepository.save(source)
+		}
+
+		val association = addUserToSource(source, currentUser, addingAsSubscription = true)
+
+		return association to emptyList()
 	}
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 }
 
-@VisibleForTesting
-fun YoutubeDownloadService.VideoProperties.isValidForSong(song: MetadataResponseDTO): Boolean {
-	val lowerTitle = this.title.toLowerCase()
-	val artist = song.artist.toLowerCase()
-
-	ReviewSourceArtistService.logger.info("Checking video with title: $lowerTitle")
-
-	// Spotify can give us artists separated by commas that other places consider featured artists. So if we search
-	// for what Spotify gives us blindly like "Mitis, RORY" and all the videos on YT are "Mitis - .. (feat. RORY)"
-	// then we aren't going to find it. So split the artist on a comma and make sure all artists are represented
-	// somewhere in the title
-	val artistsFound = artist.split(",").all { individualArtist ->
-		val trimmedArtist = individualArtist.trim()
-
-		val found = lowerTitle.contains(trimmedArtist) || channelName.toLowerCase().contains(trimmedArtist)
-		if (!found) {
-			ReviewSourceArtistService.logger.info("The artist '$trimmedArtist' was not found")
-		}
-		found
-	}
-	if (!artistsFound) {
-		return false
-	}
-
-	// Now lastly we want to check that the song title is adequately represented in the video title. I ran into
-	// a lot of situations where titles were slightly different so a substring match wasn't viable. So I think
-	// a better approach is, like we now do with artists, check each word individually for representation, and
-	// additionally get rid of words that have little value or little hope or being matched correctly
-	val unimportantWords = setOf("with", "feat", "ft", "featuring")
-	val titleWords = this.title
-			.toLowerCase()
-			.replace("(", "")
-			.replace(")", "")
-			.replace("[", "")
-			.replace("]", "")
-			.replace(".", "")
-			.replace("-", "")
-			.split(" ")
-			.filter { it.isNotBlank() && !unimportantWords.contains(it) }
-
-	return titleWords.all { titleWord ->
-		val found = lowerTitle.contains(titleWord)
-		if (!found) {
-			ReviewSourceArtistService.logger.info("The title word '$titleWord' was not found")
-		}
-		found
-	}
-}

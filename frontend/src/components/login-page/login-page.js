@@ -36,14 +36,6 @@ class LoginPageInternal extends React.Component {
 			})
 	}
 
-	downloadApk(event) {
-		event.preventDefault();
-
-		Api.download('file/download-apk');
-
-		return false;
-	}
-
 	render() {
 		return (
 			<div className="full-screen">
@@ -64,10 +56,6 @@ class LoginPageInternal extends React.Component {
 							</div>
 
 							<button>Login</button>
-						</div>
-
-						<div className="apk-download">
-							Download the <strong>beta</strong> <a onMouseDown={this.downloadApk.bind(this)}>Android App</a>
 						</div>
 					</div>
 				</form>

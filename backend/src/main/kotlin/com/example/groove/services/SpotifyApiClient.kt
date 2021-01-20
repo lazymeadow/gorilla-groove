@@ -80,7 +80,7 @@ class SpotifyApiClient(
 					}
 				}
 				// Spotify can have duplicates apparently. No it isn't a result of paginating incorrectly as I originally
-				// thought I might be doing, as they have different "sourceIds". Everything else is the same. So exclude them
+				// thought I might be doing. They have different "sourceIds". Everything else is the same. So exclude them
 				// by putting them into a Set
 				.toSet()
 				.sortedWith(compareBy({ -it.releaseYear }, { it.album }, { it.trackNumber }))
@@ -250,7 +250,7 @@ class SpotifyApiClient(
 	)
 
 	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO {
-		val biggestImageUrl = this.album!!.images.maxBy { it.height }!!.url
+		val biggestImageUrl = this.album!!.images.maxByOrNull { it.height }!!.url
 
 		return MetadataResponseDTO(
 				sourceId = this.id,
@@ -299,7 +299,7 @@ class SpotifyApiClient(
 		// We can get the same song multiple times from different albums. They have different track IDs however
 		val nameToTracks = nonRemixTracks.groupBy { it.name }
 		return nameToTracks.values.map { duplicateTracks ->
-			duplicateTracks.minBy { it.album!!.releaseDate.toDate().toEpochDay() }!!
+			duplicateTracks.minByOrNull { it.album!!.releaseDate.toDate().toEpochDay() }!!
 		}
 	}
 

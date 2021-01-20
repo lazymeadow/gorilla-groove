@@ -34,14 +34,14 @@ abstract class ReviewSource(
 
 	fun isUserSubscribed(user: User): Boolean {
 		val userSource = reviewSourceUsers.find { it.user.id == user.id } ?: return false
-		return !userSource.deleted
+		return !userSource.deleted && userSource.active
 	}
 
 	fun isActive(): Boolean {
-		return reviewSourceUsers.isNotEmpty() && reviewSourceUsers.any { !it.deleted }
+		return reviewSourceUsers.isNotEmpty() && reviewSourceUsers.any { !it.deleted && it.active }
 	}
 
 	fun getActiveUsers(): List<User> {
-		return reviewSourceUsers.filterNot { it.deleted }.map { it.user }
+		return reviewSourceUsers.filter { !it.deleted && it.active }.map { it.user }
 	}
 }

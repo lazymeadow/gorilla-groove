@@ -47,7 +47,7 @@ function ReviewQueueManagementModal() {
 				</thead>
 				<tbody>
 				{reviewQueueContext.reviewQueueSources
-					.filter(source => source.sourceType !== ReviewSourceType.USER_RECOMMEND)
+					.filter(source => source.sourceType !== ReviewSourceType.USER_RECOMMEND && source.active)
 					.map(source =>
 						<tr key={source.id} className="">
 							<td>{toTitleCaseFromSnakeCase(source.sourceType)}</td>

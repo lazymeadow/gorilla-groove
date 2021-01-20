@@ -1,0 +1,73 @@
+#background-task-progress {
+  // These rules really shouldn't be here (should be positioned by parent component) but I'm so lazy right now
+  position: absolute;
+  bottom: 1px;
+  right: 20px;
+
+  progress {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    &::-moz-progress-bar {
+      background-color: fade(@upload-color, 50%);
+      border-radius: 0;
+      padding: 0;
+    }
+
+    &::-webkit-progress-bar {
+      background-color: @light-blue;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      border: 1px lightgrey groove;
+    }
+
+    &::-webkit-progress-value {
+      background-color: fade(@upload-color, 50%);
+      border-radius: 0;
+    }
+  }
+
+  .count-overlay {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.85em;
+  }
+
+  .floating-window {
+    visibility: hidden;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: absolute;
+    bottom: 18px;
+    right: -100px;
+
+    &:hover {
+      visibility: visible;
+    }
+
+    .grid-item {
+      font-size: 0.85em;
+    }
+
+    .progress-grid {
+      display: grid;
+      grid-template-columns: 325px auto;
+      grid-gap: 10px;
+      text-align: left;
+
+      .grid-head {
+        font-weight: bold;
+      }
+    }
+  }
+
+  &:hover .floating-window {
+    visibility: visible;
+  }
+}
+

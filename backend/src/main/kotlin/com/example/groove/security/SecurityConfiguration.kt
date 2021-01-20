@@ -4,6 +4,7 @@ import com.example.groove.properties.S3Properties
 import com.example.groove.util.logger
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.Environment
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -35,6 +36,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class SecurityConfiguration(
 		private val tokenAuthenticationProvider: TokenAuthenticationProvider,
 		private val dataSource: DataSource,
+		private val environment: Environment,
 		s3Properties: S3Properties
 ) : WebSecurityConfigurerAdapter() {
 
@@ -43,7 +45,6 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/api/user-invite-link/public/**"), // Unauthenticated users need to request the full details of their invite link
 			AntPathRequestMatcher("/api/user/public/**"), // Unauthenticated users need to be able to create their own accounts
 			AntPathRequestMatcher("/api/file/track-link/*"),
-			AntPathRequestMatcher("/api/file/download-apk**"),
 			AntPathRequestMatcher("/api/track/preview/public/*"),
 			AntPathRequestMatcher("/api/version**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
@@ -130,10 +131,14 @@ class SecurityConfiguration(
 	fun corsConfigurer(): WebMvcConfigurer {
 		return object : WebMvcConfigurer {
 			override fun addCorsMappings(registry: CorsRegistry) {
-				registry
-						.addMapping("/**")
-						.allowedOrigins(*allowedOrigins)
-						.allowCredentials(true)
+				val mapping = registry.addMapping("/**")
+
+				// Only add CORS in prod to make life easier when developing locally
+				if (environment.activeProfiles.contains("prod")) {
+					mapping.allowedOrigins(*allowedOrigins)
+				}
+
+				mapping.allowCredentials(true)
 						.allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
 			}
 		}

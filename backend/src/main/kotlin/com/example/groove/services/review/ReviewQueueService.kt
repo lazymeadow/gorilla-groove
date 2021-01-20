@@ -133,6 +133,7 @@ class ReviewQueueService(
 				?: throw IllegalArgumentException("No review source found with ID $sourceId")
 
 		existingAssociation.deleted = true
+		existingAssociation.active = false
 		existingAssociation.updatedAt = now()
 		reviewSourceUserRepository.save(existingAssociation)
 

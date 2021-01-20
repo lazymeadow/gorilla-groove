@@ -24,14 +24,19 @@ class SearchController(
 	}
 
 	// This is currently used by clients to try to match a spotify song to a video on youtube
-	@GetMapping("/youtube/term/{term}/length/{length}")
+	@GetMapping("/youtube/artist/{artist}/track-name/{trackName}/length/{length}")
 	fun findVideoForTermAndLength(
-			@PathVariable term: String,
+			@PathVariable artist: String,
+			@PathVariable trackName: String,
 			@PathVariable length: Int
 	): YoutubeDownloadService.VideoProperties? {
-		val properties = youtubeDownloadService.searchYouTube(searchTerm = term, targetLength = length).firstOrNull()
+		val properties = youtubeDownloadService.searchYouTube(
+				artist = artist,
+				trackName = trackName,
+				targetLength = length
+		).firstOrNull()
 		if (properties == null) {
-			logger.info("Could not find a matching video for search term $term")
+			logger.info("Could not find a matching video for artist $artist, name $trackName, length $length")
 		}
 		// Youtube-DL is currently unreliable, so I've commented out the API client's implementation here as well
 //		return youtubeApiClient.findVideos(searchTerm = term)
