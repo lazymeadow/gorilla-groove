@@ -21,7 +21,7 @@ class MediaControlsController: UIViewController {
         let icon = createIcon("repeat", weight: .bold)
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
-            action: #selector(toggleRepeat(tapGestureRecognizer:))
+            action: #selector(toggleRepeat)
         ))
         icon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.repeatOn)
 
@@ -32,7 +32,7 @@ class MediaControlsController: UIViewController {
         let icon = createIcon("backward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
-            action: #selector(playPrevious(tapGestureRecognizer:))
+            action: #selector(playPrevious)
         ))
         return icon
     }()
@@ -41,7 +41,7 @@ class MediaControlsController: UIViewController {
         let icon = createIcon("play.fill", scale: .large)
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
-            action: #selector(playMusic(tapGestureRecognizer:))
+            action: #selector(playMusic)
         ))
         return icon
     }()
@@ -51,7 +51,7 @@ class MediaControlsController: UIViewController {
         icon.isHidden = true
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
-            action: #selector(pauseMusic(tapGestureRecognizer:))
+            action: #selector(pauseMusic)
         ))
         return icon
     }()
@@ -60,7 +60,7 @@ class MediaControlsController: UIViewController {
         let icon = createIcon("forward.end.fill")
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
-            action: #selector(playNext(tapGestureRecognizer:))
+            action: #selector(playNext)
         ))
         return icon
     }()
@@ -69,7 +69,7 @@ class MediaControlsController: UIViewController {
         let icon = createIcon("shuffle", weight: .bold)
         icon.addGestureRecognizer(UITapGestureRecognizer(
             target: self,
-            action: #selector(toggleShuffle(tapGestureRecognizer:))
+            action: #selector(toggleShuffle)
         ))
         icon.tintColor = getEnabledButtonColor(enabled: NowPlayingTracks.shuffleOn)
         return icon
@@ -167,13 +167,19 @@ class MediaControlsController: UIViewController {
             self.handleTimeChange(time)
         }
         
+        AudioPlayer.observePlaybackChanged(self) { vc, isPlaying in
+            DispatchQueue.main.async {
+                vc.recalculatePlayButton()
+            }
+        }
+        
         NowPlayingTracks.addTrackChangeObserver { nillableTrack in
             DispatchQueue.main.async { self.handleTrackChange(nillableTrack) }
         }
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(willEnterForeground),
+            selector: #selector(recalculatePlayButton),
             name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
@@ -411,7 +417,7 @@ class MediaControlsController: UIViewController {
         sliderGrabbed = false
     }
     
-    @objc func willEnterForeground() {
+    @objc func recalculatePlayButton() {
         if (AudioPlayer.isPaused) {
             playIcon.isHidden = false
             pauseIcon.isHidden = true

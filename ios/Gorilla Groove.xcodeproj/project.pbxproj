@@ -69,6 +69,7 @@
 		E86EB67C24ECA3F80066CB4E /* Playlist.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67B24ECA3F80066CB4E /* Playlist.swift */; };
 		E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67D24ECA4F30066CB4E /* PlaylistTrack.swift */; };
 		E86F97FF25B627380015C6CE /* BackgroundTaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */; };
+		E86F980225B921A20015C6CE /* ObservationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F980125B921A20015C6CE /* ObservationToken.swift */; };
 		E871186525675C1C007B8F16 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E871186425675C1C007B8F16 /* Settings.bundle */; };
 		E8711868256777BD007B8F16 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8711867256777BD007B8F16 /* SettingsService.swift */; };
 		E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDEA258078B100207F99 /* InAppSettingsKit */; };
@@ -147,6 +148,7 @@
 		E86EB67B24ECA3F80066CB4E /* Playlist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Playlist.swift; sourceTree = "<group>"; };
 		E86EB67D24ECA4F30066CB4E /* PlaylistTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistTrack.swift; sourceTree = "<group>"; };
 		E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskService.swift; sourceTree = "<group>"; };
+		E86F980125B921A20015C6CE /* ObservationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservationToken.swift; sourceTree = "<group>"; };
 		E871186425675C1C007B8F16 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		E8711867256777BD007B8F16 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		E873DDF22586F45500207F99 /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
@@ -280,6 +282,7 @@
 				E85966482440021200AA8727 /* UIExtensions.swift */,
 				E85A366325AA3395005C4FDD /* Extensions.swift */,
 				E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */,
+				E86F980125B921A20015C6CE /* ObservationToken.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -416,6 +419,7 @@
 				E85B598125A1BF390071496D /* NotificationService.swift in Sources */,
 				E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */,
 				E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */,
+				E86F980225B921A20015C6CE /* ObservationToken.swift in Sources */,
 				E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */,
 				E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */,
 				A829AC0A23CA57AD0034AD69 /* TrackService.swift in Sources */,

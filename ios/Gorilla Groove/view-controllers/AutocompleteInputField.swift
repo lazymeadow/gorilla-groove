@@ -50,6 +50,14 @@ class AutoCompleteInputField : UIView, UITableViewDataSource, UITableViewDelegat
         return spinner
     }()
     
+    @discardableResult
+    override func resignFirstResponder() -> Bool {
+        super.resignFirstResponder()
+        self.textField.resignFirstResponder()
+        
+        return true
+    }
+    
     var textChangeHandler: ((_ newText: String) -> Void)? = nil
     var submitHandler: ((_ text: String) -> Void)? = nil
     

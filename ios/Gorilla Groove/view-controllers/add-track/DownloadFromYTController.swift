@@ -25,6 +25,16 @@ class DownloadFromYTController : UIViewController {
         return field
     }()
     
+    private let inputCaption: UILabel = {
+        let label = UILabel()
+        label.font = label.font.withSize(11)
+        label.textColor = Colors.inputLine
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Playlist downloads can take up to a minute to start"
+        
+        return label
+    }()
+    
     private let bottomInputLine: UIView = {
         let view = UIView()
         
@@ -66,6 +76,7 @@ class DownloadFromYTController : UIViewController {
         self.view.addSubview(submitButton)
         self.view.addSubview(bottomInputLine)
         self.view.addSubview(inputField)
+        self.view.addSubview(inputCaption)
         self.view.addSubview(activitySpinner)
         
         NSLayoutConstraint.activate([
@@ -78,10 +89,14 @@ class DownloadFromYTController : UIViewController {
             bottomInputLine.heightAnchor.constraint(equalToConstant: 1),
             bottomInputLine.topAnchor.constraint(equalTo: inputField.bottomAnchor, constant: 5),
             
+            inputCaption.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+            inputCaption.leadingAnchor.constraint(equalTo: inputField.leadingAnchor, constant: 0),
+            inputCaption.topAnchor.constraint(equalTo: bottomInputLine.topAnchor, constant: 10),
+            
             submitButton.leadingAnchor.constraint(equalTo: bottomInputLine.leadingAnchor),
             submitButton.trailingAnchor.constraint(equalTo: bottomInputLine.trailingAnchor),
             submitButton.heightAnchor.constraint(equalToConstant: 50),
-            submitButton.topAnchor.constraint(equalTo: bottomInputLine.bottomAnchor, constant: 75),
+            submitButton.topAnchor.constraint(equalTo: inputCaption.bottomAnchor, constant: 75),
             
             activitySpinner.centerXAnchor.constraint(equalTo: bottomInputLine.centerXAnchor),
             activitySpinner.bottomAnchor.constraint(equalTo: submitButton.topAnchor, constant: -10),

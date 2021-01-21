@@ -183,6 +183,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         player.play()
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
+        self.observers.values.forEach { $0(true) }
     }
     
     static func pause() {
@@ -193,6 +194,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         player.pause()
         
         sendPlayEvent(nil)
+        self.observers.values.forEach { $0(false) }
     }
     
     static func stop() {
@@ -201,6 +203,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         player.replaceCurrentItem(with: nil)
         
         sendPlayEvent(nil)
+        self.observers.values.forEach { $0(false) }
     }
     
     private static func setRatingEnabled(_ enabled: Bool) {
@@ -250,6 +253,29 @@ class AudioPlayer : CachingPlayerItemDelegate {
         let trackId: Int?
         let isPlaying: Bool?
         let messageType: String = "NOW_PLAYING"
+    }
+    
+    private static var observers = [UUID : (Bool) -> Void]()
+    
+    @discardableResult
+    static func observePlaybackChanged<T: AnyObject>(
+        _ observer: T,
+        closure: @escaping (T, Bool) -> Void
+    ) -> ObservationToken {
+        let id = UUID()
+        
+        observers[id] = { [weak observer] isPlaying in
+            guard let observer = observer else {
+                observers.removeValue(forKey: id)
+                return
+            }
+
+            closure(observer, isPlaying)
+        }
+        
+        return ObservationToken {
+            observers.removeValue(forKey: id)
+        }
     }
 }
 

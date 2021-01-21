@@ -172,7 +172,8 @@ class AddFromSpotifyController : UIViewController {
         if text.isEmpty {
             return
         }
-        
+        	
+        self.inputField.resignFirstResponder()
         loading = true
         HttpRequester.get("search/spotify/artist/\(text)", SpotifyTrackSearchResponse.self) { response, status, _ in
             DispatchQueue.main.async {
@@ -181,8 +182,17 @@ class AddFromSpotifyController : UIViewController {
             
             guard let items = response?.items, status.isSuccessful() else {
                 GGLog.error("Failed to get spotify search response for term \(text)!")
-                Toast.show("Data could not be loaded")
+                DispatchQueue.main.async {
+                    Toast.show("Data could not be loaded")
+                }
                 
+                return
+            }
+            
+            if items.isEmpty {
+                DispatchQueue.main.async {
+                    Toast.show("No songs found by \(text)")
+                }
                 return
             }
             
@@ -317,7 +327,6 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         
         player.automaticallyWaitsToMinimizeStalling = true
         player.volume = 1.0
-        
     }
     
     override func viewDidLoad() {
@@ -339,6 +348,14 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         tableView.register(TrackViewCell.self, forCellReuseIdentifier: "addFromSpotify")
         
         tableView.tableFooterView = UIView(frame: .zero)
+        
+        AudioPlayer.observePlaybackChanged(self) { vc, isPlaying in
+            if isPlaying {
+                DispatchQueue.main.async {
+                    vc.player.pause()
+                }
+            }
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -396,6 +413,11 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
             if let urlStr = track.previewUrl, let url = URL(string: urlStr) {
                 AudioPlayer.pause()
                 
+                // FIXME
+                // Somehow this screws up the notification center's play button despite the fact that the playback rate seems to be 0.0
+                // Not a big deal. Just requires the user to tap pause then play if they previewed music while listening to other music.
+                // Might be an easy fix, but in an ideal world there is only one AVAudioPlayer for the entire app. Will have to
+                // decouple the AudioPlayer from being so closely aligned to a Track
                 let playerItem = AVPlayerItem(url: url)
                 self.player.replaceCurrentItem(with: playerItem)
                 self.player.play()
