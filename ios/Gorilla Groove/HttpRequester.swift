@@ -187,7 +187,7 @@ class HttpRequester {
     ) -> (T?, Int, String?) {
         guard let httpResponse = response as? HTTPURLResponse else {
             logger.error("error: not a valid http response")
-            return (nil, -1, error as! String?)
+            return (nil, -1, error?.localizedDescription)
         }
         
         if (httpResponse.statusCode >= 300 || httpResponse.statusCode < 200) {
