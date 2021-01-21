@@ -71,7 +71,9 @@ class LogViewController : UIViewController {
                     if time == "TIME ERROR" {
                         GGLog.info(String(line))
                     }
-                    let logLevel = (logParts[safe: 4] ?? "[debug]:").dropLast(1)
+                    // Default to crit because if we don't have the log parts, it probably means a log message got added
+                    // that came outside the normal logger (like an index out of bounds error)
+                    let logLevel = (logParts[safe: 4] ?? "[crit]:").dropLast(1)
                     
                     // dropFirst is safe to use if there are too many elements.
                     // This drops the date, time, line number, log tag, and debug level, leaving us with only the log itself remaining

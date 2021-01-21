@@ -79,7 +79,7 @@ class NowPlayingTracks {
         nowPlayingIndex = nowPlayingIndex - indexesRemovedBeforeCurrentlyPlayed
         
         if let currentId = currentTrack?.id, idsToRemove.contains(currentId) {
-            GGLog.warning("The currently played track is being removed from Now Playing")
+            GGLog.info("The currently played track is being removed from Now Playing")
             currentTrack = nowPlayingTracks[safe: nowPlayingIndex]
             
             if nowPlayingTracks.isEmpty {
