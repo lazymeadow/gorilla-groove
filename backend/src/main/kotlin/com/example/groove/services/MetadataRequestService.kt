@@ -37,7 +37,7 @@ class MetadataRequestService(
 			}
 
 			// We only want to update this info if we are actually using the same album as the response
-			if (track.album.equals(metadataResponse.album, ignoreCase = true)) {
+			if (metadataResponse.albumArtLink != null && track.album.equals(metadataResponse.album, ignoreCase = true)) {
 				if (track.releaseYear.shouldBeUpdated(request.changeReleaseYear)) {
 					track.releaseYear = metadataResponse.releaseYear
 					track.updatedAt = now

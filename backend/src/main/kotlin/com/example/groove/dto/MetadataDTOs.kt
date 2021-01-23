@@ -9,7 +9,7 @@ interface MetadataDTO {
 	val album: String
 	val releaseYear: Int
 	val trackNumber: Int
-	val albumArtLink: String
+	val albumArtLink: String?
 	val length: Int
 }
 
@@ -19,7 +19,7 @@ class MetadataImportRequestDTO (
 		override val album: String,
 		override val releaseYear: Int,
 		override val trackNumber: Int,
-		override val albumArtLink: String,
+		override val albumArtLink: String?,
 		override val length: Int,
 		val artistQueueName: String?,
 		val addToReview: Boolean = false
@@ -32,7 +32,7 @@ class MetadataResponseDTO (
 		override val album: String,
 		override val releaseYear: Int,
 		override val trackNumber: Int,
-		override val albumArtLink: String,
+		override val albumArtLink: String?,
 		override val length: Int,
 		val previewUrl: String? // Not all tracks have this. Quite a few don't, actually
 ) : MetadataDTO {

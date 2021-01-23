@@ -65,7 +65,10 @@ class SpotifyApiClient(
 				}
 				// Mixed versions are gross. Not real full songs. I am making the executive decision that nobody should see these
 				.filterNot { result ->
-					result.name.contains("(mixed)", ignoreCase = true) || result.name.contains("(mix cut)", ignoreCase = true)
+					result.name.contains("(mixed)", ignoreCase = true)
+							|| result.name.contains("(mix cut)", ignoreCase = true)
+							|| result.name.contains("[mixed]", ignoreCase = true)
+							|| result.name.contains(" - mixed", ignoreCase = true)
 				}
 				// There are a crapload of remixes on spotify. I only think that remixes make sense to see if the
 				// artist that you are interested in DID the remix. If the artist you are interested in had their
@@ -117,7 +120,7 @@ class SpotifyApiClient(
 
 		// Assume spotify has good relevance on its search and just grab the first result
 		// (we already limited ourselves to 1 in the query parameter anyway)
-		return result.tracks.items.map { it.toMetadataResponseDTO() }
+		return result.tracks.items.mapNotNull { it.toMetadataResponseDTO() }
 	}
 
 	private inline fun<reified T> RestTemplate.querySpotify(url: URI): T {
@@ -162,7 +165,7 @@ class SpotifyApiClient(
 			allTracks.filter { it.album!!.releaseDate.toDate().toEpochDay() > date.toEpochDay() }
 		} ?: allTracks
 
-		return filteredTracks.map { it.toMetadataResponseDTO() }
+		return filteredTracks.mapNotNull { it.toMetadataResponseDTO() }
 	}
 
 	private fun getSpotifyArtistId(artist: String): String? {
@@ -249,15 +252,21 @@ class SpotifyApiClient(
 			val name: String
 	)
 
-	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO {
-		val biggestImageUrl = this.album!!.images.maxByOrNull { it.height }!!.url
+	private fun SpotifyTrack.toMetadataResponseDTO(): MetadataResponseDTO? {
+		val album = album ?: run {
+			logger.error("Could not convert track to metadata response! Track name: $name. Artists: $artists")
+			return null
+		}
+
+		// This was null once when searching Rameses B's "Game of Thrones" song. Had an album but no artwork
+		val biggestImageUrl = album.images.maxByOrNull { it.height }?.url
 
 		return MetadataResponseDTO(
 				sourceId = this.id,
 				name = this.name,
 				artist = this.artists.joinToString { it.name },
-				album = this.album!!.name,
-				releaseYear = this.album!!.releaseYear,
+				album = album.name,
+				releaseYear = album.releaseYear,
 				trackNumber = this.trackNumber,
 				albumArtLink = biggestImageUrl,
 				length = (this.durationMs / 1000).toInt(),
