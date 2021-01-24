@@ -43,8 +43,9 @@ class UpdateTrackDTO(
 		override val cropArtToSquare: Boolean = false,
 		override val note: String? = null,
 		val hidden: Boolean? = null,
+		val private: Boolean? = null,
 		val albumArtUrl: String? = null,
-		val offlineAvailability: OfflineAvailabilityType? = null
+		private val offlineAvailability: OfflineAvailabilityType? = null
 ) : GGImportTrackDTO {
 	override fun updateTrack(track: Track) {
 		super.updateTrack(track)
@@ -52,6 +53,7 @@ class UpdateTrackDTO(
 		featuring?.let { track.featuring = it }
 		note?.let { track.note = it }
 		hidden?.let { track.hidden = it }
+		private?.let { track.private = it }
 		offlineAvailability?.let { track.offlineAvailability = it }
 	}
 }

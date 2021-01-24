@@ -90,6 +90,8 @@ class TrackController(
 		return ResponseEntity(HttpStatus.OK)
 	}
 
+	// I don't really remember why I made this a separate thing, but whatever reason that was never materialized.
+	// Don't use this. Instead just use the normal metadata editing endpoints that now support setting private-ness
 	@PostMapping("/set-private")
 	fun setPrivate(@RequestBody setPrivateDTO: SetPrivateDTO): ResponseEntity<String> {
 		trackService.setPrivate(setPrivateDTO.trackIds, setPrivateDTO.isPrivate)
