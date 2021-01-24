@@ -166,14 +166,14 @@ class TrackService(
 	}
 
 	@Transactional
-	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?) {
+	fun updateTracks(updatingUser: User, updateTrackDTO: UpdateTrackDTO, albumArt: MultipartFile?): List<Track> {
 		val artFile = when {
 			updateTrackDTO.albumArtUrl != null -> imageService.downloadFromUrl(updateTrackDTO.albumArtUrl)
 			albumArt != null -> songIngestionService.storeMultipartFile(albumArt)
 			else -> null
 		}
 
-		updateTrackDTO.trackIds.forEach { trackId ->
+		val updatedTracks = updateTrackDTO.trackIds.map { trackId ->
 			val track = trackRepository.get(trackId)
 			val user = loadLoggedInUser()
 
@@ -202,9 +202,12 @@ class TrackService(
 			}
 
 			trackRepository.save(track)
+			track
 		}
 
 		artFile?.delete()
+
+		return updatedTracks
 	}
 
 	@Transactional
