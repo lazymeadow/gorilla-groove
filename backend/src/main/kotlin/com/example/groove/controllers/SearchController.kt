@@ -8,6 +8,7 @@ import com.example.groove.util.loadLoggedInUser
 import com.example.groove.util.logger
 
 import org.springframework.web.bind.annotation.*
+import kotlin.math.abs
 
 @RestController
 @RequestMapping("api/search")
@@ -55,14 +56,20 @@ class SearchController(
 		)
 	}
 
-	// Do I still use this? I'm not sure I still use this
-	@GetMapping("/spotify/artist/{artist}/name/{name}")
+	// Mobile clients use this to do metadata updates. The flow is a little different.
+	// Web picks a song, picks the fields to update, and then kicks off a request.
+	// Mobile picks a song, asks for metadata, then can choose to save the changes they got
+	@GetMapping("/spotify/artist/{artist}/name/{name}/length/{length}")
 	fun searchSpotifyByArtistAndName(
 			@PathVariable("artist") artist: String,
-			@PathVariable("name") name: String
-	): List<MetadataResponseDTO> {
-		logger.info("User ${loadLoggedInUser().name} is searching spotify for the artist '$artist' and name '$name'")
-		return spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name)
+			@PathVariable("name") name: String,
+			@PathVariable("length") length: Int
+	): MetadataSearchResponse {
+		logger.info("User ${loadLoggedInUser().name} is searching spotify for the artist '$artist' and name '$name' and length '$length'")
+		val metadata = spotifyApiClient.getMetadataByTrackArtistAndName(artist = artist, name = name).filter {
+			abs(it.length - length) < YoutubeDownloadService.SONG_LENGTH_IDENTIFICATION_TOLERANCE
+		}
+		return MetadataSearchResponse(items = metadata)
 	}
 
 	// Used to help suggest items to users while they are filling in forms

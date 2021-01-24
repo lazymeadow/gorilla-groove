@@ -325,7 +325,7 @@ class YoutubeDownloadService(
 
 		// When we are checking if a YouTube video is valid for a given Spotify song, we want to make sure
 		// that the song lengths more or less agree. This is the tolerance for that check
-		private const val SONG_LENGTH_IDENTIFICATION_TOLERANCE = 4
+		const val SONG_LENGTH_IDENTIFICATION_TOLERANCE = 4
 	}
 }
 
