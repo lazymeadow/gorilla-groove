@@ -118,7 +118,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let tableIndex = tableView.indexPath(for: cell)!
         let track = visibleTracks[tableIndex.row]
 
-        let alert = TrackContextMenu.createMenuForTrack(track) { newTrack in
+        let alert = TrackContextMenu.createMenuForTrack(track, parentVc: self) { newTrack in
             if newTrack == nil || (!self.showingHidden && newTrack!.isHidden) {
                 GGLog.info("Hiding existing track from menu list in response to edit")
                 self.visibleTracks.remove(at: tableIndex.row)

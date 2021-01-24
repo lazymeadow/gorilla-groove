@@ -97,7 +97,7 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
         GGNavLog.info("User tapped a review source")
         
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
             GGNavLog.info("User tapped delete review source")
             self.activitySpinner.startAnimating()
             
@@ -123,7 +123,7 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
                 }
             }
         }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
             GGNavLog.info("User tapped cancel button")
         }))
         

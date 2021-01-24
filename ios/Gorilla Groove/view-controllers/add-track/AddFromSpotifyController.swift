@@ -66,8 +66,12 @@ class AddFromSpotifyController : UIViewController {
         }
     }
     
+    static let title = "Search Spotify"
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.title = AddFromSpotifyController.title
         
         self.view.backgroundColor = Colors.background
         
@@ -219,7 +223,7 @@ struct SpotifyTrackResponse: Codable {
     let album: String
     let releaseYear: Int
     let trackNumber: Int
-    let albumArtLink: String
+    let albumArtLink: String?
     let length: Int
     let previewUrl: String?
     
@@ -253,7 +257,7 @@ struct SpotifyTrack: ViewableTrackData {
     var album: String
     let releaseYear: Int
     let trackNumber: Int
-    let albumArtLink: String
+    let albumArtLink: String?
     var length: Int
     let previewUrl: String?
     
@@ -279,7 +283,7 @@ struct SpotifyImportRequest : Codable {
     var album: String
     let releaseYear: Int
     let trackNumber: Int
-    let albumArtLink: String
+    let albumArtLink: String?
     var length: Int
     let previewUrl: String?
     let addToReview: Bool

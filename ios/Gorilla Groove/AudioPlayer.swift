@@ -49,7 +49,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     static func initialize() {
         initializeControlCenter()
 
-        player.automaticallyWaitsToMinimizeStalling = false
+        player.automaticallyWaitsToMinimizeStalling = true
         player.volume = 1.0
 
         let time = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
@@ -308,6 +308,9 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
         // If a different track finished than the one that stalled, that would just be weird. Though maybe it could happen.
         if songCacheItem.trackId != playbackStalledTrackId {
             playbackStalledTrackId = nil
+        } else {
+            // Not really a warning, but I want it to be easy to spot in the logs for debugging. Temporary.
+            GGLog.warning("Stalled playback ID was ready to play")
         }
         
         // Could be a number of things wrong with this. The struggle I have right now is that, even after a stalled item says

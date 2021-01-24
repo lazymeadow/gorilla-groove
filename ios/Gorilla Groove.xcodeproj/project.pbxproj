@@ -70,6 +70,7 @@
 		E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67D24ECA4F30066CB4E /* PlaylistTrack.swift */; };
 		E86F97FF25B627380015C6CE /* BackgroundTaskService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */; };
 		E86F980225B921A20015C6CE /* ObservationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F980125B921A20015C6CE /* ObservationToken.swift */; };
+		E86F980625BAA2390015C6CE /* EditMetadataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86F980525BAA2390015C6CE /* EditMetadataController.swift */; };
 		E871186525675C1C007B8F16 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E871186425675C1C007B8F16 /* Settings.bundle */; };
 		E8711868256777BD007B8F16 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8711867256777BD007B8F16 /* SettingsService.swift */; };
 		E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDEA258078B100207F99 /* InAppSettingsKit */; };
@@ -83,6 +84,7 @@
 		E88053C425B1142D00A7D0F3 /* AddFromSpotifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
+		E8DB1B2525BDE39D00556175 /* GGCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */; };
 		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
 /* End PBXBuildFile section */
 
@@ -149,6 +151,7 @@
 		E86EB67D24ECA4F30066CB4E /* PlaylistTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistTrack.swift; sourceTree = "<group>"; };
 		E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskService.swift; sourceTree = "<group>"; };
 		E86F980125B921A20015C6CE /* ObservationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservationToken.swift; sourceTree = "<group>"; };
+		E86F980525BAA2390015C6CE /* EditMetadataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditMetadataController.swift; sourceTree = "<group>"; };
 		E871186425675C1C007B8F16 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		E8711867256777BD007B8F16 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		E873DDF22586F45500207F99 /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
@@ -160,6 +163,7 @@
 		E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFromSpotifyController.swift; sourceTree = "<group>"; };
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGCheckbox.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -230,6 +234,8 @@
 				E873DE02258AF97600207F99 /* LogoutController.swift */,
 				E8588F83259159C600ACA919 /* IconView.swift */,
 				E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */,
+				E86F980525BAA2390015C6CE /* EditMetadataController.swift */,
+				E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -412,6 +418,7 @@
 				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
 				A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */,
 				E86EB67C24ECA3F80066CB4E /* Playlist.swift in Sources */,
+				E8DB1B2525BDE39D00556175 /* GGCheckbox.swift in Sources */,
 				E85966492440021200AA8727 /* UIExtensions.swift in Sources */,
 				E83B012124CE82F600C2C5E4 /* Database.swift in Sources */,
 				E8588F84259159C600ACA919 /* IconView.swift in Sources */,
@@ -463,6 +470,7 @@
 				A829AC2423CC2C1D0034AD69 /* TrackViewCell.swift in Sources */,
 				A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */,
 				E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */,
+				E86F980625BAA2390015C6CE /* EditMetadataController.swift in Sources */,
 				E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */,
 				E85966452423207B00AA8727 /* ArtistViewCell.swift in Sources */,
 				E8588F68258D16CB00ACA919 /* PlaylistSynchronizer.swift in Sources */,

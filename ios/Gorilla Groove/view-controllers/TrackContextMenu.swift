@@ -2,21 +2,19 @@ import Foundation
 import UIKit
 
 class TrackContextMenu {
-    static func createMenuForTrack(_ track: Track, onAction: @escaping (Track?) -> Void) -> UIAlertController {
+    static func createMenuForTrack(
+        _ track: Track,
+        parentVc: UIViewController,
+        onAction: @escaping (Track?) -> Void
+    ) -> UIAlertController {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        let privateTitle = track.isPrivate ? "Make Public" : "Make Private"
-        alert.addAction(UIAlertAction(title: privateTitle, style: .default, handler: { (_) in
-            track.isPrivate = !track.isPrivate
-            let request = SetPrivateRequest(trackIds: [track.id], isPrivate: track.isPrivate)
-            HttpRequester.post("track/set-private", EmptyResponse.self, request) { _, statusCode, _ in
-                if statusCode.isSuccessful() {
-                    onAction(track)
-                    ServerSynchronizer.syncWithServer()
-                } else {
-                    ViewUtil.showAlert(message: "Failed to update track visibility!")
-                }
-            }
+        alert.addAction(UIAlertAction(title: "Edit Properties", style: .default, handler: { _ in
+            let metadataController = EditMetadataController(track: track)
+            metadataController.modalPresentationStyle = .pageSheet
+            
+            let vc = UINavigationController(rootViewController: metadataController)
+            parentVc.present(vc, animated: true)
         }))
         
 //        alert.addAction(UIAlertAction(title: "Recommend", style: .default, handler: { (_) in
@@ -25,24 +23,6 @@ class TrackContextMenu {
         
 //        alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { (_) in
 //            print("Trim")
-//        }))
-        
-        let hideTitle = track.isHidden ? "Show in Library" : "Hide in Library"
-        alert.addAction(UIAlertAction(title: hideTitle, style: .default, handler: { (_) in
-            track.isHidden = !track.isHidden
-            let request = UpdateTrackRequest(trackIds: [track.id], hidden: track.isHidden)
-            HttpRequester.put("track/simple-update", EmptyResponse.self, request) { _, statusCode, _ in
-                if statusCode.isSuccessful() {
-                    onAction(track)
-                    ServerSynchronizer.syncWithServer()
-                } else {
-                    ViewUtil.showAlert(message: "Failed to update track visibility!")
-                }
-            }
-        }))
-        
-//        alert.addAction(UIAlertAction(title: "View Info", style: .default, handler: { (_) in
-//            print("User clicked view info")
 //        }))
         
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
@@ -75,7 +55,17 @@ struct SetPrivateRequest: Codable {
 
 struct UpdateTrackRequest: Codable {
     let trackIds: Array<Int>
+    var name: String? = nil
+    var artist: String? = nil
+    var featuring: String? = nil
+    var album: String? = nil
+    var genre: String? = nil
+    var trackNumber: Int? = nil
+    var note: String? = nil
+    var releaseYear: Int? = nil
     var hidden: Bool? = nil
+    var `private`: Bool? = nil
+    var albumArtUrl: String? = nil
 }
 
 struct DeleteTrackRequest: Codable {

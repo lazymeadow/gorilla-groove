@@ -20,29 +20,16 @@ class AddTrackListController: UIViewController, UITableViewDataSource, UITableVi
     }()
     
     private lazy var taskProgressView: UIView = {
-//        let rightChevron = IconView("chevron.right", weight: .medium)
-//        rightChevron.translatesAutoresizingMaskIntoConstraints = false
-//        rightChevron.tintColor = Colors.foreground
-        
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = Colors.navigationBackground
                 
         view.addSubview(taskProgressLabel)
-//        view.addSubview(rightChevron)
         
         NSLayoutConstraint.activate([
-//            view.heightAnchor.constraint(equalTo: taskProgressLabel.heightAnchor, constant: 20),
             taskProgressLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             taskProgressLabel.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 15),
-//            rightChevron.rightAnchor.constraint(equalTo: view.rightAnchor),
-//            rightChevron.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
-//
-//        view.addGestureRecognizer(UITapGestureRecognizer(
-//            target: self,
-//            action: #selector(pickSource(tapGestureRecognizer:))
-//        ))
         
         return view
     }()
@@ -160,9 +147,9 @@ fileprivate class AddTrackListCell : UITableViewCell {
             
             switch option {
             case .YOUTUBE_DL:
-                textLabel!.text = "Download from YouTube"
+                textLabel!.text = DownloadFromYTController.title
             case .SPOTIFY_SEARCH:
-                textLabel!.text = "Search Spotify"
+                textLabel!.text = AddFromSpotifyController.title
             }
         }
     }

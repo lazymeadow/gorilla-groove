@@ -66,10 +66,12 @@ class DownloadFromYTController : UIViewController {
         }
     }
     
+    static let title = "Download from YouTube"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "Download from YouTube"
+        self.title = DownloadFromYTController.title
                 
         self.view.backgroundColor = Colors.background
         
