@@ -6,10 +6,15 @@ class NowPlayingTracks {
     
     private(set) static var currentTrack: Track? = nil
     
-    private(set) static var nowPlayingTracks: Array<Track> = []
+    static func getNowPlayingTracks() -> [Track] {
+        return nowPlayingTrackIds.map { trackIdToTrack[$0]! }
+    }
     
-    private static var playedShuffleIndexes: Array<Int> = []
-    private static var indexesToShuffle: Array<Int> = []
+    private static var trackIdToTrack: [Int: Track] = [:]
+    private(set) static var nowPlayingTrackIds: [Int] = []
+    
+    private static var playedShuffleIndexes: [Int] = []
+    private static var indexesToShuffle: [Int] = []
     
     private(set) static var nowPlayingIndex: Int = -1
     static var shuffleOn: Bool = false {
@@ -29,12 +34,25 @@ class NowPlayingTracks {
     
     private static var registeredCallbacks: Array<(_ track: Track?)->()> = []
     
+    private static let this = NowPlayingTracks()
     private init() { }
     
     static func initialize() {
         let mediaState = FileState.read(MediaState.self) ?? MediaState(shuffleEnabled: false, repeatEnabled: false)
         shuffleOn = mediaState.shuffleEnabled
         repeatOn = mediaState.repeatEnabled
+        
+        TrackService.observeTrackChanges(this) { _, updatedTrack in
+            if trackIdToTrack[updatedTrack.id] == nil {
+                return
+            }
+            
+            self.trackIdToTrack[updatedTrack.id] = updatedTrack
+            
+            if currentTrack?.id == updatedTrack.id {
+                currentTrack = updatedTrack
+            }
+        }
     }
     
     static func persistState() {
@@ -42,10 +60,11 @@ class NowPlayingTracks {
         FileState.save(mediaState)
     }
     
-    static func setNowPlayingTracks(_ tracks: Array<Track>, playFromIndex: Int) {
-        nowPlayingTracks = tracks
+    static func setNowPlayingTracks(_ tracks: [Track], playFromIndex: Int) {
+        nowPlayingTrackIds = tracks.map { $0.id }
+        trackIdToTrack = tracks.keyBy { $0.id }
         nowPlayingIndex = playFromIndex
-        currentTrack = nowPlayingTracks[playFromIndex]
+        currentTrack = tracks[playFromIndex]
         
         if (shuffleOn) {
             doShuffle(preservePrevious: false)
@@ -64,8 +83,9 @@ class NowPlayingTracks {
         
         var newPlayingTracks: Array<Track> = []
         
-        for index in nowPlayingTracks.indices {
-            let track = nowPlayingTracks[index]
+        for index in nowPlayingTrackIds.indices {
+            let trackId = nowPlayingTrackIds[index]
+            let track = trackIdToTrack[trackId]!
             if idsToRemove.contains(track.id) {
                 if index < nowPlayingIndex {
                     indexesRemovedBeforeCurrentlyPlayed += 1
@@ -75,17 +95,23 @@ class NowPlayingTracks {
             }
         }
         
-        nowPlayingTracks = newPlayingTracks
+        nowPlayingTrackIds = newPlayingTracks.map { $0.id }
+        trackIdToTrack = newPlayingTracks.keyBy { $0.id }
         nowPlayingIndex = nowPlayingIndex - indexesRemovedBeforeCurrentlyPlayed
         
         if let currentId = currentTrack?.id, idsToRemove.contains(currentId) {
             GGLog.info("The currently played track is being removed from Now Playing")
-            currentTrack = nowPlayingTracks[safe: nowPlayingIndex]
             
-            if nowPlayingTracks.isEmpty {
+            if let nextTrackId = nowPlayingTrackIds[safe: nowPlayingIndex] {
+                currentTrack = trackIdToTrack[nextTrackId]!
+            } else {
+                currentTrack = nil
+            }
+
+            if nowPlayingTrackIds.isEmpty {
                 nowPlayingIndex = -1
-            } else if nowPlayingIndex >= nowPlayingTracks.count {
-                nowPlayingIndex = nowPlayingTracks.count - 1
+            } else if nowPlayingIndex >= nowPlayingTrackIds.count {
+                nowPlayingIndex = nowPlayingTrackIds.count - 1
             }
             
             if currentTrack == nil {
@@ -265,7 +291,7 @@ class NowPlayingTracks {
     }
     
     static func playNext() {
-        if (nowPlayingTracks.isEmpty) {
+        if (nowPlayingTrackIds.isEmpty) {
             return
         }
         
@@ -297,13 +323,14 @@ class NowPlayingTracks {
             
             nowPlayingIndex = indexesToShuffle.removeFirst()
             
-            currentTrack = nowPlayingTracks[nowPlayingIndex]
+            let nextTrackId = nowPlayingTrackIds[nowPlayingIndex]
+            currentTrack = trackIdToTrack[nextTrackId]
         }
     }
     
     private static func playNextNonShuffle() {
         nowPlayingIndex += 1
-        if (nowPlayingIndex >= nowPlayingTracks.count) {
+        if (nowPlayingIndex >= nowPlayingTrackIds.count) {
             if (repeatOn) {
                 nowPlayingIndex = 0
             } else {
@@ -312,11 +339,12 @@ class NowPlayingTracks {
             }
         }
         
-        currentTrack = nowPlayingTracks[nowPlayingIndex]
+        let nextTrackId = nowPlayingTrackIds[nowPlayingIndex]
+        currentTrack = trackIdToTrack[nextTrackId]
     }
     
     static func playPrevious() {
-        if (nowPlayingTracks.isEmpty) {
+        if (nowPlayingTrackIds.isEmpty) {
             return
         }
         
@@ -339,20 +367,22 @@ class NowPlayingTracks {
             nowPlayingIndex = playedShuffleIndexes.removeLast()
         }
         
-        currentTrack = nowPlayingTracks[nowPlayingIndex]
+        let nextTrackId = nowPlayingTrackIds[nowPlayingIndex]
+        currentTrack = trackIdToTrack[nextTrackId]
     }
     
     private static func playPreviousNonShuffle() {
         nowPlayingIndex -= 1
         if (nowPlayingIndex < 0) {
             if (repeatOn) {
-                nowPlayingIndex = nowPlayingTracks.count - 1
+                nowPlayingIndex = nowPlayingTrackIds.count - 1
             } else {
                 nowPlayingIndex = 0 // Will restart the current track
             }
         }
         
-        currentTrack = nowPlayingTracks[nowPlayingIndex]
+        let nextTrackId = nowPlayingTrackIds[nowPlayingIndex]
+        currentTrack = trackIdToTrack[nextTrackId]
     }
     
     private static func doShuffle(preservePrevious: Bool) {
@@ -360,11 +390,11 @@ class NowPlayingTracks {
             playedShuffleIndexes = []
         }
         
-        if (nowPlayingTracks.isEmpty) {
+        if (nowPlayingTrackIds.isEmpty) {
             return
         }
         
-        indexesToShuffle = Array(0...nowPlayingTracks.count - 1)
+        indexesToShuffle = Array(0...nowPlayingTrackIds.count - 1)
         
         if (currentTrack != nil) {
             playedShuffleIndexes.append(nowPlayingIndex)

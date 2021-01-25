@@ -2,8 +2,12 @@ import Foundation
 import UIKit
 
 public extension Sequence {
-    func groupBy<T: Hashable>(_ key: (Iterator.Element) -> T) -> [T:[Iterator.Element]] {
+    func groupBy<T: Hashable>(_ key: (Iterator.Element) -> T) -> [T: [Iterator.Element]] {
         return Dictionary.init(grouping: self, by: key)
+    }
+    
+    func keyBy<T: Hashable>(_ key: (Iterator.Element) -> T) -> [T: Iterator.Element] {
+        return Dictionary.init(grouping: self, by: key).mapValues { $0.first! }
     }
     
     func takeFirst(_ n: Int) -> [Iterator.Element] {

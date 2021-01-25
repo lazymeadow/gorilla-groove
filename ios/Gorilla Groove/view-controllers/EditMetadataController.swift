@@ -238,6 +238,8 @@ class EditMetadataController : UIViewController {
                 
                 TrackDao.save(upToDateTrack)
                 
+                TrackService.broadcastTrackChange(upToDateTrack)
+                
                 DispatchQueue.main.async {
                     self.navigationController!.dismiss(animated: true)
                     Toast.show("Track data updated")
@@ -329,7 +331,7 @@ class EditMetadataController : UIViewController {
     
     @objc func adjustForKeyboard(notification: Notification) {
         guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
-
+        
         let keyboardScreenEndFrame = keyboardValue.cgRectValue
         let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
 

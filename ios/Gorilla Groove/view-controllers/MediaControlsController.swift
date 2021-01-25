@@ -177,6 +177,14 @@ class MediaControlsController: UIViewController {
             DispatchQueue.main.async { self.handleTrackChange(nillableTrack) }
         }
         
+        TrackService.observeTrackChanges(self) { _, updatedTrack in
+            if updatedTrack.id == NowPlayingTracks.currentTrack?.id {
+                DispatchQueue.main.async {
+                    self.setTrackInfo(updatedTrack)
+                }
+            }
+        }
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(recalculatePlayButton),
@@ -295,15 +303,19 @@ class MediaControlsController: UIViewController {
             return
         }
         
+        setTrackInfo(track)
         self.currentTime.text = Formatters.timeFromSeconds(0)
-        self.totalTime.text = Formatters.timeFromSeconds(Int(track.length))
-        self.songText.text = track.name + " - " + track.artistString
         self.pauseIcon.isHidden = false
         self.playIcon.isHidden = true
         
         self.slider.setValue(0, animated: true)
         
         self.targetListenTime = Double(Int(track.length)) * 0.60
+    }
+    
+    private func setTrackInfo(_ track: Track) {
+        self.totalTime.text = Formatters.timeFromSeconds(Int(track.length))
+        self.songText.text = track.name + " - " + track.artistString
     }
     
     private func handleTimeChange(_ time: Double) {

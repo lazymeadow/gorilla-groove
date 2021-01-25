@@ -164,6 +164,33 @@ class TrackService {
             linkFetchHandler(links)
         }
     }
+    
+    private static var observers = [UUID : (Track) -> Void]()
+
+    @discardableResult
+    static func observeTrackChanges<T: AnyObject>(
+        _ observer: T,
+        closure: @escaping (T, Track) -> Void
+    ) -> ObservationToken {
+        let id = UUID()
+        
+        observers[id] = { [weak observer] track in
+            guard let observer = observer else {
+                observers.removeValue(forKey: id)
+                return
+            }
+
+            closure(observer, track)
+        }
+        
+        return ObservationToken {
+            observers.removeValue(forKey: id)
+        }
+    }
+    
+    static func broadcastTrackChange(_ track: Track) {
+        observers.values.forEach { $0(track) }
+    }
 }
 
 struct TrackLinkResponse: Codable {

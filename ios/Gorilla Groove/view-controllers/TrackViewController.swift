@@ -4,12 +4,13 @@ import AVKit
 
 class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
-    var loadTracksFunc: (() -> Array<Track>)? = nil
-    var tracks: Array<Track> = []
-    var visibleTracks: Array<Track> = []
-    let scrollPlayedTrackIntoView: Bool
-    let showingHidden: Bool
-    let tableView = UITableView()
+    private var loadTracksFunc: (() -> [Track])? = nil
+    private var trackIds: [Int] = []
+    private var trackIdToTrack: [Int: Track]
+    private var visibleTrackIds: [Int] = []
+    private let scrollPlayedTrackIntoView: Bool
+    private let showingHidden: Bool
+    private let tableView = UITableView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,13 +41,16 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: tableView) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
-                self.visibleTracks = self.tracks
+                self.visibleTrackIds = self.trackIds
             } else {
-                self.visibleTracks = self.tracks.filter { $0.name.lowercased().contains(searchTerm) }
+                self.visibleTrackIds = self.trackIds.filter {
+                    let track = self.trackIdToTrack[$0]!
+                    return track.name.lowercased().contains(searchTerm)
+                }
             }
         }
         
-        // viewDidLoad only seems to be called once. But I am wary of more than one of these being registered
+        // TODO should update this to use ObservationTokens. I think this probably doesn't get cleaned up properly with the current app
         NowPlayingTracks.addTrackChangeObserver { _ in
             DispatchQueue.main.async {
                 self.tableView.visibleCells.forEach { cell in
@@ -61,8 +65,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         super.viewDidAppear(animated)
         
         if let loadFunc = loadTracksFunc {
-            self.tracks = loadFunc()
-            self.visibleTracks = self.tracks
+            let tracks = loadFunc()
+            self.trackIds = tracks.map { $0.id }
+            self.visibleTrackIds = self.trackIds
+            self.trackIdToTrack = tracks.keyBy { $0.id }
             self.tableView.reloadData()
         }
         
@@ -73,12 +79,13 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return visibleTracks.count
+        return visibleTrackIds.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "songCell", for: indexPath) as! TrackViewCell
-        let track = visibleTracks[indexPath.row]
+        let trackId = visibleTrackIds[indexPath.row]
+        let track = trackIdToTrack[trackId]!
         
         cell.track = track
         
@@ -100,8 +107,9 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let cell = sender.view as! TrackViewCell
         
         let tableIndex = tableView.indexPath(for: cell)!
-
+        
         cell.animateSelectionColor()
+        let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]! }
         NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
         
         if let search = self.navigationItem.searchController {
@@ -116,12 +124,13 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         let cell = sender.view as! TrackViewCell
         let tableIndex = tableView.indexPath(for: cell)!
-        let track = visibleTracks[tableIndex.row]
-
+        let trackId = visibleTrackIds[tableIndex.row]
+        let track = trackIdToTrack[trackId]!
+        
         let alert = TrackContextMenu.createMenuForTrack(track, parentVc: self) { newTrack in
             if newTrack == nil || (!self.showingHidden && newTrack!.isHidden) {
                 GGLog.info("Hiding existing track from menu list in response to edit")
-                self.visibleTracks.remove(at: tableIndex.row)
+                self.visibleTrackIds.remove(at: tableIndex.row)
                 DispatchQueue.main.async {
                     self.tableView.deleteRows(at: [tableIndex], with: .automatic)
                 }
@@ -133,25 +142,43 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     init(
         _ title: String,
-        _ tracks: Array<Track> = [],
+        _ tracks: [Track] = [],
         scrollPlayedTrackIntoView: Bool = false,
         showingHidden: Bool = false,
-        loadTracksFunc: (() -> Array<Track>)? = nil
+        loadTracksFunc: (() -> [Track])? = nil
     ) {
-        self.tracks = tracks
-        self.visibleTracks = tracks
+        self.trackIds = tracks.map { $0.id }
+        self.trackIdToTrack = tracks.keyBy { $0.id }
+        self.visibleTrackIds = self.trackIds
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
         self.showingHidden = showingHidden
         self.loadTracksFunc = loadTracksFunc
         
         super.init(nibName: nil, bundle: nil)
-
+        
         self.title = title
+        
+        // We hold track data fairly long term in this controller a lot of the time. Subscribe to broadcasts for track changes
+        // so that we can update our track information in real time
+        TrackService.observeTrackChanges(self) { vc, updatedTrack in
+            if self.trackIdToTrack[updatedTrack.id] == nil {
+                return
+            }
+            
+            self.trackIdToTrack[updatedTrack.id] = updatedTrack
+            
+            DispatchQueue.main.async {
+                self.tableView.visibleCells.forEach { cell in
+                    let songViewCell = cell as! TrackViewCell
+                    if songViewCell.track!.id == updatedTrack.id {
+                        songViewCell.track = updatedTrack
+                    }
+                }
+            }
+        }
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        self.scrollPlayedTrackIntoView = false
-        self.showingHidden = false
-        super.init(coder: aDecoder)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

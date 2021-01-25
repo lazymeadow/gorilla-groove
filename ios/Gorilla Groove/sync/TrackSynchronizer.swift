@@ -96,8 +96,10 @@ class TrackSynchronizer {
                 artCachedAt: newArtCachedAt,
                 thumbnailCachedAt: newThumbnailCachedAt
             )
-            TrackDao.save(updatedTrack)
             
+            TrackDao.save(updatedTrack)
+            TrackService.broadcastTrackChange(updatedTrack)
+
             // A track SHOULD never go from not being in review, to being in review. But w/e. Sometimes I do weird stuff with the DB manually
             if oldTrack.inReview || updatedTrack.inReview {
                 modifiedInReviewTracks.append(updatedTrack)
