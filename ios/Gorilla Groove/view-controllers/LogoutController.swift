@@ -31,8 +31,34 @@ class LogoutController : UIViewController {
             AppDelegate.rootView?.makeToast("You are in offline mode and cannot be logged out")
             navigationController?.popViewController(animated: false)
         } else {
-            logout()
+            confirmLogoutViaAlert()
         }
+    }
+
+    private func confirmLogoutViaAlert() {
+        let alert = UIAlertController(
+            title: "Logout?",
+            message: "Are you sure you'd like to logout?",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(.init(
+            title: "Yee",
+            style: .destructive,
+            handler: { (action: UIAlertAction) in
+                self.logout()
+            }
+        ))
+
+        alert.addAction(.init(
+            title: "Nah",
+            style: .cancel,
+            handler: { (action: UIAlertAction) in
+                self.navigationController?.popViewController(animated: true)
+            }
+        ))
+
+        self.present(alert, animated: true)
     }
     
     private func logout() {
