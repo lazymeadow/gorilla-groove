@@ -87,7 +87,7 @@ class ReviewSourceYoutubeChannelService(
 				return@saveLoop
 			}
 
-			val (artist, name) = splitSongNameAndArtist(video.title)
+			val (name, artist) = splitSongNameAndArtist(video.title)
 			val downloadDTO = YoutubeDownloadDTO(
 					url = video.videoUrl,
 					name = name,
