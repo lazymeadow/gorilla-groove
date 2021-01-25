@@ -13,8 +13,6 @@ class EditMetadataController : UIViewController {
     private let noteEntry = PropertyEntry("Note")
     private let hiddenEntry = CheckboxEntry("Hidden")
     private let privateEntry = CheckboxEntry("Private")
-
-    private var activeTextField: UITextField? = nil
     
     private let albumArtView: UIImageView = {
         let view = UIImageView()
@@ -41,13 +39,22 @@ class EditMetadataController : UIViewController {
         return scrollView
     }()
     
-    private let activitySpinner: UIActivityIndicatorView = {
+    private let leftActivitySpinner: UIActivityIndicatorView = {
         let spinner = UIActivityIndicatorView()
         
         spinner.translatesAutoresizingMaskIntoConstraints = false
         spinner.color = Colors.foreground
-        spinner.hidesWhenStopped = false
-        spinner.startAnimating()
+        spinner.hidesWhenStopped = true
+        
+        return spinner
+    }()
+    
+    private let rightActivitySpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
+        
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.color = Colors.foreground
+        spinner.hidesWhenStopped = true
         
         return spinner
     }()
@@ -56,13 +63,12 @@ class EditMetadataController : UIViewController {
     private var newAlbumArtLink: String?
     
     init(track: Track) {
-        self.track = track
+        // Not a huge fan of the DB call on the main thread, but I don't really want to put everything behind a loader
+        // and deal with things relying on Track not being null in viewDidLoad() for the small main thread hit.
+        // I think it's important to make sure this view has the latest data tho
+        self.track = TrackDao.findById(track.id) ?? track
         super.init(nibName: nil, bundle: nil)
     }
-    
-    private lazy var activityNavButtonItem: UIBarButtonItem = {
-        return UIBarButtonItem(customView: activitySpinner)
-    }()
     
     private lazy var leftNavButtonItem: UIBarButtonItem = {
         return UIBarButtonItem(title: "Get Info", style: .plain, target: self, action: #selector(getInfo))
@@ -95,7 +101,9 @@ class EditMetadataController : UIViewController {
         scrollView.addSubview(noteEntry)
         scrollView.addSubview(hiddenEntry)
         scrollView.addSubview(privateEntry)
-
+        scrollView.addSubview(leftActivitySpinner)
+        scrollView.addSubview(rightActivitySpinner)
+        
         self.view.addSubview(scrollView)
         
         NSLayoutConstraint.activate([
@@ -139,6 +147,12 @@ class EditMetadataController : UIViewController {
             privateEntry.topAnchor.constraint(equalTo: hiddenEntry.bottomAnchor, constant: spacing),
             privateEntry.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             privateEntry.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -5),
+            
+            leftActivitySpinner.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 36),
+            leftActivitySpinner.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
+            
+            rightActivitySpinner.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -23),
+            rightActivitySpinner.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
         ])
         
         titleEntry.input.text = track.name
@@ -162,7 +176,22 @@ class EditMetadataController : UIViewController {
         
         GGNavLog.info("Loaded EditMetadataController")
         
+        setInitialArt()
+    }
+    
+    private func setInitialArt() {
         if track.hasAlbumArt {
+            if track.artCachedAt != nil {
+                if let cachedArt = CacheService.getCachedData(trackId: track.id, cacheType: .art) {
+                    albumArtView.contentMode = .scaleAspectFit
+                    albumArtView.image = UIImage(data: cachedArt)
+                    return
+                } else {
+                    GGLog.error("Failed to find cached art data, despite the track thinking it had a cache! Clearing cache from DB for track \(track.id)")
+                    CacheService.deleteCachedData(trackId: track.id, cacheType: .art, ignoreWarning: true)
+                }
+            }
+            
             TrackService.fetchLinksForTrack(
                 track: track,
                 fetchSong: false,
@@ -186,7 +215,8 @@ class EditMetadataController : UIViewController {
     
     @objc private func save() {
         GGNavLog.info("User tapped 'save'")
-        self.navigationItem.rightBarButtonItem = activityNavButtonItem
+        self.navigationItem.rightBarButtonItem = nil
+        rightActivitySpinner.startAnimating()
         
         let trackNum = (trackNumberEntry.input.text ?? "").trim()
         let releaseYear = (releaseYearEntry.input.text ?? "").trim()
@@ -248,6 +278,7 @@ class EditMetadataController : UIViewController {
                 DispatchQueue.main.async {
                     Toast.show("Failed to update track data")
                     self.navigationItem.rightBarButtonItem = self.rightNavButtonItem
+                    self.rightActivitySpinner.stopAnimating()
                 }
             }
         }
@@ -256,9 +287,13 @@ class EditMetadataController : UIViewController {
     @objc private func getInfo() {
         GGNavLog.info("User tapped 'get info'")
         
-        // For whatever reason, the 2nd time this is set it stops animating. No idea why. Lost a lot of time trying to figure it out.
-        // Seems like an iOS bug tbh. But it's probably unlikely someone taps on this more than once... so even less of a big deal
-        self.navigationItem.leftBarButtonItem = activityNavButtonItem
+        // I tried putting an activity spinner in here, but for whatever reason, the 2nd time it goes in there it doesn't animate.
+        // It just holds still. This sucks because if you tap the "Get Info" item then tap the "Save" item the "save" item will never animate.
+        // Makes it look like it's stuck and that you need to kill your app or something. I have now moved the spinners out sadly.
+        self.navigationItem.leftBarButtonItem = nil
+        leftActivitySpinner.startAnimating()
+        
+        scrollView.firstResponder?.resignFirstResponder()
         
         guard let artist = artistEntry.input.text, !artist.isEmpty else {
             Toast.show("Artist must be filled out to get info")
@@ -273,6 +308,7 @@ class EditMetadataController : UIViewController {
         HttpRequester.get("search/spotify/artist/\(artist)/name/\(name)/length/\(track.length)", SpotifyTrackSearchResponse.self) { [self] response, status, _ in
             DispatchQueue.main.async {
                 self.navigationItem.leftBarButtonItem = leftNavButtonItem
+                leftActivitySpinner.stopAnimating()
             }
             
             guard let items = response?.items, status.isSuccessful() else {
@@ -376,6 +412,8 @@ class EditMetadataController : UIViewController {
     }
 }
 
+fileprivate let labelWidth: CGFloat = 90
+
 fileprivate class PropertyEntry : UIView, UITextFieldDelegate  {
     
     let label: UILabel = {
@@ -429,7 +467,7 @@ fileprivate class PropertyEntry : UIView, UITextFieldDelegate  {
         
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 15),
-            label.widthAnchor.constraint(equalToConstant: 110),
+            label.widthAnchor.constraint(equalToConstant: labelWidth),
             input.leadingAnchor.constraint(equalTo: label.trailingAnchor),
             input.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -15),
             bottomInputLine.leadingAnchor.constraint(equalTo: input.leadingAnchor),
@@ -479,7 +517,7 @@ fileprivate class CheckboxEntry : UIView {
         
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 15),
-            label.widthAnchor.constraint(equalToConstant: 110),
+            label.widthAnchor.constraint(equalToConstant: labelWidth),
             input.leadingAnchor.constraint(equalTo: label.trailingAnchor),
             input.trailingAnchor.constraint(equalTo: self.trailingAnchor), // This constraint is somehow necessary for it being tappable
             input.topAnchor.constraint(equalTo: self.topAnchor, constant: -3),

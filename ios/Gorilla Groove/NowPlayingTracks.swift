@@ -183,7 +183,7 @@ class NowPlayingTracks {
     }
     
     private static func displayImageData(trackId: Int, data: Data) {
-        if let image = UIImage.init(data: data) {
+        if let image = UIImage(data: data) {
             let artwork = MPMediaItemArtwork(boundsSize: image.size, requestHandler: { _ in return image })
             MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
         } else {
