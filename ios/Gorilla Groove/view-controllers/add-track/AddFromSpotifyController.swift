@@ -445,7 +445,7 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
             
             self.importToLibrary(track: track, addToReview: true, artistQueueName: self.searchTerm)
         }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .default, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
             GGNavLog.info("User tapped cancel button")
         }))
         
