@@ -1,12 +1,13 @@
 import Foundation
+import UIKit
 
 class Toast {
-    static func show(_ message: String) {
+    static func show(_ message: String, view: UIView? = nil) {
         if Thread.isMainThread {
-            AppDelegate.rootView?.makeToast(message)
+            (view ?? AppDelegate.rootView)?.makeToast(message)
         } else {
             DispatchQueue.main.async {
-                AppDelegate.rootView?.makeToast(message)
+                (view ?? AppDelegate.rootView)?.makeToast(message)
             }
         }
     }

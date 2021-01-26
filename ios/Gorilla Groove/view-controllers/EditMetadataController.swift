@@ -198,7 +198,7 @@ class EditMetadataController : UIViewController {
                 fetchArt: true
             ) { [self] trackLinkResponse in
                 guard let response = trackLinkResponse else {
-                    Toast.show("Could not fetch album art")
+                    Toast.show("Could not fetch album art", view: self.view)
                     setNoAlbumArtPicture()
                     
                     return
@@ -222,11 +222,11 @@ class EditMetadataController : UIViewController {
         let releaseYear = (releaseYearEntry.input.text ?? "").trim()
 
         if !trackNum.isEmpty && Int(trackNum) == nil {
-            Toast.show("Track # must be a number")
+            Toast.show("Track # must be a number", view: self.view)
             return
         }
         if !releaseYear.isEmpty && Int(releaseYear) == nil {
-            Toast.show("Year must be a number")
+            Toast.show("Year must be a number", view: self.view)
             return
         }
         
@@ -276,7 +276,7 @@ class EditMetadataController : UIViewController {
                 }
             } else {
                 DispatchQueue.main.async {
-                    Toast.show("Failed to update track data")
+                    Toast.show("Failed to update track data", view: self.view)
                     self.navigationItem.rightBarButtonItem = self.rightNavButtonItem
                     self.rightActivitySpinner.stopAnimating()
                 }
@@ -290,12 +290,12 @@ class EditMetadataController : UIViewController {
         scrollView.firstResponder?.resignFirstResponder()
         
         guard let artist = artistEntry.input.text, !artist.isEmpty else {
-            Toast.show("Artist must be filled out to get info")
+            Toast.show("Artist must not be empty", view: self.view)
             return
         }
         
         guard let name = titleEntry.input.text, !name.isEmpty else {
-            Toast.show("Name must be filled out to get info")
+            Toast.show("Name must not be empty", view: self.view)
             return
         }
         
@@ -314,7 +314,7 @@ class EditMetadataController : UIViewController {
             guard let items = response?.items, status.isSuccessful() else {
                 GGLog.error("Failed to get a metadata search response for artist '\(artist)' and name '\(name)'!")
                 DispatchQueue.main.async {
-                    Toast.show("Metadata could not be fetched")
+                    Toast.show("Metadata could not be fetched", view: self.view)
                 }
                 
                 return
@@ -322,7 +322,7 @@ class EditMetadataController : UIViewController {
             
             guard let metadata = items.first else {
                 DispatchQueue.main.async {
-                    Toast.show("No info could be found")
+                    Toast.show("No info could be found", view: self.view)
                 }
                 return
             }
