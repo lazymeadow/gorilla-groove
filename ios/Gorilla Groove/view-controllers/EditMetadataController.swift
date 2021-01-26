@@ -287,12 +287,6 @@ class EditMetadataController : UIViewController {
     @objc private func getInfo() {
         GGNavLog.info("User tapped 'get info'")
         
-        // I tried putting an activity spinner in here, but for whatever reason, the 2nd time it goes in there it doesn't animate.
-        // It just holds still. This sucks because if you tap the "Get Info" item then tap the "Save" item the "save" item will never animate.
-        // Makes it look like it's stuck and that you need to kill your app or something. I have now moved the spinners out sadly.
-        self.navigationItem.leftBarButtonItem = nil
-        leftActivitySpinner.startAnimating()
-        
         scrollView.firstResponder?.resignFirstResponder()
         
         guard let artist = artistEntry.input.text, !artist.isEmpty else {
@@ -304,6 +298,12 @@ class EditMetadataController : UIViewController {
             Toast.show("Name must be filled out to get info")
             return
         }
+        
+        // I tried putting an activity spinner in here, but for whatever reason, the 2nd time it goes in there it doesn't animate.
+        // It just holds still. This sucks because if you tap the "Get Info" item then tap the "Save" item the "save" item will never animate.
+        // Makes it look like it's stuck and that you need to kill your app or something. I have now moved the spinners out sadly.
+        self.navigationItem.leftBarButtonItem = nil
+        leftActivitySpinner.startAnimating()
         
         HttpRequester.get("search/spotify/artist/\(artist)/name/\(name)/length/\(track.length)", SpotifyTrackSearchResponse.self) { [self] response, status, _ in
             DispatchQueue.main.async {
