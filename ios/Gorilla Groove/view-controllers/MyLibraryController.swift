@@ -1,99 +1,84 @@
 import UIKit
 
-class MyLibraryController: UITableViewController {
-    let options = SongViewType.allCases
-    
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private var offlineModeEnabled: Bool
+class MyLibraryController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.title = "My Library"
-        
-        // Remove extra table row lines that have no content
-        tableView.tableFooterView = UIView(frame: .zero)
-        
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "libraryCell")
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         GGNavLog.info("Loaded my library")
+        
+        loadInitialVc(.TITLE)
     }
     
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return options.count
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "libraryCell", for: indexPath)
-        
-        cell.textLabel!.text = "\(options[indexPath.row])".toTitleCase()
-        cell.textLabel!.textColor = Colors.tableText
-        let tapGesture = UITapGestureRecognizer(
-            target: self,
-            action: #selector(handleTap(sender:))
-        )
-        cell.addGestureRecognizer(tapGesture)
-        
-        return cell
-    }
-    
-    @objc private func handleTap(sender: UITapGestureRecognizer) {
-        let cell = sender.view as! UITableViewCell
-        cell.animateSelectionColor()
-        
-        let tapLocation = sender.location(in: self.tableView)
-        
-        let optionIndex = self.tableView.indexPathForRow(at: tapLocation)![1]
-        let viewType = options[optionIndex]
-        let viewText = "\(viewType)".toTitleCase()
-        
-        switch (viewType) {
-        case .TITLE:
-            loadTitleView(viewText)
-        case .ARTIST:
-            loadArtistView()
-        case .ALBUM:
-            loadAlbumView()
-        case .PLAY_COUNT:
-            loadTitleView(viewText, "play_count", sortAscending: false)
-        case .DATE_ADDED:
-            loadTitleView(viewText, "added_to_library", sortAscending: false)
-        }
-    }
-    
-    @objc private func loadTitleView(
-        _ viewTitle: String,
-        _ sortOverrideKey: String? = nil,
-        sortAscending: Bool = true
-    ) {
-        let tracks = TrackService.getTracks(sortOverrideKey: sortOverrideKey, sortAscending: sortAscending)
+    private func loadInitialVc(_ viewType: LibraryViewType) {
+        MyLibraryController.loadTitleView(vc: self)
 
-        let view = TrackViewController(viewTitle, tracks)
-        self.navigationController!.pushViewController(view, animated: true)
+//        switch (viewType) {
+//        case .TITLE:
+//            loadTitleView("My Library")
+//        case .ARTIST:
+//            loadArtistView()
+//        case .ALBUM:
+//            loadAlbumView()
+//        case .PLAY_COUNT:
+//            loadTitleView("My Library", "play_count", sortAscending: false)
+//        case .DATE_ADDED:
+//            loadTitleView("My Library", "added_to_library", sortAscending: false)
+//        }
     }
     
-    @objc private func loadArtistView() {
-        let artists = TrackDao.getArtists(isSongCached: offlineModeEnabled ? true : nil)
+    static func loadTitleView(vc: UIViewController) {
+        let tracks = TrackService.getTracks()
 
-        let view = ArtistViewController("Artist", artists)
-        self.navigationController!.pushViewController(view, animated: true)
+        let view = TrackViewController("My Library", tracks, originalView: .TITLE)
+        view.tabBarItem = RootNavigationController.libraryTabBarItem
+        vc.navigationController!.setViewControllers([view], animated: false)
     }
     
-    @objc private func loadAlbumView() {
-        let albums = TrackDao.getAlbums(isSongCached: offlineModeEnabled ? true : nil)
+    static func loadArtistView(vc: UIViewController) {
+        let artists = TrackDao.getArtists(isSongCached: OfflineStorageService.offlineModeEnabled ? true : nil)
 
-        let view = AlbumViewController("Album", albums, nil)
-        self.navigationController!.pushViewController(view, animated: true)
+        let view = ArtistViewController("My Library", artists)
+        view.tabBarItem = RootNavigationController.libraryTabBarItem
+        
+        let backItem = UIBarButtonItem()
+        backItem.title = "Artists"
+        view.navigationItem.backBarButtonItem = backItem
+        vc.navigationController!.setViewControllers([view], animated: false)
     }
     
-    enum SongViewType: CaseIterable {
-        case TITLE
-        case ARTIST
-        case ALBUM
-        case PLAY_COUNT
-        case DATE_ADDED
+    static func loadAlbumView(vc: UIViewController) {
+        let albums = TrackDao.getAlbums(isSongCached: OfflineStorageService.offlineModeEnabled ? true : nil)
+
+        let view = AlbumViewController("My Library", albums, nil)
+        view.tabBarItem = RootNavigationController.libraryTabBarItem
+        let backItem = UIBarButtonItem()
+        backItem.title = "Albums"
+        view.navigationItem.backBarButtonItem = backItem
+        vc.navigationController!.setViewControllers([view], animated: false)
+    }
+    
+    static func getNavigationOptions(vc: UIViewController, viewType: LibraryViewType) -> [FilterOption] {
+        return [
+            FilterOption("View by Name", isSelected: viewType == .TITLE) { MyLibraryController.loadTitleView(vc: vc) },
+            FilterOption("View by Artist", isSelected: viewType == .ARTIST) { MyLibraryController.loadArtistView(vc: vc) },
+            FilterOption("View by Album", isSelected: viewType == .ALBUM) { MyLibraryController.loadAlbumView(vc: vc) },
+        ]
     }
 }
+
+enum LibraryViewType: CaseIterable {
+    case TITLE
+    case ARTIST
+    case ALBUM
+    case PLAY_COUNT
+    case DATE_ADDED
+    case PLAYLIST
+    case NOW_PLAYING
+}
+

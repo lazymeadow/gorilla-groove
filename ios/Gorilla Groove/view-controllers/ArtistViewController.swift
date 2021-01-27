@@ -1,34 +1,55 @@
 import UIKit
 import Foundation
-import AVFoundation
-import AVKit
 
 class ArtistViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    var artists: Array<String> = []
-    var visibleArtists: Array<String> = []
+    private var artists: [String] = []
+    private var visibleArtists: [String] = []
+    private let originalView: LibraryViewType?
     
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private var offlineModeEnabled: Bool
+    private lazy var filterOptions: [[FilterOption]]? = {
+        if let viewType = originalView {
+            return [MyLibraryController.getNavigationOptions(vc: self, viewType: viewType)]
+        } else {
+            return nil
+        }
+    }()
+    
+    private lazy var filter: TableFilter? = {
+        if let options = filterOptions {
+            return TableFilter(options, vc: self)
+        } else {
+            return nil
+        }
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded artist view")
-
+        
         let artistTableView = UITableView()
-
+        
         view.addSubview(artistTableView)
         
         artistTableView.translatesAutoresizingMaskIntoConstraints = false
-        artistTableView.topAnchor.constraint(equalTo:view.topAnchor).isActive = true
-        artistTableView.leftAnchor.constraint(equalTo:view.leftAnchor).isActive = true
-        artistTableView.rightAnchor.constraint(equalTo:view.rightAnchor).isActive = true
-        artistTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor).isActive = true
+        
+        NSLayoutConstraint.activate([
+            artistTableView.topAnchor.constraint(equalTo:view.topAnchor),
+            artistTableView.leftAnchor.constraint(equalTo:view.leftAnchor),
+            artistTableView.rightAnchor.constraint(equalTo:view.rightAnchor),
+            artistTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor),
+        ])
+        filter?.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        filter?.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10).isActive = true
         
         artistTableView.dataSource = self
         artistTableView.delegate = self
         artistTableView.register(ArtistViewCell.self, forCellReuseIdentifier: "artistCell")
         
-        TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: artistTableView) { input in
+        TableSearchAugmenter.addSearchToNavigation(
+            controller: self,
+            tableView: artistTableView,
+            onTap: { self.filter?.setIsHiddenAnimated(true) }
+        ) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
                 self.visibleArtists = self.artists
@@ -57,19 +78,23 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         return cell
     }
     
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        filter?.setIsHiddenAnimated(true)
+    }
+    
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! ArtistViewCell
         
         cell.animateSelectionColor()
         
-        let albums = TrackDao.getAlbums(artist: cell.artist!, isSongCached: offlineModeEnabled ? true : nil)
+        let albums = TrackDao.getAlbums(artist: cell.artist!, isSongCached: OfflineStorageService.offlineModeEnabled ? true : nil)
         
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {
             if (albums.count == 1) {
                 let tracks = TrackService.getTracks(album: albums.first!.name, artist: cell.artist!)
                 
-                return TrackViewController(albums.first!.name, tracks)
+                return TrackViewController(albums.first!.name, tracks, originalView: .ARTIST)
             } else {
                 return AlbumViewController(cell.artist!, albums, cell.artist!)
             }
@@ -78,16 +103,17 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         self.navigationController!.pushViewController(view, animated: true)
     }
     
-    init(_ title: String, _ artists: Array<String>) {
+    init(_ title: String, _ artists: [String], originalView: LibraryViewType? = nil) {
         self.artists = artists
         self.visibleArtists = artists
+        self.originalView = originalView
         
         super.init(nibName: nil, bundle: nil)
 
         self.title = title
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

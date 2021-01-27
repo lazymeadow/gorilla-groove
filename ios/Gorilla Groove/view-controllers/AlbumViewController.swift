@@ -4,12 +4,18 @@ import AVFoundation
 import AVKit
 
 class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    var albums: Array<Album> = []
-    var visibleAlbums: Array<Album> = []
+    private var albums: Array<Album> = []
+    private var visibleAlbums: Array<Album> = []
     
-    var artist: String? = nil
+    private var artist: String? = nil
     
-    let albumTableView = UITableView()
+    private lazy var filterOptions = [
+        MyLibraryController.getNavigationOptions(vc: self, viewType: .ALBUM),
+    ]
+    
+    private lazy var filter = TableFilter(filterOptions, vc: self)
+    
+    private let albumTableView = UITableView()
         
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,16 +24,25 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         view.addSubview(albumTableView)
         
         albumTableView.translatesAutoresizingMaskIntoConstraints = false
-        albumTableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        albumTableView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
-        albumTableView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
-        albumTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        NSLayoutConstraint.activate([
+            albumTableView.topAnchor.constraint(equalTo:view.topAnchor),
+            albumTableView.leftAnchor.constraint(equalTo:view.leftAnchor),
+            albumTableView.rightAnchor.constraint(equalTo:view.rightAnchor),
+            albumTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor),
+            
+            filter.topAnchor.constraint(equalTo: view.topAnchor),
+            filter.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
+        ])
         
         albumTableView.dataSource = self
         albumTableView.delegate = self
         albumTableView.register(AlbumViewCell.self, forCellReuseIdentifier: "albumCell")
         
-        TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: albumTableView) { input in
+        TableSearchAugmenter.addSearchToNavigation(
+            controller: self,
+            tableView: albumTableView,
+            onTap: { self.filter.setIsHiddenAnimated(true) }
+        ) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
                 self.visibleAlbums = self.albums
@@ -57,6 +72,10 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         return cell
     }
     
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        filter.setIsHiddenAnimated(true)
+    }
+    
     @objc private func handleTap(sender: UITapGestureRecognizer) {
         let cell = sender.view as! AlbumViewCell
         
@@ -68,7 +87,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         let tracks = TrackService.getTracks(album: albumToLoad, artist: artist)
         
-        let view = TrackViewController(viewName, tracks)
+        let view = TrackViewController(viewName, tracks, originalView: .ALBUM)
         self.navigationController!.pushViewController(view, animated: true)
     }
     
@@ -88,8 +107,10 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                 albumViewCell.album = album
                 return
             }
-            GGLog.error("Had cached art but failed to load it! Wiping out bad cache and fetching live art")
-            TrackDao.setCachedAt(trackId: album.trackIdForArt, cachedAt: nil, cacheType: .thumbnail)
+            DispatchQueue.global().async {
+                GGLog.error("Had cached art but failed to load it! Wiping out bad cache and fetching live art")
+                TrackDao.setCachedAt(trackId: album.trackIdForArt, cachedAt: nil, cacheType: .thumbnail)
+            }
         }
         
         album.imageLoadFired = true

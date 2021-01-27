@@ -1,6 +1,5 @@
 import UIKit
 import Foundation
-import AVKit
 
 class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
@@ -12,31 +11,42 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private let showingHidden: Bool
     private let tableView = UITableView()
     
-    private let filterOptions = [
-        [
-            FilterOption("View by Name", isSelected: true),
-            FilterOption("View by Artist"),
-            FilterOption("View by Album"),
-        ],
-        [
-            FilterOption("Sort by Name", isSelected: true),
-            FilterOption("Sort by Play Count"),
-            FilterOption("Sort by Date Added"),
-        ],
-        [
-            FilterOption("Show Cached Status"),
-            FilterOption("Show Offline Status"),
-        ]
-    ]
+    private let originalView: LibraryViewType
     
-    private lazy var filter = TableFilter(filterOptions, vc: self)
+    private lazy var filterOptions: [[FilterOption]] = {
+        if originalView == .PLAYLIST {
+            return []
+        } else if originalView == .NOW_PLAYING {
+            return []
+        } else {
+            return [
+                MyLibraryController.getNavigationOptions(vc: self, viewType: originalView),
+                [
+                    FilterOption("Sort by Name", isSelected: true) {},
+                    FilterOption("Sort by Play Count") {},
+                    FilterOption("Sort by Date Added") {},
+                ],
+                [
+                    FilterOption("Show Cached Status") {},
+                    FilterOption("Show Offline Status") {},
+                ]
+            ]
+        }
+    }()
     
+    private lazy var filter: TableFilter? = {
+        if !filterOptions.isEmpty {
+            return TableFilter(filterOptions, vc: self)
+        } else {
+            return nil
+        }
+    }()
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded track view")
 
         view.addSubview(tableView)
-        view.addSubview(filter)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -44,10 +54,9 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            filter.topAnchor.constraint(equalTo: view.topAnchor),
-            filter.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
         ])
+        filter?.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        filter?.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10).isActive = true
         
         tableView.keyboardDismissMode = .onDrag
         
@@ -64,7 +73,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
             tableView: tableView,
-            onTap: { self.filter.setIsHiddenAnimated(true) }
+            onTap: { self.filter?.setIsHiddenAnimated(true) }
         ) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
@@ -131,12 +140,12 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        filter.setIsHiddenAnimated(true)
+        filter?.setIsHiddenAnimated(true)
     }
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
-        filter.setIsHiddenAnimated(true)
-
+        filter?.setIsHiddenAnimated(true)
+        
         let cell = sender.view as! TrackViewCell
         
         let tableIndex = tableView.indexPath(for: cell)!
@@ -178,6 +187,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         _ tracks: [Track] = [],
         scrollPlayedTrackIntoView: Bool = false,
         showingHidden: Bool = false,
+        originalView: LibraryViewType,
         loadTracksFunc: (() -> [Track])? = nil
     ) {
         self.trackIds = tracks.map { $0.id }
@@ -186,6 +196,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
         self.showingHidden = showingHidden
         self.loadTracksFunc = loadTracksFunc
+        self.originalView = originalView
         
         super.init(nibName: nil, bundle: nil)
         

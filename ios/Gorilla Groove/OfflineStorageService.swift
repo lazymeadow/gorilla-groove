@@ -25,7 +25,7 @@ class OfflineStorageService {
     private static var tracksTemporarilyCached: String
     
     @SettingsBundleStorage(key: "offline_mode_enabled")
-    private static var offlineModeEnabled: Bool
+    static var offlineModeEnabled: Bool
     
     private static var currentBytesStored = 0
     private static var maxOfflineStorageBytes: Int {

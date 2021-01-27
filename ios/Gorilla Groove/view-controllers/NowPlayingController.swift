@@ -2,9 +2,14 @@ import Foundation
 
 class NowPlayingController : TrackViewController {
     init() {
-        super.init("Now Playing", scrollPlayedTrackIntoView: true, loadTracksFunc: {
-            return NowPlayingTracks.getNowPlayingTracks()
-        })
+        super.init(
+            "Now Playing",
+            scrollPlayedTrackIntoView: true,
+            originalView: .NOW_PLAYING,
+            loadTracksFunc: {
+                return NowPlayingTracks.getNowPlayingTracks()
+            }
+        )
     }
     
     override func viewDidAppear(_ animated: Bool) {

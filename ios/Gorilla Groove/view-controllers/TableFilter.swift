@@ -30,6 +30,12 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         // Creating constraints to modify them later when content loads
         self.heightAnchor.constraint(equalToConstant: 0).isActive = true
         
+        vc.view.addSubview(self)
+//        NSLayoutConstraint.activate([
+//            self.topAnchor.constraint(equalTo: vc.view.topAnchor),
+//            self.rightAnchor.constraint(equalTo: vc.view.rightAnchor, constant: -10),
+//        ])
+        
         self.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
     }
     
@@ -97,6 +103,8 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         let filterOption = cell.filterOption!
 
         GGNavLog.info("User tapped on filter option source with ID \(filterOption.name)")
+        
+        filterOption.onClick()
     }
     
     // This function is a GIGANTIC CLUSTER. But I was struggling mad hard on not having constraint conflict warnings....
@@ -142,16 +150,16 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
 class FilterOption {
     var name: String
     var isSelected: Bool
-    var isVisible: Bool
+    var onClick: () -> Void
     
     init(
         _ name: String,
         isSelected: Bool = false,
-        isVisible: Bool = true
+        onClick: @escaping () -> Void
     ) {
         self.name = name
         self.isSelected = isSelected
-        self.isVisible = isVisible
+        self.onClick = onClick
     }
 }
 
