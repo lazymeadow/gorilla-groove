@@ -105,16 +105,16 @@ class AutoCompleteInputField : UIView, UITableViewDataSource, UITableViewDelegat
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-         if (keyPath == "contentSize"){
+        if (keyPath == "contentSize"){
             if let newValue = change?[.newKey] {
                 DispatchQueue.main.async {
-                    let newSize  = newValue as! CGSize
+                    let newSize = newValue as! CGSize
                     let heightConstraint = self.autoCompleteTable.constraints.filter({ $0.firstAttribute == .height }).first!
                     heightConstraint.constant = newSize.height
                 }
-             }
-         }
-     }
+            }
+        }
+    }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return autoCompleteData.count

@@ -5,6 +5,7 @@ class TableSearchAugmenter {
     static func addSearchToNavigation(
         controller: UIViewController,
         tableView: UITableView,
+        onTap: (() -> Void)? = nil,
         _ textChanged: @escaping (_ text: String) -> Void
     ) {
         let searchController = GGSearchController()
@@ -12,11 +13,21 @@ class TableSearchAugmenter {
 
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
         let searchIcon = UIImage(systemName: "magnifyingglass", withConfiguration: config)!
-        controller.navigationItem.rightBarButtonItem = UIBarButtonItem(
-               image: searchIcon,
-               style: .plain,
-               action: { searchDelegate.search() }
+        
+        let searchItem = UIBarButtonItem(
+            image: searchIcon,
+            style: .plain,
+            action: {
+                onTap?()
+                searchDelegate.search()
+            }
         )
+        
+        var newNavItems = controller.navigationItem.rightBarButtonItems ?? []
+        // 0 is the right-most item, which is probably where we want search almost all the time
+        newNavItems.insert(searchItem, at: 0)
+        
+        controller.navigationItem.rightBarButtonItems = newNavItems
         
         searchController.obscuresBackgroundDuringPresentation = false
         controller.navigationItem.hidesSearchBarWhenScrolling = false

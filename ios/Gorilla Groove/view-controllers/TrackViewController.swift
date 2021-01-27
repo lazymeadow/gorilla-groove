@@ -12,18 +12,41 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private let showingHidden: Bool
     private let tableView = UITableView()
     
+    private let filterOptions = [
+        [
+            FilterOption("View by Name", isSelected: true),
+            FilterOption("View by Artist"),
+            FilterOption("View by Album"),
+        ],
+        [
+            FilterOption("Sort by Name", isSelected: true),
+            FilterOption("Sort by Play Count"),
+            FilterOption("Sort by Date Added"),
+        ],
+        [
+            FilterOption("Show Cached Status"),
+            FilterOption("Show Offline Status"),
+        ]
+    ]
+    
+    private lazy var filter = TableFilter(filterOptions, vc: self)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded track view")
 
         view.addSubview(tableView)
+        view.addSubview(filter)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            filter.topAnchor.constraint(equalTo: view.topAnchor),
+            filter.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
         ])
         
         tableView.keyboardDismissMode = .onDrag
@@ -37,8 +60,12 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let footerView = UIView(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 0))
         footerView.backgroundColor = UIColor.green
         tableView.tableFooterView = footerView
-
-        TableSearchAugmenter.addSearchToNavigation(controller: self, tableView: tableView) { input in
+        
+        TableSearchAugmenter.addSearchToNavigation(
+            controller: self,
+            tableView: tableView,
+            onTap: { self.filter.setIsHiddenAnimated(true) }
+        ) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
                 self.visibleTrackIds = self.trackIds
@@ -103,7 +130,13 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         songViewCell.checkIfPlaying()
     }
     
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        filter.setIsHiddenAnimated(true)
+    }
+    
     @objc private func handleTap(sender: UITapGestureRecognizer) {
+        filter.setIsHiddenAnimated(true)
+
         let cell = sender.view as! TrackViewCell
         
         let tableIndex = tableView.indexPath(for: cell)!

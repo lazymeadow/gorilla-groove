@@ -85,6 +85,7 @@
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8DB1B2525BDE39D00556175 /* GGCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */; };
+		E8DB1B2925BFB46B00556175 /* TableFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DB1B2825BFB46B00556175 /* TableFilter.swift */; };
 		E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */ = {isa = PBXBuildFile; productRef = E8FBB74D257DC0DF007DB097 /* Connectivity */; };
 /* End PBXBuildFile section */
 
@@ -164,6 +165,7 @@
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGCheckbox.swift; sourceTree = "<group>"; };
+		E8DB1B2825BFB46B00556175 /* TableFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableFilter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,6 +238,7 @@
 				E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */,
 				E86F980525BAA2390015C6CE /* EditMetadataController.swift */,
 				E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */,
+				E8DB1B2825BFB46B00556175 /* TableFilter.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -442,6 +445,7 @@
 				E86F97FF25B627380015C6CE /* BackgroundTaskService.swift in Sources */,
 				E88053C125AE818F00A7D0F3 /* DownloadFromYTController.swift in Sources */,
 				E8588F74258EB54600ACA919 /* ReviewSourceSynchronizer.swift in Sources */,
+				E8DB1B2925BFB46B00556175 /* TableFilter.swift in Sources */,
 				E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */,
 				E85966432423201100AA8727 /* ArtistViewController.swift in Sources */,
 				A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */,

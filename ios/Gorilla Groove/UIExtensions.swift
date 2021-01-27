@@ -38,4 +38,20 @@ extension UIView {
 
         return nil
     }
+    
+    func setIsHiddenAnimated(_ hidden: Bool) {
+        if hidden == isHidden {
+            return
+        }
+        
+        if !hidden {
+            self.alpha = 0.0
+            self.isHidden = false
+        }
+        UIView.animate(withDuration: 0.20, animations: {
+            self.alpha = hidden ? 0.0 : 1.0
+        }) { (complete) in
+            self.isHidden = hidden
+        }
+    }
 }
