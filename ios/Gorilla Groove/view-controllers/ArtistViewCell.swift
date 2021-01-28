@@ -5,7 +5,7 @@ class ArtistViewCell: UITableViewCell {
     
     var artist: String? {
         didSet {
-            guard let artist = artist else {return}
+            guard let artist = artist else { return }
             nameLabel.text = artist.isEmpty ? "(No Artist)" : artist
         }
     }
@@ -34,7 +34,7 @@ class ArtistViewCell: UITableViewCell {
         let constraint = self.contentView.heightAnchor.constraint(equalToConstant: 40)
         constraint.priority = UILayoutPriority(750)
         constraint.isActive = true
-
+        
         NSLayoutConstraint.activate([
             containerView.heightAnchor.constraint(equalTo: self.contentView.heightAnchor),
             containerView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 6),

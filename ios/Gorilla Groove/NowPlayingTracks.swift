@@ -155,8 +155,11 @@ class NowPlayingTracks {
         AudioPlayer.pause()
         LocationService.requestLocationPermissionIfNeeded()
         
-        // Make sure we've got the latest information. Song may have been cached since the last view retrieved it, or whatever
-        let track = TrackDao.findById(originalTrack.id)!
+        var track = originalTrack
+        if track.isOwnTrack {
+            // Make sure we've got the latest information. Song may have been cached since the last view retrieved it, or whatever
+            track = TrackDao.findById(originalTrack.id)!
+        }
         
         updatePlayingTrackInfo(track)
         notifyListeners()
@@ -172,13 +175,13 @@ class NowPlayingTracks {
             GGLog.debug("Art data for track \(track.id) is already cached. Displaying from offline storage")
             displayImageData(trackId: track.id, data: existingArtData)
         }
-
+        
         // If it is not cached, go out to the LIVE INTERNET To find it (and cache it while streaming it)
         playFromLiveInternetData(
             track: track,
             fetchSong: existingSongData == nil,
             fetchArt: existingArtData == nil && track.filesizeArtPng > 0,
-            shouldCache: OfflineStorageService.shouldTrackBeCached(track: track)
+            shouldCache: track.isOwnTrack && OfflineStorageService.shouldTrackBeCached(track: track)
         )
     }
     
@@ -193,6 +196,11 @@ class NowPlayingTracks {
     }
     
     private static func getCachedData(_ track: Track) -> (Data?, Data?) {
+        // We don't cache tracks that are not ours
+        if !track.isOwnTrack {
+            return (nil, nil)
+        }
+        
         var cachedSong: Data? = nil
         var cachedArt: Data? = nil
         

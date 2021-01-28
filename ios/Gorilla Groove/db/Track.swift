@@ -52,6 +52,12 @@ public class Track : Entity, ViewableTrackData {
             return filesizeArtPng > 0
         }
     }
+    
+    public var isOwnTrack: Bool {
+        get {
+            return userId == 0
+        }
+    }
 
     public init(
         id: Int,
@@ -72,6 +78,7 @@ public class Track : Entity, ViewableTrackData {
         playCount: Int,
         releaseYear: Int?,
         trackNumber: Int?,
+        userId: Int = 0, // Currently being lazy with this. 0 just means it's yours
         songCachedAt: Date?,
         artCachedAt: Date?,
         thumbnailCachedAt: Date?,
@@ -100,6 +107,7 @@ public class Track : Entity, ViewableTrackData {
         self.playCount = playCount
         self.releaseYear = releaseYear
         self.trackNumber = trackNumber
+        self.userId = userId
         self.songCachedAt = songCachedAt
         self.artCachedAt = artCachedAt
         self.thumbnailCachedAt = thumbnailCachedAt

@@ -37,6 +37,8 @@ class TrackService {
     
     // This doesn't update the play count. Waits for the server to sync it back down later. Possibly a mistake
     static func markTrackListenedTo(_ track: Track) {
+        if !track.isOwnTrack { return }
+        
         DispatchQueue.global().async {
             markTrackListenedToInternal(track.id)
         }
@@ -82,6 +84,11 @@ class TrackService {
         let requestSemaphore = retrySemaphore ?? DispatchSemaphore(value: 0)
 
         HttpRequester.post("track/mark-listened", EmptyResponse.self, postBody) { _, statusCode ,_ in
+            if statusCode == 400 {
+                GGLog.warning("400 status received marking a track as listened to. Did you screw up, Ayrton? Are you marking other users' tracks as listened to?")
+                return
+            }
+            
             if (statusCode < 200 || statusCode >= 300) {
                 GGLog.warning("Failed to mark track as listened to! For track with ID: \(trackId). Retrying...")
                 self.markTrackListenedToInternal(trackId, retry + 1, request: postBody, retrySemaphore: requestSemaphore)

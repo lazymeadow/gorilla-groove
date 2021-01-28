@@ -14,6 +14,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private let albumFilter: String?
     private var sortOverrideKey: String? = nil
     private var sortDirectionAscending: Bool = true
+    private let userId: Int
     
     private let originalView: LibraryViewType
     
@@ -30,6 +31,21 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             return []
         } else if originalView == .NOW_PLAYING {
             return []
+        } else if originalView == .USER {
+            sortOverrideKey = "name"
+            return [
+                [
+                    FilterOption("Sort by Name", filterImage: .ARROW_UP) { [weak self] option in
+                        self?.handleSortChange(option: option, key: "name", initialSortAsc: true)
+                    },
+                    FilterOption("Sort by Play Count") { [weak self] option in
+                        self?.handleSortChange(option: option, key: "playCount", initialSortAsc: false)
+                    },
+                    FilterOption("Sort by Date Added") { [weak self] option in
+                        self?.handleSortChange(option: option, key: "addedToLibrary", initialSortAsc: false)
+                    },
+                ]
+            ]
         } else {
             sortOverrideKey = "name"
             return [
@@ -44,10 +60,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                     FilterOption("Sort by Date Added") { [weak self] option in
                         self?.handleSortChange(option: option, key: "added_to_library", initialSortAsc: false)
                     },
-                ],
-                [
-                    FilterOption("Show Cached Status") { _ in},
-                    FilterOption("Show Offline Status") { _ in },
                 ]
             ]
         }
@@ -62,7 +74,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }()
     
     private func handleSortChange(option: FilterOption, key: String, initialSortAsc: Bool) {
-        filterOptions[sortsIndex].forEach { $0.filterImage = .NONE }
+        // This is so dumb don't hate me
+        filterOptions[userId == 0 ? 1 : 0].forEach { $0.filterImage = .NONE }
         
         if sortOverrideKey == key {
             sortDirectionAscending = !sortDirectionAscending
@@ -75,12 +88,23 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         filter!.reloadData()
         loadTracks()
     }
+    
+    private let activitySpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
         
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.hidesWhenStopped = true
+        spinner.color = Colors.foreground
+        
+        return spinner
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded track view")
 
         view.addSubview(tableView)
+        view.addSubview(activitySpinner)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -88,6 +112,9 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
             tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            activitySpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activitySpinner.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
         ])
         filter?.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         filter?.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10).isActive = true
@@ -209,6 +236,16 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     func loadTracks() {
+        activitySpinner.startAnimating()
+        
+        if userId == 0 {
+            loadDbTracks()
+        } else {
+            loadWebTracks()
+        }
+    }
+    
+    private func loadDbTracks() {
         DispatchQueue.global().async { [weak self] in
             guard let this = self else { return }
             let loadFunc = this.loadTracksFunc ?? {
@@ -226,12 +263,40 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             this.visibleTrackIds = this.trackIds
             
             DispatchQueue.main.async {
+                this.activitySpinner.stopAnimating()
                 this.tableView.reloadData()
                 
                 if this.scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
                     let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
                     this.tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
                 }
+            }
+        }
+    }
+    
+    private func loadWebTracks() {
+        let sortDir = sortDirectionAscending ? "ASC" : "DESC"
+        let url = "track?userId=\(userId)&sort=\(sortOverrideKey!),\(sortDir)&size=100000&page=0&showHidden=true"
+        HttpRequester.get(url, LiveTrackRequest.self) { [weak self] res, status, _ in
+            guard let this = self else { return }
+            guard let tracks = res?.content, status.isSuccessful() else {
+                DispatchQueue.main.async {
+                    Toast.show("Could not load tracks")
+                }
+                this.trackIds = []
+                this.trackIdToTrack = [:]
+                this.visibleTrackIds = []
+                this.tableView.reloadData()
+                return
+            }
+            
+            this.trackIds = tracks.map { $0.id }
+            this.trackIdToTrack = tracks.map { $0.asTrack(userId: this.userId) }.keyBy { $0.id }
+            this.visibleTrackIds = this.trackIds
+            
+            DispatchQueue.main.async {
+                this.activitySpinner.stopAnimating()
+                this.tableView.reloadData()
             }
         }
     }
@@ -243,6 +308,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         originalView: LibraryViewType,
         artistFilter: String? = nil,
         albumFilter: String? = nil,
+        userId: Int = 0,
         loadTracksFunc: (() -> [Track])? = nil
     ) {
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
@@ -251,6 +317,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.originalView = originalView
         self.artistFilter = artistFilter
         self.albumFilter = albumFilter
+        self.userId = userId
         
         super.init(nibName: nil, bundle: nil)
         

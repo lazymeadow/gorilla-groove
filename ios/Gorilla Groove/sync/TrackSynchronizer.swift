@@ -182,7 +182,7 @@ struct TrackResponse: Codable {
     let reviewSourceId: Int?
     let lastReviewed: Date?
     
-    func asTrack(songCachedAt: Date? = nil, artCachedAt: Date? = nil, thumbnailCachedAt: Date? = nil) -> Track {
+    func asTrack(songCachedAt: Date? = nil, artCachedAt: Date? = nil, thumbnailCachedAt: Date? = nil, userId: Int = 0) -> Track {
         return Track(
             id: id,
             album: album,
@@ -202,6 +202,7 @@ struct TrackResponse: Codable {
             playCount: playCount,
             releaseYear: releaseYear,
             trackNumber: trackNumber,
+            userId: userId,
             songCachedAt: songCachedAt,
             artCachedAt: artCachedAt,
             thumbnailCachedAt: thumbnailCachedAt,

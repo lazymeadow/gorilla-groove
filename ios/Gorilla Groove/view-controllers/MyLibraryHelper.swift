@@ -61,9 +61,8 @@ enum LibraryViewType: CaseIterable {
     case TITLE
     case ARTIST
     case ALBUM
-    case PLAY_COUNT
-    case DATE_ADDED
     case PLAYLIST
     case NOW_PLAYING
+    case USER
 }
 
