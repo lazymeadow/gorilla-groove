@@ -10,7 +10,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
     private var artist: String? = nil
     
     private lazy var filterOptions = [
-        MyLibraryController.getNavigationOptions(vc: self, viewType: .ALBUM),
+        MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ALBUM),
     ]
     
     private lazy var filter = TableFilter(filterOptions, vc: self)
@@ -84,10 +84,8 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         // If someone picked the special "View All" album at the top, then load everything by nilling this out
         let albumToLoad = cell.album!.viewAllAlbum ? nil : cell.album!.name
         let viewName = cell.album!.viewAllAlbum ? "All " + artist! : albumToLoad!
-        
-        let tracks = TrackService.getTracks(album: albumToLoad, artist: artist)
-        
-        let view = TrackViewController(viewName, tracks, originalView: .ALBUM)
+                
+        let view = TrackViewController(viewName, originalView: .ALBUM, artistFilter: artist, albumFilter: albumToLoad)
         self.navigationController!.pushViewController(view, animated: true)
     }
     

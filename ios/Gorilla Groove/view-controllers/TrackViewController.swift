@@ -5,13 +5,19 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     private var loadTracksFunc: (() -> [Track])? = nil
     private var trackIds: [Int] = []
-    private var trackIdToTrack: [Int: Track]
+    private var trackIdToTrack: [Int: Track] = [:]
     private var visibleTrackIds: [Int] = []
     private let scrollPlayedTrackIntoView: Bool
     private let showingHidden: Bool
     private let tableView = UITableView()
+    private let artistFilter: String?
+    private let albumFilter: String?
+    private var sortOverrideKey: String? = nil
+    private var sortDirectionAscending: Bool = true
     
     private let originalView: LibraryViewType
+    
+    private let sortsIndex = 1
     
     private lazy var filterOptions: [[FilterOption]] = {
         if originalView == .PLAYLIST {
@@ -19,16 +25,23 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         } else if originalView == .NOW_PLAYING {
             return []
         } else {
+            sortOverrideKey = "name"
             return [
-                MyLibraryController.getNavigationOptions(vc: self, viewType: originalView),
+                MyLibraryHelper.getNavigationOptions(vc: self, viewType: originalView),
                 [
-                    FilterOption("Sort by Name", isSelected: true) {},
-                    FilterOption("Sort by Play Count") {},
-                    FilterOption("Sort by Date Added") {},
+                    FilterOption("Sort by Name", filterImage: .ARROW_UP) { option in
+                        self.handleSortChange(option: option, key: "name", initialSortAsc: true)
+                    },
+                    FilterOption("Sort by Play Count") { option in
+                        self.handleSortChange(option: option, key: "play_count", initialSortAsc: false)
+                    },
+                    FilterOption("Sort by Date Added") { option in
+                        self.handleSortChange(option: option, key: "added_to_library", initialSortAsc: false)
+                    },
                 ],
                 [
-                    FilterOption("Show Cached Status") {},
-                    FilterOption("Show Offline Status") {},
+                    FilterOption("Show Cached Status") { _ in},
+                    FilterOption("Show Offline Status") { _ in },
                 ]
             ]
         }
@@ -41,6 +54,21 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             return nil
         }
     }()
+    
+    private func handleSortChange(option: FilterOption, key: String, initialSortAsc: Bool) {
+        self.filterOptions[self.sortsIndex].forEach { $0.filterImage = .NONE }
+        
+        if self.sortOverrideKey == key {
+            self.sortDirectionAscending = !self.sortDirectionAscending
+        } else {
+            self.sortDirectionAscending = initialSortAsc
+            self.sortOverrideKey = key
+        }
+        option.filterImage = self.sortDirectionAscending ? .ARROW_UP : .ARROW_DOWN
+        
+        self.filter!.reloadData()
+        self.loadTracks()
+    }
         
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -100,13 +128,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if let loadFunc = loadTracksFunc {
-            let tracks = loadFunc()
-            self.trackIds = tracks.map { $0.id }
-            self.visibleTrackIds = self.trackIds
-            self.trackIdToTrack = tracks.keyBy { $0.id }
-            self.tableView.reloadData()
-        }
+        loadTracks()
         
         if scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
             let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
@@ -182,24 +204,43 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         ViewUtil.showAlert(alert)
     }
     
+    func loadTracks() {
+        DispatchQueue.global().async { [self] in
+            let loadFunc = loadTracksFunc ?? { [self] in
+                TrackService.getTracks(album: albumFilter, artist: artistFilter, sortOverrideKey: sortOverrideKey, sortAscending: sortDirectionAscending)
+            }
+            
+            let tracks = loadFunc()
+            self.trackIds = tracks.map { $0.id }
+            self.trackIdToTrack = tracks.keyBy { $0.id }
+            self.visibleTrackIds = self.trackIds
+            
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
     init(
         _ title: String,
-        _ tracks: [Track] = [],
         scrollPlayedTrackIntoView: Bool = false,
         showingHidden: Bool = false,
         originalView: LibraryViewType,
+        artistFilter: String? = nil,
+        albumFilter: String? = nil,
         loadTracksFunc: (() -> [Track])? = nil
     ) {
-        self.trackIds = tracks.map { $0.id }
-        self.trackIdToTrack = tracks.keyBy { $0.id }
-        self.visibleTrackIds = self.trackIds
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
         self.showingHidden = showingHidden
         self.loadTracksFunc = loadTracksFunc
         self.originalView = originalView
+        self.artistFilter = artistFilter
+        self.albumFilter = albumFilter
         
         super.init(nibName: nil, bundle: nil)
         
+        loadTracks()
+
         self.title = title
         
         // We hold track data fairly long term in this controller a lot of the time. Subscribe to broadcasts for track changes

@@ -5,24 +5,37 @@ import UIKit
 // The icon should ALWAYS be the same size / shape or else it gets stretched. So I added wrappers to these
 // that will grow / shrink independently of the inner icon, that always retains its shape
 class IconView : UIView {
+    private let imageView: UIImageView
+    private let weight: UIImage.SymbolWeight
+    private let scale: UIImage.SymbolScale
+    private let multiplier: CGFloat
+    
     init(
         _ name: String,
         weight: UIImage.SymbolWeight = .ultraLight,
         scale: UIImage.SymbolScale = .small,
         multiplier: CGFloat = 1.5
     ) {
-        super.init(frame: CGRect.zero)
-                
-        let image = SFIconCreator.create(name, weight: weight, scale: scale, multiplier: multiplier)
-        let icon = UIImageView(image: image)
+        self.weight = weight
+        self.scale = scale
+        self.multiplier = multiplier
         
-        let horizontalWrap = wrapView(icon, isWidth: true)
+        let image = SFIconCreator.create(name, weight: weight, scale: scale, multiplier: multiplier)
+        imageView = UIImageView(image: image)
+        
+        super.init(frame: CGRect.zero)
+        
+        let horizontalWrap = wrapView(imageView, isWidth: true)
         let wrapper = wrapView(horizontalWrap, isWidth: false)
                 
         self.addSubview(wrapper)
         
         self.widthAnchor.constraint(equalTo: wrapper.widthAnchor).isActive = true
         self.heightAnchor.constraint(equalTo: wrapper.heightAnchor).isActive = true
+    }
+    
+    func changeImage(_ name: String) {
+        imageView.image = SFIconCreator.create(name, weight: weight, scale: scale, multiplier: multiplier)
     }
     
     // Because UIEdgeInsets doesn't actually work no matter what I try, do this hacky nonsense instead

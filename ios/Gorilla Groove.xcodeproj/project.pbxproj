@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08723C2EE05003899B8 /* MyLibraryController.swift */; };
+		A815B08823C2EE05003899B8 /* MyLibraryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08723C2EE05003899B8 /* MyLibraryHelper.swift */; };
 		A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A815B08A23C2FC4C003899B8 /* FileState.swift */; };
 		A829AC0A23CA57AD0034AD69 /* TrackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0923CA57AD0034AD69 /* TrackService.swift */; };
 		A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */; };
@@ -90,7 +90,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A815B08723C2EE05003899B8 /* MyLibraryController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryController.swift; sourceTree = "<group>"; };
+		A815B08723C2EE05003899B8 /* MyLibraryHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyLibraryHelper.swift; sourceTree = "<group>"; };
 		A815B08A23C2FC4C003899B8 /* FileState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileState.swift; sourceTree = "<group>"; };
 		A829AC0923CA57AD0034AD69 /* TrackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackService.swift; sourceTree = "<group>"; };
 		A829AC0B23CAAC8E0034AD69 /* HttpRequester.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpRequester.swift; sourceTree = "<group>"; };
@@ -215,7 +215,7 @@
 				E85A366A25AD41D7005C4FDD /* add-track */,
 				E85B598425A413950071496D /* review-queue */,
 				A89100EF23BD339D00D6EA2D /* ViewController.swift */,
-				A815B08723C2EE05003899B8 /* MyLibraryController.swift */,
+				A815B08723C2EE05003899B8 /* MyLibraryHelper.swift */,
 				A829AC2323CC2C1D0034AD69 /* TrackViewCell.swift */,
 				E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */,
 				E85A4DDA23DE4F99006BD7EE /* SyncController.swift */,
@@ -462,7 +462,7 @@
 				E86AFF1F23E963A8005B84EB /* TableViewCell.swift in Sources */,
 				E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */,
 				E85A4DD323D537D0006BD7EE /* NowPlayingTracks.swift in Sources */,
-				A815B08823C2EE05003899B8 /* MyLibraryController.swift in Sources */,
+				A815B08823C2EE05003899B8 /* MyLibraryHelper.swift in Sources */,
 				E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */,
 				E85A366125AA31B7005C4FDD /* AutocompleteInputField.swift in Sources */,
 				E85B598625A413C40071496D /* PickReviewSourceController.swift in Sources */,

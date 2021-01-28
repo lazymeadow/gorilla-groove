@@ -1,41 +1,9 @@
 import UIKit
 
-class MyLibraryController: UIViewController {
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+class MyLibraryHelper {
 
-        self.title = "My Library"
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        GGNavLog.info("Loaded my library")
-        
-        loadInitialVc(.TITLE)
-    }
-    
-    private func loadInitialVc(_ viewType: LibraryViewType) {
-        MyLibraryController.loadTitleView(vc: self)
-
-//        switch (viewType) {
-//        case .TITLE:
-//            loadTitleView("My Library")
-//        case .ARTIST:
-//            loadArtistView()
-//        case .ALBUM:
-//            loadAlbumView()
-//        case .PLAY_COUNT:
-//            loadTitleView("My Library", "play_count", sortAscending: false)
-//        case .DATE_ADDED:
-//            loadTitleView("My Library", "added_to_library", sortAscending: false)
-//        }
-    }
-    
     static func loadTitleView(vc: UIViewController) {
-        let tracks = TrackService.getTracks()
-
-        let view = TrackViewController("My Library", tracks, originalView: .TITLE)
+        let view = TrackViewController("My Library", originalView: .TITLE)
         view.tabBarItem = RootNavigationController.libraryTabBarItem
         vc.navigationController!.setViewControllers([view], animated: false)
     }
@@ -65,9 +33,15 @@ class MyLibraryController: UIViewController {
     
     static func getNavigationOptions(vc: UIViewController, viewType: LibraryViewType) -> [FilterOption] {
         return [
-            FilterOption("View by Name", isSelected: viewType == .TITLE) { MyLibraryController.loadTitleView(vc: vc) },
-            FilterOption("View by Artist", isSelected: viewType == .ARTIST) { MyLibraryController.loadArtistView(vc: vc) },
-            FilterOption("View by Album", isSelected: viewType == .ALBUM) { MyLibraryController.loadAlbumView(vc: vc) },
+            FilterOption("View by Name", filterImage: viewType == .TITLE ? .CHECKED : .NONE) { _ in
+                loadTitleView(vc: vc)
+            },
+            FilterOption("View by Artist", filterImage: viewType == .ARTIST ? .CHECKED : .NONE) { _ in
+                loadArtistView(vc: vc)
+            },
+            FilterOption("View by Album", filterImage: viewType == .ALBUM ? .CHECKED : .NONE) { _ in
+                loadAlbumView(vc: vc)
+            },
         ]
     }
 }

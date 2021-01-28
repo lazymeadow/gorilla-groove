@@ -153,7 +153,7 @@ public class TrackDao : BaseDao<Track> {
         offlineAvailability: OfflineAvailabilityType? = nil,
         isCached: Bool? = nil,
         isSongCached: Bool? = nil,
-        sorts: Array<(String, Bool, Bool)> = [],
+        sorts: [(String, Bool, Bool)] = [],
         limit: Int? = nil
     ) -> Array<Track> {
         let sortString = sorts.map { (key, isAscending, isNoCase) in

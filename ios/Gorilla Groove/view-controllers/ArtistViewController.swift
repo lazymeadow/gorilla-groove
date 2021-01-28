@@ -6,21 +6,11 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     private var visibleArtists: [String] = []
     private let originalView: LibraryViewType?
     
-    private lazy var filterOptions: [[FilterOption]]? = {
-        if let viewType = originalView {
-            return [MyLibraryController.getNavigationOptions(vc: self, viewType: viewType)]
-        } else {
-            return nil
-        }
-    }()
+    private lazy var filterOptions: [[FilterOption]] = [
+        MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ARTIST),
+    ]
     
-    private lazy var filter: TableFilter? = {
-        if let options = filterOptions {
-            return TableFilter(options, vc: self)
-        } else {
-            return nil
-        }
-    }()
+    private lazy var filter = TableFilter(filterOptions, vc: self)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,8 +28,8 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
             artistTableView.rightAnchor.constraint(equalTo:view.rightAnchor),
             artistTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor),
         ])
-        filter?.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        filter?.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10).isActive = true
+        filter.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        filter.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10).isActive = true
         
         artistTableView.dataSource = self
         artistTableView.delegate = self
@@ -48,7 +38,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
             tableView: artistTableView,
-            onTap: { self.filter?.setIsHiddenAnimated(true) }
+            onTap: { self.filter.setIsHiddenAnimated(true) }
         ) { input in
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
@@ -79,7 +69,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     }
     
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        filter?.setIsHiddenAnimated(true)
+        filter.setIsHiddenAnimated(true)
     }
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
@@ -91,10 +81,8 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {
-            if (albums.count == 1) {
-                let tracks = TrackService.getTracks(album: albums.first!.name, artist: cell.artist!)
-                
-                return TrackViewController(albums.first!.name, tracks, originalView: .ARTIST)
+            if (albums.count == 1) {                
+                return TrackViewController(albums.first!.name, originalView: .ARTIST, artistFilter: cell.artist!, albumFilter: albums.first!.name)
             } else {
                 return AlbumViewController(cell.artist!, albums, cell.artist!)
             }

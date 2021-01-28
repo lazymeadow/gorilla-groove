@@ -31,10 +31,6 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         self.heightAnchor.constraint(equalToConstant: 0).isActive = true
         
         vc.view.addSubview(self)
-//        NSLayoutConstraint.activate([
-//            self.topAnchor.constraint(equalTo: vc.view.topAnchor),
-//            self.rightAnchor.constraint(equalTo: vc.view.rightAnchor, constant: -10),
-//        ])
         
         self.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
     }
@@ -104,7 +100,10 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
 
         GGNavLog.info("User tapped on filter option source with ID \(filterOption.name)")
         
-        filterOption.onClick()
+        // At least for right now, I think it makes sense for all options to close this when they're tapped. If we don't want this
+        // to happen, we could override this for individual entries later with a new property
+        self.setIsHiddenAnimated(true)
+        filterOption.onClick(filterOption)
     }
     
     // This function is a GIGANTIC CLUSTER. But I was struggling mad hard on not having constraint conflict warnings....
@@ -126,7 +125,7 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
                 let maxWidth = self.visibleCells.reduce(0.0) { (currentMax, cell) -> CGFloat in
                     let cell = cell as! TableFilterCell
                     let labelSize = cell.nameLabel.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).width
-                    let checkmarkSize = cell.isCheckedImage.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).width
+                    let checkmarkSize = cell.leftImage.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).width
                     
                     return max(labelSize + checkmarkSize, currentMax)
                 }
@@ -149,30 +148,46 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
 
 class FilterOption {
     var name: String
-    var isSelected: Bool
-    var onClick: () -> Void
+    var filterImage: TableFilterImage
+    var onClick: (FilterOption) -> Void
     
     init(
         _ name: String,
-        isSelected: Bool = false,
-        onClick: @escaping () -> Void
+        filterImage: TableFilterImage = .NONE,
+        onClick: @escaping (FilterOption) -> Void
     ) {
         self.name = name
-        self.isSelected = isSelected
+        self.filterImage = filterImage
         self.onClick = onClick
     }
 }
 
-
+enum TableFilterImage {
+    case CHECKED
+    case ARROW_UP
+    case ARROW_DOWN
+    case NONE
+}
 
 fileprivate class TableFilterCell: UITableViewCell {
+    
+    private static let checkedIcon = IconView("checkmark", weight: .medium, scale: .medium)
     
     var filterOption: FilterOption? {
         didSet {
             guard let filterOption = filterOption else { return }
             nameLabel.text = filterOption.name
             nameLabel.sizeToFit()
-            isCheckedImage.isHidden = !filterOption.isSelected
+            
+            leftImage.isHidden = filterOption.filterImage == .NONE
+            
+            if filterOption.filterImage == .CHECKED {
+                leftImage.changeImage("checkmark")
+            } else if filterOption.filterImage == .ARROW_UP {
+                leftImage.changeImage("arrow.up")
+            } else if filterOption.filterImage == .ARROW_DOWN {
+                leftImage.changeImage("arrow.down")
+            }
         }
     }
     
@@ -184,7 +199,7 @@ fileprivate class TableFilterCell: UITableViewCell {
         return label
     }()
     
-    let isCheckedImage: UIView = {
+    let leftImage: IconView = {
         let icon = IconView("checkmark", weight: .medium, scale: .medium)
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.tintColor = Colors.primary
@@ -197,15 +212,15 @@ fileprivate class TableFilterCell: UITableViewCell {
         self.translatesAutoresizingMaskIntoConstraints = false
         
         self.contentView.addSubview(nameLabel)
-        self.contentView.addSubview(isCheckedImage)
+        self.contentView.addSubview(leftImage)
         
         NSLayoutConstraint.activate([
             self.contentView.heightAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: 19),
             
-            isCheckedImage.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
-            isCheckedImage.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            leftImage.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
+            leftImage.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
             
-            nameLabel.leadingAnchor.constraint(equalTo: isCheckedImage.trailingAnchor),
+            nameLabel.leadingAnchor.constraint(equalTo: leftImage.trailingAnchor),
             nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
         ])
     }

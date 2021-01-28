@@ -13,7 +13,7 @@ class RootNavigationController : UITabBarController {
     static let libraryTabBarItem = UITabBarItem(title: "My Library", image: UIImage(systemName: "music.house.fill"), tag: 0)
     
     private lazy var tagToController: [Int: UIViewController] = {
-        let libraryController = MyLibraryController()
+        let libraryController = TrackViewController("My Library", originalView: .TITLE)
         let nowPlayingController = NowPlayingController()
         let usersController = UsersController()
         let playlistsController = PlaylistsController()
@@ -22,7 +22,7 @@ class RootNavigationController : UITabBarController {
         let errorReportController = ErrorReportController()
         let logoutController = LogoutController()
         let addTrackListController = AddTrackListController()
-
+        
         // Do NOT edit these tag values. They are used for keeping track of the order of the VCs in the tab bar, and changing the tags
         // would change how a user sees them. The tag is also used for the "launch_screen" setting value
         

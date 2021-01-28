@@ -52,10 +52,10 @@ class PlaylistsController : UITableViewController {
         
         let playlist = cell.data!
         
-        let isSongCached = offlineModeEnabled ? true : nil
-        let tracks = TrackDao.getTracksForPlaylist(playlist.id, isSongCached: isSongCached)
-        
-        let view = TrackViewController(playlist.name, tracks, showingHidden: true, originalView: .PLAYLIST)
+        let view = TrackViewController(playlist.name, showingHidden: true, originalView: .PLAYLIST, loadTracksFunc: {
+            let isSongCached = OfflineStorageService.offlineModeEnabled ? true : nil
+            return TrackDao.getTracksForPlaylist(playlist.id, isSongCached: isSongCached)
+        })
         self.navigationController!.pushViewController(view, animated: true)
     }
 }
