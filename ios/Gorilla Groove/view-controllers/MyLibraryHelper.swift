@@ -2,10 +2,14 @@ import UIKit
 
 class MyLibraryHelper {
 
+    // I have issues with retain cycles, and I can't debug them because the memory graph in xcode crashes
+    // whenever I try to use it. This is somewhat of a stop-gap measure to reduce the impact of the memory leak.
+    // The artist and album views aren't reused as I'd need to tweak them to not take dynamic constructor args
+    static var titleView = TrackViewController("My Library", originalView: .TITLE)
+    
     static func loadTitleView(vc: UIViewController) {
-        let view = TrackViewController("My Library", originalView: .TITLE)
-        view.tabBarItem = RootNavigationController.libraryTabBarItem
-        vc.navigationController!.setViewControllers([view], animated: false)
+        titleView.tabBarItem = RootNavigationController.libraryTabBarItem
+        vc.navigationController!.setViewControllers([titleView], animated: false)
     }
     
     static func loadArtistView(vc: UIViewController) {
@@ -32,15 +36,22 @@ class MyLibraryHelper {
     }
     
     static func getNavigationOptions(vc: UIViewController, viewType: LibraryViewType) -> [FilterOption] {
+        weak var vc = vc
         return [
             FilterOption("View by Name", filterImage: viewType == .TITLE ? .CHECKED : .NONE) { _ in
-                loadTitleView(vc: vc)
+                if let vc = vc {
+                    loadTitleView(vc: vc)
+                }
             },
             FilterOption("View by Artist", filterImage: viewType == .ARTIST ? .CHECKED : .NONE) { _ in
-                loadArtistView(vc: vc)
+                if let vc = vc {
+                    loadArtistView(vc: vc)
+                }
             },
             FilterOption("View by Album", filterImage: viewType == .ALBUM ? .CHECKED : .NONE) { _ in
-                loadAlbumView(vc: vc)
+                if let vc = vc {
+                    loadAlbumView(vc: vc)
+                }
             },
         ]
     }

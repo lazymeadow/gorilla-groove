@@ -38,7 +38,7 @@ class TableSearchAugmenter {
 
     
     private class SearchControllerDelegate: NSObject, UISearchResultsUpdating, UISearchBarDelegate {
-        var controller: UIViewController
+        weak var controller: UIViewController?
         var tableView: UITableView
         var searchController: UISearchController
         var textChanged: (_ text: String) -> Void
@@ -81,28 +81,28 @@ class TableSearchAugmenter {
             // We want to ignore the re-trigger that iOS does for ending the event when we mark it as inactive manually.
             // Keep around a boolean so we know to ignore it.
             handlingSearchEnd = true
-            controller.navigationItem.searchController!.isActive = false
+            controller?.navigationItem.searchController!.isActive = false
             handlingSearchEnd = false
             
             searchBar.text = persistentSearchTerm
         }
         
         func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-            controller.navigationItem.searchController!.isActive = false
-            controller.navigationItem.searchController = nil
+            controller?.navigationItem.searchController!.isActive = false
+            controller?.navigationItem.searchController = nil
             
             // Need this or a little remnant view seems to get left behind after hiding an active search controller
-            controller.navigationController?.view.setNeedsLayout()
+            controller?.navigationController?.view.setNeedsLayout()
         }
         
         func search() {
-            if (controller.navigationItem.searchController == nil) {
-                controller.navigationItem.searchController = searchController
+            if (controller?.navigationItem.searchController == nil) {
+                controller?.navigationItem.searchController = searchController
             } else {
-                controller.navigationItem.searchController = nil
+                controller?.navigationItem.searchController = nil
             }
             
-            let bar = controller.navigationController?.navigationBar
+            let bar = controller?.navigationController?.navigationBar
             bar!.sizeToFit()
          }
     }

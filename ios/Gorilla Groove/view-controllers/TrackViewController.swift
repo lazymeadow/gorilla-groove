@@ -19,6 +19,12 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     private let sortsIndex = 1
     
+    // This never gets invoked. I've got a retain cycle somewhere but the memory graph in xcode crashes the shitty program
+    // so debugging where this is has been proving a challenge.
+    deinit {
+        GGLog.info("Deinit TVC")
+    }
+    
     private lazy var filterOptions: [[FilterOption]] = {
         if originalView == .PLAYLIST {
             return []
@@ -29,14 +35,14 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             return [
                 MyLibraryHelper.getNavigationOptions(vc: self, viewType: originalView),
                 [
-                    FilterOption("Sort by Name", filterImage: .ARROW_UP) { option in
-                        self.handleSortChange(option: option, key: "name", initialSortAsc: true)
+                    FilterOption("Sort by Name", filterImage: .ARROW_UP) { [weak self] option in
+                        self?.handleSortChange(option: option, key: "name", initialSortAsc: true)
                     },
-                    FilterOption("Sort by Play Count") { option in
-                        self.handleSortChange(option: option, key: "play_count", initialSortAsc: false)
+                    FilterOption("Sort by Play Count") { [weak self] option in
+                        self?.handleSortChange(option: option, key: "play_count", initialSortAsc: false)
                     },
-                    FilterOption("Sort by Date Added") { option in
-                        self.handleSortChange(option: option, key: "added_to_library", initialSortAsc: false)
+                    FilterOption("Sort by Date Added") { [weak self] option in
+                        self?.handleSortChange(option: option, key: "added_to_library", initialSortAsc: false)
                     },
                 ],
                 [
@@ -56,18 +62,18 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }()
     
     private func handleSortChange(option: FilterOption, key: String, initialSortAsc: Bool) {
-        self.filterOptions[self.sortsIndex].forEach { $0.filterImage = .NONE }
+        filterOptions[sortsIndex].forEach { $0.filterImage = .NONE }
         
-        if self.sortOverrideKey == key {
-            self.sortDirectionAscending = !self.sortDirectionAscending
+        if sortOverrideKey == key {
+            sortDirectionAscending = !sortDirectionAscending
         } else {
-            self.sortDirectionAscending = initialSortAsc
-            self.sortOverrideKey = key
+            sortDirectionAscending = initialSortAsc
+            sortOverrideKey = key
         }
-        option.filterImage = self.sortDirectionAscending ? .ARROW_UP : .ARROW_DOWN
+        option.filterImage = sortDirectionAscending ? .ARROW_UP : .ARROW_DOWN
         
-        self.filter!.reloadData()
-        self.loadTracks()
+        filter!.reloadData()
+        loadTracks()
     }
         
     override func viewDidLoad() {
@@ -101,23 +107,25 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
             tableView: tableView,
-            onTap: { self.filter?.setIsHiddenAnimated(true) }
-        ) { input in
+            onTap: { [weak self] in self?.filter?.setIsHiddenAnimated(true) }
+        ) { [weak self] input in
+            guard let this = self else { return }
+            
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
-                self.visibleTrackIds = self.trackIds
+                this.visibleTrackIds = this.trackIds
             } else {
-                self.visibleTrackIds = self.trackIds.filter {
-                    let track = self.trackIdToTrack[$0]!
+                this.visibleTrackIds = this.trackIds.filter {
+                    let track = this.trackIdToTrack[$0]!
                     return track.name.lowercased().contains(searchTerm)
                 }
             }
         }
         
         // TODO should update this to use ObservationTokens. I think this probably doesn't get cleaned up properly with the current app
-        NowPlayingTracks.addTrackChangeObserver { _ in
-            DispatchQueue.main.async {
-                self.tableView.visibleCells.forEach { cell in
+        NowPlayingTracks.addTrackChangeObserver(self) { _, _ in
+            DispatchQueue.main.async { [weak self] in
+                self?.tableView.visibleCells.forEach { cell in
                     let songViewCell = cell as! TrackViewCell
                     songViewCell.checkIfPlaying()
                 }
@@ -125,15 +133,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
         loadTracks()
-        
-        if scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
-            let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
-            tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
-        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -176,7 +179,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]! }
         NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
         
-        if let search = self.navigationItem.searchController {
+        if let search = navigationItem.searchController {
             search.searchBar.delegate!.searchBarTextDidEndEditing!(search.searchBar)
         }
     }
@@ -191,12 +194,13 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let trackId = visibleTrackIds[tableIndex.row]
         let track = trackIdToTrack[trackId]!
         
-        let alert = TrackContextMenu.createMenuForTrack(track, parentVc: self) { newTrack in
-            if newTrack == nil || (!self.showingHidden && newTrack!.isHidden) {
+        let alert = TrackContextMenu.createMenuForTrack(track, parentVc: self) { [weak self] newTrack in
+            guard let this = self else { return }
+            if newTrack == nil || (!this.showingHidden && newTrack!.isHidden) {
                 GGLog.info("Hiding existing track from menu list in response to edit")
-                self.visibleTrackIds.remove(at: tableIndex.row)
+                this.visibleTrackIds.remove(at: tableIndex.row)
                 DispatchQueue.main.async {
-                    self.tableView.deleteRows(at: [tableIndex], with: .automatic)
+                    this.tableView.deleteRows(at: [tableIndex], with: .automatic)
                 }
             }
         }
@@ -205,18 +209,29 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     func loadTracks() {
-        DispatchQueue.global().async { [self] in
-            let loadFunc = loadTracksFunc ?? { [self] in
-                TrackService.getTracks(album: albumFilter, artist: artistFilter, sortOverrideKey: sortOverrideKey, sortAscending: sortDirectionAscending)
+        DispatchQueue.global().async { [weak self] in
+            guard let this = self else { return }
+            let loadFunc = this.loadTracksFunc ?? {
+                TrackService.getTracks(
+                    album: this.albumFilter,
+                    artist: this.artistFilter,
+                    sortOverrideKey: this.sortOverrideKey,
+                    sortAscending: this.sortDirectionAscending
+                )
             }
             
             let tracks = loadFunc()
-            self.trackIds = tracks.map { $0.id }
-            self.trackIdToTrack = tracks.keyBy { $0.id }
-            self.visibleTrackIds = self.trackIds
+            this.trackIds = tracks.map { $0.id }
+            this.trackIdToTrack = tracks.keyBy { $0.id }
+            this.visibleTrackIds = this.trackIds
             
             DispatchQueue.main.async {
-                self.tableView.reloadData()
+                this.tableView.reloadData()
+                
+                if this.scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
+                    let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
+                    this.tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
+                }
             }
         }
     }
@@ -239,8 +254,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         super.init(nibName: nil, bundle: nil)
         
-        loadTracks()
-
         self.title = title
         
         // We hold track data fairly long term in this controller a lot of the time. Subscribe to broadcasts for track changes

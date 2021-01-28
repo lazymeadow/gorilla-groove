@@ -13,7 +13,7 @@ class RootNavigationController : UITabBarController {
     static let libraryTabBarItem = UITabBarItem(title: "My Library", image: UIImage(systemName: "music.house.fill"), tag: 0)
     
     private lazy var tagToController: [Int: UIViewController] = {
-        let libraryController = TrackViewController("My Library", originalView: .TITLE)
+        let libraryController = MyLibraryHelper.titleView
         let nowPlayingController = NowPlayingController()
         let usersController = UsersController()
         let playlistsController = PlaylistsController()

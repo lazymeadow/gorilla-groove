@@ -143,7 +143,7 @@ class ReviewQueueController : UIViewController {
         
         self.view.backgroundColor = Colors.background
         
-        NowPlayingTracks.addTrackChangeObserver { newTrack in self.handleTrackChange(newTrack) }
+        NowPlayingTracks.addTrackChangeObserver(self) { vc, newTrack in vc.handleTrackChange(newTrack) }
         
         NSLayoutConstraint.activate([
             queueSelectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),

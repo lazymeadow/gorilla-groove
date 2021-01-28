@@ -284,12 +284,6 @@ class NowPlayingTracks {
         }
     }
     
-    private static func notifyListeners() {
-        registeredCallbacks.forEach { callback in
-            callback(currentTrack)
-        }
-    }
-    
     static func playNext() {
         if (nowPlayingTrackIds.isEmpty) {
             return
@@ -404,8 +398,31 @@ class NowPlayingTracks {
         indexesToShuffle.shuffle()
     }
     
-    static func addTrackChangeObserver(callback: @escaping (_ track: Track?) -> Void) {
-        registeredCallbacks.append(callback)
+    private static var observers = [UUID : (Track?) -> Void]()
+
+    @discardableResult
+    static func addTrackChangeObserver<T: AnyObject>(
+        _ observer: T,
+        closure: @escaping (T, Track?) -> Void
+    ) -> ObservationToken {
+        let id = UUID()
+        
+        observers[id] = { [weak observer] track in
+            guard let observer = observer else {
+                observers.removeValue(forKey: id)
+                return
+            }
+
+            closure(observer, track)
+        }
+        
+        return ObservationToken {
+            observers.removeValue(forKey: id)
+        }
+    }
+    
+    private static func notifyListeners() {
+        observers.values.forEach { $0(currentTrack) }
     }
 }
 

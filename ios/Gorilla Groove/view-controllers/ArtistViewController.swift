@@ -38,13 +38,15 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
             tableView: artistTableView,
-            onTap: { self.filter.setIsHiddenAnimated(true) }
-        ) { input in
+            onTap: { [weak self] in self?.filter.setIsHiddenAnimated(true) }
+        ) { [weak self] input in
+            guard let this = self else { return }
+            
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
-                self.visibleArtists = self.artists
+                this.visibleArtists = this.artists
             } else {
-                self.visibleArtists = self.artists.filter { $0.lowercased().contains(searchTerm) }
+                this.visibleArtists = this.artists.filter { $0.lowercased().contains(searchTerm) }
             }
         }
         
@@ -88,7 +90,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
             }
         }()
         
-        self.navigationController!.pushViewController(view, animated: true)
+        navigationController!.pushViewController(view, animated: true)
     }
     
     init(_ title: String, _ artists: [String], originalView: LibraryViewType? = nil) {

@@ -41,11 +41,13 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
         let filterIcon = UIImage(systemName: "slider.horizontal.3", withConfiguration: config)!
 
+        weak var this = self
+        
         let filterItem = UIBarButtonItem(
             image: filterIcon,
             style: .plain,
             action: {
-                self.setIsHiddenAnimated(!self.isHidden)
+                this?.setIsHiddenAnimated(!this!.isHidden)
             }
         )
         
@@ -102,7 +104,7 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         
         // At least for right now, I think it makes sense for all options to close this when they're tapped. If we don't want this
         // to happen, we could override this for individual entries later with a new property
-        self.setIsHiddenAnimated(true)
+        setIsHiddenAnimated(true)
         filterOption.onClick(filterOption)
     }
     
@@ -117,12 +119,14 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         if (keyPath == "contentSize"){
             guard let newValue = change?[.newKey] else { return }
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let this = self else { return }
+                
                 let newSize = newValue as! CGSize
-                let heightConstraint = self.constraints.filter({ $0.firstAttribute == .height }).first!
+                let heightConstraint = this.constraints.filter({ $0.firstAttribute == .height }).first!
                 heightConstraint.constant = newSize.height
                 
-                let maxWidth = self.visibleCells.reduce(0.0) { (currentMax, cell) -> CGFloat in
+                let maxWidth = this.visibleCells.reduce(0.0) { (currentMax, cell) -> CGFloat in
                     let cell = cell as! TableFilterCell
                     let labelSize = cell.nameLabel.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).width
                     let checkmarkSize = cell.leftImage.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).width
@@ -132,10 +136,10 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
                 
                 let rightMargin: CGFloat = 15
                 
-                if let existingWidthConstraint = self.constraints.filter({ $0.firstAttribute == .width }).first {
+                if let existingWidthConstraint = this.constraints.filter({ $0.firstAttribute == .width }).first {
                     existingWidthConstraint.constant = maxWidth + rightMargin
                 } else {
-                    self.widthAnchor.constraint(equalToConstant: maxWidth + rightMargin).isActive = true
+                    this.widthAnchor.constraint(equalToConstant: maxWidth + rightMargin).isActive = true
                 }
             }
         }
@@ -173,7 +177,7 @@ fileprivate class TableFilterCell: UITableViewCell {
     
     private static let checkedIcon = IconView("checkmark", weight: .medium, scale: .medium)
     
-    var filterOption: FilterOption? {
+    weak var filterOption: FilterOption? {
         didSet {
             guard let filterOption = filterOption else { return }
             nameLabel.text = filterOption.name
@@ -209,19 +213,19 @@ fileprivate class TableFilterCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        self.translatesAutoresizingMaskIntoConstraints = false
+        translatesAutoresizingMaskIntoConstraints = false
         
-        self.contentView.addSubview(nameLabel)
-        self.contentView.addSubview(leftImage)
+        contentView.addSubview(nameLabel)
+        contentView.addSubview(leftImage)
         
         NSLayoutConstraint.activate([
-            self.contentView.heightAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: 19),
+            contentView.heightAnchor.constraint(equalTo: nameLabel.heightAnchor, constant: 19),
             
-            leftImage.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
-            leftImage.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            leftImage.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            leftImage.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             
             nameLabel.leadingAnchor.constraint(equalTo: leftImage.trailingAnchor),
-            nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            nameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
         ])
     }
     

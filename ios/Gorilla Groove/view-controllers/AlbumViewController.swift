@@ -16,7 +16,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
     private lazy var filter = TableFilter(filterOptions, vc: self)
     
     private let albumTableView = UITableView()
-        
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         GGNavLog.info("Loaded album view")
@@ -41,13 +41,15 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
             tableView: albumTableView,
-            onTap: { self.filter.setIsHiddenAnimated(true) }
-        ) { input in
+            onTap: { [weak self] in self?.filter.setIsHiddenAnimated(true) }
+        ) { [weak self] input in
+            guard let this = self else { return }
+            
             let searchTerm = input.lowercased()
             if (searchTerm.isEmpty) {
-                self.visibleAlbums = self.albums
+                this.visibleAlbums = this.albums
             } else {
-                self.visibleAlbums = self.albums.filter { $0.name.lowercased().contains(searchTerm) }
+                this.visibleAlbums = this.albums.filter { $0.name.lowercased().contains(searchTerm) }
             }
         }
         
@@ -86,7 +88,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         let viewName = cell.album!.viewAllAlbum ? "All " + artist! : albumToLoad!
                 
         let view = TrackViewController(viewName, originalView: .ALBUM, artistFilter: artist, albumFilter: albumToLoad)
-        self.navigationController!.pushViewController(view, animated: true)
+        navigationController!.pushViewController(view, animated: true)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -130,10 +132,12 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                 }
                 
                 CacheService.setCachedData(trackId: album.trackIdForArt, data: data, cacheType: .thumbnail)
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let this = self else { return }
+                    
                     album.art = art
                     
-                    let foundCell = self.albumTableView.visibleCells.first { rawCell in
+                    let foundCell = this.albumTableView.visibleCells.first { rawCell in
                         let cell = rawCell as! AlbumViewCell
                         return cell.album?.unfilteredIndex == album.unfilteredIndex
                     }
@@ -147,7 +151,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
-    init(_ title: String, _ albums: Array<Album>, _ artist: String?) {
+    init(_ title: String, _ albums: [Album], _ artist: String?) {
         self.artist = artist
         
         var displayedAlbums = albums
