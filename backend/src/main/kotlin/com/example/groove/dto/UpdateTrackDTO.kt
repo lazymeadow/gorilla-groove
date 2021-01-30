@@ -14,12 +14,12 @@ interface TrackDTO {
 	val genre: String?
 
 	fun updateTrack(track: Track) {
-		name?.let { track.name = it }
-		artist?.let { track.artist = it }
-		album?.let { track.album = it }
+		name?.let { track.name = it.trim() }
+		artist?.let { track.artist = it.trim() }
+		album?.let { track.album = it.trim() }
 		trackNumber?.let { track.trackNumber = it }
 		releaseYear?.let { track.releaseYear = it }
-		genre?.let { track.genre = it }
+		genre?.let { track.genre = it.trim() }
 	}
 }
 
@@ -50,8 +50,8 @@ class UpdateTrackDTO(
 	override fun updateTrack(track: Track) {
 		super.updateTrack(track)
 
-		featuring?.let { track.featuring = it }
-		note?.let { track.note = it }
+		featuring?.let { track.featuring = it.trim() }
+		note?.let { track.note = it.trim() }
 		hidden?.let { track.hidden = it }
 		private?.let { track.private = it }
 		offlineAvailability?.let { track.offlineAvailability = it }
