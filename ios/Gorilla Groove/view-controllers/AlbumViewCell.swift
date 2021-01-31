@@ -55,8 +55,8 @@ class AlbumViewCell: UITableViewCell {
             containerView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 6),
             containerView.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -6),
             
-            artView.widthAnchor.constraint(equalToConstant: 32),
-            artView.heightAnchor.constraint(equalToConstant: 32),
+            artView.widthAnchor.constraint(equalToConstant: 40),
+            artView.heightAnchor.constraint(equalToConstant: 40),
         ])
     }
     

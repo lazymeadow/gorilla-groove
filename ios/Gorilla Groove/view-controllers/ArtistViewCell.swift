@@ -21,24 +21,12 @@ class ArtistViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        let containerView = UIStackView()
-        containerView.axis = .horizontal
-        containerView.distribution  = .fill
-        containerView.alignment = .center
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        
-        containerView.addArrangedSubview(nameLabel)
-        
-        self.contentView.addSubview(containerView)
-                
-        let constraint = self.contentView.heightAnchor.constraint(equalToConstant: 40)
-        constraint.priority = UILayoutPriority(750)
-        constraint.isActive = true
-        
+        self.contentView.addSubview(nameLabel)
+              
         NSLayoutConstraint.activate([
-            containerView.heightAnchor.constraint(equalTo: self.contentView.heightAnchor),
-            containerView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 6),
-            containerView.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -6),
+            nameLabel.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
+            nameLabel.leftAnchor.constraint(equalTo: self.contentView.leftAnchor, constant: 6),
+            nameLabel.rightAnchor.constraint(equalTo: self.contentView.rightAnchor, constant: -6),
         ])
     }
     
