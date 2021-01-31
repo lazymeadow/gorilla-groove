@@ -291,6 +291,36 @@ class TrackService(
 		}
 	}
 
+	fun importTrackForUser(user: User, trackId: Long): Track {
+		val track = trackRepository.get(trackId)
+
+		require(track != null && !track.private) {
+			"Track with ID $trackId does not exist"
+		}
+		require(track.user.id != user.id) {
+			"You cannot import your own track"
+		}
+
+		val now = now()
+		val forkedTrack = track.copy(
+				id = 0,
+				user = user,
+				createdAt = now,
+				updatedAt = now,
+				addedToLibrary = now,
+				playCount = 0,
+				lastPlayed = null,
+				hidden = false,
+				originalTrack = track
+		)
+
+		trackRepository.save(forkedTrack)
+
+		fileStorageService.copyAllAlbumArt(track.id, forkedTrack.id)
+
+		return track
+	}
+
 	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): Map<String, Any?> {
 		// This will throw an exception if anonymous access is not allowed for this file
 		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, audioFormat)

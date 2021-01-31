@@ -51,8 +51,26 @@ class BackgroundTaskProcessor(
 		}
 	}
 
+	fun startImport(ids: List<Long>): List<BackgroundTaskItem> {
+		val user = loadLoggedInUser()
+
+		// We do these checks again later when stuff runs, but better to do them early before we individually process
+		val tracks = trackService.getTracksByIds(ids.toSet(), loadLoggedInUser())
+		tracks.forEach {
+			require(it.user.id != user.id) { "You cannot import your own tracks" }
+		}
+
+		return tracks.map { track ->
+			val idHolder = IdHolder(track.id)
+
+			addBackgroundTask(USER_LIBRARY_IMPORT, idHolder, track.name)
+		}
+	}
+
 	fun addBackgroundTask(type: BackgroundProcessType, payload: Any, descriptionOverride: String? = null): BackgroundTaskItem {
 		val currentUser = loadLoggedInUser()
+
+		logger.info("Adding background task of type $type for user ${currentUser.name}")
 
 		val description = descriptionOverride ?: when (type) {
 			YT_DOWNLOAD -> {
@@ -67,6 +85,7 @@ class BackgroundTaskProcessor(
 				payload as MetadataImportRequestDTO
 				"${payload.name} - ${payload.artist}"
 			}
+			else -> ""
 		}
 
 		val backgroundTaskItem = BackgroundTaskItem(
@@ -207,6 +226,15 @@ class BackgroundTaskProcessor(
 
 				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
 			}
+			USER_LIBRARY_IMPORT -> {
+				val payload = om.readKClass(task.payload, IdHolder::class)
+				val track = trackService.importTrackForUser(user, payload.id)
+
+				task.status = COMPLETE
+				backgroundTaskItemRepository.save(task)
+
+				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task, track.id)
+			}
 		}
 	}
 
@@ -262,3 +290,5 @@ class BackgroundTaskProcessor(
 fun<T: Any> ObjectMapper.readKClass(payload: String, kClass: KClass<T>): T {
 	return kClass.cast(this.readValue(payload, kClass.java))
 }
+
+data class IdHolder(val id: Long)

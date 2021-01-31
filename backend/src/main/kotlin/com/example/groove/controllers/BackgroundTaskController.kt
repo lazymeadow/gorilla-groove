@@ -3,7 +3,6 @@ package com.example.groove.controllers
 import com.example.groove.db.model.BackgroundTaskItem
 import com.example.groove.db.model.enums.BackgroundProcessType
 import com.example.groove.dto.MetadataImportRequestDTO
-import com.example.groove.dto.MetadataResponseDTO
 import com.example.groove.dto.YoutubeDownloadDTO
 import com.example.groove.services.BackgroundTaskProcessor
 import com.example.groove.util.loadLoggedInUser
@@ -57,6 +56,18 @@ class BackgroundTaskController(
 		)
 
 		return BackgroundTaskResponse(items = listOf(task))
+	}
+
+	// So I added this, mis-remembering how long imports take, and thinking that I needed a background task
+	// for mobile. Then I realized that imports take all of like 4 seconds. However, I finished working on it
+	// and it seemed like it might be useful one day. So I'm leaving it in. It could be useful for bulk requests.
+	// iOS doesn't do bulk anything right now. Android might, and web could use this. But currently too lazy to do so.
+	// If you're reading this, this endpoint is UNTESTED as nothing was hooked up to use it.
+	@PostMapping("/import")
+	fun enqueueNamedDl(@RequestBody body: MultiTrackIdDTO): BackgroundTaskResponse {
+		val tasks = backgroundTaskProcessor.startImport(body.trackIds)
+
+		return BackgroundTaskResponse(items = tasks)
 	}
 
 	data class BackgroundTaskResponse(val items: List<BackgroundTaskItem>)

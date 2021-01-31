@@ -230,14 +230,12 @@ class TrackController(
 			val isPrivate: Boolean
 	)
 
-	data class MultiTrackIdDTO(
-			val trackIds: List<Long>
-	)
-
 	companion object {
 		val logger = logger()
 	}
 }
+
+data class MultiTrackIdDTO(val trackIds: List<Long>)
 
 data class MarkTrackAsListenedToDTO(
 		val trackId: Long,
