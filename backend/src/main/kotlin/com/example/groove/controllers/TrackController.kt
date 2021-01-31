@@ -100,17 +100,17 @@ class TrackController(
 	}
 
 	@PostMapping("/import")
-	fun importTracks(@RequestBody importDTO: MultiTrackIdDTO): List<Track> {
-		return trackService.importTrack(importDTO.trackIds)
+	fun importTracks(@RequestBody importDTO: MultiTrackIdDTO): MultiTrackResponse {
+		return MultiTrackResponse(items = trackService.importTrack(importDTO.trackIds))
 	}
 
 	// The other update track endpoint is more difficult to use as it allows you to upload binary album art data within
 	// the request. This endpoint does the same update (minus album art capabilities) and is simpler to consume from
 	@PutMapping("/simple-update")
-	fun updateTrackDataNoAlbumArt(@RequestBody updateTrackDTO: UpdateTrackDTO): TrackUpdateResponse {
+	fun updateTrackDataNoAlbumArt(@RequestBody updateTrackDTO: UpdateTrackDTO): MultiTrackResponse {
 		val tracks = trackService.updateTracks(loadLoggedInUser(), updateTrackDTO, null)
 
-		return TrackUpdateResponse(items = tracks)
+		return MultiTrackResponse(items = tracks)
 	}
 
 	// Can't seem to deserialize a multipart file alongside other data using @RequestBody. So this is my dumb solution
@@ -247,6 +247,6 @@ data class MarkTrackAsListenedToDTO(
 		val longitude: Double?
 )
 
-data class TrackUpdateResponse(
+data class MultiTrackResponse(
 		val items: List<Track>
 )
