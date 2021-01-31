@@ -72,6 +72,10 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
         
         tableView.tableFooterView = UIView(frame: .zero)
+        
+        // Because the footer has no size, set an additional handler on the controller's view to make sure tapping on empty space closes it
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
+        view.addGestureRecognizer(tapGesture)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -95,7 +99,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         cell.tableIndex = indexPath.row
         cell.album = album
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
         
         return cell
@@ -123,6 +127,10 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
             user: user
         )
         navigationController!.pushViewController(view, animated: true)
+    }
+    
+    @objc private func closeFilter(sender: UITapGestureRecognizer) {
+        filter.setIsHiddenAnimated(true)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {

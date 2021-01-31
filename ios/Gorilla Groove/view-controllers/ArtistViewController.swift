@@ -71,6 +71,10 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         
         // Remove extra table rows when we don't have a full screen of songs
         tableView.tableFooterView = UIView(frame: .zero)
+        
+        // Because the footer has no size, set an additional handler on the controller's view to make sure tapping on empty space closes it
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
+        view.addGestureRecognizer(tapGesture)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -94,6 +98,10 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
                 this.reloadArtists()
             }
         }
+    }
+    
+    @objc private func closeFilter(sender: UITapGestureRecognizer) {
+        filter.setIsHiddenAnimated(true)
     }
     
     private func loadWebArtists() {

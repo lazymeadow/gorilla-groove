@@ -172,6 +172,9 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 }
             }
         }
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
+        view.addGestureRecognizer(tapGesture)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -209,6 +212,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        filter?.setIsHiddenAnimated(true)
+    }
+    
+    @objc private func closeFilter(sender: UITapGestureRecognizer) {
         filter?.setIsHiddenAnimated(true)
     }
     
