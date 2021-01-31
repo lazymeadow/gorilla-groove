@@ -9,7 +9,7 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     private let user: User?
     
     private lazy var filterOptions: [[FilterOption]] = [
-        MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ARTIST, user: nil),
+        MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ARTIST, user: user),
     ]
     
     private lazy var filter = TableFilter(filterOptions, vc: self)

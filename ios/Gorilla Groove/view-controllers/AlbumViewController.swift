@@ -8,7 +8,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
     private var artist: String? = nil
     
     private lazy var filterOptions = [
-        MyLibraryHelper.getNavigationOptions(vc: self, viewType: artist != nil ? .ARTIST : .ALBUM, user: nil),
+        MyLibraryHelper.getNavigationOptions(vc: self, viewType: artist != nil ? .ARTIST : .ALBUM, user: user),
     ]
     
     private lazy var filter = TableFilter(filterOptions, vc: self)
