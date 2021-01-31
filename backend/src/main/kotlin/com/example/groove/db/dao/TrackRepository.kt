@@ -1,6 +1,5 @@
 package com.example.groove.db.dao
 
-import com.example.groove.db.model.RemoteSyncable
 import com.example.groove.db.model.Track
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
