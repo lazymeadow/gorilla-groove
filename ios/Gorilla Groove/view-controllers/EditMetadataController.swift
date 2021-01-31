@@ -268,7 +268,7 @@ class EditMetadataController : UIViewController {
                 
                 TrackDao.save(upToDateTrack)
                 
-                TrackService.broadcastTrackChange(upToDateTrack)
+                TrackService.broadcastTrackChange(upToDateTrack, type: .MODIFICATION)
                 
                 DispatchQueue.main.async {
                     self.navigationController!.dismiss(animated: true)

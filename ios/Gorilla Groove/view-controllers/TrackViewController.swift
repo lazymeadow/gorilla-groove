@@ -16,7 +16,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private var sortDirectionAscending: Bool = true
     private let user: User?
     private let alwaysReload: Bool
-    
+    private let trackContextView: TrackContextView
+
     private var lastOfflineMode: Bool
     
     private let originalView: LibraryViewType
@@ -245,16 +246,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let trackId = visibleTrackIds[tableIndex.row]
         let track = trackIdToTrack[trackId]!
         
-        let alert = TrackContextMenu.createMenuForTrack(track, parentVc: self) { [weak self] newTrack in
-            guard let this = self else { return }
-            if newTrack == nil || (!this.showingHidden && newTrack!.isHidden) {
-                GGLog.info("Hiding existing track from menu list in response to edit")
-                this.visibleTrackIds.remove(at: tableIndex.row)
-                DispatchQueue.main.async {
-                    this.tableView.deleteRows(at: [tableIndex], with: .automatic)
-                }
-            }
-        }
+        let alert = TrackContextMenu.createMenuForTrack(track, view: trackContextView, parentVc: self)
         
         ViewUtil.showAlert(alert)
     }
@@ -379,6 +371,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         albumFilter: String? = nil,
         user: User? = nil,
         alwaysReload: Bool = false,
+        trackContextView: TrackContextView? = nil,
         loadTracksFunc: (() -> [Track])? = nil
     ) {
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
@@ -389,6 +382,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.albumFilter = albumFilter
         self.user = user
         self.alwaysReload = alwaysReload
+        self.trackContextView = trackContextView ?? (user == nil ? .MY_LIBRARY : .OTHER_USER)
         self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
         
         super.init(nibName: nil, bundle: nil)
@@ -397,18 +391,30 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         // We hold track data fairly long term in this controller a lot of the time. Subscribe to broadcasts for track changes
         // so that we can update our track information in real time
-        TrackService.observeTrackChanges(self) { vc, updatedTrack in
-            if self.trackIdToTrack[updatedTrack.id] == nil {
+        TrackService.observeTrackChanges(self) { vc, changedTrack, changeType in
+            if vc.trackIdToTrack[changedTrack.id] == nil {
                 return
             }
             
-            self.trackIdToTrack[updatedTrack.id] = updatedTrack
+            if changeType == .MODIFICATION {
+                vc.trackIdToTrack[changedTrack.id] = changedTrack
+                
+                DispatchQueue.main.async {
+                    vc.tableView.visibleCells.forEach { cell in
+                        let songViewCell = cell as! TrackViewCell
+                        if songViewCell.track!.id == changedTrack.id {
+                            songViewCell.track = changedTrack
+                        }
+                    }
+                }
+            }
             
-            DispatchQueue.main.async {
-                self.tableView.visibleCells.forEach { cell in
-                    let songViewCell = cell as! TrackViewCell
-                    if songViewCell.track!.id == updatedTrack.id {
-                        songViewCell.track = updatedTrack
+            if changeType == .DELETION || (!vc.showingHidden && changedTrack.isHidden) {
+                GGLog.info("Removing existing track from track list in response to change")
+                if let index = vc.visibleTrackIds.index(where: { $0 == changedTrack.id }) {
+                    vc.visibleTrackIds.remove(at: index)
+                    DispatchQueue.main.async {
+                        vc.tableView.deleteRows(at: [IndexPath(item: index, section: 0)], with: .automatic)
                     }
                 }
             }

@@ -233,22 +233,49 @@ class TrackService {
         }.sorted() { $0.name < $1.name }
     }
     
-    private static var observers = [UUID : (Track) -> Void]()
-
+    static func deleteTrack(_ track: Track) {
+        let request = UpdateTrackRequest(trackIds: [track.id])
+        HttpRequester.delete("track", request) { _, statusCode, _ in
+            if statusCode.isSuccessful() {
+                TrackDao.delete(track)
+                broadcastTrackChange(track, type: .DELETION)
+                Toast.show("Track deleted")
+            } else {
+                Toast.show("Failed to delete the track!")
+            }
+        }
+    }
+    
+    static func importTrack(_ track: Track) {
+        let request = ImportTrackRequest(trackIds: [track.id])
+        HttpRequester.post("track/import", ImportTrackResponse.self, request) { res, statusCode, _ in
+            guard let tracks = res?.items.map({ $0.asTrack() }), statusCode.isSuccessful() else {
+                Toast.show("Failed to import track!")
+                return
+            }
+            
+            // there should only be one track here as a response right now. But if we ever add in multi-selection to the tables it could change
+            tracks.forEach { TrackDao.save($0) }
+            Toast.show("Track imported")
+        }
+    }
+    
+    private static var observers = [UUID : (Track, TrackChangeType) -> Void]()
+    
     @discardableResult
     static func observeTrackChanges<T: AnyObject>(
         _ observer: T,
-        closure: @escaping (T, Track) -> Void
+        closure: @escaping (T, Track, TrackChangeType) -> Void
     ) -> ObservationToken {
         let id = UUID()
         
-        observers[id] = { [weak observer] track in
+        observers[id] = { [weak observer] track, changeType in
             guard let observer = observer else {
                 observers.removeValue(forKey: id)
                 return
             }
 
-            closure(observer, track)
+            closure(observer, track, changeType)
         }
         
         return ObservationToken {
@@ -256,12 +283,25 @@ class TrackService {
         }
     }
     
-    static func broadcastTrackChange(_ track: Track) {
-        observers.values.forEach { $0(track) }
+    static func broadcastTrackChange(_ track: Track, type: TrackChangeType) {
+        observers.values.forEach { $0(track, type) }
     }
 }
 
 struct TrackLinkResponse: Codable {
     let songLink: String?
     let albumArtLink: String?
+}
+
+struct ImportTrackRequest: Codable {
+    let trackIds: [Int]
+}
+
+struct ImportTrackResponse: Codable {
+    let items: [TrackResponse]
+}
+
+enum TrackChangeType {
+    case MODIFICATION
+    case DELETION
 }

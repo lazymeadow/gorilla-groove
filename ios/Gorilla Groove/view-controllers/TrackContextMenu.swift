@@ -4,40 +4,41 @@ import UIKit
 class TrackContextMenu {
     static func createMenuForTrack(
         _ track: Track,
-        parentVc: UIViewController,
-        onAction: @escaping (Track?) -> Void
+        view: TrackContextView,
+        parentVc: UIViewController
     ) -> UIAlertController {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        alert.addAction(UIAlertAction(title: "Edit Properties", style: .default, handler: { _ in
-            let metadataController = EditMetadataController(track: track)
-            metadataController.modalPresentationStyle = .pageSheet
-            
-            let vc = UINavigationController(rootViewController: metadataController)
-            parentVc.present(vc, animated: true)
-        }))
+        if view == .MY_LIBRARY || view == .NOW_PLAYING {
+            alert.addAction(UIAlertAction(title: "Edit Properties", style: .default, handler: { _ in
+                let metadataController = EditMetadataController(track: track)
+                metadataController.modalPresentationStyle = .pageSheet
+                
+                let vc = UINavigationController(rootViewController: metadataController)
+                parentVc.present(vc, animated: true)
+            }))
+        }
         
-//        alert.addAction(UIAlertAction(title: "Recommend", style: .default, handler: { (_) in
-//            print("Recommend")
-//        }))
+        if view == .MY_LIBRARY {
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
+                ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive) {
+                    TrackService.deleteTrack(track)
+                }
+            }))
+        }
+        
+        if view == .OTHER_USER {
+            alert.addAction(UIAlertAction(title: "Import", style: .default, handler: { (_) in
+                TrackService.importTrack(track)
+                Toast.show("Track import started")
+            }))
+        }
         
 //        alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { (_) in
 //            print("Trim")
 //        }))
         
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
-            ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive) {
-                let request = UpdateTrackRequest(trackIds: [track.id])
-                HttpRequester.delete("track", request) { _, statusCode, _ in
-                    if statusCode.isSuccessful() {
-                        onAction(nil)
-                        ServerSynchronizer.syncWithServer()
-                    } else {
-                        Toast.show("Failed to delete the track!")
-                    }
-                }
-            }
-        }))
+        
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
             GGNavLog.info("User clicked context menu 'Cancel' button")
@@ -70,4 +71,10 @@ struct UpdateTrackRequest: Codable {
 
 struct DeleteTrackRequest: Codable {
     let trackIds: Array<Int>
+}
+
+enum TrackContextView {
+    case MY_LIBRARY
+    case NOW_PLAYING
+    case OTHER_USER
 }

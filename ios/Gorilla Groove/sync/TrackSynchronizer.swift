@@ -98,7 +98,7 @@ class TrackSynchronizer {
             )
             
             TrackDao.save(updatedTrack)
-            TrackService.broadcastTrackChange(updatedTrack)
+            TrackService.broadcastTrackChange(updatedTrack, type: .MODIFICATION)
 
             // A track SHOULD never go from not being in review, to being in review. But w/e. Sometimes I do weird stuff with the DB manually
             if oldTrack.inReview || updatedTrack.inReview {

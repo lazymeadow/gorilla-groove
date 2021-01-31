@@ -42,8 +42,8 @@ class NowPlayingTracks {
         shuffleOn = mediaState.shuffleEnabled
         repeatOn = mediaState.repeatEnabled
         
-        TrackService.observeTrackChanges(this) { _, updatedTrack in
-            if trackIdToTrack[updatedTrack.id] == nil {
+        TrackService.observeTrackChanges(this) { _, updatedTrack, changeType in
+            if changeType != .MODIFICATION || trackIdToTrack[updatedTrack.id] == nil {
                 return
             }
             

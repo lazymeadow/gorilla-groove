@@ -177,8 +177,8 @@ class MediaControlsController: UIViewController {
             DispatchQueue.main.async { vc.handleTrackChange(nillableTrack) }
         }
         
-        TrackService.observeTrackChanges(self) { _, updatedTrack in
-            if updatedTrack.id == NowPlayingTracks.currentTrack?.id {
+        TrackService.observeTrackChanges(self) { _, updatedTrack, changeType in
+            if changeType == .MODIFICATION && updatedTrack.id == NowPlayingTracks.currentTrack?.id {
                 DispatchQueue.main.async {
                     self.setTrackInfo(updatedTrack)
                 }

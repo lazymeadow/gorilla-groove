@@ -72,12 +72,10 @@ class BackgroundTaskService {
                     
                     ServerSynchronizer.syncWithServer(syncTypes: [.track, .reviewSource], abortIfRecentlySynced: false)
                     
-                    DispatchQueue.main.async {
-                        if completedTasks.count == 1 {
-                            Toast.show("Finished downloading '\(completedTasks.first!.description)'")
-                        } else if completedTasks.count > 1 {
-                            Toast.show("Finished downloading \(completedTasks.count) items")
-                        }
+                    if completedTasks.count == 1 {
+                        Toast.show("Finished downloading '\(completedTasks.first!.description)'")
+                    } else if completedTasks.count > 1 {
+                        Toast.show("Finished downloading \(completedTasks.count) items")
                     }
                     
                     idToTask = [:]

@@ -35,6 +35,8 @@ class HttpRequester {
         _ url: String,
         _ type: T.Type
     ) -> (T?, Int, String?) {
+        if Thread.isMainThread { fatalError("Do not make a synchronous request on the main thread") }
+
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("GET", url) else {
             return (nil, STATUS_ABORTED, nil)
@@ -72,6 +74,28 @@ class HttpRequester {
             handleResponse(data, type, response, error, callback)
         }
         dataTask.resume()
+    }
+    
+    static func deleteSync(_ url: String, _ body: Encodable? = nil) -> (EmptyResponse?, Int, String?) {
+        if Thread.isMainThread { fatalError("Do not make a synchronous request on the main thread") }
+
+        let session = URLSession(configuration: .default)
+        guard let request = getBaseRequest("DELETE", url, body: body) else {
+            return (nil, STATUS_ABORTED, nil)
+        }
+        
+        logger.debug("DELETE \(request.url!.absoluteString)")
+        let semaphore = DispatchSemaphore(value: 0)
+        var rval: (EmptyResponse?, Int, String?) = (nil, -1, nil)
+        
+        let dataTask = session.dataTask(with: request) { data, response, error in
+            rval = handleResponse(data, EmptyResponse.self, response, error)
+            semaphore.signal()
+        }
+        dataTask.resume()
+        semaphore.wait()
+        
+        return rval
     }
     
     static func delete(
