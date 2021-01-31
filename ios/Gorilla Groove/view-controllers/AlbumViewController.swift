@@ -1,46 +1,58 @@
 import UIKit
 import Foundation
-import AVFoundation
-import AVKit
 
 class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    private var albums: Array<Album> = []
-    private var visibleAlbums: Array<Album> = []
+    private var albums: [Album] = []
+    private var visibleAlbums: [Album] = []
     
     private var artist: String? = nil
     
     private lazy var filterOptions = [
-        MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ALBUM),
+        MyLibraryHelper.getNavigationOptions(vc: self, viewType: artist != nil ? .ARTIST : .ALBUM, user: nil),
     ]
     
     private lazy var filter = TableFilter(filterOptions, vc: self)
+    private let user: User?
     
-    private let albumTableView = UITableView()
+    private let tableView = UITableView()
+    
+    private let activitySpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
+        
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.hidesWhenStopped = true
+        spinner.color = Colors.foreground
+        
+        return spinner
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        GGNavLog.info("Loaded album view")
         
-        view.addSubview(albumTableView)
-        
-        albumTableView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(tableView)
+        view.addSubview(activitySpinner)
+
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            albumTableView.topAnchor.constraint(equalTo:view.topAnchor),
-            albumTableView.leftAnchor.constraint(equalTo:view.leftAnchor),
-            albumTableView.rightAnchor.constraint(equalTo:view.rightAnchor),
-            albumTableView.bottomAnchor.constraint(equalTo:view.bottomAnchor),
+            tableView.topAnchor.constraint(equalTo:view.topAnchor),
+            tableView.leftAnchor.constraint(equalTo:view.leftAnchor),
+            tableView.rightAnchor.constraint(equalTo:view.rightAnchor),
+            tableView.bottomAnchor.constraint(equalTo:view.bottomAnchor),
+            
+            activitySpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activitySpinner.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
             
             filter.topAnchor.constraint(equalTo: view.topAnchor),
             filter.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -10),
         ])
         
-        albumTableView.dataSource = self
-        albumTableView.delegate = self
-        albumTableView.register(AlbumViewCell.self, forCellReuseIdentifier: "albumCell")
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(AlbumViewCell.self, forCellReuseIdentifier: "albumCell")
         
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
-            tableView: albumTableView,
+            tableView: tableView,
             onTap: { [weak self] in self?.filter.setIsHiddenAnimated(true) }
         ) { [weak self] input in
             guard let this = self else { return }
@@ -53,8 +65,17 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         }
         
-        // Remove extra table rows when we don't have a full screen of songs
-        albumTableView.tableFooterView = UIView(frame: .zero)
+        tableView.tableFooterView = UIView(frame: .zero)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        GGNavLog.info("Loaded album view")
+        
+        if let user = user, albums.isEmpty {
+            getUserAlbums(user)
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -82,12 +103,19 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         let cell = sender.view as! AlbumViewCell
         
         cell.animateSelectionColor()
-        
+        filter.setIsHiddenAnimated(true)
+
         // If someone picked the special "View All" album at the top, then load everything by nilling this out
         let albumToLoad = cell.album!.viewAllAlbum ? nil : cell.album!.name
         let viewName = cell.album!.viewAllAlbum ? "All " + artist! : albumToLoad!
                 
-        let view = TrackViewController(viewName, originalView: .ALBUM, artistFilter: artist, albumFilter: albumToLoad)
+        let view = TrackViewController(
+            viewName,
+            originalView: artist == nil ? .ALBUM : .ARTIST,
+            artistFilter: artist,
+            albumFilter: albumToLoad,
+            user: user
+        )
         navigationController!.pushViewController(view, animated: true)
     }
     
@@ -137,7 +165,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                     
                     album.art = art
                     
-                    let foundCell = this.albumTableView.visibleCells.first { rawCell in
+                    let foundCell = this.tableView.visibleCells.first { rawCell in
                         let cell = rawCell as! AlbumViewCell
                         return cell.album?.unfilteredIndex == album.unfilteredIndex
                     }
@@ -151,9 +179,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
-    init(_ title: String, _ albums: [Album], _ artist: String?) {
-        self.artist = artist
-        
+    private func setAlbums(_ albums: [Album]) {
         var displayedAlbums = albums
         if (artist != nil && displayedAlbums.count > 1) {
             let viewAll = Album(
@@ -176,13 +202,52 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.albums = displayedAlbums
         self.visibleAlbums = displayedAlbums
         
+        tableView.reloadData()
+        
+        self.activitySpinner.stopAnimating()
+    }
+    
+    private func getUserAlbums(_ user: User) {
+        self.activitySpinner.startAnimating()
+
+        let url = "track?userId=\(user.id)&sort=name,ASC&size=100000&page=0&showHidden=true"
+        HttpRequester.get(url, LiveTrackRequest.self) { [weak self] res, status, _ in
+            guard let this = self else { return }
+            
+            guard let trackResponse = res?.content, status.isSuccessful() else {
+                this.albums = []
+                this.visibleAlbums = []
+                
+                DispatchQueue.main.async {
+                    Toast.show("Could not load albums")
+                    this.tableView.reloadData()
+                    this.activitySpinner.stopAnimating()
+                }
+                return
+            }
+            
+            let tracks = trackResponse.map { $0.asTrack(userId: user.id) }
+            DispatchQueue.main.async {
+                this.setAlbums(TrackService.getAlbumsFromTracks(tracks))
+            }
+        }
+    }
+    
+    init(_ title: String, _ albums: [Album], _ artist: String?, user: User? = nil) {
+        self.artist = artist
+        self.user = user
+        
         super.init(nibName: nil, bundle: nil)
         
         self.title = title
+        
+        if !albums.isEmpty {
+            setAlbums(albums)
+        }
     }
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 

@@ -47,8 +47,7 @@ class UsersController : UITableViewController {
         
         let user = cell.user!
         
-        /// https://gorillagroove.net/api/track?userId=6&showHidden=true&sort=artist,DESC&sort=album,ASC&sort=trackNumber,ASC&size=75&page=0
-        let vc = TrackViewController(user.name, originalView: .USER, userId: user.id)
+        let vc = TrackViewController(user.name, originalView: .TITLE, user: user)
         
         vc.modalPresentationStyle = .fullScreen
         self.navigationController!.pushViewController(vc, animated: true)

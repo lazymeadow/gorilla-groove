@@ -14,56 +14,66 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private let albumFilter: String?
     private var sortOverrideKey: String? = nil
     private var sortDirectionAscending: Bool = true
-    private let userId: Int
+    private let user: User?
+    private let alwaysReload: Bool
+    
+    private var lastOfflineMode: Bool
     
     private let originalView: LibraryViewType
     
     private let sortsIndex = 1
     
     // This never gets invoked. I've got a retain cycle somewhere but the memory graph in xcode crashes the shitty program
-    // so debugging where this is has been proving a challenge.
+    // so debugging where this is has been proving to be a challenge.
     deinit {
         GGLog.info("Deinit TVC")
     }
     
     private lazy var filterOptions: [[FilterOption]] = {
-        if originalView == .PLAYLIST {
+        if originalView == .PLAYLIST || originalView == .NOW_PLAYING {
             return []
-        } else if originalView == .NOW_PLAYING {
-            return []
-        } else if originalView == .USER {
-            sortOverrideKey = "name"
-            return [
-                [
-                    FilterOption("Sort by Name", filterImage: .ARROW_UP) { [weak self] option in
-                        self?.handleSortChange(option: option, key: "name", initialSortAsc: true)
-                    },
-                    FilterOption("Sort by Play Count") { [weak self] option in
-                        self?.handleSortChange(option: option, key: "playCount", initialSortAsc: false)
-                    },
-                    FilterOption("Sort by Date Added") { [weak self] option in
-                        self?.handleSortChange(option: option, key: "addedToLibrary", initialSortAsc: false)
-                    },
-                ]
-            ]
-        } else {
-            sortOverrideKey = "name"
-            return [
-                MyLibraryHelper.getNavigationOptions(vc: self, viewType: originalView),
-                [
-                    FilterOption("Sort by Name", filterImage: .ARROW_UP) { [weak self] option in
-                        self?.handleSortChange(option: option, key: "name", initialSortAsc: true)
-                    },
-                    FilterOption("Sort by Play Count") { [weak self] option in
-                        self?.handleSortChange(option: option, key: "play_count", initialSortAsc: false)
-                    },
-                    FilterOption("Sort by Date Added") { [weak self] option in
-                        self?.handleSortChange(option: option, key: "added_to_library", initialSortAsc: false)
-                    },
-                ]
-            ]
         }
+        
+        let albumSort = originalView == .ARTIST || originalView == .ALBUM
+        
+        let options = [
+            MyLibraryHelper.getNavigationOptions(vc: self, viewType: originalView, user: user),
+            [
+                FilterOption("Sort by Name", filterImage: albumSort ? .NONE : .ARROW_UP) { [weak self] option in
+                    guard let this = self else { return }
+                    this.handleSortChange(option: option, key: this.getSortKey("name"), initialSortAsc: true)
+                },
+                FilterOption("Sort by Play Count") { [weak self] option in
+                    guard let this = self else { return }
+                    this.handleSortChange(option: option, key: this.getSortKey("play_count"), initialSortAsc: false)
+                },
+                FilterOption("Sort by Date Added") { [weak self] option in
+                    guard let this = self else { return }
+                    this.handleSortChange(option: option, key: this.getSortKey("added_to_library"), initialSortAsc: false)
+                },
+                FilterOption("Sort by Album", filterImage: albumSort ? .ARROW_UP : .NONE) { [weak self] option in
+                    guard let this = self else { return }
+                    this.handleSortChange(option: option, key: this.getSortKey("album"), initialSortAsc: true)
+                },
+            ]
+        ]
+        
+        sortOverrideKey = albumSort ? "album" : "name"
+
+        return options
     }()
+    
+    // Web uses different sort keys than the app's DB
+    func getSortKey(_ key: String) -> String {
+        switch (key) {
+        case "name": return key
+        case "play_count": return user == nil ? key : "playCount"
+        case "added_to_library": return user == nil ? key : "addedToLibrary"
+        case "album": return user == nil ? key : "addedToLibrary"
+        default:
+            fatalError("Unsupported sort key: \(key)")
+        }
+    }
     
     private lazy var filter: TableFilter? = {
         if !filterOptions.isEmpty {
@@ -74,8 +84,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }()
     
     private func handleSortChange(option: FilterOption, key: String, initialSortAsc: Bool) {
-        // This is so dumb don't hate me
-        filterOptions[userId == 0 ? 1 : 0].forEach { $0.filterImage = .NONE }
+        // This [1] is so dumb don't hate me
+        filterOptions[1].forEach { $0.filterImage = .NONE }
         
         if sortOverrideKey == key {
             sortDirectionAscending = !sortDirectionAscending
@@ -149,7 +159,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         }
         
-        // TODO should update this to use ObservationTokens. I think this probably doesn't get cleaned up properly with the current app
         NowPlayingTracks.addTrackChangeObserver(self) { _, _ in
             DispatchQueue.main.async { [weak self] in
                 self?.tableView.visibleCells.forEach { cell in
@@ -163,7 +172,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        loadTracks()
+        if visibleTrackIds.isEmpty || alwaysReload || lastOfflineMode != OfflineStorageService.offlineModeEnabled {
+            lastOfflineMode = OfflineStorageService.offlineModeEnabled
+            loadTracks()
+        }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -235,10 +247,12 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         ViewUtil.showAlert(alert)
     }
     
+    // TBH I don't really like how I've done this. Now that this can take either DB or Web tracks, I'd rather rework this so that
+    // the tracks are loaded in from either source, and then sorted by this controller
     func loadTracks() {
         activitySpinner.startAnimating()
         
-        if userId == 0 {
+        if user == nil {
             loadDbTracks()
         } else {
             loadWebTracks()
@@ -269,6 +283,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 if this.scrollPlayedTrackIntoView && NowPlayingTracks.nowPlayingIndex >= 0 {
                     let indexPath = IndexPath(row: NowPlayingTracks.nowPlayingIndex, section: 0)
                     this.tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
+                } else if !this.visibleTrackIds.isEmpty {
+                    // Reset the view to the top after reloading
+                    let indexPath = IndexPath(row: 0, section: 0)
+                    this.tableView.scrollToRow(at: indexPath, at: .top, animated: false)
                 }
             }
         }
@@ -276,27 +294,59 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     private func loadWebTracks() {
         let sortDir = sortDirectionAscending ? "ASC" : "DESC"
-        let url = "track?userId=\(userId)&sort=\(sortOverrideKey!),\(sortDir)&size=100000&page=0&showHidden=true"
+        let extraSort = sortOverrideKey == "album" ? "&sort=trackNumber,ASC" : ""
+        
+        // Offload some processing by providing a search term if we have an artist.
+        // Will dramatically reduce the number of things we need to process
+        let searchTerm = artistFilter == nil ? "" : "&searchTerm=\(artistFilter!)"
+        
+        let url = "track?userId=\(user!.id)&sort=\(sortOverrideKey!),\(sortDir)\(extraSort)\(searchTerm)&size=100000&page=0&showHidden=true"
         HttpRequester.get(url, LiveTrackRequest.self) { [weak self] res, status, _ in
             guard let this = self else { return }
-            guard let tracks = res?.content, status.isSuccessful() else {
-                DispatchQueue.main.async {
-                    Toast.show("Could not load tracks")
-                }
+            guard var tracks = res?.content, status.isSuccessful() else {
                 this.trackIds = []
                 this.trackIdToTrack = [:]
                 this.visibleTrackIds = []
-                this.tableView.reloadData()
+                
+                DispatchQueue.main.async {
+                    Toast.show("Could not load tracks")
+                    this.tableView.reloadData()
+                }
                 return
             }
             
+            // We provide the artist search term to the API, but because the search term on the API side searches for multiple fields,
+            // we need to make sure it's actually valid on our side. It will be the majority of the time
+            if let artistFilter = this.artistFilter?.lowercased() {
+                // If artist filter is an empty string, we specifically only want tracks without artists
+                if artistFilter == "" {
+                    tracks = tracks.filter { $0.artist == "" && $0.featuring == "" }
+                } else {
+                    tracks = tracks.filter { $0.artist.lowercased().contains(artistFilter) || $0.featuring.lowercased().contains(artistFilter) }
+                }
+            }
+            if let albumFilter = this.albumFilter?.lowercased() {
+                // If album filter is an empty string, we specifically only want tracks without albums
+                if albumFilter == "" {
+                    tracks = tracks.filter { $0.album == "" }
+                } else {
+                    tracks = tracks.filter { $0.album.lowercased().contains(albumFilter) }
+                }
+            }
+            
             this.trackIds = tracks.map { $0.id }
-            this.trackIdToTrack = tracks.map { $0.asTrack(userId: this.userId) }.keyBy { $0.id }
+            this.trackIdToTrack = tracks.map { $0.asTrack(userId: this.user?.id ?? 0) }.keyBy { $0.id }
             this.visibleTrackIds = this.trackIds
             
             DispatchQueue.main.async {
                 this.activitySpinner.stopAnimating()
                 this.tableView.reloadData()
+                
+                // Reset the view to the top after reloading
+                if !this.visibleTrackIds.isEmpty { // I don't THINK this should ever be empty. But it's a crash if it is
+                    let indexPath = IndexPath(row: 0, section: 0)
+                    this.tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+                }
             }
         }
     }
@@ -308,7 +358,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         originalView: LibraryViewType,
         artistFilter: String? = nil,
         albumFilter: String? = nil,
-        userId: Int = 0,
+        user: User? = nil,
+        alwaysReload: Bool = false,
         loadTracksFunc: (() -> [Track])? = nil
     ) {
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
@@ -317,7 +368,9 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.originalView = originalView
         self.artistFilter = artistFilter
         self.albumFilter = albumFilter
-        self.userId = userId
+        self.user = user
+        self.alwaysReload = alwaysReload
+        self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
         
         super.init(nibName: nil, bundle: nil)
         

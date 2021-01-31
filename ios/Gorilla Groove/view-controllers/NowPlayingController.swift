@@ -6,6 +6,7 @@ class NowPlayingController : TrackViewController {
             "Now Playing",
             scrollPlayedTrackIntoView: true,
             originalView: .NOW_PLAYING,
+            alwaysReload: true,
             loadTracksFunc: {
                 return NowPlayingTracks.getNowPlayingTracks()
             }

@@ -121,7 +121,9 @@ class SettingsChangeObserver: NSObject {
                     WebSocket.connect()
                 }
                 
-                ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
+                DispatchQueue.global().async {
+                    ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
+                }
             }
         } else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)

@@ -3,15 +3,12 @@ import CoreData
 
 class TrackService {
     
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private static var offlineModeEnabled: Bool
-    
     static func getTracks(
         album: String? = nil,
         artist: String? = nil,
         sortOverrideKey: String? = nil,
         sortAscending: Bool = true
-    ) -> Array<Track> {        
+    ) -> [Track] {
         var sorts = [(String, Bool, Bool)]()
         
         // Sort differently depending on how we are trying to load things
@@ -30,7 +27,7 @@ class TrackService {
             album: album,
             artist: artist,
             isHidden: false,
-            isSongCached: offlineModeEnabled ? true : nil,
+            isSongCached: OfflineStorageService.offlineModeEnabled ? true : nil,
             sorts: sorts
         )
     }
@@ -67,7 +64,7 @@ class TrackService {
             )
         }
         
-        if offlineModeEnabled || retry > 3 {
+        if OfflineStorageService.offlineModeEnabled || retry > 3 {
             if retry > 3 {
                 GGLog.error("Retry limit was reached!")
             }
@@ -103,7 +100,7 @@ class TrackService {
     }
     
     struct FailedListenRequests: Codable {
-        var requests: Array<MarkListenedRequest>
+        var requests: [MarkListenedRequest]
     }
     
     struct MarkListenedRequest: Codable {
@@ -170,6 +167,62 @@ class TrackService {
             
             linkFetchHandler(links)
         }
+    }
+    
+    static func getArtistsFromTracks(_ tracks: [Track]) -> [String] {
+        var uniqueArtists = Set<String>()
+        
+        var artists: [String] = []
+        
+        tracks.forEach { track in
+            let lowerArtist = track.artist.lowercased()
+            if !uniqueArtists.contains(lowerArtist) {
+                uniqueArtists.insert(lowerArtist)
+                artists.append(track.artist)
+            }
+            
+            if !track.featuring.isEmpty {
+                let lowerFeaturing = track.featuring.lowercased()
+                if !uniqueArtists.contains(lowerFeaturing) {
+                    uniqueArtists.insert(lowerFeaturing)
+                    artists.append(track.featuring)
+                }
+            }
+        }
+        
+        return artists.sorted()
+    }
+    
+    static func getAlbumsFromTracks(_ tracks: [Track], artist: String? = nil) -> [Album] {
+        var uniqueAlbums: [String : Track] = [:]
+        
+        let lowerArtist = artist?.lowercased() ?? ""
+        
+        tracks.forEach { track in
+            if artist == nil
+                || (track.artist.lowercased().contains(lowerArtist) || track.featuring.lowercased().contains(lowerArtist))
+                // If artist is an empty string, the track needs to not have an artist
+                || (artist == "" && (track.artist == "" && track.featuring == "")) {
+                let lowerAlbum = track.album.lowercased()
+                if let alreadyFoundAlbum = uniqueAlbums[lowerAlbum] {
+                    // We assume that all albums have the same art.
+                    // So if one of them already has cached art, use that instead of the earlier one that was found
+                    if alreadyFoundAlbum.thumbnailCachedAt == nil && track.thumbnailCachedAt != nil {
+                        uniqueAlbums[lowerAlbum] = track
+                    }
+                } else {
+                    uniqueAlbums[lowerAlbum] = track
+                }
+            }
+        }
+        
+        return uniqueAlbums.values.map { track in
+            Album(
+                name: track.album,
+                trackIdForArt: track.id,
+                artCached: track.thumbnailCachedAt != nil
+            )
+        }.sorted() { $0.name < $1.name }
     }
     
     private static var observers = [UUID : (Track) -> Void]()

@@ -5,7 +5,7 @@ public class Track : Entity, ViewableTrackData {
     public var album: String
     public var artist: String
     public var addedToLibrary: Date?
-    public var featuring: String?
+    public var featuring: String
     public var genre: String?
     public var isHidden: Bool
     public var isPrivate: Bool
@@ -39,8 +39,8 @@ public class Track : Entity, ViewableTrackData {
     
     public var artistString: String {
         get {
-            if featuring?.count ?? 0 > 0 {
-                return "\(artist) ft. \(featuring!)"
+            if featuring.count > 0 {
+                return "\(artist) ft. \(featuring)"
             } else {
                 return artist
             }
@@ -64,7 +64,7 @@ public class Track : Entity, ViewableTrackData {
         album: String,
         artist: String,
         addedToLibrary: Date?,
-        featuring: String?,
+        featuring: String,
         genre: String?,
         isHidden: Bool,
         isPrivate: Bool,
@@ -125,7 +125,7 @@ public class Track : Entity, ViewableTrackData {
             album: dict["album"] as! String,
             artist: dict["artist"] as! String,
             addedToLibrary: (dict["addedToLibrary"] as? Int)?.toDate(),
-            featuring: dict["featuring"] as! String?,
+            featuring: dict["featuring"] as! String,
             genre: dict["genre"] as? String,
             isHidden: (dict["isHidden"] as! Int).toBool(),
             isPrivate: (dict["isPrivate"] as! Int).toBool(),
@@ -163,7 +163,7 @@ public class TrackDao : BaseDao<Track> {
         isSongCached: Bool? = nil,
         sorts: [(String, Bool, Bool)] = [],
         limit: Int? = nil
-    ) -> Array<Track> {
+    ) -> [Track] {
         let sortString = sorts.map { (key, isAscending, isNoCase) in
             key + (isNoCase ? " COLLATE NOCASE" : "") + (isAscending ? " ASC " : " DESC ")
         }.joined(separator: ",")
@@ -182,26 +182,36 @@ public class TrackDao : BaseDao<Track> {
             }
         }
         
+        var artistQuery = ""
+        if let artist = artist {
+            // If searching for an empty string, we want an exact match of nothingness. Otherwise, we want to do an includes
+            if artist.isEmpty {
+                artistQuery = "AND (artist = '\(artist)' AND featuring = '\(artist)')"
+            } else {
+                artistQuery = "AND (artist LIKE '%\(artist)%' OR featuring LIKE '%\(artist)%')"
+            }
+        }
+        
         let query = """
             SELECT *
             FROM track t
             WHERE in_review = \(inReview)
             \(isHidden.asSqlParam("AND is_hidden ="))
-            \(artist.asSqlParam("AND artist ="))
+            \(artistQuery)
             \(album.asSqlParam("AND album ="))
             \(isCachedQuery)
             \(offlineAvailability?.getDbName().asSqlParam("AND offline_availability =") ?? "")
             \(sortString.isEmpty ? "" : ("ORDER BY \(sortString)"))
             \(limit.asSqlParam("LIMIT"))
         """
-        
+                
         return queryEntities(query)
     }
     
     static func getTracksForPlaylist(
         _ playlistId: Int,
         isSongCached: Bool? = nil
-    ) -> Array<Track> {
+    ) -> [Track] {
         var isCachedQuery = ""
         if let isSongCached = isSongCached {
             isCachedQuery = "AND (t.song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
@@ -242,10 +252,15 @@ public class TrackDao : BaseDao<Track> {
     static func getAlbums(
         artist: String? = nil,
         isSongCached: Bool? = nil
-    ) -> Array<Album> {
+    ) -> [Album] {
         var isCachedQuery = ""
         if let isSongCached = isSongCached {
             isCachedQuery = "AND (song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
+        }
+        
+        var artistQuery = ""
+        if let artist = artist {
+            artistQuery = "AND artist LIKE '%\(artist)%' OR featuring LIKE '%\(artist)%'"
         }
         
         let artistRows = Database.query("""
@@ -253,7 +268,7 @@ public class TrackDao : BaseDao<Track> {
             FROM track
             WHERE is_hidden = FALSE
             \(isCachedQuery)
-            \(artist.asSqlParam("AND artist ="))
+            \(artistQuery)
             GROUP BY album
             ORDER BY album COLLATE NOCASE ASC
         """)

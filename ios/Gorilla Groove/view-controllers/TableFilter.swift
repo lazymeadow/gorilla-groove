@@ -78,7 +78,7 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         if section == 0 {
             return 0
         } else {
-            return 2
+            return 3
         }
     }
     
@@ -223,6 +223,7 @@ fileprivate class TableFilterCell: UITableViewCell {
             
             leftImage.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             leftImage.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            leftImage.widthAnchor.constraint(equalToConstant: 40),
             
             nameLabel.leadingAnchor.constraint(equalTo: leftImage.trailingAnchor),
             nameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
