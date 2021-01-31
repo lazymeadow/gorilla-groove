@@ -8,6 +8,8 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     private let originalView: LibraryViewType?
     private let user: User?
     
+    private var lastOfflineMode: Bool
+
     private lazy var filterOptions: [[FilterOption]] = [
         MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ARTIST, user: user),
     ]
@@ -74,11 +76,12 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // This means we re-loaded this view and it shouldn't load more stuff as nothing should have changed
-        if !tracks.isEmpty {
+        // If it wasn't empty, it means we re-loaded this already existing view and it shouldn't load more stuff unless we know stuff changed
+        if !tracks.isEmpty && lastOfflineMode == OfflineStorageService.offlineModeEnabled {
             return
         }
         
+        lastOfflineMode = OfflineStorageService.offlineModeEnabled
         activitySpinner.startAnimating()
 
         if user != nil {
@@ -168,7 +171,8 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     init(_ title: String, originalView: LibraryViewType? = nil, user: User? = nil) {
         self.originalView = originalView
         self.user = user
-        
+        self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
+
         super.init(nibName: nil, bundle: nil)
 
         self.title = title

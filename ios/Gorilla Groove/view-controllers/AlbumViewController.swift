@@ -1,6 +1,12 @@
 import UIKit
 import Foundation
 
+// There is sort of a bug on this view that toggling on or off offline mode doesn't refresh the albums that we show.
+// The artist and track views do. However, it isn't objectively better to fix this as it requires reworking the way
+// that this controller works (as currently it can take Albums from an external source). And taking Albums from that
+// external source can be good because it means that, when viewing another users' library, you can look at their
+// albums for an artist without making a request. These files are just kind of a disaster and need to be reworked,
+// but I'm so close with being done working on this that I'm just.... not going to. At least not right now.
 class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     private var albums: [Album] = []
     private var visibleAlbums: [Album] = []
