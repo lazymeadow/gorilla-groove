@@ -20,27 +20,33 @@ class TrackContextMenu {
         }
         
         if view == .MY_LIBRARY {
-            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { (_) in
+            alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
                 ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive) {
                     TrackService.deleteTrack(track)
                 }
             }))
         }
         
+        if view == .NOW_PLAYING {
+            alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { _ in
+                NowPlayingTracks.removeTracks([track.id])
+            }))
+        }
+        
         if view == .OTHER_USER {
-            alert.addAction(UIAlertAction(title: "Import", style: .default, handler: { (_) in
+            alert.addAction(UIAlertAction(title: "Import", style: .default, handler: { _ in
                 TrackService.importTrack(track)
                 Toast.show("Track import started")
             }))
         }
         
-//        alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { (_) in
+//        alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { _ in
 //            print("Trim")
 //        }))
         
         
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (_) in
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
             GGNavLog.info("User clicked context menu 'Cancel' button")
         }))
         

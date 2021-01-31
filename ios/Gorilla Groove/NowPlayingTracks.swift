@@ -141,8 +141,8 @@ class NowPlayingTracks {
         // So it's easier to just mark the song as listened to right away so it's always done by the time the cache clearing runs.
         // A delay is put in here just to not mark something as listened to if someone skips through multiple songs quickly
         DispatchQueue.global().asyncAfter(deadline: .now() + 10.0) {
-            // If the current track isn't this track, then the song was skipped in the 10 seconds. Don't mark it.
-            // The exception here is if the song is incredibly short. If it is, it's not really worth not making it.
+            // If the current track isn't this track, then the song was skipped in the first 10 seconds. Don't mark it.
+            // The exception here is if the song is incredibly short. If it is, it's not really worth not marking it.
             if track.id == currentTrack?.id || track.length < 12 {
                 TrackDao.setDevicePlayStart(trackId: track.id, date: Date())
             } else {
