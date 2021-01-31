@@ -55,6 +55,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                     guard let this = self else { return }
                     this.handleSortChange(option: option, key: this.getSortKey("album"), initialSortAsc: true)
                 },
+                FilterOption("Sort by Year") { [weak self] option in
+                    guard let this = self else { return }
+                    this.handleSortChange(option: option, key: this.getSortKey("year"), initialSortAsc: true)
+                },
             ]
         ]
         
@@ -69,7 +73,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         case "name": return key
         case "play_count": return user == nil ? key : "playCount"
         case "added_to_library": return user == nil ? key : "addedToLibrary"
-        case "album": return user == nil ? key : "addedToLibrary"
+        case "album": return user == nil ? key : "album"
+        case "year": return user == nil ? "release_year" : "releaseYear"
         default:
             fatalError("Unsupported sort key: \(key)")
         }
@@ -294,7 +299,14 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     private func loadWebTracks() {
         let sortDir = sortDirectionAscending ? "ASC" : "DESC"
-        let extraSort = sortOverrideKey == "album" ? "&sort=trackNumber,ASC" : ""
+        let extraSort: String
+        if sortOverrideKey == "album" {
+            extraSort = "&sort=trackNumber,ASC"
+        } else if sortOverrideKey == "releaseYear" {
+            extraSort = "&sort=album,ASC&sort=trackNumber,ASC"
+        } else {
+            extraSort = ""
+        }
         
         // Offload some processing by providing a search term if we have an artist.
         // Will dramatically reduce the number of things we need to process

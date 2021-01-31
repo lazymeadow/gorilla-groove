@@ -12,12 +12,20 @@ class TrackService {
         var sorts = [(String, Bool, Bool)]()
         
         // Sort differently depending on how we are trying to load things
-        if (sortOverrideKey != nil) {
+        if sortOverrideKey != nil {
             sorts.append((sortOverrideKey!, sortAscending, true))
-        } else if (artist != nil && album == nil) {
+            
+            if sortOverrideKey == "album" {
+                sorts.append(("track_number", true, false))
+            } else if sortOverrideKey == "year" {
+                // I no longer remember why we add these additional sorts for year. I'm pretty sure it was a preference Audrey had
+                // and she's the one who uses this sort the most so I'm just blindly copying them from web.
+                sorts.append(("album", true, true))
+                sorts.append(("track_number", true, false))
+            }
+        } else if artist != nil && album == nil {
             sorts.append(("album", sortAscending, true))
-            sorts.append(("track_number", true, false))
-        } else if (album != nil) {
+        } else if album != nil {
             sorts.append(("track_number", sortAscending, false))
         } else {
             sorts.append(("name", sortAscending, true))
