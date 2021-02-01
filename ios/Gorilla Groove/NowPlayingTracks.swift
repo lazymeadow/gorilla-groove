@@ -71,17 +71,19 @@ class NowPlayingTracks {
         }
         
         playTrack(currentTrack!)
+        notifyListeners(nil, .RESET)
     }
     
     static func removeTracks(_ trackIds: Set<Int>, playNext: Bool? = nil) {
         if trackIds.isEmpty { return }
         
         GGLog.info("Removing track IDs from Now Playing: \(trackIds)")
+        let tracks = trackIds.map { trackIdToTrack[$0]! }
         
         var indexesRemovedBeforeCurrentlyPlayed = 0
         let idsToRemove = Set(trackIds)
         
-        var newPlayingTracks: Array<Track> = []
+        var newPlayingTracks: [Track] = []
         
         for index in nowPlayingTrackIds.indices {
             let trackId = nowPlayingTrackIds[index]
@@ -125,11 +127,20 @@ class NowPlayingTracks {
                     GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
                     playTrack(currentTrack)
                 } else {
-                    notifyListeners()
+                    notifyListeners(currentTrack, .NOW_PLAYING)
                 }
             } else {
-                notifyListeners()
+                notifyListeners(currentTrack, .NOW_PLAYING)
             }
+        }
+        
+        // If we alter the indexes, we need to redo the shuffle or else the indexes will be wrong.
+        // This could be done smarter by decrementing indexes that are higher than the index of the tracks we removed.
+        // But that sounds annoying so I'm not going to.
+        doShuffle(preservePrevious: false)
+        
+        tracks.forEach { track in
+            notifyListeners(track, .REMOVED)
         }
     }
     
@@ -162,7 +173,7 @@ class NowPlayingTracks {
         }
         
         updatePlayingTrackInfo(track)
-        notifyListeners()
+        notifyListeners(currentTrack, .NOW_PLAYING)
         
         // First check if this song is already cached so we don't have to fetch it
         let (existingSongData, existingArtData) = getCachedData(track)
@@ -304,7 +315,7 @@ class NowPlayingTracks {
         }
         
         if (currentTrack == nil) {
-            notifyListeners()
+            notifyListeners(currentTrack, .NOW_PLAYING)
         } else {
             playTrack(currentTrack!)
         }
@@ -406,22 +417,42 @@ class NowPlayingTracks {
         indexesToShuffle.shuffle()
     }
     
-    private static var observers = [UUID : (Track?) -> Void]()
+    static func addTrackNext(_ track: Track) {
+        trackIdToTrack[track.id] = track
+        nowPlayingTrackIds.insert(track.id, at: nowPlayingIndex + 1)
+        
+        notifyListeners(nil, .ADDED)
+        
+        // Not dealing with re-calculating shuffle indexes properly because I can't be assed right now
+        doShuffle(preservePrevious: false)
+    }
+    
+    static func addTrackLast(_ track: Track) {
+        trackIdToTrack[track.id] = track
+        nowPlayingTrackIds.append(track.id)
+        
+        notifyListeners(nil, .ADDED)
+
+        // Not dealing with re-calculating shuffle indexes properly because I can't be assed right now
+        doShuffle(preservePrevious: false)
+    }
+    
+    private static var observers = [UUID : (Track?, TrackChangeType) -> Void]()
 
     @discardableResult
     static func addTrackChangeObserver<T: AnyObject>(
         _ observer: T,
-        closure: @escaping (T, Track?) -> Void
+        closure: @escaping (T, Track?, TrackChangeType) -> Void
     ) -> ObservationToken {
         let id = UUID()
         
-        observers[id] = { [weak observer] track in
+        observers[id] = { [weak observer] track, type in
             guard let observer = observer else {
                 observers.removeValue(forKey: id)
                 return
             }
 
-            closure(observer, track)
+            closure(observer, track, type)
         }
         
         return ObservationToken {
@@ -429,12 +460,19 @@ class NowPlayingTracks {
         }
     }
     
-    private static func notifyListeners() {
-        observers.values.forEach { $0(currentTrack) }
+    private static func notifyListeners(_ track: Track?, _ type: TrackChangeType) {
+        observers.values.forEach { $0(track, type) }
     }
 }
 
 struct MediaState: Codable {
     let shuffleEnabled: Bool
     let repeatEnabled: Bool
+}
+
+enum TrackChangeType {
+    case NOW_PLAYING
+    case REMOVED
+    case ADDED
+    case RESET
 }

@@ -9,6 +9,13 @@ class TrackContextMenu {
     ) -> UIAlertController {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
+        alert.addAction(UIAlertAction(title: "Play Next", style: .default, handler: { _ in
+            NowPlayingTracks.addTrackNext(track)
+        }))
+        alert.addAction(UIAlertAction(title: "Play Last", style: .default, handler: { _ in
+            NowPlayingTracks.addTrackLast(track)
+        }))
+        
         if view == .MY_LIBRARY || view == .NOW_PLAYING {
             alert.addAction(UIAlertAction(title: "Edit Properties", style: .default, handler: { _ in
                 let metadataController = EditMetadataController(track: track)
@@ -28,7 +35,7 @@ class TrackContextMenu {
         }
         
         if view == .NOW_PLAYING {
-            alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { _ in
+            alert.addAction(UIAlertAction(title: "Remove", style: .default, handler: { _ in
                 NowPlayingTracks.removeTracks([track.id])
             }))
         }

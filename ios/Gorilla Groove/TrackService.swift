@@ -260,12 +260,12 @@ class TrackService {
         }
     }
     
-    private static var observers = [UUID : (Track, TrackChangeType) -> Void]()
+    private static var observers = [UUID : (Track, TrackUpdateType) -> Void]()
     
     @discardableResult
     static func observeTrackChanges<T: AnyObject>(
         _ observer: T,
-        closure: @escaping (T, Track, TrackChangeType) -> Void
+        closure: @escaping (T, Track, TrackUpdateType) -> Void
     ) -> ObservationToken {
         let id = UUID()
         
@@ -283,7 +283,7 @@ class TrackService {
         }
     }
     
-    static func broadcastTrackChange(_ track: Track, type: TrackChangeType) {
+    static func broadcastTrackChange(_ track: Track, type: TrackUpdateType) {
         observers.values.forEach { $0(track, type) }
     }
 }
@@ -301,7 +301,7 @@ struct ImportTrackResponse: Codable {
     let items: [TrackResponse]
 }
 
-enum TrackChangeType {
+enum TrackUpdateType {
     case MODIFICATION
     case DELETION
 }

@@ -14,6 +14,17 @@ class NowPlayingController : TrackViewController {
         )
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        NowPlayingTracks.addTrackChangeObserver(self) { vc, track, type in
+            if (type == .REMOVED || type == .ADDED || type == .RESET) && vc.viewIfLoaded?.window != nil {
+                GGLog.debug("Reloading now playing tracks because of a type change: \(type)")
+                vc.loadTracks()
+            }
+        }
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         GGNavLog.info("Loaded now playing")
         

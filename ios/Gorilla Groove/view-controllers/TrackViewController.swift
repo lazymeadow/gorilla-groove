@@ -165,11 +165,13 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         }
         
-        NowPlayingTracks.addTrackChangeObserver(self) { _, _ in
-            DispatchQueue.main.async { [weak self] in
-                self?.tableView.visibleCells.forEach { cell in
-                    let songViewCell = cell as! TrackViewCell
-                    songViewCell.checkIfPlaying()
+        NowPlayingTracks.addTrackChangeObserver(self) { vc, track, type in
+            if type == .NOW_PLAYING {
+                DispatchQueue.main.async {
+                    vc.tableView.visibleCells.forEach { cell in
+                        let songViewCell = cell as! TrackViewCell
+                        songViewCell.checkIfPlaying()
+                    }
                 }
             }
         }

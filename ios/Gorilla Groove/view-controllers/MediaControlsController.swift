@@ -173,8 +173,10 @@ class MediaControlsController: UIViewController {
             }
         }
         
-        NowPlayingTracks.addTrackChangeObserver(self) { vc, nillableTrack in
-            DispatchQueue.main.async { vc.handleTrackChange(nillableTrack) }
+        NowPlayingTracks.addTrackChangeObserver(self) { vc, nillableTrack, type in
+            if type == .NOW_PLAYING {
+                DispatchQueue.main.async { vc.handleTrackChange(nillableTrack) }
+            }
         }
         
         TrackService.observeTrackChanges(self) { _, updatedTrack, changeType in
