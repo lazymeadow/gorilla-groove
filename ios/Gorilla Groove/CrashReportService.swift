@@ -130,7 +130,9 @@ class CrashReportService {
             let showNotice = showCriticalErrorNotice
             
             GGLog.info("About to send automated crash report. The user will\(showNotice ? " " : " not ")be notified of the error")
-            sendProblemReport()
+            DispatchQueue.global().async {
+                sendProblemReport()
+            }
             
             problemReportingStatus.lastAutomatedReport = now
             FileState.save(problemReportingStatus)

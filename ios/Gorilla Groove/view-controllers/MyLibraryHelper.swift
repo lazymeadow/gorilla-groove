@@ -2,9 +2,8 @@ import UIKit
 
 class MyLibraryHelper {
 
-    // I have issues with retain cycles, and I can't debug them because the memory graph in xcode crashes
-    // whenever I try to use it. This is somewhat of a stop-gap measure to reduce the impact of the memory leak.
-    // UPDATE this has gotten hackier since I wrote the first two lines of the comment. Idk what to do anymore.
+    // I originally did this to minimize the issue of a retain cycle. Idk that I still need it. I probably don't.
+    // But I'm burned out and am not about to make more changes right now.
     static var titleView = TrackViewController("My Library", originalView: .TITLE)
     
     static func loadTitleView(vc: UIViewController, user: User?) {

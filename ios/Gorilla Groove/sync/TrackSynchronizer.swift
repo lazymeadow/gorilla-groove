@@ -43,9 +43,9 @@ class TrackSynchronizer {
         
         guard let content = entityResponse?.content else { return (-1, false) }
         
-        var newInReviewTracks: Array<Track> = []
-        var modifiedInReviewTracks: Array<Track> = []
-        var deletedInReviewTracks: Array<Track> = []
+        var newInReviewTracks: [Track] = []
+        var modifiedInReviewTracks: [Track] = []
+        var deletedInReviewTracks: [Track] = []
 
         for newTrackResponse in content.new {
             let newTrack = newTrackResponse.asTrack()
@@ -61,7 +61,13 @@ class TrackSynchronizer {
         for modifiedTrackResponse in content.modified {
             let modifiedTrackId = modifiedTrackResponse.id
             GGSyncLog.debug("Modifying track with ID \(modifiedTrackId)")
-            let oldTrack = TrackDao.findById(modifiedTrackId)!
+            guard let oldTrack = TrackDao.findById(modifiedTrackId) else {
+                GGSyncLog.critical("Could not find existing track with ID \(modifiedTrackId). Cleaning up any cache and saving again")
+                CacheService.deleteAllData(trackId: modifiedTrackId)
+                
+                TrackDao.save(modifiedTrackResponse.asTrack())
+                continue
+            }
             
             // Check if our caches are invalidated for this track
             var newSongCachedAt: Date? = nil

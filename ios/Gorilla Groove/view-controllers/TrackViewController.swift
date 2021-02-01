@@ -24,12 +24,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     private let sortsIndex = 1
     
-    // This never gets invoked. I've got a retain cycle somewhere but the memory graph in xcode crashes the shitty program
-    // so debugging where this is has been proving to be a challenge.
-    deinit {
-        GGLog.info("Deinit TVC")
-    }
-    
     private lazy var filterOptions: [[FilterOption]] = {
         if originalView == .PLAYLIST || originalView == .NOW_PLAYING {
             return []
