@@ -40,7 +40,7 @@ class ViewUtil {
                 yesAction!()
             }))
         }
-        alertController.addAction(UIAlertAction(title: dismissText, style: .default))
+        alertController.addAction(UIAlertAction(title: dismissText, style: .cancel))
         
         showAlert(alertController)
     }

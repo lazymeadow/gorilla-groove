@@ -28,7 +28,7 @@ class TrackContextMenu {
         
         if view == .MY_LIBRARY {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-                ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive) {
+                ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive, dismissText: "Cancel") {
                     TrackService.deleteTrack(track)
                 }
             }))

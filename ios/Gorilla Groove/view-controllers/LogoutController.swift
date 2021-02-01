@@ -1,12 +1,9 @@
 import Foundation
 import UIKit
-import Toast
 
+// Not a fan of this being a view controller but it is what it is as long as we're using Apple's bottom bar
 class LogoutController : UIViewController {
-    
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private var offlineModeEnabled: Bool
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -25,10 +22,10 @@ class LogoutController : UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if offlineModeEnabled {
+        if OfflineStorageService.offlineModeEnabled {
             GGNavLog.info("User was in offline mode and could not log out")
             
-            AppDelegate.rootView?.makeToast("You are in offline mode and cannot be logged out")
+            Toast.show("You are in offline mode and cannot be logged out")
             navigationController?.popViewController(animated: false)
         } else {
             confirmLogoutViaAlert()
@@ -66,7 +63,6 @@ class LogoutController : UIViewController {
         AudioPlayer.stop()
         UserState.isLoggedIn = false
 
-        // TODO actually send the logout command to the API
         HttpRequester.post("authentication/logout", EmptyResponse.self, nil) { _, statusCode, _ in
             if (statusCode == 200) {
                 GGLog.info("Logout token deleted")
