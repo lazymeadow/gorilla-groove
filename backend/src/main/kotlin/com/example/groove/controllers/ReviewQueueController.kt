@@ -36,7 +36,10 @@ class ReviewQueueController(
 
 	@PostMapping("/recommend")
 	fun recommend(@RequestBody body: TrackRecommendDTO) {
-		reviewQueueService.recommend(body.targetUserId, body.trackIds)
+		require(body.targetUserIds.isNotEmpty()) { "targetUserIds must not be empty" }
+		require(body.trackIds.isNotEmpty()) { "trackIds must not be empty" }
+
+		reviewQueueService.recommend(body.targetUserIds, body.trackIds)
 	}
 
 	@PostMapping("/subscribe/youtube-channel")
@@ -115,7 +118,7 @@ class ReviewQueueController(
 	}
 
 	data class TrackRecommendDTO(
-			val targetUserId: Long,
+			val targetUserIds: List<Long>,
 			val trackIds: List<Long>
 	)
 

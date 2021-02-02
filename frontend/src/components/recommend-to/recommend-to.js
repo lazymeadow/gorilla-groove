@@ -19,7 +19,7 @@ function RecommendToModal(props) {
 		setLoading(true);
 
 		Api.post('review-queue/recommend', {
-			targetUserId: targetUserId,
+			targetUserIds: [targetUserId],
 			trackIds: tracks.map(it => it.id)
 		}).then(() => {
 			props.closeFunction();
