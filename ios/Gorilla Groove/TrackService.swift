@@ -7,7 +7,8 @@ class TrackService {
         album: String? = nil,
         artist: String? = nil,
         sortOverrideKey: String? = nil,
-        sortAscending: Bool = true
+        sortAscending: Bool = true,
+        showHidden: Bool? = false
     ) -> [Track] {
         var sorts = [(String, Bool, Bool)]()
         
@@ -34,7 +35,7 @@ class TrackService {
         return TrackDao.getTracks(
             album: album,
             artist: artist,
-            isHidden: false,
+            isHidden: showHidden,
             isSongCached: OfflineStorageService.offlineModeEnabled ? true : nil,
             sorts: sorts
         )

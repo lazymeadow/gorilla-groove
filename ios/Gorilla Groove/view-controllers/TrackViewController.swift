@@ -18,6 +18,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private let alwaysReload: Bool
     private let trackContextView: TrackContextView
 
+    private var showHiddenTracks: Bool
     private var lastOfflineMode: Bool
     
     private let originalView: LibraryViewType
@@ -53,6 +54,15 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 FilterOption("Sort by Year") { [weak self] option in
                     guard let this = self else { return }
                     this.handleSortChange(option: option, key: this.getSortKey("year"), initialSortAsc: true)
+                },
+            ],
+            [
+                FilterOption("Show Hidden Tracks", filterImage: showHiddenTracks ? .CHECKED : .NONE) { [weak self] option in
+                    guard let this = self else { return }
+                    this.showHiddenTracks = !this.showHiddenTracks
+                    option.filterImage = this.showHiddenTracks ? .CHECKED : .NONE
+                    this.filter?.reloadData()
+                    this.loadTracks()
                 },
             ]
         ]
@@ -183,6 +193,12 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        filter?.isHidden = true
+    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return visibleTrackIds.count
     }
@@ -267,7 +283,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                     album: this.albumFilter,
                     artist: this.artistFilter,
                     sortOverrideKey: this.sortOverrideKey,
-                    sortAscending: this.sortDirectionAscending
+                    sortAscending: this.sortDirectionAscending,
+                    showHidden: this.showHiddenTracks ? nil : false // nil returns both hidden and not hidden, which is what we want
                 )
             }
             
@@ -307,7 +324,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         // Will dramatically reduce the number of things we need to process
         let searchTerm = artistFilter == nil ? "" : "&searchTerm=\(artistFilter!)"
         
-        let url = "track?userId=\(user!.id)&sort=\(sortOverrideKey!),\(sortDir)\(extraSort)\(searchTerm)&size=100000&page=0&showHidden=true"
+        let url = "track?userId=\(user!.id)&sort=\(sortOverrideKey!),\(sortDir)\(extraSort)\(searchTerm)&size=100000&page=0&showHidden=\(showHiddenTracks)"
         HttpRequester.get(url, LiveTrackRequest.self) { [weak self] res, status, _ in
             guard let this = self else { return }
             guard var tracks = res?.content, status.isSuccessful() else {
@@ -380,6 +397,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.alwaysReload = alwaysReload
         self.trackContextView = trackContextView ?? (user == nil ? .MY_LIBRARY : .OTHER_USER)
         self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
+        self.showHiddenTracks = user != nil || originalView == .PLAYLIST
         
         super.init(nibName: nil, bundle: nil)
         
