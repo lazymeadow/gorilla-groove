@@ -47,6 +47,8 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
             image: filterIcon,
             style: .plain,
             action: {
+                GGNavLog.info("Setting filter 'isHidden' to \(!this!.isHidden)")
+                
                 this?.setIsHiddenAnimated(!this!.isHidden)
             }
         )

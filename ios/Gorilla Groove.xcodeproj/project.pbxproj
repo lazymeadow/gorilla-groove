@@ -39,6 +39,7 @@
 		E8588F7D259032E600ACA919 /* StandardSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F7C259032E600ACA919 /* StandardSynchronizer.swift */; };
 		E8588F84259159C600ACA919 /* IconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F83259159C600ACA919 /* IconView.swift */; };
 		E8588F882595841D00ACA919 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8588F872595841D00ACA919 /* Toast.swift */; };
+		E858E01025C8C66E00454AAA /* SelectUsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E858E00F25C8C66E00454AAA /* SelectUsersController.swift */; };
 		E85966432423201100AA8727 /* ArtistViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966422423201100AA8727 /* ArtistViewController.swift */; };
 		E85966452423207B00AA8727 /* ArtistViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966442423207B00AA8727 /* ArtistViewCell.swift */; };
 		E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */; };
@@ -60,9 +61,10 @@
 		E85B598125A1BF390071496D /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598025A1BF390071496D /* NotificationService.swift */; };
 		E85B598625A413C40071496D /* PickReviewSourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598525A413C40071496D /* PickReviewSourceController.swift */; };
 		E85B598925A4186E0071496D /* EditReviewSourcesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598825A4186E0071496D /* EditReviewSourcesController.swift */; };
+		E85E046425C8F57C008A43F2 /* BaseUsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85E046325C8F57C008A43F2 /* BaseUsersController.swift */; };
 		E864D8302564B5B8008C2C4C /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E864D82F2564B5B8008C2C4C /* LocationService.swift */; };
 		E86AFEF923E7CB2D005B84EB /* ServerSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */; };
-		E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1C23E9572A005B84EB /* UsersController.swift */; };
+		E86AFF1D23E9572A005B84EB /* ViewUsersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1C23E9572A005B84EB /* ViewUsersController.swift */; };
 		E86AFF1F23E963A8005B84EB /* TableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFF1E23E963A8005B84EB /* TableViewCell.swift */; };
 		E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67724EC9AA40066CB4E /* BaseDao.swift */; };
 		E86EB67A24EC9B7D0066CB4E /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86EB67924EC9B7D0066CB4E /* Track.swift */; };
@@ -121,6 +123,7 @@
 		E8588F7C259032E600ACA919 /* StandardSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardSynchronizer.swift; sourceTree = "<group>"; };
 		E8588F83259159C600ACA919 /* IconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconView.swift; sourceTree = "<group>"; };
 		E8588F872595841D00ACA919 /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
+		E858E00F25C8C66E00454AAA /* SelectUsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectUsersController.swift; sourceTree = "<group>"; };
 		E85966422423201100AA8727 /* ArtistViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistViewController.swift; sourceTree = "<group>"; };
 		E85966442423207B00AA8727 /* ArtistViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistViewCell.swift; sourceTree = "<group>"; };
 		E8596646243FEFEC00AA8727 /* TableSearchAugmenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableSearchAugmenter.swift; sourceTree = "<group>"; };
@@ -142,9 +145,10 @@
 		E85B598025A1BF390071496D /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		E85B598525A413C40071496D /* PickReviewSourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickReviewSourceController.swift; sourceTree = "<group>"; };
 		E85B598825A4186E0071496D /* EditReviewSourcesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditReviewSourcesController.swift; sourceTree = "<group>"; };
+		E85E046325C8F57C008A43F2 /* BaseUsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseUsersController.swift; sourceTree = "<group>"; };
 		E864D82F2564B5B8008C2C4C /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		E86AFEF823E7CB2D005B84EB /* ServerSynchronizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSynchronizer.swift; sourceTree = "<group>"; };
-		E86AFF1C23E9572A005B84EB /* UsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsersController.swift; sourceTree = "<group>"; };
+		E86AFF1C23E9572A005B84EB /* ViewUsersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUsersController.swift; sourceTree = "<group>"; };
 		E86AFF1E23E963A8005B84EB /* TableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewCell.swift; sourceTree = "<group>"; };
 		E86EB67724EC9AA40066CB4E /* BaseDao.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseDao.swift; sourceTree = "<group>"; };
 		E86EB67924EC9B7D0066CB4E /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
@@ -214,6 +218,7 @@
 			children = (
 				E85A366A25AD41D7005C4FDD /* add-track */,
 				E85B598425A413950071496D /* review-queue */,
+				E85E046225C8F566008A43F2 /* users */,
 				A89100EF23BD339D00D6EA2D /* ViewController.swift */,
 				A815B08723C2EE05003899B8 /* MyLibraryHelper.swift */,
 				A829AC2323CC2C1D0034AD69 /* TrackViewCell.swift */,
@@ -221,7 +226,6 @@
 				E85A4DDA23DE4F99006BD7EE /* SyncController.swift */,
 				E85A50E923E2736D00029D7C /* RootNavigationController.swift */,
 				E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */,
-				E86AFF1C23E9572A005B84EB /* UsersController.swift */,
 				E86AFF1E23E963A8005B84EB /* TableViewCell.swift */,
 				E8597AF023F0C6150095450E /* AlbumViewController.swift */,
 				E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */,
@@ -329,6 +333,16 @@
 				E85A365D25AA318A005C4FDD /* AddReviewSourceController.swift */,
 			);
 			path = "review-queue";
+			sourceTree = "<group>";
+		};
+		E85E046225C8F566008A43F2 /* users */ = {
+			isa = PBXGroup;
+			children = (
+				E86AFF1C23E9572A005B84EB /* ViewUsersController.swift */,
+				E85E046325C8F57C008A43F2 /* BaseUsersController.swift */,
+				E858E00F25C8C66E00454AAA /* SelectUsersController.swift */,
+			);
+			path = users;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -447,10 +461,12 @@
 				E8588F74258EB54600ACA919 /* ReviewSourceSynchronizer.swift in Sources */,
 				E8DB1B2925BFB46B00556175 /* TableFilter.swift in Sources */,
 				E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */,
+				E85E046425C8F57C008A43F2 /* BaseUsersController.swift in Sources */,
 				E85966432423201100AA8727 /* ArtistViewController.swift in Sources */,
 				A829AC0C23CAAC8E0034AD69 /* HttpRequester.swift in Sources */,
 				E873DE0025887A6A00207F99 /* LogViewController.swift in Sources */,
-				E86AFF1D23E9572A005B84EB /* UsersController.swift in Sources */,
+				E86AFF1D23E9572A005B84EB /* ViewUsersController.swift in Sources */,
+				E858E01025C8C66E00454AAA /* SelectUsersController.swift in Sources */,
 				E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */,
 				E8588F61258C867700ACA919 /* TrackSynchronizer.swift in Sources */,
 				E8C2ABE224E102A10050A01E /* User.swift in Sources */,
@@ -642,7 +658,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.0;
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -663,7 +679,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.0;
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;

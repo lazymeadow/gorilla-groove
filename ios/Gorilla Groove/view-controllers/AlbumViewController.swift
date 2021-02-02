@@ -40,10 +40,10 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
 
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo:view.topAnchor),
-            tableView.leftAnchor.constraint(equalTo:view.leftAnchor),
-            tableView.rightAnchor.constraint(equalTo:view.rightAnchor),
-            tableView.bottomAnchor.constraint(equalTo:view.bottomAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             activitySpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             activitySpinner.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),

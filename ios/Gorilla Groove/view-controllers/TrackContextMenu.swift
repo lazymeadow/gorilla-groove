@@ -24,6 +24,14 @@ class TrackContextMenu {
                 let vc = UINavigationController(rootViewController: metadataController)
                 parentVc.present(vc, animated: true)
             }))
+            
+            alert.addAction(UIAlertAction(title: "Recommend", style: .default, handler: { _ in
+                let usersController = SelectUsersController(track)
+                usersController.modalPresentationStyle = .pageSheet
+                
+                let vc = UINavigationController(rootViewController: usersController)
+                parentVc.present(vc, animated: true)
+            }))
         }
         
         if view == .MY_LIBRARY {

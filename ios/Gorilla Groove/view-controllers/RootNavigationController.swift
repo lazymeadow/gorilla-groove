@@ -15,7 +15,7 @@ class RootNavigationController : UITabBarController {
     private lazy var tagToController: [Int: UIViewController] = {
         let libraryController = MyLibraryHelper.titleView
         let nowPlayingController = NowPlayingController()
-        let usersController = UsersController()
+        let usersController = ViewUsersController()
         let playlistsController = PlaylistsController()
         let appSettingsController = IASKAppSettingsViewController()
         let reviewQueueController = ReviewQueueController()

@@ -24,6 +24,12 @@ extension Collection {
     }
 }
 
+extension Set {
+    func toArray() -> [Element] {
+        return Array(self)
+    }
+}
+
 public extension Date {
     func toEpochTime() -> Int {
         return (Int(self.timeIntervalSince1970 * 1000))

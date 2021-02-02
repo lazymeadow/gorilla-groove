@@ -88,3 +88,9 @@ extension UINavigationController {
         }
     }
 }
+
+
+struct LiveTrackRequest : Codable {
+    let content: [TrackResponse]
+}
+

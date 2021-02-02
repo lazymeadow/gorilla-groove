@@ -77,8 +77,13 @@ class NowPlayingTracks {
     static func removeTracks(_ trackIds: Set<Int>, playNext: Bool? = nil) {
         if trackIds.isEmpty { return }
         
-        GGLog.info("Removing track IDs from Now Playing: \(trackIds)")
-        let tracks = trackIds.map { trackIdToTrack[$0]! }
+        GGLog.info("Removing track IDs from Now Playing (if they are playing): \(trackIds)")
+        let tracks = trackIds.compactMap { trackIdToTrack[$0] }
+        
+        if tracks.isEmpty {
+            GGLog.debug("No tracks being removed were playing")
+            return
+        }
         
         var indexesRemovedBeforeCurrentlyPlayed = 0
         let idsToRemove = Set(trackIds)

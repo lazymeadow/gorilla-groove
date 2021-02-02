@@ -21,6 +21,12 @@ extension UIBarButtonItem {
         self._action = action
     }
 
+    convenience init(title: String, style: UIBarButtonItem.Style, action: @escaping () -> ()) {
+        self.init(title: title, style: style, target: nil, action: #selector(pressed))
+        self.target = self
+        self._action = action
+    }
+    
     @objc private func pressed(sender: UIBarButtonItem) {
         _action()
     }

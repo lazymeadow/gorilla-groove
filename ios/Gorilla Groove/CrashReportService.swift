@@ -175,7 +175,7 @@ class CrashReportService {
             .appendingPathComponent("crash-report.zip")
         
         guard let archive = Archive(url: archiveUrl, accessMode: .create) else {
-            GGLog.error("Could not create archive")
+            GGLog.error("Could not create archive. Attempted path: \(archiveUrl.absoluteString)")
             return false
         }
                 
@@ -190,6 +190,7 @@ class CrashReportService {
             try archive.addEntry(with: dbPath.lastPathComponent, relativeTo: dbPath.deletingLastPathComponent())
         } catch {
             GGLog.info("Adding entry to ZIP archive failed with error: \(error.localizedDescription)")
+            return false
         }
         
         let archiveData = try! Data(contentsOf: archiveUrl)
