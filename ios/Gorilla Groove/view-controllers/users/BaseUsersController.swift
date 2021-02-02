@@ -123,7 +123,7 @@ class UserCell: UITableViewCell {
         ])
         
         let leadingConstraint = nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 6)
-        leadingConstraint.priority = UILayoutPriority(250)
+        leadingConstraint.priority = UILayoutPriority(550)
         leadingConstraint.isActive = true
     }
     
