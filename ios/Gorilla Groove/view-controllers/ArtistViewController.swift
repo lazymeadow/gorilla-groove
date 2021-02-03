@@ -8,10 +8,20 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     private let originalView: LibraryViewType?
     private let user: User?
     
+    private var showHiddenTracks: Bool
     private var lastOfflineMode: Bool
 
     private lazy var filterOptions: [[FilterOption]] = [
         MyLibraryHelper.getNavigationOptions(vc: self, viewType: .ARTIST, user: user),
+        [
+            FilterOption("Show Hidden Tracks", filterImage: showHiddenTracks ? .CHECKED : .NONE) { [weak self] option in
+                guard let this = self else { return }
+                this.showHiddenTracks = !this.showHiddenTracks
+                option.filterImage = this.showHiddenTracks ? .CHECKED : .NONE
+                this.filter.reloadData()
+                this.refreshArtists()
+            },
+        ]
     ]
     
     private lazy var filter = TableFilter(filterOptions, vc: self)
@@ -58,15 +68,8 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
             controller: self,
             tableView: tableView,
             onTap: { [weak self] in self?.filter.setIsHiddenAnimated(true) }
-        ) { [weak self] input in
-            guard let this = self else { return }
-            
-            let searchTerm = input.lowercased()
-            if (searchTerm.isEmpty) {
-                this.visibleArtists = this.artists
-            } else {
-                this.visibleArtists = this.artists.filter { $0.lowercased().contains(searchTerm) }
-            }
+        ) { [weak self] _ in
+            self?.setVisibleArtists()
         }
         
         // Remove extra table rows when we don't have a full screen of songs
@@ -80,23 +83,45 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        GGNavLog.info("Loaded artist view")
+
         // If it wasn't empty, it means we re-loaded this already existing view and it shouldn't load more stuff unless we know stuff changed
-        if !tracks.isEmpty && lastOfflineMode == OfflineStorageService.offlineModeEnabled {
+        if !artists.isEmpty && lastOfflineMode == OfflineStorageService.offlineModeEnabled {
             return
         }
         
-        lastOfflineMode = OfflineStorageService.offlineModeEnabled
         activitySpinner.startAnimating()
-
+        
+        if tracks.isEmpty || lastOfflineMode != OfflineStorageService.offlineModeEnabled {
+            loadTracks()
+        } else {
+            refreshArtists()
+        }
+    }
+    
+    private func loadTracks() {
         if user != nil {
-            loadWebArtists()
+            loadWebTracks()
         } else {
             DispatchQueue.global().async { [weak self] in
                 guard let this = self else { return }
                 
-                this.tracks = TrackService.getTracks()
-                this.reloadArtists()
+                // Always get hidden tracks (aka nil which gets both). We'll filter them out later if we don't want to see them.
+                // This prevents us from having to reload tracks if we want to toggle them on or off
+                this.tracks = TrackService.getTracks(showHidden: nil)
+                DispatchQueue.main.async {
+                    this.refreshArtists()
+                }
             }
+        }
+    }
+    
+    private func setVisibleArtists() {
+        let searchTerm = searchText.lowercased()
+        if (searchTerm.isEmpty) {
+            visibleArtists = artists
+        } else {
+            visibleArtists = artists.filter { $0.lowercased().contains(searchTerm) }
         }
     }
     
@@ -104,13 +129,14 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         filter.setIsHiddenAnimated(true)
     }
     
-    private func loadWebArtists() {
+    private func loadWebTracks() {
         let url = "track?userId=\(user!.id)&sort=name,ASC&size=100000&page=0&showHidden=true"
         HttpRequester.get(url, LiveTrackRequest.self) { [weak self] res, status, _ in
             guard let this = self else { return }
             guard let trackResponse = res?.content, status.isSuccessful() else {
                 this.artists = []
                 this.visibleArtists = []
+                this.tracks = []
                 
                 DispatchQueue.main.async {
                     Toast.show("Could not load artists")
@@ -120,13 +146,15 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
             }
             
             this.tracks = trackResponse.map { $0.asTrack(userId: this.user!.id) }
-            this.reloadArtists()
+            DispatchQueue.main.async {
+                this.refreshArtists()
+            }
         }
     }
     
-    private func reloadArtists() {
-        artists = TrackService.getArtistsFromTracks(tracks)
-        visibleArtists = artists
+    private func refreshArtists() {
+        artists = TrackService.getArtistsFromTracks(tracks, showHidden: showHiddenTracks)
+        setVisibleArtists()
         
         DispatchQueue.main.async { [weak self] in
             self?.activitySpinner.stopAnimating()
@@ -162,25 +190,31 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
 
         let artist = cell.artist!
         
-        let albums = TrackService.getAlbumsFromTracks(tracks, artist: artist)
+        let albums = TrackService.getAlbumsFromTracks(tracks, artist: artist, showHidden: showHiddenTracks)
         
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {
             if (albums.count == 1) {
-                return TrackViewController(albums.first!.name, originalView: .ARTIST, artistFilter: artist, albumFilter: albums.first!.name, user: user)
+                return TrackViewController(albums.first!.name, originalView: .ARTIST, artistFilter: artist, albumFilter: albums.first!.name, user: user, showingHidden: showHiddenTracks)
             } else {
-                return AlbumViewController(cell.nameLabel.text!, albums, cell.artist!, user: user)
+                return AlbumViewController(cell.nameLabel.text!, albums, tracks, cell.artist!, user: user, showingHidden: showHiddenTracks)
             }
         }()
         
         navigationController!.pushViewController(view, animated: true)
     }
     
-    init(_ title: String, originalView: LibraryViewType? = nil, user: User? = nil) {
+    init(
+        _ title: String,
+        originalView: LibraryViewType? = nil,
+        user: User? = nil,
+        showingHidden: Bool? = nil
+    ) {
         self.originalView = originalView
         self.user = user
         self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
-
+        self.showHiddenTracks = showingHidden ?? (user != nil)
+        
         super.init(nibName: nil, bundle: nil)
 
         self.title = title

@@ -178,12 +178,16 @@ class TrackService {
         }
     }
     
-    static func getArtistsFromTracks(_ tracks: [Track]) -> [String] {
+    static func getArtistsFromTracks(_ tracks: [Track], showHidden: Bool = false) -> [String] {
         var uniqueArtists = Set<String>()
         
         var artists: [String] = []
         
-        tracks.forEach { track in
+        for track in tracks {
+            if track.isHidden && !showHidden {
+                continue
+            }
+            
             let lowerArtist = track.artist.lowercased()
             if !uniqueArtists.contains(lowerArtist) {
                 uniqueArtists.insert(lowerArtist)
@@ -202,12 +206,16 @@ class TrackService {
         return artists.sorted()
     }
     
-    static func getAlbumsFromTracks(_ tracks: [Track], artist: String? = nil) -> [Album] {
+    static func getAlbumsFromTracks(_ tracks: [Track], artist: String? = nil, showHidden: Bool = false) -> [Album] {
         var uniqueAlbums: [String : Track] = [:]
         
         let lowerArtist = artist?.lowercased() ?? ""
         
-        tracks.forEach { track in
+        for track in tracks {
+            if track.isHidden && !showHidden {
+                continue
+            }
+            
             if artist == nil
                 || (track.artist.lowercased().contains(lowerArtist) || track.featuring.lowercased().contains(lowerArtist))
                 // If artist is an empty string, the track needs to not have an artist

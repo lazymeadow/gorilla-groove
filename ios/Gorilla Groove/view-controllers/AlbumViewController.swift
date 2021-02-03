@@ -9,12 +9,24 @@ import Foundation
 // but I'm so close with being done working on this that I'm just.... not going to. At least not right now.
 class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     private var albums: [Album] = []
+    private var tracks: [Track]
     private var visibleAlbums: [Album] = []
     
+    private var showHiddenTracks: Bool
+    private var lastOfflineMode: Bool
     private var artist: String? = nil
     
-    private lazy var filterOptions = [
+    private lazy var filterOptions: [[FilterOption]] = [
         MyLibraryHelper.getNavigationOptions(vc: self, viewType: artist != nil ? .ARTIST : .ALBUM, user: user),
+        [
+            FilterOption("Show Hidden Tracks", filterImage: showHiddenTracks ? .CHECKED : .NONE) { [weak self] option in
+                guard let this = self else { return }
+                this.showHiddenTracks = !this.showHiddenTracks
+                option.filterImage = this.showHiddenTracks ? .CHECKED : .NONE
+                this.filter.reloadData()
+                this.refreshAlbums()
+            },
+        ]
     ]
     
     private lazy var filter = TableFilter(filterOptions, vc: self)
@@ -61,14 +73,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
             tableView: tableView,
             onTap: { [weak self] in self?.filter.setIsHiddenAnimated(true) }
         ) { [weak self] input in
-            guard let this = self else { return }
-            
-            let searchTerm = input.lowercased()
-            if (searchTerm.isEmpty) {
-                this.visibleAlbums = this.albums
-            } else {
-                this.visibleAlbums = this.albums.filter { $0.name.lowercased().contains(searchTerm) }
-            }
+            self?.setVisibleAlbums()
         }
         
         tableView.tableFooterView = UIView(frame: .zero)
@@ -83,8 +88,46 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         GGNavLog.info("Loaded album view")
         
-        if let user = user, albums.isEmpty {
-            getUserAlbums(user)
+        if albums.isEmpty || lastOfflineMode != OfflineStorageService.offlineModeEnabled {
+            loadTracks()
+        }
+    }
+    
+    private func loadTracks() {
+        activitySpinner.startAnimating()
+
+        if let user = user {
+            loadWebTracks(user: user)
+        } else {
+            DispatchQueue.global().async { [weak self] in
+                guard let this = self else { return }
+                
+                // Always get hidden tracks (aka nil which gets both). We'll filter them out later if we don't want to see them.
+                // This prevents us from having to reload tracks if we want to toggle them on or off
+                this.tracks = TrackService.getTracks(showHidden: nil)
+                DispatchQueue.main.async {
+                    this.refreshAlbums()
+                }
+            }
+        }
+    }
+    
+    private func refreshAlbums() {
+        albums = TrackService.getAlbumsFromTracks(tracks, showHidden: showHiddenTracks)
+        setVisibleAlbums()
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.activitySpinner.stopAnimating()
+            self?.tableView.reloadData()
+        }
+    }
+    
+    private func setVisibleAlbums() {
+        let searchTerm = searchText.lowercased()
+        if (searchTerm.isEmpty) {
+            visibleAlbums = albums
+        } else {
+            visibleAlbums = albums.filter { $0.name.lowercased().contains(searchTerm) }
         }
     }
     
@@ -124,7 +167,8 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
             originalView: artist == nil ? .ALBUM : .ARTIST,
             artistFilter: artist,
             albumFilter: albumToLoad,
-            user: user
+            user: user,
+            showingHidden: showHiddenTracks
         )
         navigationController!.pushViewController(view, animated: true)
     }
@@ -158,7 +202,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         album.imageLoadFired = true
         
         DispatchQueue.global().async {
-            let linkRequestLink = "file/link/\(album.trackIdForArt)?artSize=SMALL"
+            let linkRequestLink = "file/link/\(album.trackIdForArt)?artSize=SMALL&linkFetchType=ART"
             HttpRequester.get(linkRequestLink, TrackLinkResponse.self) { response, status, err in
                 if (status < 200 || status >= 300) {
                     return
@@ -221,9 +265,9 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.activitySpinner.stopAnimating()
     }
     
-    private func getUserAlbums(_ user: User) {
+    private func loadWebTracks(user: User) {
         self.activitySpinner.startAnimating()
-
+        
         let url = "track?userId=\(user.id)&sort=name,ASC&size=100000&page=0&showHidden=true"
         HttpRequester.get(url, LiveTrackRequest.self) { [weak self] res, status, _ in
             guard let this = self else { return }
@@ -240,17 +284,27 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
                 return
             }
             
-            let tracks = trackResponse.map { $0.asTrack(userId: user.id) }
+            this.tracks = trackResponse.map { $0.asTrack(userId: user.id) }
             DispatchQueue.main.async {
-                this.setAlbums(TrackService.getAlbumsFromTracks(tracks))
+                this.refreshAlbums()
             }
         }
     }
     
-    init(_ title: String, _ albums: [Album], _ artist: String?, user: User? = nil) {
+    init(
+        _ title: String,
+        _ albums: [Album],
+        _ tracks: [Track] = [],
+        _ artist: String?,
+        user: User? = nil,
+        showingHidden: Bool? = nil
+    ) {
         self.artist = artist
         self.user = user
-        
+        self.showHiddenTracks = showingHidden ?? (user != nil)
+        self.tracks = tracks
+        self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
+
         super.init(nibName: nil, bundle: nil)
         
         self.title = title

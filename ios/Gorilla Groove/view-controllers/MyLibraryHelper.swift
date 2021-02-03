@@ -27,14 +27,9 @@ class MyLibraryHelper {
     }
     
     static func loadAlbumView(vc: UIViewController, user: User?) {
-        var albums: [Album] = []
-        if user == nil {
-            albums = TrackService.getAlbumsFromTracks(TrackService.getTracks())
-        }
-        
         let title = user == nil ? "My Library" : user!.name
         
-        let view = AlbumViewController(title, albums, nil, user: user)
+        let view = AlbumViewController(title, [], [], nil, user: user)
         let backItem = UIBarButtonItem()
         backItem.title = "Albums"
         view.navigationItem.backBarButtonItem = backItem

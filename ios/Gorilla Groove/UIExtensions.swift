@@ -61,3 +61,16 @@ extension UIView {
         }
     }
 }
+
+extension UIViewController {
+    var searchText: String {
+        get {
+            guard let searchController = self.navigationItem.searchController else {
+                GGLog.warning("No search controller found when getting search term for controller: \(self.title ?? "-1")")
+                return ""
+            }
+            
+            return searchController.searchBar.text ?? ""
+        }
+    }
+}

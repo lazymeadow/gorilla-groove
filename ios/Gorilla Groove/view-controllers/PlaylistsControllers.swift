@@ -4,10 +4,7 @@ import UIKit
 
 class PlaylistsController : UITableViewController {
 
-    var playlists: Array<Playlist> = []
-    
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private var offlineModeEnabled: Bool
+    var playlists: [Playlist] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,7 +37,7 @@ class PlaylistsController : UITableViewController {
         cell.textLabel!.text = playlists[indexPath.row].name
         cell.data = playlists[indexPath.row]
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(sender:)))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
         
         return cell
@@ -52,7 +49,7 @@ class PlaylistsController : UITableViewController {
         
         let playlist = cell.data!
         
-        let view = TrackViewController(playlist.name, showingHidden: true, originalView: .PLAYLIST, loadTracksFunc: {
+        let view = TrackViewController(playlist.name, originalView: .PLAYLIST, loadTracksFunc: {
             let isSongCached = OfflineStorageService.offlineModeEnabled ? true : nil
             return TrackDao.getTracksForPlaylist(playlist.id, isSongCached: isSongCached)
         })

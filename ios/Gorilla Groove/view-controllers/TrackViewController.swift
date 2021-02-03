@@ -8,7 +8,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private var trackIdToTrack: [Int: Track] = [:]
     private var visibleTrackIds: [Int] = []
     private let scrollPlayedTrackIntoView: Bool
-    private let showingHidden: Bool
     private let tableView = UITableView()
     private let artistFilter: String?
     private let albumFilter: String?
@@ -155,18 +154,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             controller: self,
             tableView: tableView,
             onTap: { [weak self] in self?.filter?.setIsHiddenAnimated(true) }
-        ) { [weak self] input in
-            guard let this = self else { return }
-            
-            let searchTerm = input.lowercased()
-            if (searchTerm.isEmpty) {
-                this.visibleTrackIds = this.trackIds
-            } else {
-                this.visibleTrackIds = this.trackIds.filter {
-                    let track = this.trackIdToTrack[$0]!
-                    return track.name.lowercased().contains(searchTerm)
-                }
-            }
+        ) { [weak self] _ in
+            self?.setVisibleTracks()
         }
         
         NowPlayingTracks.addTrackChangeObserver(self) { vc, track, type in
@@ -275,6 +264,18 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
+    private func setVisibleTracks() {
+        let searchTerm = searchText.lowercased()
+        if (searchTerm.isEmpty) {
+            visibleTrackIds = trackIds
+        } else {
+            visibleTrackIds = trackIds.filter {
+                let track = trackIdToTrack[$0]!
+                return track.name.lowercased().contains(searchTerm)
+            }
+        }
+    }
+    
     private func loadDbTracks() {
         DispatchQueue.global().async { [weak self] in
             guard let this = self else { return }
@@ -291,9 +292,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             let tracks = loadFunc()
             this.trackIds = tracks.map { $0.id }
             this.trackIdToTrack = tracks.keyBy { $0.id }
-            this.visibleTrackIds = this.trackIds
             
             DispatchQueue.main.async {
+                this.setVisibleTracks()
+                
                 this.activitySpinner.stopAnimating()
                 this.tableView.reloadData()
                 
@@ -330,9 +332,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             guard var tracks = res?.content, status.isSuccessful() else {
                 this.trackIds = []
                 this.trackIdToTrack = [:]
-                this.visibleTrackIds = []
                 
                 DispatchQueue.main.async {
+                    this.setVisibleTracks()
+
                     Toast.show("Could not load tracks")
                     this.tableView.reloadData()
                 }
@@ -360,9 +363,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             
             this.trackIds = tracks.map { $0.id }
             this.trackIdToTrack = tracks.map { $0.asTrack(userId: this.user?.id ?? 0) }.keyBy { $0.id }
-            this.visibleTrackIds = this.trackIds
             
             DispatchQueue.main.async {
+                this.setVisibleTracks()
+
                 this.activitySpinner.stopAnimating()
                 this.tableView.reloadData()
                 
@@ -378,17 +382,16 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     init(
         _ title: String,
         scrollPlayedTrackIntoView: Bool = false,
-        showingHidden: Bool = false,
         originalView: LibraryViewType,
         artistFilter: String? = nil,
         albumFilter: String? = nil,
         user: User? = nil,
         alwaysReload: Bool = false,
         trackContextView: TrackContextView? = nil,
+        showingHidden: Bool? = nil,
         loadTracksFunc: (() -> [Track])? = nil
     ) {
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
-        self.showingHidden = showingHidden
         self.loadTracksFunc = loadTracksFunc
         self.originalView = originalView
         self.artistFilter = artistFilter
@@ -397,7 +400,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.alwaysReload = alwaysReload
         self.trackContextView = trackContextView ?? (user == nil ? .MY_LIBRARY : .OTHER_USER)
         self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
-        self.showHiddenTracks = user != nil || originalView == .PLAYLIST
+        self.showHiddenTracks = showingHidden ?? (user != nil) // Hidden tracks are for our own benefit, so don't show them by default when looking at our own library (user == nil)
         
         super.init(nibName: nil, bundle: nil)
         
@@ -423,7 +426,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 }
             }
             
-            if changeType == .DELETION || (!vc.showingHidden && changedTrack.isHidden) {
+            if changeType == .DELETION || (!vc.showHiddenTracks && changedTrack.isHidden) {
                 GGLog.info("Removing existing track from track list in response to change")
                 if let index = vc.visibleTrackIds.index(where: { $0 == changedTrack.id }) {
                     vc.visibleTrackIds.remove(at: index)

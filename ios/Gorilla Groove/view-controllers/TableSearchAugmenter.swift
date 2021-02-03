@@ -35,7 +35,6 @@ class TableSearchAugmenter {
         searchController.searchResultsUpdater = searchDelegate
         searchController.searchBar.delegate = searchDelegate
     }
-
     
     private class SearchControllerDelegate: NSObject, UISearchResultsUpdating, UISearchBarDelegate {
         weak var controller: UIViewController?
@@ -62,7 +61,6 @@ class TableSearchAugmenter {
             let searchTerm = searchController.searchBar.text!
 
             textChanged(searchTerm)
-
             
             tableView.reloadData()
         }
