@@ -10,6 +10,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         CrashReportService.initialize()
         
         GGLog.info("\n \nApp was booted\n \n")
+
+        // No window is created because I deleted the root storyboard (sound those foul beasts into the abyss)
+        self.window = UIWindow(frame: UIScreen.main.bounds)
         
         UINavigationBar.appearance().barTintColor = Colors.navigationBackground
         UINavigationBar.appearance().tintColor = Colors.primary
@@ -28,7 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let loginState = FileState.read(LoginState.self) {
             GGLog.debug("User was previously logged in")
             Database.openDatabase(userId: loginState.id)
-
+            
             if (ServerSynchronizer.lastSync == Date.minimum()) {
                 if AppDelegate.getAppVersion() == "1.3.1.1" {
                     GGLog.info("User is on 1.3.1.1 and needs to resync to fix a bug. Going to sync screen")
@@ -43,8 +46,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
+        if window!.rootViewController == nil {
+            window!.rootViewController = LoginViewController()
+        }
+        
         SettingsService.initialize()
 
+        window!.makeKeyAndVisible()
+        
         return true
     }
     

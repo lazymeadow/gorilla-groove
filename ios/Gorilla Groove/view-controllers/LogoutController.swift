@@ -70,16 +70,12 @@ class LogoutController : UIViewController {
         }
         FileState.clear(LoginState.self)
         WebSocket.disconnect()
-        
-        // Until we ditch the storyboard, have to navigate to the login view this way
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(withIdentifier: "LoginController")
-        
+                
         // When I used the present() code, it would make the Sync view not load properly
         // after someone logged out? It seems like setting the root view is the only way
         // to navigate anywhere (outside a navigation controller) that doesn't have side effects...
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        appDelegate.window!.rootViewController = vc
+        appDelegate.window!.rootViewController = LoginViewController()
 //        vc.modalPresentationStyle = .fullScreen
 //        vc.modalTransitionStyle = .crossDissolve
 //        self.present(vc, animated: true)

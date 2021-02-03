@@ -15,8 +15,6 @@
 		A829AC2823D158E60034AD69 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2723D158E60034AD69 /* AudioPlayer.swift */; };
 		A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A829AC2923D3B0DE0034AD69 /* Colors.swift */; };
 		A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100ED23BD339D00D6EA2D /* AppDelegate.swift */; };
-		A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100EF23BD339D00D6EA2D /* ViewController.swift */; };
-		A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F123BD339D00D6EA2D /* Main.storyboard */; };
 		A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A89100F423BD339E00D6EA2D /* Assets.xcassets */; };
 		A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */; };
 		E83B012124CE82F600C2C5E4 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83B012024CE82F600C2C5E4 /* Database.swift */; };
@@ -85,6 +83,7 @@
 		E88053C125AE818F00A7D0F3 /* DownloadFromYTController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C025AE818F00A7D0F3 /* DownloadFromYTController.swift */; };
 		E88053C425B1142D00A7D0F3 /* AddFromSpotifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */; };
 		E889441025CA3E4C005D5FB4 /* GGActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */; };
+		E889441425CA4352005D5FB4 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889441325CA4352005D5FB4 /* LoginViewController.swift */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8DB1B2525BDE39D00556175 /* GGCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */; };
@@ -102,8 +101,6 @@
 		A829AC2923D3B0DE0034AD69 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gorilla Groove.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A89100ED23BD339D00D6EA2D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		A89100EF23BD339D00D6EA2D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		A89100F223BD339D00D6EA2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		A89100F423BD339E00D6EA2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A89100F723BD339E00D6EA2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -168,6 +165,7 @@
 		E88053C025AE818F00A7D0F3 /* DownloadFromYTController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFromYTController.swift; sourceTree = "<group>"; };
 		E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFromSpotifyController.swift; sourceTree = "<group>"; };
 		E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGActionSheet.swift; sourceTree = "<group>"; };
+		E889441325CA4352005D5FB4 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGCheckbox.swift; sourceTree = "<group>"; };
@@ -209,7 +207,6 @@
 		A829AC2123CC2ABC0034AD69 /* storyboards */ = {
 			isa = PBXGroup;
 			children = (
-				A89100F123BD339D00D6EA2D /* Main.storyboard */,
 				A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */,
 			);
 			path = storyboards;
@@ -221,7 +218,7 @@
 				E85A366A25AD41D7005C4FDD /* add-track */,
 				E85B598425A413950071496D /* review-queue */,
 				E85E046225C8F566008A43F2 /* users */,
-				A89100EF23BD339D00D6EA2D /* ViewController.swift */,
+				E889441325CA4352005D5FB4 /* LoginViewController.swift */,
 				A815B08723C2EE05003899B8 /* MyLibraryHelper.swift */,
 				A829AC2323CC2C1D0034AD69 /* TrackViewCell.swift */,
 				E85A4DCE23D4D2AE006BD7EE /* MediaControlsController.swift */,
@@ -424,7 +421,6 @@
 				E871186525675C1C007B8F16 /* Settings.bundle in Resources */,
 				A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */,
 				A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */,
-				A89100F323BD339D00D6EA2D /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -435,7 +431,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A89100F023BD339D00D6EA2D /* ViewController.swift in Sources */,
 				A829AC2A23D3B0DE0034AD69 /* Colors.swift in Sources */,
 				E86EB67C24ECA3F80066CB4E /* Playlist.swift in Sources */,
 				E8DB1B2525BDE39D00556175 /* GGCheckbox.swift in Sources */,
@@ -459,6 +454,7 @@
 				E85A366425AA3395005C4FDD /* Extensions.swift in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				E8598FB6250B17D900D70E9F /* WebSocket.swift in Sources */,
+				E889441425CA4352005D5FB4 /* LoginViewController.swift in Sources */,
 				E86F97FF25B627380015C6CE /* BackgroundTaskService.swift in Sources */,
 				E88053C125AE818F00A7D0F3 /* DownloadFromYTController.swift in Sources */,
 				E8588F74258EB54600ACA919 /* ReviewSourceSynchronizer.swift in Sources */,
@@ -514,14 +510,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		A89100F123BD339D00D6EA2D /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				A89100F223BD339D00D6EA2D /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
