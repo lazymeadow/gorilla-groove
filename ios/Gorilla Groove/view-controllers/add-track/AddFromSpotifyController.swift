@@ -408,7 +408,7 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
     private func showEditMenu(_ track: SpotifyTrack) {
         GGNavLog.info("User tapped a review source")
         
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let alert = GGActionSheet.create()
         
         let title = track.previewUrl == nil ? "No Preview Available" : "Play Preview"
         alert.addAction(UIAlertAction(title: title, style: .default, handler: { (_) in

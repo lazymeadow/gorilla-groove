@@ -7,7 +7,7 @@ class TrackContextMenu {
         view: TrackContextView,
         parentVc: UIViewController
     ) -> UIAlertController {
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let alert = GGActionSheet.create()
         
         alert.addAction(UIAlertAction(title: "Play Next", style: .default, handler: { _ in
             NowPlayingTracks.addTrackNext(track)

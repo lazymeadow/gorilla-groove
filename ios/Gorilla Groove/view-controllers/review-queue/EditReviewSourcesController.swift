@@ -68,7 +68,7 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
     @objc func addReviewSource() {
         GGNavLog.info("User tapped add review source")
         
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let alert = GGActionSheet.create()
         alert.addAction(UIAlertAction(title: "Artist", style: .default, handler: { (_) in
             GGNavLog.info("User tapped add Artist source")
             
@@ -96,7 +96,7 @@ class EditReviewSourcesController : UIViewController, UITableViewDataSource, UIT
     private func showEditMenu(_ source: ReviewSource) {
         GGNavLog.info("User tapped a review source")
         
-        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let alert = GGActionSheet.create()
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
             GGNavLog.info("User tapped delete review source")
             self.activitySpinner.startAnimating()

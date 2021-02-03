@@ -84,6 +84,7 @@
 		E873DE03258AF97600207F99 /* LogoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DE02258AF97600207F99 /* LogoutController.swift */; };
 		E88053C125AE818F00A7D0F3 /* DownloadFromYTController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C025AE818F00A7D0F3 /* DownloadFromYTController.swift */; };
 		E88053C425B1142D00A7D0F3 /* AddFromSpotifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */; };
+		E889441025CA3E4C005D5FB4 /* GGActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */; };
 		E889822624EF4DE200E38CE9 /* CachingPlayerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */; };
 		E8C2ABE224E102A10050A01E /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C2ABE124E102A10050A01E /* User.swift */; };
 		E8DB1B2525BDE39D00556175 /* GGCheckbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */; };
@@ -166,6 +167,7 @@
 		E873DE02258AF97600207F99 /* LogoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoutController.swift; sourceTree = "<group>"; };
 		E88053C025AE818F00A7D0F3 /* DownloadFromYTController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFromYTController.swift; sourceTree = "<group>"; };
 		E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFromSpotifyController.swift; sourceTree = "<group>"; };
+		E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGActionSheet.swift; sourceTree = "<group>"; };
 		E889822524EF4DE200E38CE9 /* CachingPlayerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachingPlayerItem.swift; sourceTree = "<group>"; };
 		E8C2ABE124E102A10050A01E /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGCheckbox.swift; sourceTree = "<group>"; };
@@ -243,6 +245,7 @@
 				E86F980525BAA2390015C6CE /* EditMetadataController.swift */,
 				E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */,
 				E8DB1B2825BFB46B00556175 /* TableFilter.swift */,
+				E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -473,6 +476,7 @@
 				E85A4DD523D56D13006BD7EE /* UserState.swift in Sources */,
 				E8588F71258EB31B00ACA919 /* ReviewSource.swift in Sources */,
 				E8588F6B258D182E00ACA919 /* PlaylistTrackSynchronizer.swift in Sources */,
+				E889441025CA3E4C005D5FB4 /* GGActionSheet.swift in Sources */,
 				E840A588256DA19F009F3C9E /* GGLog.swift in Sources */,
 				E8711868256777BD007B8F16 /* SettingsService.swift in Sources */,
 				E86AFF1F23E963A8005B84EB /* TableViewCell.swift in Sources */,
@@ -658,7 +662,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.6.0;
+				MARKETING_VERSION = 2.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -679,7 +683,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.6.0;
+				MARKETING_VERSION = 2.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
