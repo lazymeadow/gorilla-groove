@@ -8,6 +8,7 @@ import com.example.groove.db.model.UserPermission
 import com.example.groove.db.model.enums.PermissionType
 import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.util.DateUtils
+import com.example.groove.util.DateUtils.now
 import com.example.groove.util.isNewerThan
 import com.example.groove.util.loadLoggedInUser
 import org.springframework.security.crypto.bcrypt.BCrypt
@@ -67,7 +68,8 @@ class UserService(
 	@Transactional
 	fun updateOwnLastLogin() {
 		val user = loadLoggedInUser()
-		user.lastLogin = DateUtils.now()
+		user.lastLogin = now()
+		user.updatedAt = user.lastLogin
 
 		userRepository.save(user)
 	}
