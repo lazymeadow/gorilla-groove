@@ -225,13 +225,13 @@ class TrackService(
 	}
 
 	@Transactional
-	fun deleteTracks(loadLoggedInUser: User, trackIds: List<Long>) {
-		val tracks = trackRepository.findAllById(trackIds)
+	fun deleteTracks(user: User, trackIds: List<Long>) {
+		val tracks = trackRepository.findAllById(trackIds).toList()
 
 		// Check all tracks for permissions FIRST. Otherwise, we might delete a track from disk,
 		// then throw an exception and roll back the DB, but the disk deletion would not be undone
 		tracks.forEach { track ->
-			if (track.user.id != loadLoggedInUser.id) {
+			if (track.user.id != user.id) {
 				throw IllegalArgumentException("Track with ID: ${track.id} not found")
 			}
 		}
@@ -243,6 +243,8 @@ class TrackService(
 
 			deleteFileIfUnused(track.fileName)
 		}
+
+		playlistService.deletePlaylistTracksForTracks(user, tracks)
 	}
 
 	private fun deleteFileIfUnused(fileName: String) {

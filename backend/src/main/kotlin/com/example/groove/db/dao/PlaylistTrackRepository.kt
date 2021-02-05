@@ -5,6 +5,7 @@ import com.example.groove.db.model.PlaylistTrack
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.sql.Timestamp
@@ -13,7 +14,7 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 	@Query("SELECT pt " +
 			"FROM PlaylistTrack pt " +
 			"WHERE pt.playlist = :playlist " +
-			"AND pt.track.deleted = FALSE " +
+			"AND pt.deleted = FALSE " +
 			"AND (:name IS NULL OR pt.track.name LIKE %:name%) " +
 			"AND (:artist IS NULL OR pt.track.artist LIKE %:artist%) " +
 			"AND (:album IS NULL OR pt.track.album LIKE %:album%)" +
@@ -66,4 +67,45 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 			)
 			""")
 	override fun getLastModifiedRow(userId: Long): Timestamp?
+
+	@Query("""
+			SELECT max(pt.sortOrder)
+			FROM PlaylistTrack pt
+			WHERE pt.playlist.id = :id
+			AND pt.deleted = FALSE
+			""")
+	fun getHighestSortOrderOnPlaylist(id: Long): Int?
+
+	@Modifying
+	@Query("""
+		UPDATE PlaylistTrack pt
+		SET pt.updatedAt = :updatedAt, pt.deleted = TRUE
+		WHERE pt.track.id IN (:ids)
+	""")
+	fun softDeletePlaylistTracksByTrackIds(
+			updatedAt: Timestamp,
+			ids: List<Long>
+	)
+
+	@Modifying
+	@Query("""
+		UPDATE PlaylistTrack pt
+		SET pt.updatedAt = :updatedAt, pt.deleted = TRUE
+		WHERE pt.playlist.id IN (:ids)
+	""")
+	fun softDeletePlaylistTracksByPlaylistIds(
+			updatedAt: Timestamp,
+			ids: List<Long>
+	)
+
+	@Modifying
+	@Query("""
+		UPDATE PlaylistTrack pt
+		SET pt.updatedAt = :updatedAt, pt.deleted = TRUE
+		WHERE pt.id IN (:ids)
+	""")
+	fun softDeleteByIds(
+			updatedAt: Timestamp,
+			ids: List<Long>
+	)
 }

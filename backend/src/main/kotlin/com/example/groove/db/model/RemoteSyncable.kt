@@ -1,8 +1,9 @@
 package com.example.groove.db.model
 
+import com.example.groove.db.dao.GGEntity
 import java.sql.Timestamp
 
-interface RemoteSyncable : SyncDTO {
+interface RemoteSyncable : SyncDTO, GGEntity {
 	override val id: Long
 
 	val createdAt: Timestamp

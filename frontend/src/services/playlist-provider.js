@@ -63,7 +63,7 @@ export class PlaylistProvider extends React.Component {
 
 	addToPlaylist(playlistId, trackIds) {
 		return Api.post('playlist/track', {
-			playlistId: playlistId,
+			playlistIds: [playlistId],
 			trackIds: trackIds
 		}).then(() => {
 			console.log("Wow, Ayrton. Great moves. Keep it up. I'm proud of you.");

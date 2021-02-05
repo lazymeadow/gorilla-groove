@@ -2,6 +2,7 @@
 
 package com.example.groove.exception.handler
 
+import com.example.groove.exception.DataConflictException
 import com.example.groove.exception.PermissionDeniedException
 import com.example.groove.exception.ResourceNotFoundException
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException
@@ -37,5 +38,11 @@ class BadRequestExceptionHandler {
 	@ExceptionHandler(PermissionDeniedException::class)
 	protected fun handleUnauthorized(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
 		resp.sendError(HttpStatus.FORBIDDEN.value(), ex.message)
+	}
+
+	// These exceptions should return a 409
+	@ExceptionHandler(DataConflictException::class)
+	protected fun handleConflict(req: HttpServletRequest, ex: Exception, resp: HttpServletResponse) {
+		resp.sendError(HttpStatus.CONFLICT.value(), ex.message)
 	}
 }

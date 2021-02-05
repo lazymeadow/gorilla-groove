@@ -4,6 +4,7 @@ import com.example.groove.db.model.Playlist
 import com.example.groove.db.model.PlaylistTrack
 import com.example.groove.services.PlaylistService
 import com.example.groove.util.loadLoggedInUser
+import com.example.groove.util.logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
@@ -22,7 +23,9 @@ class PlaylistController(
 
 	@PostMapping
     fun createPlaylist(@RequestBody createPlaylistDTO: CreatePlaylistDTO): Playlist {
-		return playlistService.createPlaylist(loadLoggedInUser(), createPlaylistDTO.name)
+		val user = loadLoggedInUser()
+		logger.info("User ${user.name} is creating a playlist with name ${createPlaylistDTO.name}")
+		return playlistService.createPlaylist(user, createPlaylistDTO.name)
     }
 
 	@PutMapping("/{playlistId}")
@@ -30,21 +33,27 @@ class PlaylistController(
 			@PathVariable playlistId: Long,
 			@RequestBody createPlaylistDTO: CreatePlaylistDTO
 	): Playlist {
-		return playlistService.renamePlaylist(loadLoggedInUser(), playlistId, createPlaylistDTO.name)
+		val user = loadLoggedInUser()
+		logger.info("User ${user.name} is editing playlist $playlistId")
+		return playlistService.renamePlaylist(user, playlistId, createPlaylistDTO.name)
 	}
 
 	@DeleteMapping("/{playlistId}")
 	fun deletePlaylist(@PathVariable playlistId: Long) {
-		return playlistService.deletePlaylist(loadLoggedInUser(), playlistId)
+		val user = loadLoggedInUser()
+		logger.info("User ${user.name} is deleting playlist $playlistId")
+		return playlistService.deletePlaylist(user, playlistId)
 	}
 
 	@PostMapping("/track")
 	fun addToPlaylist(@RequestBody addPlaylistTrackDTO: AddPlaylistTrackDTO) {
-		playlistService.addTracksToPlaylist(addPlaylistTrackDTO.playlistId, addPlaylistTrackDTO.trackIds)
+		logger.info("User ${loadLoggedInUser().name} is adding tracks ${addPlaylistTrackDTO.trackIds} to playlists ${addPlaylistTrackDTO.playlistIds}")
+		playlistService.addTracksToPlaylists(addPlaylistTrackDTO.playlistIds, addPlaylistTrackDTO.trackIds)
 	}
 
 	@DeleteMapping("/track")
-	fun removeFromPlaylist(@RequestBody removePlaylistTrackDTO: RemovePlaylistTrackDTO) {
+	fun removeFromPlaylist(@RequestBody removePlaylistTrackDTO: PlaylistTrackListDTO) {
+		logger.info("User ${loadLoggedInUser().name} is removing playlist tracks ${removePlaylistTrackDTO.playlistTrackIds}")
 		playlistService.deletePlaylistTracks(removePlaylistTrackDTO.playlistTrackIds)
 	}
 
@@ -60,16 +69,33 @@ class PlaylistController(
 		return playlistService.getTracks(name, artist, album, playlistId, searchTerm, pageable)
     }
 
+	@PutMapping("/track/sort-order")
+	fun setPlaylistTrackOrder(
+		@RequestBody body: ReorderPlaylistRequest
+	) {
+		logger.info("User ${loadLoggedInUser().name} is reordering playlist ${body.playlistId}")
+		return playlistService.reorderPlaylist(body.playlistId, body.playlistTrackIds)
+	}
+
 	data class CreatePlaylistDTO(
 			val name: String
 	)
 
 	data class AddPlaylistTrackDTO(
-			val playlistId: Long,
+			val playlistIds: List<Long>,
 			val trackIds: List<Long>
 	)
 
-	data class RemovePlaylistTrackDTO(
+	data class PlaylistTrackListDTO(
 			val playlistTrackIds: List<Long>
 	)
+
+	data class ReorderPlaylistRequest(
+			val playlistId: Long,
+			val playlistTrackIds: List<Long>
+	)
+
+	companion object {
+		private val logger = logger()
+	}
 }

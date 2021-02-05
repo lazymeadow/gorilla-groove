@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "playlist")
-data class Playlist(
+class Playlist(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)

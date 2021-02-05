@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "playlist_track")
-data class PlaylistTrack(
+class PlaylistTrack(
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,17 +15,20 @@ data class PlaylistTrack(
 
 		@JsonIgnore
 		@ManyToOne
-		@JoinColumn(name = "playlist_id", nullable = false)
+		@JoinColumn(name = "playlist_id")
 		val playlist: Playlist,
 
 		@ManyToOne
-		@JoinColumn(name = "track_id", nullable = false)
+		@JoinColumn(name = "track_id")
 		val track: Track,
 
-		@Column(name = "created_at", nullable = false)
+		@Column(name = "sort_order")
+		var sortOrder: Int = 0,
+
+		@Column(name = "created_at")
 		override var createdAt: Timestamp = now(),
 
-		@Column(name = "updated_at", nullable = false)
+		@Column(name = "updated_at")
 		override var updatedAt: Timestamp = now(),
 
 		@JsonIgnore
