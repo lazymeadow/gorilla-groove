@@ -34,4 +34,6 @@ class PlaylistTrack(
 		@JsonIgnore
 		@Column(columnDefinition = "BIT")
 		override var deleted: Boolean = false
-) : RemoteSyncable
+) : RemoteSyncable {
+	val playlistId get() = playlist.id
+}
