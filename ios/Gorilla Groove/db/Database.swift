@@ -124,7 +124,7 @@ class Database {
     
     static private func migrate(_ userId: Int) {
         let currentVersion = getDbVersion()
-        let targetVersion = 10
+        let targetVersion = 11
         
         logger.info("Existing DB is using version: \(currentVersion)")
 
@@ -272,6 +272,8 @@ class Database {
             executeOrFail("""
                 ALTER TABLE "user" RENAME TO "user_old";
             """)
+            // Epic fail. This does NOT COPY THE UNIQUE CONSTRAINT ON ID! If you are reading this for copy paste inspiration,
+            // make sure you add a unique index after
             executeOrFail("""
                 CREATE TABLE "user" AS SELECT id, name, last_login, created_at FROM user_old;
             """)
@@ -314,6 +316,28 @@ class Database {
             executeOrFail("ALTER TABLE review_source ADD active INT NOT NULL DEFAULT 1;")
         }
         
+        if currentVersion < 11 {
+            logger.info("Fixing broken unique constraints on user and playlist tables and removing any duplicates that were added")
+            executeOrFail("""
+                DELETE FROM user
+                    WHERE rowid NOT IN (SELECT max(rowid)
+                    FROM user
+                    GROUP BY id)
+            """)
+            executeOrFail("CREATE UNIQUE INDEX unique_user_id ON user(id);")
+            
+            executeOrFail("""
+                DELETE FROM playlist
+                    WHERE rowid NOT IN (SELECT max(rowid)
+                    FROM playlist
+                    GROUP BY id)
+            """)
+            executeOrFail("CREATE UNIQUE INDEX unique_playlist_id ON playlist(id);")
+            
+            logger.info("Adding sort_order to playlist_track")
+            executeOrFail("ALTER TABLE playlist_track ADD sort_order INT NOT NULL DEFAULT 0;")
+
+        }
         
         executeOrFail("UPDATE db_version SET version = \(targetVersion)")
         logger.info("Database was upgraded to version \(targetVersion)")

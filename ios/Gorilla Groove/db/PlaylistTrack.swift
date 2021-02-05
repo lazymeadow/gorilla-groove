@@ -3,6 +3,7 @@ import Foundation
 public struct PlaylistTrack : Entity {
     public var id: Int
     public var playlistId: Int
+    public var sortOrder: Int
     public var createdAt: Date
     public var trackId: Int
     
@@ -10,6 +11,7 @@ public struct PlaylistTrack : Entity {
         return PlaylistTrack(
             id: dict["id"] as! Int,
             playlistId: dict["playlistId"] as! Int,
+            sortOrder: dict["sortOrder"] as! Int,
             createdAt: (dict["createdAt"] as! Int).toDate(),
             trackId: dict["trackId"] as! Int
         )

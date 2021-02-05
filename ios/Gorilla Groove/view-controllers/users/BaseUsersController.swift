@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 
-class BaseUsersController<T: UserCell> : UIViewController, UITableViewDataSource, UITableViewDelegate {
+class BaseUsersController<T: BasicEntityCell<User>> : UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     private var users: [User] = []
     private var visibleUsers: [User] = []
@@ -33,7 +33,7 @@ class BaseUsersController<T: UserCell> : UIViewController, UITableViewDataSource
         view.addSubview(tableView)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
-
+        
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
@@ -82,7 +82,7 @@ class BaseUsersController<T: UserCell> : UIViewController, UITableViewDataSource
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "userCell", for: indexPath) as! T
         
-        cell.user = visibleUsers[indexPath.row]
+        cell.entity = visibleUsers[indexPath.row]
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
@@ -95,12 +95,20 @@ class BaseUsersController<T: UserCell> : UIViewController, UITableViewDataSource
 }
 
 
-class UserCell: UITableViewCell {
+class BasicEntityCell<T>: UITableViewCell {
     
-    var user: User? {
+    var entity: T? {
         didSet {
-            guard let user = user else { return }
+            guard let entity = entity else { return }
+            refreshCell(entity)
+        }
+    }
+    
+    func refreshCell(_ entity: T) {
+        if let user = entity as? User {
             nameLabel.text = user.name
+        } else if let playlist = entity as? Playlist {
+            nameLabel.text = playlist.name
         }
     }
     

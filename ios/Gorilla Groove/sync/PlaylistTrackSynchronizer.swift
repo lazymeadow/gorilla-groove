@@ -6,8 +6,9 @@ class PlaylistTrackSynchronizer : StandardSynchronizer<PlaylistTrack, PlaylistTr
 
 struct PlaylistTrackResponse: SyncResponseData {
     let id: Int
-    let track: TrackResponse
+    let track: TrackIdResponse
     let playlistId: Int
+    let sortOrder: Int
     let createdAt: Date
     let updatedAt: Date
     
@@ -15,8 +16,13 @@ struct PlaylistTrackResponse: SyncResponseData {
         return PlaylistTrack(
             id: id,
             playlistId: playlistId,
+            sortOrder: sortOrder,
             createdAt: createdAt,
             trackId: track.id
         )
     }
+}
+
+struct TrackIdResponse: Codable {
+    let id: Int
 }

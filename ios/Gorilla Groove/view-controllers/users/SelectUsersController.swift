@@ -78,7 +78,7 @@ class SelectUsersController : BaseUsersController<SelectUserCell> {
         HttpRequester.post("review-queue/recommend", EmptyResponse.self, request) { _, status, _ in
             if !status.isSuccessful() {
                 DispatchQueue.main.async {
-                    Toast.show("Failed to recommend tracks", view: this.view)
+                    Toast.show("Failed to recommend track", view: this.view)
                     this.sendButton.tintColor = Colors.primary
                     this.activitySpinner.stopAnimating()
                 }
@@ -87,7 +87,7 @@ class SelectUsersController : BaseUsersController<SelectUserCell> {
             
             DispatchQueue.main.async {
                 this.navigationController!.dismiss(animated: true)
-                Toast.show("Tracks recommended")
+                Toast.show("Track recommended")
             }
         }
     }
@@ -105,7 +105,7 @@ class SelectUsersController : BaseUsersController<SelectUserCell> {
     }
 }
 
-class SelectUserCell: UserCell {
+class SelectEntityCell<T>: BasicEntityCell<T> {
     
     let leftImage: IconView = {
         let icon = IconView("checkmark", weight: .medium, scale: .medium)
@@ -136,6 +136,17 @@ class SelectUserCell: UserCell {
             
             nameLabel.leadingAnchor.constraint(equalTo: leftImage.trailingAnchor),
         ])
+    }
+}
+
+class SelectUserCell : SelectEntityCell<User> {
+    var user: User? {
+        set(user) {
+            entity = user
+        }
+        get {
+            entity
+        }
     }
 }
 

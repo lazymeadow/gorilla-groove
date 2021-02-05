@@ -78,7 +78,7 @@ class HttpRequester {
     
     static func deleteSync(_ url: String, _ body: Encodable? = nil) -> (EmptyResponse?, Int, String?) {
         if Thread.isMainThread { fatalError("Do not make a synchronous request on the main thread") }
-
+        
         let session = URLSession(configuration: .default)
         guard let request = getBaseRequest("DELETE", url, body: body) else {
             return (nil, STATUS_ABORTED, nil)

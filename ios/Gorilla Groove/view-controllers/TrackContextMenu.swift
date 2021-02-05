@@ -35,6 +35,13 @@ class TrackContextMenu {
         }
         
         if view == .MY_LIBRARY {
+            alert.addAction(UIAlertAction(title: "Add to Playlist", style: .default, handler: { _ in
+                let playlistsController = SelectPlaylistsController(track)
+                playlistsController.modalPresentationStyle = .pageSheet
+                
+                let vc = UINavigationController(rootViewController: playlistsController)
+                parentVc.present(vc, animated: true)
+            }))
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
                 ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive, dismissText: "Cancel") {
                     TrackService.deleteTrack(track)
