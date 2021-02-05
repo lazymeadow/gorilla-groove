@@ -78,6 +78,7 @@ class SyncableEntityService(
 						id = it.id,
 						track = it.track,
 						playlistId = it.playlist.id,
+						sortOrder = it.sortOrder,
 						createdAt = it.createdAt,
 						updatedAt = it.updatedAt,
 						deleted = it.deleted
@@ -157,6 +158,7 @@ class SyncableEntityService(
 			override val id: Long,
 			val track: Track,
 			val playlistId: Long,
+			val sortOrder: Int,
 			override val createdAt: Timestamp,
 			override var updatedAt: Timestamp,
 
