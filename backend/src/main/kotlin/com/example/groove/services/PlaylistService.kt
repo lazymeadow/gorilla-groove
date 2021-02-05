@@ -171,7 +171,7 @@ class PlaylistService(
 
 	@Synchronized
 	@Transactional
-	fun addTracksToPlaylists(playlistIds: List<Long>, trackIds: List<Long>) {
+	fun addTracksToPlaylists(playlistIds: List<Long>, trackIds: List<Long>): List<PlaylistTrack> {
 		val user = loadLoggedInUser()
 		val playlists = playlistIds.map { id ->
 			playlistRepository.get(id) ?: throw IllegalArgumentException("Playlist ID: $id not found")
@@ -205,6 +205,8 @@ class PlaylistService(
 		}
 
 		playlistTrackRepository.saveAll(playlistTracks)
+
+		return playlistTracks
 	}
 
 	// When we delete tracks, we want to make sure the playlist tracks are also deleted.

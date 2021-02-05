@@ -46,9 +46,10 @@ class PlaylistController(
 	}
 
 	@PostMapping("/track")
-	fun addToPlaylist(@RequestBody addPlaylistTrackDTO: AddPlaylistTrackDTO) {
+	fun addToPlaylist(@RequestBody addPlaylistTrackDTO: AddPlaylistTrackDTO): PlaylistTrackResponse {
 		logger.info("User ${loadLoggedInUser().name} is adding tracks ${addPlaylistTrackDTO.trackIds} to playlists ${addPlaylistTrackDTO.playlistIds}")
-		playlistService.addTracksToPlaylists(addPlaylistTrackDTO.playlistIds, addPlaylistTrackDTO.trackIds)
+		val newPlaylistTracks = playlistService.addTracksToPlaylists(addPlaylistTrackDTO.playlistIds, addPlaylistTrackDTO.trackIds)
+		return PlaylistTrackResponse(items = newPlaylistTracks)
 	}
 
 	@DeleteMapping("/track")
@@ -93,6 +94,10 @@ class PlaylistController(
 	data class ReorderPlaylistRequest(
 			val playlistId: Long,
 			val playlistTrackIds: List<Long>
+	)
+
+	data class PlaylistTrackResponse(
+			val items: List<PlaylistTrack>
 	)
 
 	companion object {
