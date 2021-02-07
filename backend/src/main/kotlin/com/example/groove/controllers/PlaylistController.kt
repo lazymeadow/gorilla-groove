@@ -53,9 +53,13 @@ class PlaylistController(
 	}
 
 	@DeleteMapping("/track")
-	fun removeFromPlaylist(@RequestBody removePlaylistTrackDTO: PlaylistTrackListDTO) {
-		logger.info("User ${loadLoggedInUser().name} is removing playlist tracks ${removePlaylistTrackDTO.playlistTrackIds}")
-		playlistService.deletePlaylistTracks(removePlaylistTrackDTO.playlistTrackIds)
+	fun removeFromPlaylist(@RequestParam playlistTrackIds: List<Long>) {
+		require(playlistTrackIds.isNotEmpty()) {
+			"A playlistTrackId is required"
+		}
+
+		logger.info("User ${loadLoggedInUser().name} is removing playlist tracks $playlistTrackIds")
+		playlistService.deletePlaylistTracks(playlistTrackIds)
 	}
 
 	@GetMapping("/track")
@@ -85,10 +89,6 @@ class PlaylistController(
 	data class AddPlaylistTrackDTO(
 			val playlistIds: List<Long>,
 			val trackIds: List<Long>
-	)
-
-	data class PlaylistTrackListDTO(
-			val playlistTrackIds: List<Long>
 	)
 
 	data class ReorderPlaylistRequest(

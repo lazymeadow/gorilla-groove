@@ -132,8 +132,8 @@ class TrackController(
 	}
 
 	@DeleteMapping
-	fun deleteTracks(@RequestBody deleteTrackDTO: MultiTrackIdDTO): ResponseEntity<String> {
-		trackService.deleteTracks(loadLoggedInUser(), deleteTrackDTO.trackIds)
+	fun deleteTracks(@RequestParam trackIds: List<Long>): ResponseEntity<String> {
+		trackService.deleteTracks(loadLoggedInUser(), trackIds)
 
 		return ResponseEntity(HttpStatus.OK)
 	}

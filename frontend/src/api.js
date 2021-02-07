@@ -29,7 +29,9 @@ export class Api {
 	}
 
 	static delete(url, params) {
-		return Api.sendRequest('delete', url, params);
+		let urlParameters = Api.encodeUriParamsFromObject(params);
+
+		return this.sendRequest('delete', url + urlParameters);
 	}
 
 	static sendRequest(requestType, url, params) {
@@ -134,7 +136,13 @@ export class Api {
 				}).join('&')
 			} else {
 				let encodedKey = encodeURIComponent(key);
-				let encodedValue = encodeURIComponent(params[key]);
+				let value = params[key];
+				let encodedValue = '';
+				if (Array.isArray(value)) {
+					encodedValue = value.map(it => encodeURIComponent(it)).join(',')
+				} else {
+					encodedValue = encodeURIComponent(params[key]);
+				}
 				return `${encodedKey}=${encodedValue}`
 			}
 		}).join('&');
