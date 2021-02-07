@@ -87,7 +87,7 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
         
         let playlist = cell.data!
         
-        let view = TrackViewController(playlist.name, originalView: .PLAYLIST, loadTracksFunc: {
+        let view = TrackViewController(playlist.name, originalView: .PLAYLIST, playlist: playlist, trackContextView: .PLAYLIST, loadTracksFunc: {
             let isSongCached = OfflineStorageService.offlineModeEnabled ? true : nil
             return TrackDao.getTracksForPlaylist(playlist.id, isSongCached: isSongCached)
         })
@@ -98,7 +98,6 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
         if sender.state != .began {
             return
         }
-        
         
         let cell = sender.view as! TableViewCell<Playlist>
         var playlist = cell.data!
@@ -194,7 +193,6 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
             }
         }
     }
-    
 }
 
 struct PlaylistRequest : Codable {

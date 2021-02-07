@@ -18,4 +18,16 @@ public struct PlaylistTrack : Entity {
     }
 }
 
-public class PlaylistTrackDao : BaseDao<PlaylistTrack> { }
+public class PlaylistTrackDao : BaseDao<PlaylistTrack> {
+    static func findByPlaylistAndTrack(
+        playlistId: Int,
+        trackId: Int
+    ) -> [PlaylistTrack] {
+        return queryEntities("""
+            SELECT pt.*
+            FROM playlist_track pt
+            WHERE pt.playlist_id = \(playlistId)
+            AND pt.track_id = \(trackId)
+        """)
+    }
+}

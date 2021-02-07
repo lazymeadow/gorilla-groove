@@ -14,6 +14,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private var sortOverrideKey: String? = nil
     private var sortDirectionAscending: Bool = true
     private let user: User?
+    private let playlist: Playlist?
     private let alwaysReload: Bool
     private let trackContextView: TrackContextView
 
@@ -247,7 +248,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let trackId = visibleTrackIds[tableIndex.row]
         let track = trackIdToTrack[trackId]!
         
-        let alert = TrackContextMenu.createMenuForTrack(track, view: trackContextView, parentVc: self)
+        let alert = TrackContextMenu.createMenuForTrack(track, view: trackContextView, playlist: playlist, parentVc: self)
         
         ViewUtil.showAlert(alert)
     }
@@ -386,6 +387,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         artistFilter: String? = nil,
         albumFilter: String? = nil,
         user: User? = nil,
+        playlist: Playlist? = nil,
         alwaysReload: Bool = false,
         trackContextView: TrackContextView? = nil,
         showingHidden: Bool? = nil,
@@ -397,6 +399,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.artistFilter = artistFilter
         self.albumFilter = albumFilter
         self.user = user
+        self.playlist = playlist
         self.alwaysReload = alwaysReload
         self.trackContextView = trackContextView ?? (user == nil ? .MY_LIBRARY : .OTHER_USER)
         self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
@@ -429,6 +432,27 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             if changeType == .DELETION || (!vc.showHiddenTracks && changedTrack.isHidden) {
                 GGLog.info("Removing existing track from track list in response to change")
                 if let index = vc.visibleTrackIds.index(where: { $0 == changedTrack.id }) {
+                    vc.visibleTrackIds.remove(at: index)
+                    DispatchQueue.main.async {
+                        vc.tableView.deleteRows(at: [IndexPath(item: index, section: 0)], with: .automatic)
+                    }
+                }
+            }
+        }
+        
+        if playlist != nil {
+            PlaylistService.observePlaylistTrackChanges(self) { vc, changedPlaylistTrack, changeType in
+                if vc.playlist?.id != changedPlaylistTrack.playlistId {
+                    return
+                }
+                
+                if changeType != .REMOVAL {
+                    return
+                }
+
+                // This is a bug. It only removes the first instance of this from the view. A track could be repeated on a playlist
+                // multiple times. But it's such an unlikely scenario I don't feel like coding around it. Good programmer.
+                if let index = vc.visibleTrackIds.index(where: { $0 == changedPlaylistTrack.trackId }) {
                     vc.visibleTrackIds.remove(at: index)
                     DispatchQueue.main.async {
                         vc.tableView.deleteRows(at: [IndexPath(item: index, section: 0)], with: .automatic)

@@ -243,8 +243,7 @@ class TrackService {
     }
     
     static func deleteTrack(_ track: Track) {
-        let request = UpdateTrackRequest(trackIds: [track.id])
-        HttpRequester.delete("track", request) { _, statusCode, _ in
+        HttpRequester.delete("track?trackIds=\(track.id)") { _, statusCode, _ in
             if statusCode.isSuccessful() {
                 TrackDao.delete(track)
                 broadcastTrackChange(track, type: .DELETION)

@@ -5,6 +5,7 @@ class TrackContextMenu {
     static func createMenuForTrack(
         _ track: Track,
         view: TrackContextView,
+        playlist: Playlist?,
         parentVc: UIViewController
     ) -> UIAlertController {
         let alert = GGActionSheet.create()
@@ -62,10 +63,24 @@ class TrackContextMenu {
             }))
         }
         
+        if view == .PLAYLIST {
+            alert.addAction(UIAlertAction(title: "Remove from Playlist", style: .default, handler: { _ in
+                DispatchQueue.global().async {
+                    let playlistTracks = PlaylistTrackDao.findByPlaylistAndTrack(playlistId: playlist!.id, trackId: track.id)
+                    if playlistTracks.count > 1 {
+                        GGLog.warning("The user is deleting a playlist track that has duplicates. The one they are intending to delete may be different from the one that is deleted")
+                    } else if playlistTracks.isEmpty {
+                        GGLog.critical("No playlist tracks found when removing a track from a playlist! Track \(track.id). Playlist \(playlist!.id)")
+                        return
+                    }
+                    PlaylistService.removeTrack(playlistTracks.first!)
+                }
+            }))
+        }
+        
 //        alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { _ in
 //            print("Trim")
 //        }))
-        
         
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
@@ -105,4 +120,5 @@ enum TrackContextView {
     case MY_LIBRARY
     case NOW_PLAYING
     case OTHER_USER
+    case PLAYLIST
 }

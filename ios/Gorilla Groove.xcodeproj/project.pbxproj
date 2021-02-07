@@ -80,6 +80,7 @@
 		E873DDFD25883CEF00207F99 /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = E873DDFC25883CEF00207F99 /* Toast */; };
 		E873DE0025887A6A00207F99 /* LogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DDFF25887A6A00207F99 /* LogViewController.swift */; };
 		E873DE03258AF97600207F99 /* LogoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873DE02258AF97600207F99 /* LogoutController.swift */; };
+		E875AC3625D07DCB00AAE877 /* PlaylistService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E875AC3525D07DCB00AAE877 /* PlaylistService.swift */; };
 		E88053C125AE818F00A7D0F3 /* DownloadFromYTController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C025AE818F00A7D0F3 /* DownloadFromYTController.swift */; };
 		E88053C425B1142D00A7D0F3 /* AddFromSpotifyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */; };
 		E889441025CA3E4C005D5FB4 /* GGActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */; };
@@ -163,6 +164,7 @@
 		E873DDF825871E6D00207F99 /* ErrorReportController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorReportController.swift; sourceTree = "<group>"; };
 		E873DDFF25887A6A00207F99 /* LogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewController.swift; sourceTree = "<group>"; };
 		E873DE02258AF97600207F99 /* LogoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoutController.swift; sourceTree = "<group>"; };
+		E875AC3525D07DCB00AAE877 /* PlaylistService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistService.swift; sourceTree = "<group>"; };
 		E88053C025AE818F00A7D0F3 /* DownloadFromYTController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFromYTController.swift; sourceTree = "<group>"; };
 		E88053C325B1142D00A7D0F3 /* AddFromSpotifyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFromSpotifyController.swift; sourceTree = "<group>"; };
 		E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGActionSheet.swift; sourceTree = "<group>"; };
@@ -298,6 +300,7 @@
 				E85A366325AA3395005C4FDD /* Extensions.swift */,
 				E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */,
 				E86F980125B921A20015C6CE /* ObservationToken.swift */,
+				E875AC3525D07DCB00AAE877 /* PlaylistService.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -515,6 +518,7 @@
 				E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */,
 				E85A365E25AA318A005C4FDD /* AddReviewSourceController.swift in Sources */,
 				E85A4DCF23D4D2AE006BD7EE /* MediaControlsController.swift in Sources */,
+				E875AC3625D07DCB00AAE877 /* PlaylistService.swift in Sources */,
 				E88053C425B1142D00A7D0F3 /* AddFromSpotifyController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
