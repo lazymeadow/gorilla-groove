@@ -20,7 +20,13 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Playlists"
-
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .add,
+            target: self,
+            action: #selector(addReviewSource)
+        )
+        
         self.view.addSubview(tableView)
         self.view.addSubview(activitySpinner)
         
@@ -155,6 +161,40 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
         
         ViewUtil.showAlert(alert)
     }
+    
+    @objc func addReviewSource() {
+        GGNavLog.info("User tapped add playlist")
+        
+        ViewUtil.showTextFieldAlert(title: "Add Playlist", message: "Give it a name", yesText: "Add") { [weak self] text in
+            guard let this = self else { return }
+            let request = PlaylistRequest(name: text)
+            this.activitySpinner.startAnimating()
+            
+            HttpRequester.post("playlist", PlaylistResponse.self, request) { playlistResponse, status, _ in
+                guard let newPlaylist = playlistResponse?.asEntity() as? Playlist else {
+                    DispatchQueue.main.async {
+                        if status.isSuccessful() {
+                            Toast.show("Playlist created but could not be loaded")
+                        } else {
+                            Toast.show("Could not create playlist")
+                        }
+                        this.activitySpinner.stopAnimating()
+                    }
+                    return
+                }
+                
+                PlaylistDao.save(newPlaylist)
+                this.playlists = PlaylistDao.getPlaylists()
+                
+                DispatchQueue.main.async {
+                    Toast.show("Playlist created")
+                    this.activitySpinner.stopAnimating()
+                    this.tableView.reloadData()
+                }
+            }
+        }
+    }
+    
 }
 
 struct PlaylistRequest : Codable {
