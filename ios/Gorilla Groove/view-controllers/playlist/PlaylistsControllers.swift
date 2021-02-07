@@ -2,20 +2,49 @@ import Foundation
 import UIKit
 
 
-class PlaylistsController : UITableViewController {
+class PlaylistsController : UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    var playlists: [Playlist] = []
+    private var playlists: [Playlist] = []
+    private let tableView = UITableView()
+
+    private let activitySpinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView()
+        
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.hidesWhenStopped = true
+        spinner.color = Colors.foreground
+        
+        return spinner
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Playlists"
 
-        let view = self.view as! UITableView
+        self.view.addSubview(tableView)
+        self.view.addSubview(activitySpinner)
         
-        view.register(TableViewCell<Playlist>.self, forCellReuseIdentifier: "playlistCell")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            activitySpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activitySpinner.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+        ])
+        
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(TableViewCell<Playlist>.self, forCellReuseIdentifier: "playlistCell")
         
         // Remove extra table row lines that have no content
-        view.tableFooterView = UIView(frame: .zero)
+        tableView.tableFooterView = UIView(frame: .zero)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
         playlists = PlaylistDao.getPlaylists()
     }
@@ -26,11 +55,11 @@ class PlaylistsController : UITableViewController {
         GGNavLog.info("Loaded playlists view")
     }
     
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return playlists.count
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let rawCell = tableView.dequeueReusableCell(withIdentifier: "playlistCell", for: indexPath)
         let cell = rawCell as! TableViewCell<Playlist>
         
@@ -39,6 +68,9 @@ class PlaylistsController : UITableViewController {
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
+        
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(bringUpLongPressMenu))
+        cell.addGestureRecognizer(longPressGesture)
         
         return cell
     }
@@ -55,4 +87,76 @@ class PlaylistsController : UITableViewController {
         })
         self.navigationController!.pushViewController(view, animated: true)
     }
+    
+    @objc private func bringUpLongPressMenu(sender: UITapGestureRecognizer) {
+        if sender.state != .began {
+            return
+        }
+        
+        
+        let cell = sender.view as! TableViewCell<Playlist>
+        var playlist = cell.data!
+        
+        let alert = GGActionSheet.create()
+        
+        alert.addAction(UIAlertAction(title: "Rename", style: .default, handler: { _ in
+            ViewUtil.showTextFieldAlert(message: "Rename \(playlist.name) to:", yesText: "Rename") { [weak self] text in
+                guard let this = self else { return }
+                let request = PlaylistRequest(name: text)
+                this.activitySpinner.startAnimating()
+                
+                HttpRequester.put("playlist/\(playlist.id)", EmptyResponse.self, request) { _, status, _ in
+                    if !status.isSuccessful() {
+                        DispatchQueue.main.async {
+                            Toast.show("Could not rename playlist")
+                            this.activitySpinner.stopAnimating()
+                        }
+                        return
+                    }
+                    playlist.name = text
+                    PlaylistDao.save(playlist)
+                    
+                    DispatchQueue.main.async {
+                        this.activitySpinner.stopAnimating()
+                        cell.data = playlist
+                        cell.textLabel!.text = playlist.name
+                    }
+                }
+            }
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            ViewUtil.showAlert(message: "Delete \(playlist.name)?", yesText: "Delete", yesStyle: .destructive) { [weak self] in
+                guard let this = self else { return }
+                this.activitySpinner.startAnimating()
+                
+                HttpRequester.delete("playlist/\(playlist.id)", nil) { _, status, _ in
+                    if !status.isSuccessful() {
+                        DispatchQueue.main.async {
+                            Toast.show("Could not delete playlist")
+                            this.activitySpinner.stopAnimating()
+                        }
+                        return
+                    }
+                    PlaylistDao.delete(playlist)
+                    this.playlists = this.playlists.filter { $0.id != playlist.id }
+                    
+                    DispatchQueue.main.async {
+                        this.activitySpinner.stopAnimating()
+                        this.tableView.reloadData()
+                    }
+                }
+            }
+        }))
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
+            GGNavLog.info("User clicked context menu 'Cancel' button")
+        }))
+        
+        ViewUtil.showAlert(alert)
+    }
+}
+
+struct PlaylistRequest : Codable {
+    let name: String
 }
