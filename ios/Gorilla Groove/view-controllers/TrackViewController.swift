@@ -203,13 +203,19 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         cell.track = track.asTrack()
         
+        if !tableView.isEditing {
+            applyGestureRecognizers(cell)
+        }
+            
+        return cell
+    }
+    
+    private func applyGestureRecognizers(_ cell: TrackViewCell) {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
         
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(bringUpSongContextMenu))
         cell.addGestureRecognizer(longPressGesture)
-            
-        return cell
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -221,6 +227,18 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         super.setEditing(editing, animated: animated)
         
         tableView.setEditing(editing, animated: animated)
+        
+        // Have had serious issues with click handlers interfering with the reordering process. Can't handle it in their respective click handlers
+        // because they interfere with the process before the click handler even fires.
+        // Clear the handlers if we're editing, and of course, put them back if we're not.
+        tableView.visibleCells.forEach { cell in
+            let songViewCell = cell as! TrackViewCell
+            if editing {
+                songViewCell.gestureRecognizers?.removeAll()
+            } else {
+                applyGestureRecognizers(songViewCell)
+            }
+        }
         
         editingChanged(editing)
     }
@@ -236,6 +254,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
+        GGLog.info("\(sender.state)")
         filter?.setIsHiddenAnimated(true)
         
         let cell = sender.view as! TrackViewCell
@@ -253,11 +272,6 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     @objc private func bringUpSongContextMenu(sender: UITapGestureRecognizer) {
         if sender.state != .began {
-            return
-        }
-        
-        // The long press menu gets in the way if we're editing since we're holding onto cells to drag them around
-        if tableView.isEditing {
             return
         }
         

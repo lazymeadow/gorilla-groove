@@ -6,13 +6,7 @@ class PlaylistTrackController : TrackViewController {
     private var isOrderingEdited = false
     
     override func viewDidLoad() {
-        if originalView == .PLAYLIST {
-            self.navigationItem.rightBarButtonItem = UIBarButtonItem(
-                barButtonSystemItem: .edit,
-                target: self,
-                action: #selector(toggleEditMode)
-            )
-        }
+        self.navigationItem.rightBarButtonItem = editButtonItem
         
         super.viewDidLoad()
     }
@@ -43,15 +37,16 @@ class PlaylistTrackController : TrackViewController {
     override func editingChanged(_ isEditing: Bool) {
         if isEditing {
             cancelSearch()
+            navigationItem.rightBarButtonItem!.title = "Stop"
         } else if isOrderingEdited {
             isOrderingEdited = false
             
             persistPlaylistOrder()
+            navigationItem.rightBarButtonItem!.title = "Edit"
         }
     }
     
     @objc private func toggleEditMode() {
-        setEditing(!tableView.isEditing, animated: true)
     }
     
     private func persistPlaylistOrder() {

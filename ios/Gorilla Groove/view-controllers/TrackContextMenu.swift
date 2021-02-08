@@ -64,7 +64,7 @@ class TrackContextMenu {
         }
         
         if view == .PLAYLIST {
-            alert.addAction(UIAlertAction(title: "Remove from Playlist", style: .default, handler: { _ in
+            alert.addAction(UIAlertAction(title: "Remove from Playlist", style: .destructive, handler: { _ in
                 DispatchQueue.global().async {
                     let playlistTracks = PlaylistTrackDao.findByPlaylistAndTrack(playlistId: playlist!.id, trackId: track.id)
                     if playlistTracks.count > 1 {
