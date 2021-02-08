@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17505"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17703"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -16,34 +16,76 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Loading" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TgT-zz-ZFo">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="25"/>
-                                <color key="textColor" name="Foreground"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="e1s-99-73G" userLabel="Bottom Section">
+                                <rect key="frame" x="0.0" y="526" width="375" height="141"/>
+                                <color key="backgroundColor" name="Nav Controls"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="141" id="PV4-rc-yBe"/>
+                                </constraints>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ff0-d0-wgp" userLabel="Top Section">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="45"/>
+                                <color key="backgroundColor" name="Navigation Background"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="45" id="ZZs-yf-tan"/>
+                                </constraints>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5nE-0s-Ra2" userLabel="Top Dividing Line">
+                                <rect key="frame" x="0.0" y="45" width="375" height="1"/>
+                                <color key="backgroundColor" name="Table Transition"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="fmI-96-nPv"/>
+                                </constraints>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4eT-KF-3y8" userLabel="Safe Area Filler">
+                                <rect key="frame" x="0.0" y="667" width="375" height="0.0"/>
+                                <color key="backgroundColor" name="Nav Controls"/>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ePq-U5-q2S" userLabel="Top Safe Area Filler">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="0.0"/>
+                                <color key="backgroundColor" name="Navigation Background"/>
+                            </view>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="Background"/>
                         <constraints>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="TgT-zz-ZFo" secondAttribute="trailing" id="1pL-gj-BPu"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="TgT-zz-ZFo" secondAttribute="bottom" id="H4A-V1-eHM"/>
-                            <constraint firstItem="TgT-zz-ZFo" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="OLl-2w-rm0"/>
-                            <constraint firstItem="TgT-zz-ZFo" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="lkI-SY-EUO"/>
+                            <constraint firstItem="ff0-d0-wgp" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="025-LO-Akz"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="ePq-U5-q2S" secondAttribute="trailing" id="BDX-it-wC9"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="ff0-d0-wgp" secondAttribute="trailing" id="E5u-9E-Ene"/>
+                            <constraint firstItem="4eT-KF-3y8" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="FfA-8p-Azx"/>
+                            <constraint firstItem="5nE-0s-Ra2" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="LYw-Qd-Yw3"/>
+                            <constraint firstItem="ePq-U5-q2S" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="M1g-QM-TyR"/>
+                            <constraint firstItem="ePq-U5-q2S" firstAttribute="bottom" secondItem="ff0-d0-wgp" secondAttribute="top" id="Rjw-yk-IvU"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="e1s-99-73G" secondAttribute="trailing" id="Tuo-52-BsV"/>
+                            <constraint firstItem="4eT-KF-3y8" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" id="U3C-Mr-Jv6"/>
+                            <constraint firstItem="4eT-KF-3y8" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="gRG-I8-8mW"/>
+                            <constraint firstItem="ePq-U5-q2S" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="gm5-Bq-Z5S"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="leading" secondItem="e1s-99-73G" secondAttribute="leading" id="l0B-br-Q1Z"/>
+                            <constraint firstItem="5nE-0s-Ra2" firstAttribute="top" secondItem="ff0-d0-wgp" secondAttribute="bottom" id="leR-5H-JOq"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="e1s-99-73G" secondAttribute="bottom" id="nW0-A2-LwW"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="4eT-KF-3y8" secondAttribute="trailing" id="njb-4Y-KE8"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="5nE-0s-Ra2" secondAttribute="trailing" id="tFK-bf-DRF"/>
+                            <constraint firstItem="ff0-d0-wgp" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="xCk-BS-OZS"/>
                         </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="53" y="375"/>
+            <point key="canvasLocation" x="52" y="374.66266866566718"/>
         </scene>
     </scenes>
     <resources>
         <namedColor name="Background">
             <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
-        <namedColor name="Foreground">
-            <color red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        <namedColor name="Nav Controls">
+            <color red="0.11372549019607843" green="0.52941176470588236" blue="0.72941176470588232" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="Navigation Background">
+            <color red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="Table Transition">
+            <color red="0.8666666666666667" green="0.8666666666666667" blue="0.8666666666666667" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
     </resources>
 </document>

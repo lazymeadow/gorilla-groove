@@ -62,7 +62,9 @@ class Database {
         
         var statement: OpaquePointer? = nil
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            if logCrit {
+            if !UserState.isLoggedIn {
+                GGLog.warning("SQL error while user was not logged in. Likely this is a race condition issue with logout")
+            } else if logCrit {
                 logger.critical("Could not prepare statement: \(sql)")
             }
             return nil

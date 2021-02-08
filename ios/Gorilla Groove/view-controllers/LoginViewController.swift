@@ -11,7 +11,7 @@ class LoginViewController: UIViewController {
         label.font = label.font.withSize(26)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
-                
+        
         return label
     }()
     
@@ -144,12 +144,12 @@ class LoginViewController: UIViewController {
             submitButton.topAnchor.constraint(equalTo: passwordBottomLine.bottomAnchor, constant: 80),
             
             appVersion.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
-            appVersion.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -6),
+            appVersion.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -6),
             
             activitySpinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             activitySpinner.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
         ])
-        
+                
         let tap = UITapGestureRecognizer(
             target: self.view,
             action: #selector(UIView.endEditing)

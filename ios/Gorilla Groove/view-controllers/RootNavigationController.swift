@@ -73,6 +73,7 @@ class RootNavigationController : UITabBarController {
     // This is the height of this block of unmoving content on the bottom of the screen- the media controls,
     // the tab bar, and the middle dividing bar. It seems like a pain in the ass to dynamically get the heights,
     // so I am hard coding this and will probably regret it later.
+    // If you change this, update the splash screen to match. It can't be affected by code so it's hard-coded in the storyboard.
     private let bottomContentHeight = CGFloat(141.0)
     
     override func viewDidLoad() {

@@ -159,6 +159,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         // it's better than it was. The progress bar can still jump around a bit to the correct position though.
         // Both of these events seem to be important to listen for in this regard.
         [AVAudioSession.interruptionNotification, AVAudioSession.routeChangeNotification].forEach { interrupt in
+            GGLog.info("Playback was interrupted by the system with type: \(interrupt.rawValue)")
             NotificationCenter.default.addObserver(
                 forName: interrupt,
                 object: nil,
