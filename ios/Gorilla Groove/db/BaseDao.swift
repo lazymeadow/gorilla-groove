@@ -69,6 +69,20 @@ public class BaseDao<T: Entity> {
         }
     }
     
+    static func findByIdIn(_ ids: [Int]) -> [T] {
+        // DB names are stored snake_case because reasons. So convert them
+        let tableName = String(describing: T.self).toSnakeCase()
+        
+        let queryParam = ids.map { $0.toString() }.joined(separator: ",")
+        
+        let result = Database.query("SELECT * FROM \(tableName) WHERE id IN (\(queryParam))")
+        if result.isEmpty {
+            return []
+        } else {
+            return result.map { dictToEntity($0) }
+        }
+    }
+    
     static func dictToEntity(_ dict: [String: Any?]) -> T {
         let structData = dict.reduce(into: [:]) { result, x in
             result[x.key.toCamelCase()] = x.value

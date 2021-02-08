@@ -87,9 +87,16 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
         
         let playlist = cell.data!
         
-        let view = TrackViewController(playlist.name, originalView: .PLAYLIST, playlist: playlist, trackContextView: .PLAYLIST, loadTracksFunc: {
+        let view = PlaylistTrackController(playlist.name, originalView: .PLAYLIST, playlist: playlist, trackContextView: .PLAYLIST, loadTracksFunc: {
             let isSongCached = OfflineStorageService.offlineModeEnabled ? true : nil
-            return TrackDao.getTracksForPlaylist(playlist.id, isSongCached: isSongCached)
+            let playlistTracks = PlaylistTrackDao.getPlaylistTracksForPlaylist(playlist.id, isSongCached: isSongCached)
+            
+            let trackIds = playlistTracks.map { $0.trackId }
+            let trackIdToTrack = TrackDao.findByIdIn(trackIds).keyBy { $0.id }
+            
+            return playlistTracks.map {
+                PlaylistTrackWithTrack(id: $0.id, playlistId: playlist.id, track: trackIdToTrack[$0.trackId]!)
+            }
         })
         self.navigationController!.pushViewController(view, animated: true)
     }
@@ -164,7 +171,7 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
     @objc func addReviewSource() {
         GGNavLog.info("User tapped add playlist")
         
-        ViewUtil.showTextFieldAlert(title: "Add Playlist", message: "Give it a name", yesText: "Add") { [weak self] text in
+        ViewUtil.showTextFieldAlert(title: "Add Playlist", message: "Give it a name", yesText: "Add", dismissText: "Cancel") { [weak self] text in
             guard let this = self else { return }
             let request = PlaylistRequest(name: text)
             this.activitySpinner.startAnimating()
@@ -197,4 +204,24 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
 
 struct PlaylistRequest : Codable {
     let name: String
+}
+
+class PlaylistTrackWithTrack : TrackReturnable {
+    let id: Int
+    let playlistId: Int
+    let track: Track
+    
+    init(
+        id: Int,
+        playlistId: Int,
+        track: Track
+    ) {
+        self.id = id
+        self.playlistId = playlistId
+        self.track = track
+    }
+    
+    func asTrack() -> Track {
+        return track
+    }
 }

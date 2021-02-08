@@ -3,25 +3,25 @@ import Foundation
 
 class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
-    private var loadTracksFunc: (() -> [Track])? = nil
-    private var trackIds: [Int] = []
-    private var trackIdToTrack: [Int: Track] = [:]
-    private var visibleTrackIds: [Int] = []
+    private var loadTracksFunc: (() -> [TrackReturnable])? = nil
+    var trackIds: [Int] = []
+    var trackIdToTrack: [Int: TrackReturnable] = [:]
+    var visibleTrackIds: [Int] = []
     private let scrollPlayedTrackIntoView: Bool
-    private let tableView = UITableView()
+    let tableView = UITableView()
     private let artistFilter: String?
     private let albumFilter: String?
     private var sortOverrideKey: String? = nil
     private var sortDirectionAscending: Bool = true
     private let user: User?
-    private let playlist: Playlist?
+    let playlist: Playlist?
     private let alwaysReload: Bool
     private let trackContextView: TrackContextView
 
     private var showHiddenTracks: Bool
     private var lastOfflineMode: Bool
     
-    private let originalView: LibraryViewType
+    let originalView: LibraryViewType
     
     private let sortsIndex = 1
     
@@ -154,7 +154,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         TableSearchAugmenter.addSearchToNavigation(
             controller: self,
             tableView: tableView,
-            onTap: { [weak self] in self?.filter?.setIsHiddenAnimated(true) }
+            onTap: { [weak self] in
+                self?.filter?.setIsHiddenAnimated(true)
+                self?.setEditing(false, animated: true)
+            }
         ) { [weak self] _ in
             self?.setVisibleTracks()
         }
@@ -198,7 +201,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let trackId = visibleTrackIds[indexPath.row]
         let track = trackIdToTrack[trackId]!
         
-        cell.track = track
+        cell.track = track.asTrack()
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
@@ -213,6 +216,16 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let songViewCell = cell as! TrackViewCell
         songViewCell.checkIfPlaying()
     }
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        tableView.setEditing(editing, animated: animated)
+        
+        editingChanged(editing)
+    }
+    
+    func editingChanged(_ isEditing: Bool) { /* For subclassing */ }
     
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         filter?.setIsHiddenAnimated(true)
@@ -230,7 +243,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let tableIndex = tableView.indexPath(for: cell)!
         
         cell.animateSelectionColor()
-        let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]! }
+        let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]!.asTrack() }
         NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
         
         if let search = navigationItem.searchController {
@@ -243,10 +256,15 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             return
         }
         
+        // The long press menu gets in the way if we're editing since we're holding onto cells to drag them around
+        if tableView.isEditing {
+            return
+        }
+        
         let cell = sender.view as! TrackViewCell
         let tableIndex = tableView.indexPath(for: cell)!
         let trackId = visibleTrackIds[tableIndex.row]
-        let track = trackIdToTrack[trackId]!
+        let track = trackIdToTrack[trackId]!.asTrack()
         
         let alert = TrackContextMenu.createMenuForTrack(track, view: trackContextView, playlist: playlist, parentVc: self)
         
@@ -271,7 +289,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             visibleTrackIds = trackIds
         } else {
             visibleTrackIds = trackIds.filter {
-                let track = trackIdToTrack[$0]!
+                let track = trackIdToTrack[$0]!.asTrack()
                 return track.name.lowercased().contains(searchTerm)
             }
         }
@@ -280,7 +298,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private func loadDbTracks() {
         DispatchQueue.global().async { [weak self] in
             guard let this = self else { return }
-            let loadFunc = this.loadTracksFunc ?? {
+            let loadFunc: (() -> [TrackReturnable]) = this.loadTracksFunc ?? {
                 TrackService.getTracks(
                     album: this.albumFilter,
                     artist: this.artistFilter,
@@ -291,8 +309,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
             
             let tracks = loadFunc()
-            this.trackIds = tracks.map { $0.id }
-            this.trackIdToTrack = tracks.keyBy { $0.id }
+            this.trackIds = tracks.map { $0.asTrack().id }
+            this.trackIdToTrack = tracks.keyBy { $0.asTrack().id }
             
             DispatchQueue.main.async {
                 this.setVisibleTracks()
@@ -363,7 +381,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
             
             this.trackIds = tracks.map { $0.id }
-            this.trackIdToTrack = tracks.map { $0.asTrack(userId: this.user?.id ?? 0) }.keyBy { $0.id }
+            this.trackIdToTrack = tracks.map { $0.asTrack(userId: this.user?.id ?? 0) }.keyBy { $0.asTrack().id }
             
             DispatchQueue.main.async {
                 this.setVisibleTracks()
@@ -391,7 +409,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         alwaysReload: Bool = false,
         trackContextView: TrackContextView? = nil,
         showingHidden: Bool? = nil,
-        loadTracksFunc: (() -> [Track])? = nil
+        loadTracksFunc: (() -> [TrackReturnable])? = nil
     ) {
         self.scrollPlayedTrackIntoView = scrollPlayedTrackIntoView
         self.loadTracksFunc = loadTracksFunc
@@ -465,4 +483,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+}
+
+protocol TrackReturnable {
+    func asTrack() -> Track
 }

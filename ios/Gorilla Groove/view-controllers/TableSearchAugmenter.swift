@@ -41,10 +41,10 @@ class TableSearchAugmenter {
         var tableView: UITableView
         var searchController: UISearchController
         var textChanged: (_ text: String) -> Void
-
+        
         var handlingSearchEnd = false
         var persistentSearchTerm = ""
-
+        
         init(
             _ controller: UIViewController,
             _ tableView: UITableView,
@@ -56,7 +56,7 @@ class TableSearchAugmenter {
             self.searchController = searchController
             self.textChanged = textChanged
         }
-
+        
         func updateSearchResults(for searchController: UISearchController) {
             let searchTerm = searchController.searchBar.text!
 
@@ -64,7 +64,7 @@ class TableSearchAugmenter {
             
             tableView.reloadData()
         }
-
+        
         func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
             // This is triggered when isActive is set to false. We call this method manually sometimes, and set
             // isActive to false at that time. This will cause a re-trigger that we want to ignore.

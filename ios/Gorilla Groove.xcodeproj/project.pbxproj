@@ -17,6 +17,7 @@
 		A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89100ED23BD339D00D6EA2D /* AppDelegate.swift */; };
 		A89100F523BD339E00D6EA2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A89100F423BD339E00D6EA2D /* Assets.xcassets */; };
 		A89100F823BD339E00D6EA2D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A89100F623BD339E00D6EA2D /* LaunchScreen.storyboard */; };
+		E81DFBBE25D0A1E900EB056C /* PlaylistTrackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81DFBBD25D0A1E900EB056C /* PlaylistTrackController.swift */; };
 		E83B012124CE82F600C2C5E4 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83B012024CE82F600C2C5E4 /* Database.swift */; };
 		E840A57E256C88C2009F3C9E /* CrashReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A57D256C88C2009F3C9E /* CrashReportService.swift */; };
 		E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = E840A581256CD15E009F3C9E /* ZIPFoundation */; };
@@ -55,7 +56,7 @@
 		E85A4DD723DAB859006BD7EE /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DD623DAB859006BD7EE /* Formatters.swift */; };
 		E85A4DDB23DE4F99006BD7EE /* SyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A4DDA23DE4F99006BD7EE /* SyncController.swift */; };
 		E85A50EA23E2736D00029D7C /* RootNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50E923E2736D00029D7C /* RootNavigationController.swift */; };
-		E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */; };
+		E85A50EC23E5293600029D7C /* PlaylistsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A50EB23E5293600029D7C /* PlaylistsController.swift */; };
 		E85B598125A1BF390071496D /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598025A1BF390071496D /* NotificationService.swift */; };
 		E85B598625A413C40071496D /* PickReviewSourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598525A413C40071496D /* PickReviewSourceController.swift */; };
 		E85B598925A4186E0071496D /* EditReviewSourcesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85B598825A4186E0071496D /* EditReviewSourcesController.swift */; };
@@ -106,6 +107,7 @@
 		A89100F423BD339E00D6EA2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A89100F723BD339E00D6EA2D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A89100F923BD339E00D6EA2D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E81DFBBD25D0A1E900EB056C /* PlaylistTrackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistTrackController.swift; sourceTree = "<group>"; };
 		E83B012024CE82F600C2C5E4 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		E840A57D256C88C2009F3C9E /* CrashReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportService.swift; sourceTree = "<group>"; };
 		E840A587256DA19F009F3C9E /* GGLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGLog.swift; sourceTree = "<group>"; };
@@ -141,7 +143,7 @@
 		E85A4DD623DAB859006BD7EE /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
 		E85A4DDA23DE4F99006BD7EE /* SyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncController.swift; sourceTree = "<group>"; };
 		E85A50E923E2736D00029D7C /* RootNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootNavigationController.swift; sourceTree = "<group>"; };
-		E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsControllers.swift; sourceTree = "<group>"; };
+		E85A50EB23E5293600029D7C /* PlaylistsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsController.swift; sourceTree = "<group>"; };
 		E85B598025A1BF390071496D /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		E85B598525A413C40071496D /* PickReviewSourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickReviewSourceController.swift; sourceTree = "<group>"; };
 		E85B598825A4186E0071496D /* EditReviewSourcesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditReviewSourcesController.swift; sourceTree = "<group>"; };
@@ -353,8 +355,9 @@
 		E89423BA25CCE75E0096751D /* playlist */ = {
 			isa = PBXGroup;
 			children = (
-				E85A50EB23E5293600029D7C /* PlaylistsControllers.swift */,
+				E85A50EB23E5293600029D7C /* PlaylistsController.swift */,
 				E89423BD25CCECDA0096751D /* SelectPlaylistsController.swift */,
+				E81DFBBD25D0A1E900EB056C /* PlaylistTrackController.swift */,
 			);
 			path = playlist;
 			sourceTree = "<group>";
@@ -511,7 +514,8 @@
 				E8588F68258D16CB00ACA919 /* PlaylistSynchronizer.swift in Sources */,
 				E85A366825AD385C005C4FDD /* AddTrackListController.swift in Sources */,
 				E873DDF32586F45500207F99 /* NowPlayingController.swift in Sources */,
-				E85A50EC23E5293600029D7C /* PlaylistsControllers.swift in Sources */,
+				E85A50EC23E5293600029D7C /* PlaylistsController.swift in Sources */,
+				E81DFBBE25D0A1E900EB056C /* PlaylistTrackController.swift in Sources */,
 				E8588F65258C899D00ACA919 /* SyncStatus.swift in Sources */,
 				E8588F7D259032E600ACA919 /* StandardSynchronizer.swift in Sources */,
 				E8596647243FEFEC00AA8727 /* TableSearchAugmenter.swift in Sources */,
@@ -666,7 +670,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.6.1;
+				MARKETING_VERSION = 2.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
@@ -687,7 +691,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.6.1;
+				MARKETING_VERSION = 2.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = net.gorillagroove;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;

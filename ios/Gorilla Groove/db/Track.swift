@@ -1,6 +1,6 @@
 import Foundation
 
-public class Track : Entity, ViewableTrackData {
+public class Track : Entity, ViewableTrackData, TrackReturnable {
     public var id: Int
     public var album: String
     public var artist: String
@@ -58,6 +58,8 @@ public class Track : Entity, ViewableTrackData {
             return userId == 0
         }
     }
+    
+    func asTrack() -> Track { self }
 
     public init(
         id: Int,
@@ -206,27 +208,6 @@ public class TrackDao : BaseDao<Track> {
         """
                 
         return queryEntities(query)
-    }
-    
-    static func getTracksForPlaylist(
-        _ playlistId: Int,
-        isSongCached: Bool? = nil
-    ) -> [Track] {
-        var isCachedQuery = ""
-        if let isSongCached = isSongCached {
-            isCachedQuery = "AND (t.song_cached_at IS \(isSongCached ? "NOT" : "") NULL)"
-        }
-        
-        return queryEntities("""
-            SELECT t.*
-            FROM track t
-            LEFT JOIN playlist_track pt
-                ON pt.track_id = t.id
-            LEFT JOIN playlist p
-                ON pt.playlist_id = p.id
-            WHERE p.id = \(playlistId)
-            \(isCachedQuery)
-        """)
     }
     
     static func getArtists(

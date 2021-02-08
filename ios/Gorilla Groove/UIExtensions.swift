@@ -66,11 +66,27 @@ extension UIViewController {
     var searchText: String {
         get {
             guard let searchController = self.navigationItem.searchController else {
-                GGLog.warning("No search controller found when getting search term for controller: \(self.title ?? "-1")")
                 return ""
             }
             
             return searchController.searchBar.text ?? ""
         }
+        set {
+            guard let searchController = self.navigationItem.searchController else {
+                GGLog.warning("Tried to set the search text of a non-existent search controller")
+                return
+            }
+            
+            return searchController.searchBar.text = newValue
+        }
+    }
+    
+    func cancelSearch() {
+        guard let searchBar = self.navigationItem.searchController?.searchBar else {
+            // Already not searching
+            return
+        }
+        
+        searchBar.delegate!.searchBarCancelButtonClicked!(searchBar)
     }
 }
