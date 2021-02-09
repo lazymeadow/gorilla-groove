@@ -4,6 +4,8 @@ import MediaPlayer
 
 class NowPlayingTracks {
     
+    private static let bufferingTag = "[BUFFERING] "
+
     private(set) static var currentTrack: Track? = nil
     
     static func getNowPlayingTracks() -> [Track] {
@@ -52,6 +54,32 @@ class NowPlayingTracks {
             if currentTrack?.id == updatedTrack.id {
                 currentTrack = updatedTrack
             }
+        }
+        
+        AudioPlayer.observePlaybackChanged(this) { _, playbackState in
+            setMetadataFromPlaybackState(playbackState)
+        }
+    }
+    
+    static func setMetadataFromPlaybackState(_ playbackState: PlaybackStateType) {
+        switch playbackState {
+        case .PLAYING:
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
+            let currentTitle = MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyTitle] as? String ?? ""
+            if currentTitle.hasPrefix(bufferingTag) {
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyTitle] = currentTitle.dropFirst(bufferingTag.count)
+            }
+        case .PAUSED:
+            // If you leave the app with the music paused, the notification player doesn't seem to get the updated time...
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
+        case .STOPPED:
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        case .BUFFERING:
+            // Put [BUFFERING] on the front just so people have an idea that something is going on
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyTitle] = bufferingTag + (currentTrack?.name ?? "")
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
+            MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
         }
     }
     

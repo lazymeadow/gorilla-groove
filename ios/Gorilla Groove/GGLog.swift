@@ -89,7 +89,7 @@ class GGLogger {
         // But as soon as I deployed to testflight, it was empty.
         // Same issue at this guy, that never got a resolution as of Dec 2020 https://github.com/CocoaLumberjack/CocoaLumberjack/issues/800
         guard let currentPathString = fileLogger.logFileManager.sortedLogFilePaths.first else {
-            GGLog.critical("Could not get current log path!")
+            GGLog.error("Could not get current log path!")
             return nil
         }
         

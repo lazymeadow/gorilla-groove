@@ -73,8 +73,10 @@ class SettingsChangeObserver: NSObject {
         
         if keyPath == "max_offline_storage" {
             guard let newValue = change[NSKeyValueChangeKey.init(rawValue: "new")] as? Int else {
-                // This was null on a fresh app install, so it might be unfair to classify this as an "error", though it would be bad at any other time
-                GGLog.warning("Could not parse 'max_offline_storage''s new value from 'change'!")
+                if UserState.isLoggedIn {
+                    GGLog.error("Could not parse 'max_offline_storage''s new value from 'change'!")
+                }
+                
                 return
             }
             

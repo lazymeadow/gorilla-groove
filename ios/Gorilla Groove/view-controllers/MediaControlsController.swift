@@ -148,7 +148,7 @@ class MediaControlsController: UIViewController {
         self.view.addSubview(content)
         self.view.backgroundColor = Colors.navControls
         self.view.translatesAutoresizingMaskIntoConstraints = false
-
+        
         NSLayoutConstraint.activate([
             self.view.heightAnchor.constraint(equalToConstant: 90.0),
             
@@ -289,6 +289,7 @@ class MediaControlsController: UIViewController {
     private func handleTrackChange(_ nillableTrack: Track?) {
         self.timeListened = 0.0
         self.lastTimeUpdate = 0.0
+        self.slider.setValue(0, animated: false)
         self.listenedToCurrentSong = false
         self.playingTrackId = nillableTrack?.id
         
@@ -296,7 +297,6 @@ class MediaControlsController: UIViewController {
             self.currentTime.text = Formatters.timeFromSeconds(0)
             self.totalTime.text = Formatters.timeFromSeconds(0)
             self.songText.text = " "
-            self.slider.setValue(0, animated: true)
             self.pauseIcon.isHidden = true
             self.playIcon.isHidden = false
             
@@ -309,9 +309,7 @@ class MediaControlsController: UIViewController {
         self.currentTime.text = Formatters.timeFromSeconds(0)
         self.pauseIcon.isHidden = false
         self.playIcon.isHidden = true
-        
-        self.slider.setValue(0, animated: true)
-        
+                
         self.targetListenTime = Double(Int(track.length)) * 0.60
     }
     

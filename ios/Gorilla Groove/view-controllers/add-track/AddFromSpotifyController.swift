@@ -353,8 +353,8 @@ class AddFromSpotifyTrackListController : UIViewController, UITableViewDataSourc
         
         tableView.tableFooterView = UIView(frame: .zero)
         
-        AudioPlayer.observePlaybackChanged(self) { vc, isPlaying in
-            if isPlaying {
+        AudioPlayer.observePlaybackChanged(self) { vc, playbackState in
+            if playbackState == .PLAYING {
                 DispatchQueue.main.async {
                     vc.player.pause()
                 }

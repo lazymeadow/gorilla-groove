@@ -13,7 +13,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         AVPlayer()
     }()
     
-    private static var registeredCallbacks: Array<(_ time: Double)->()> = []
+    private static var registeredCallbacks: [(_ time: Double)->()] = []
     
     private static var lastSongPlayHeartbeatTime = 0.0;
     
@@ -44,6 +44,8 @@ class AudioPlayer : CachingPlayerItemDelegate {
         reviewQueueController = vc
     }
     
+    private static let timeControlStatusObserver = TimeControlStatusObserver()
+    
     private init() { }
     
     static func initialize() {
@@ -72,6 +74,31 @@ class AudioPlayer : CachingPlayerItemDelegate {
                 callback(Double(truncating: timeInSeconds as NSNumber))
             }
         }
+        
+        player.addObserver(timeControlStatusObserver, forKeyPath: "timeControlStatus", options: [.old, .new], context: nil)
+    }
+    
+    private static var isStalled = false
+    fileprivate static func onTimeControlStatusChange() {
+        if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+            if !isStalled {
+                isStalled = true
+                
+                // Give the app a chance to catch up before we notify everything that we're buffering.
+                // It can take a second for the "playing" event to kick in, even if it's already available.
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
+                    if isStalled {
+                        GGLog.warning("Playback was stalled")
+                        AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
+                    }
+                }
+            }
+        } else if player.timeControlStatus == .playing {
+            AudioPlayer.observers.values.forEach { $0(.PLAYING) }
+            isStalled = false
+        } else if player.timeControlStatus == .paused {
+            AudioPlayer.observers.values.forEach { $0(.PAUSED) }
+        }
     }
     
     private static func initializeControlCenter() {
@@ -91,10 +118,10 @@ class AudioPlayer : CachingPlayerItemDelegate {
         }
         rcc.changePlaybackPositionCommand.addTarget { event in
             GGNavLog.info("User manually adjusted playback position from the lock screen")
-
+            
             let requestedSongTime = (event as! MPChangePlaybackPositionCommandEvent).positionTime
             seekTo(requestedSongTime)
-
+            
             registeredCallbacks.forEach { callback in
                 callback(requestedSongTime)
             }
@@ -180,31 +207,23 @@ class AudioPlayer : CachingPlayerItemDelegate {
     }
     
     static func play() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
         player.play()
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
-        self.observers.values.forEach { $0(true) }
     }
     
     static func pause() {
-        // If you leave the app with the music paused, the notification player doesn't seem to get the updated time...
-        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = AudioPlayer.currentTime
-        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
-        
         player.pause()
         
         sendPlayEvent(nil)
-        self.observers.values.forEach { $0(false) }
     }
     
     static func stop() {
         player.pause()
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         player.replaceCurrentItem(with: nil)
         
         sendPlayEvent(nil)
-        self.observers.values.forEach { $0(false) }
+        self.observers.values.forEach { $0(.STOPPED) }
     }
     
     private static func setRatingEnabled(_ enabled: Bool) {
@@ -229,10 +248,11 @@ class AudioPlayer : CachingPlayerItemDelegate {
     }
     
     static func playPlayerItem(_ playerItem: AVPlayerItem, _ track: Track) {
+        isStalled = false
+
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
-        MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
-
+        
         setRatingEnabled(track.inReview)
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
@@ -256,28 +276,35 @@ class AudioPlayer : CachingPlayerItemDelegate {
         let messageType: String = "NOW_PLAYING"
     }
     
-    private static var observers = [UUID : (Bool) -> Void]()
+    private static var observers = [UUID : (PlaybackStateType) -> Void]()
     
     @discardableResult
     static func observePlaybackChanged<T: AnyObject>(
         _ observer: T,
-        closure: @escaping (T, Bool) -> Void
+        closure: @escaping (T, PlaybackStateType) -> Void
     ) -> ObservationToken {
         let id = UUID()
         
-        observers[id] = { [weak observer] isPlaying in
+        observers[id] = { [weak observer] playbackState in
             guard let observer = observer else {
                 observers.removeValue(forKey: id)
                 return
             }
 
-            closure(observer, isPlaying)
+            closure(observer, playbackState)
         }
         
         return ObservationToken {
             observers.removeValue(forKey: id)
         }
     }
+}
+
+enum PlaybackStateType {
+    case PLAYING
+    case PAUSED
+    case STOPPED
+    case BUFFERING
 }
 
 class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
@@ -299,38 +326,24 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
     
     private var playbackStalledTrackId: Int?
     
+    // This doesn't seem to get called after an item stalls, so it's of limited use
     func playerItemReadyToPlay(_ playerItem: CachingPlayerItem) {
-        // The description of CachingPlayerItem says this is called after pre-buffering. I believe I have something set up
-        // to auto-play after that, so this might be pointless. But I am curious if it is invoked after playback stalls.
         let songCacheItem = playerItem as! SongCachingPlayerItem
         GGLog.debug("Player item ready to play for track ID \(songCacheItem.trackId)")
-        
-        // Doesn't matter if it was stalled or not. If the most recent stall was not for this track, don't worry about stalls anymore.
-        // If a different track finished than the one that stalled, that would just be weird. Though maybe it could happen.
-        if songCacheItem.trackId != playbackStalledTrackId {
-            playbackStalledTrackId = nil
-        } else {
-            // Not really a warning, but I want it to be easy to spot in the logs for debugging. Temporary.
-            GGLog.warning("Stalled playback ID was ready to play")
-        }
-        
-        // Could be a number of things wrong with this. The struggle I have right now is that, even after a stalled item says
-        // that it is "ready to play", just pushing "play" again does not cause it to play. Hopefully just resetting the item
-        // reference here will make it work. Also a potential issue in that it could have audio start playing that the user
-        // wanted to pause. Need to see how it works in practice. Might need a new Bool to remember a user's "intent" to be playing.
-        if songCacheItem.trackId == playbackStalledTrackId {
-            if let track = TrackDao.findById(songCacheItem.trackId) {
-                AudioPlayer.playPlayerItem(songCacheItem, track)
-            } else {
-                GGLog.warning("Player item was ready to play a song that has been deleted")
-            }
-        }
     }
     
+    // I stopped using this as putting a key value observer on the audio player seemed better
     func playerItemPlaybackStalled(_ playerItem: CachingPlayerItem) {
-        let songCacheItem = playerItem as! SongCachingPlayerItem
-        GGLog.warning("Player item playback was stalled for track ID \(songCacheItem.trackId)")
-        playbackStalledTrackId = songCacheItem.trackId
+//        GGLog.warning("Player item playback was stalled for track ID \(songCacheItem.trackId)")
+//        playbackStalledTrackId = songCacheItem.trackId
+    }
+}
+
+class TimeControlStatusObserver : NSObject {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "timeControlStatus" {
+            AudioPlayer.onTimeControlStatusChange()
+        }
     }
 }
 

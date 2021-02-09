@@ -160,7 +160,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
 
         // If someone picked the special "View All" album at the top, then load everything by nilling this out
         let albumToLoad = cell.album!.viewAllAlbum ? nil : cell.album!.name
-        let viewName = cell.album!.viewAllAlbum ? "All " + artist! : albumToLoad!
+        let viewName = cell.album!.viewAllAlbum ? artist! : albumToLoad!
                 
         let view = TrackViewController(
             viewName,
