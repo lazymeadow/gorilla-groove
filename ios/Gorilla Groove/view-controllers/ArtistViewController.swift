@@ -72,6 +72,17 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
             self?.setVisibleArtists()
         }
         
+        // If offline mode changes while we're actively looking at this VC, then we should update it.
+        // Otherwise, it will update when the user loads the view later.
+        SettingsService.observeOfflineModeChanged(self) { _, offlineModeEnabled in
+            DispatchQueue.main.async { [weak self] in
+                if self?.isActiveVc == true {
+                    self?.lastOfflineMode = OfflineStorageService.offlineModeEnabled
+                    self?.loadTracks()
+                }
+            }
+        }
+        
         // Remove extra table rows when we don't have a full screen of songs
         tableView.tableFooterView = UIView(frame: .zero)
         

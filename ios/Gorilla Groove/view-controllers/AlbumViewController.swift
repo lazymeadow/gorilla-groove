@@ -76,6 +76,17 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
             self?.setVisibleAlbums()
         }
         
+        // If offline mode changes while we're actively looking at this VC, then we should update it.
+        // Otherwise, it will update when the user loads the view later.
+        SettingsService.observeOfflineModeChanged(self) { _, offlineModeEnabled in
+            DispatchQueue.main.async { [weak self] in
+                if self?.isActiveVc == true {
+                    self?.lastOfflineMode = OfflineStorageService.offlineModeEnabled
+                    self?.loadTracks()
+                }
+            }
+        }
+        
         tableView.tableFooterView = UIView(frame: .zero)
         
         // Because the footer has no size, set an additional handler on the controller's view to make sure tapping on empty space closes it

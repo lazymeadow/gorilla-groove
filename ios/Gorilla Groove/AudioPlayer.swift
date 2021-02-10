@@ -4,6 +4,9 @@ import MediaPlayer
 
 class AudioPlayer : CachingPlayerItemDelegate {
     
+    @SettingsBundleStorage(key: "offline_mode_automatic_enable_buffer")
+    private static var enableOfflineModeAfterLongBuffer: Bool
+    
     private static var player: AVPlayer = {
         // I ran into an exc_bad_access code=1 error once and this answer on SO suggested splitting up the initialization
         // from the declaration. I don't know why this would matter, but I have tried it and hopefully we don't see it again.
@@ -86,15 +89,31 @@ class AudioPlayer : CachingPlayerItemDelegate {
                 
                 // Give the app a chance to catch up before we notify everything that we're buffering.
                 // It can take a second for the "playing" event to kick in, even if it's already available.
-                DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
-                    if isStalled {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
+                    if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && isStalled {
                         GGLog.warning("Playback was stalled")
                         AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
+                        
+                        // If we're still stalled after a while, then enable offline mode. But only if the track didn't change. If the user
+                        // is fucking with stuff don't interfere with them.
+                        let stalledTrackId = NowPlayingTracks.currentTrack?.id
+                        if stalledTrackId != nil && enableOfflineModeAfterLongBuffer && !OfflineStorageService.offlineModeEnabled {
+                            DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
+                                if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id {
+                                    OfflineStorageService.offlineModeEnabled = true
+                                    Toast.show("Offline mode automatically enabled")
+                                    GGLog.warning("Offline mode was automatically enabled due to a long stall")
+                                }
+                            }
+                        }
                     }
                 }
             }
         } else if player.timeControlStatus == .playing {
             AudioPlayer.observers.values.forEach { $0(.PLAYING) }
+            if isStalled {
+                GGLog.info("Stalling recovered")
+            }
             isStalled = false
         } else if player.timeControlStatus == .paused {
             AudioPlayer.observers.values.forEach { $0(.PAUSED) }

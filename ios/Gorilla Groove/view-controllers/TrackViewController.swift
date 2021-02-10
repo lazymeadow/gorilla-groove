@@ -173,6 +173,17 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         }
         
+        // If offline mode changes while we're actively looking at this VC, then we should update it.
+        // Otherwise, it will update when the user loads the view later.
+        SettingsService.observeOfflineModeChanged(self) { _, offlineModeEnabled in
+            DispatchQueue.main.async { [weak self] in
+                if self?.isActiveVc == true {
+                    self?.lastOfflineMode = OfflineStorageService.offlineModeEnabled
+                    self?.loadTracks()
+                }
+            }
+        }
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
         view.addGestureRecognizer(tapGesture)
     }

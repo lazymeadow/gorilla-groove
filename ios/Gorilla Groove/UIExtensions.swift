@@ -89,4 +89,10 @@ extension UIViewController {
         
         searchBar.delegate!.searchBarCancelButtonClicked!(searchBar)
     }
+    
+    var isActiveVc: Bool {
+        get {
+            return viewIfLoaded?.window != nil
+        }
+    }
 }
