@@ -5,9 +5,6 @@ typealias PageCompleteCallback = (_ completedPage: Int, _ totalPages: Int, _ typ
 class ServerSynchronizer {
     
     static let baseUrl = "sync/entity-type/%@/minimum/%ld/maximum/%ld?size=400&page="
-   
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private static var offlineModeEnabled: Bool
     
     private static var syncRunning = false
     
@@ -34,7 +31,7 @@ class ServerSynchronizer {
             return Set()
         }
         
-        if offlineModeEnabled {
+        if OfflineStorageService.offlineModeEnabled {
             GGSyncLog.debug("Not syncing as we are in offline mode")
             return Set()
         }
@@ -118,7 +115,7 @@ class ServerSynchronizer {
         
         semaphores.forEach { $0.wait() }
         
-        if offlineModeEnabled {
+        if OfflineStorageService.offlineModeEnabled {
             GGSyncLog.warning("Offline mode was enabled while we were syncing.")
         }
         

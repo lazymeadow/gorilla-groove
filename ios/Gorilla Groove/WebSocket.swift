@@ -103,9 +103,6 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 class WebSocket {
     static private var socket: WebSocketTaskConnection? = nil
     
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private static var offlineModeEnabled: Bool
-    
     static func sendMessage(_ message: Encodable) {
         let messageJson = message.toJSONData()!.toString()
         socket?.send(messageJson)
@@ -115,7 +112,7 @@ class WebSocket {
         if socket != nil {
             return
         }
-        if offlineModeEnabled {
+        if OfflineStorageService.offlineModeEnabled {
             return
         }
         

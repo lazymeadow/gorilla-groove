@@ -59,6 +59,16 @@ class NowPlayingTracks {
         AudioPlayer.observePlaybackChanged(this) { _, playbackState in
             setMetadataFromPlaybackState(playbackState)
         }
+        
+        SettingsService.observeOfflineModeChanged(this) { _, offlineModeEnabled in
+            if offlineModeEnabled {
+                GGLog.info("Purging tracks not available offline")
+                let tracks = nowPlayingTrackIds.compactMap { trackIdToTrack[$0] }
+                let trackIdsToRemove = tracks.filter { $0.songCachedAt == nil }.map { $0.id }
+                
+                removeTracks(Set(trackIdsToRemove))
+            }
+        }
     }
     
     static func setMetadataFromPlaybackState(_ playbackState: PlaybackStateType) {
@@ -494,7 +504,9 @@ class NowPlayingTracks {
     }
     
     private static func notifyListeners(_ track: Track?, _ type: TrackChangeType) {
-        observers.values.forEach { $0(track, type) }
+        DispatchQueue.global().async {
+            observers.values.forEach { $0(track, type) }
+        }
     }
 }
 

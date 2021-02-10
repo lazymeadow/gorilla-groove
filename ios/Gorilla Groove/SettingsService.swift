@@ -62,6 +62,35 @@ class SettingsService {
             UIApplication.shared.open(settingsUrl)
         }
     }
+    
+    private static var observers = [UUID : (Bool) -> Void]()
+    
+    @discardableResult
+    static func observeOfflineModeChanged<T: AnyObject>(
+        _ observer: T,
+        closure: @escaping (T, Bool) -> Void
+    ) -> ObservationToken {
+        let id = UUID()
+        
+        observers[id] = { [weak observer] playbackState in
+            guard let observer = observer else {
+                observers.removeValue(forKey: id)
+                return
+            }
+
+            closure(observer, playbackState)
+        }
+        
+        return ObservationToken {
+            observers.removeValue(forKey: id)
+        }
+    }
+    
+    fileprivate static func notifyOfflineModeChanged() {
+        DispatchQueue.global().async {
+            observers.values.forEach { $0(OfflineStorageService.offlineModeEnabled) }
+        }
+    }
 }
 
 class SettingsChangeObserver: NSObject {
@@ -114,7 +143,11 @@ class SettingsChangeObserver: NSObject {
                 return
             }
             
+            // Change this to broadcast and let other files observe it instead.
+            // Then update NowPlayingTracks to remove tracks if offline mode is enabled
             GGLog.info("User changed 'offline_mode_enabled' to \(newValue)")
+            
+            SettingsService.notifyOfflineModeChanged()
             
             if newValue {
                 WebSocket.disconnect()

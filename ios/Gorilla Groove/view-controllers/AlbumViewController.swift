@@ -304,7 +304,7 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         self.showHiddenTracks = showingHidden ?? (user != nil)
         self.tracks = tracks
         self.lastOfflineMode = OfflineStorageService.offlineModeEnabled
-
+        
         super.init(nibName: nil, bundle: nil)
         
         self.title = title

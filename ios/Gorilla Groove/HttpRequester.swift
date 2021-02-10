@@ -9,9 +9,6 @@ class HttpRequester {
     
     typealias ResponseHandler<T> = (_ data: T?, _ status: Int, _ err: String?) -> Void
     
-    @SettingsBundleStorage(key: "offline_mode_enabled")
-    private static var offlineModeEnabled: Bool
-    
     private static let logger = GGLogger(category: "network")
     
     static func get<T: Codable>(
@@ -164,7 +161,7 @@ class HttpRequester {
         asMultipartData: Bool = false
     ) -> URLRequest? {
         
-        if offlineModeEnabled {
+        if OfflineStorageService.offlineModeEnabled {
             logger.debug("Offline mode is enabled. Not making http request to \(urlPart)")
             return nil
         }
@@ -258,7 +255,7 @@ class HttpRequester {
         _ stringUrl: String,
         downloadFinishedHandler: @escaping (_ outputUrl: URL?) -> Void
     ) {
-        if offlineModeEnabled {
+        if OfflineStorageService.offlineModeEnabled {
             logger.debug("Offline mode is enabled. Not making download request to \(stringUrl)")
             downloadFinishedHandler(nil)
             return

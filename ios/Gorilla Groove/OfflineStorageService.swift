@@ -192,6 +192,13 @@ class OfflineStorageService {
         tracksToPurge.forEach { track in
             CacheService.deleteCachedData(trackId: track.id, cacheType: .song, ignoreDataUsageRecalculation: true)
             CacheService.deleteCachedData(trackId: track.id, cacheType: .art, ignoreWarning: true, ignoreDataUsageRecalculation: true)
+            
+            // Need to broadcast the track change now that the cache has been purged so the views correctly remove them if offline mode is enabled.
+            if let updatedTrack = TrackDao.findById(track.id) {
+                TrackService.broadcastTrackChange(updatedTrack, type: .MODIFICATION)
+            } else {
+                GGLog.error("Could not find track after deleting its cache data!")
+            }
         }
         
         // Invoke the recalculation just to make sure we've got the latest information about how much data we're using up now that

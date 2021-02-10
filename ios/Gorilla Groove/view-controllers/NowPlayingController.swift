@@ -18,9 +18,11 @@ class NowPlayingController : TrackViewController {
         super.viewDidLoad()
         
         NowPlayingTracks.addTrackChangeObserver(self) { vc, track, type in
-            if (type == .REMOVED || type == .ADDED || type == .RESET) && vc.viewIfLoaded?.window != nil {
-                GGLog.debug("Reloading now playing tracks because of a type change: \(type)")
-                vc.loadTracks()
+            DispatchQueue.main.async {
+                if (type == .REMOVED || type == .ADDED || type == .RESET) && vc.viewIfLoaded?.window != nil {
+                    GGLog.debug("Reloading now playing tracks because of a type change: \(type)")
+                    vc.loadTracks()
+                }
             }
         }
     }
