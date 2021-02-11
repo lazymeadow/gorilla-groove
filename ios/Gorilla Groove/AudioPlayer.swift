@@ -24,6 +24,8 @@ class AudioPlayer : CachingPlayerItemDelegate {
     
     private static weak var reviewQueueController: ReviewQueueController? = nil
     
+    private(set) static var isPlaybackWanted = false
+    
     static var isPaused: Bool {
         get {
             // Seems ridiculous that there isn't a built in helper for this
@@ -89,7 +91,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
                 
                 // Give the app a chance to catch up before we notify everything that we're buffering.
                 // It can take a second for the "playing" event to kick in, even if it's already available.
-                DispatchQueue.global().asyncAfter(deadline: .now() + 2.0) {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
                     if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && isStalled {
                         GGLog.warning("Playback was stalled")
                         AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
@@ -99,7 +101,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
                         let stalledTrackId = NowPlayingTracks.currentTrack?.id
                         if stalledTrackId != nil && enableOfflineModeAfterLongBuffer && !OfflineStorageService.offlineModeEnabled {
                             DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
-                                if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id {
+                                if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id && isPlaybackWanted {
                                     OfflineStorageService.offlineModeEnabled = true
                                     Toast.show("Offline mode automatically enabled")
                                     GGLog.warning("Offline mode was automatically enabled due to a long stall")
@@ -227,20 +229,23 @@ class AudioPlayer : CachingPlayerItemDelegate {
     
     static func play() {
         player.play()
+        isPlaybackWanted = true
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
     }
     
     static func pause() {
         player.pause()
-        
+        isPlaybackWanted = false
+
         sendPlayEvent(nil)
     }
     
     static func stop() {
         player.pause()
         player.replaceCurrentItem(with: nil)
-        
+        isPlaybackWanted = false
+
         sendPlayEvent(nil)
         self.observers.values.forEach { $0(.STOPPED) }
     }
@@ -268,6 +273,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     
     static func playPlayerItem(_ playerItem: AVPlayerItem, _ track: Track) {
         isStalled = false
+        isPlaybackWanted = true
 
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)

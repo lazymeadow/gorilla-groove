@@ -3,8 +3,11 @@ import UIKit
 
 // Pretty slick, and stolen from
 // https://stackoverflow.com/a/64712479/13175115
+// I changed this to a class because I randomly got a sick error "Simultaneous accesses to 0x6000007fc3d0, but modification requires exclusive access"
+// This random 0 upvote stack overflow suggested changing the struct to a class and I haven't had an issue since.
+// https://stackoverflow.com/a/59324450/13175115
 @propertyWrapper
-public struct SettingsBundleStorage<T> {
+public class SettingsBundleStorage<T> {
     private let key: String
 
     public init(key: String) {

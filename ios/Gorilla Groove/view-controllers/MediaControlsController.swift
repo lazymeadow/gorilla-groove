@@ -430,7 +430,7 @@ class MediaControlsController: UIViewController {
     }
     
     @objc func recalculatePlayButton() {
-        if (AudioPlayer.isPaused) {
+        if (AudioPlayer.isPaused && !AudioPlayer.isPlaybackWanted) {
             playIcon.isHidden = false
             pauseIcon.isHidden = true
         } else {
