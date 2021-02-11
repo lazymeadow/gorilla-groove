@@ -99,7 +99,7 @@ struct SetPrivateRequest: Codable {
 }
 
 struct UpdateTrackRequest: Codable {
-    let trackIds: Array<Int>
+    let trackIds: [Int]
     var name: String? = nil
     var artist: String? = nil
     var featuring: String? = nil

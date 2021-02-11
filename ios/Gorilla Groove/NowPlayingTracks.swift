@@ -206,6 +206,7 @@ class NowPlayingTracks {
     }
     
     private static func playTrack(_ originalTrack: Track) {
+        GGLog.debug("About to start playing track with ID \(originalTrack.id)")
         AudioPlayer.pause()
         LocationService.requestLocationPermissionIfNeeded()
         

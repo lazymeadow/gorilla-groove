@@ -129,16 +129,16 @@ class ReviewQueueController : UIViewController {
             name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
-
+        
         let selectionBottomBorder = createBorder()
-
+        
         self.view.addSubview(queueSelectionView)
         self.view.addSubview(selectionBottomBorder)
         self.view.addSubview(collectionView)
         self.view.addSubview(activitySpinner)
         
         self.view.addSubview(noTracksView)
-
+        
         noTracksView.isHidden = true
         
         self.view.backgroundColor = Colors.background
@@ -273,7 +273,7 @@ class ReviewQueueController : UIViewController {
         }
     }
     
-    private func setDefaultActiveSource() {
+    private func setDefaultActiveSource(playAfter: Bool = false) {
         // Iterate over all the sources that need review, and pick a default.
         // Order goes User Recommend -> Artist -> YT Channel to put the more interesting sources first
         let sourceByType = Dictionary(grouping: self.reviewSourcesNeedingReview, by: { $0.sourceType })
@@ -286,7 +286,7 @@ class ReviewQueueController : UIViewController {
         }
         
         DispatchQueue.main.async {
-            self.setActiveSource(newSourceId)
+            self.setActiveSource(newSourceId, playAfter: playAfter)
         }
     }
     
@@ -301,7 +301,7 @@ class ReviewQueueController : UIViewController {
         }
     }
     
-    func setActiveSource(_ sourceId: Int?) {
+    func setActiveSource(_ sourceId: Int?, playAfter: Bool = false) {
         guard let sourceId = sourceId else {
             noTracksView.isHidden = false
             self.selectedSourceId = nil
@@ -324,6 +324,13 @@ class ReviewQueueController : UIViewController {
         collectionView.reloadData()
         
         self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: false)
+        
+        if !visibleTracks.isEmpty && playAfter {
+            DispatchQueue.global().async { [weak self] in
+                guard let this = self else { return }
+                NowPlayingTracks.setNowPlayingTracks(this.visibleTracks, playFromIndex: 0)
+            }
+        }
     }
     
     @objc func pickSource(tapGestureRecognizer: UITapGestureRecognizer) {
@@ -346,9 +353,9 @@ class ReviewQueueController : UIViewController {
     }
     
     func handleTrackChanges(
-        new: Array<Track> = [],
-        updated: Array<Track> = [],
-        deleted: Array<Track> = [],
+        new: [Track] = [],
+        updated: [Track] = [],
+        deleted: [Track] = [],
         playNext: Bool? = nil
     ) {
         GGLog.info("Handling track changes to current controller state. Currently loaded review source is \(self.selectedSourceId ?? -1)")
@@ -406,7 +413,7 @@ class ReviewQueueController : UIViewController {
         NowPlayingTracks.removeTracks(trackIdsToRemove, playNext: playNext)
         
         if self.selectedSourceId == nil || visibleTracks.isEmpty {
-            self.setDefaultActiveSource()
+            self.setDefaultActiveSource(playAfter: playNext ?? true)
         } else {
             // Only need to do this if we didn't set the default source as it reloads data on its own
             DispatchQueue.main.async {
@@ -574,8 +581,7 @@ extension ReviewQueueController: UICollectionViewDataSource {
             AudioPlayer.pause()
         }
         
-        let request = UpdateTrackRequest(trackIds: [track.id])
-        HttpRequester.delete("track", request) { _, statusCode, _ in
+        HttpRequester.delete("track?trackIds=\(track.id)") { _, statusCode, _ in
             if !statusCode.isSuccessful() {
                 DispatchQueue.main.async {
                     self.activitySpinner.stopAnimating()
