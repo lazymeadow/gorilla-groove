@@ -45,6 +45,8 @@ class PlaylistsController : UIViewController, UITableViewDataSource, UITableView
         tableView.delegate = self
         tableView.register(TableViewCell<Playlist>.self, forCellReuseIdentifier: "playlistCell")
         
+        OfflineStorageService.addOfflineModeToggleObserverToVc(self)
+
         // Remove extra table row lines that have no content
         tableView.tableFooterView = UIView(frame: .zero)
     }

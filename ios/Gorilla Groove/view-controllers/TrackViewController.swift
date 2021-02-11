@@ -184,6 +184,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         }
         
+        OfflineStorageService.addOfflineModeToggleObserverToVc(self)
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
         view.addGestureRecognizer(tapGesture)
     }

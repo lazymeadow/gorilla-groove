@@ -471,6 +471,57 @@ class OfflineStorageService {
     struct SizeIncreasePrompt: Codable {
         let userRejectedIncrease: Bool
     }
+    
+    
+    private static let disableOfflineModeButton: UIBarButtonItem = {
+        let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
+        let icon = UIImage(systemName: "wifi.slash", withConfiguration: config)!
+        
+        return UIBarButtonItem(
+            image: icon,
+            style: .plain,
+            action: {
+                GGNavLog.info("Showing user offline mode disable prompt")
+
+                ViewUtil.showAlert(title: "Go back online?", yesText: "Yes", dismissText: "Stay Offline") {
+                    OfflineStorageService.offlineModeEnabled = false
+                }
+            }
+        )
+    }()
+    
+    static func addOfflineModeToggleObserverToVc(_ vc: UIViewController) {
+        DispatchQueue.main.async {
+            if offlineModeEnabled {
+                addOfflineDisableButtonIfNeeded(vc)
+            }
+            
+            SettingsService.observeOfflineModeChanged(vc) { vc, offlineModeEnabled in
+                DispatchQueue.main.async {
+                    if offlineModeEnabled {
+                        addOfflineDisableButtonIfNeeded(vc)
+                    } else {
+                        if vc.navigationItem.leftBarButtonItem == disableOfflineModeButton {
+                            vc.navigationItem.leftBarButtonItem = nil
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private static func addOfflineDisableButtonIfNeeded(_ vc: UIViewController) {
+        if vc.navigationController?.navigationBar.backItem != nil {
+            return
+        }
+        
+        let existingIcons = vc.navigationItem.leftBarButtonItems ?? []
+        // If there are already icons in the VC, don't show the icon as it could look weird / make things too busy
+        if !existingIcons.isEmpty {
+            return
+        }
+        vc.navigationItem.leftBarButtonItem = disableOfflineModeButton
+    }
 }
 
 

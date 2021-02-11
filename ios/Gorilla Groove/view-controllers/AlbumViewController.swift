@@ -89,6 +89,8 @@ class AlbumViewController: UIViewController, UITableViewDataSource, UITableViewD
         
         tableView.tableFooterView = UIView(frame: .zero)
         
+        OfflineStorageService.addOfflineModeToggleObserverToVc(self)
+
         // Because the footer has no size, set an additional handler on the controller's view to make sure tapping on empty space closes it
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
         view.addGestureRecognizer(tapGesture)
