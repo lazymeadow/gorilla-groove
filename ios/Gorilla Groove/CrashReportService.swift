@@ -174,6 +174,11 @@ class CrashReportService {
             .urls(for: .cachesDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("crash-report.zip")
         
+        if FileManager.exists(archiveUrl) {
+            GGLog.warning("Prior archive existed for problem report and it was not cleaned up. Cleaning up now")
+            try! FileManager.default.removeItem(at: archiveUrl)
+        }
+        
         guard let archive = Archive(url: archiveUrl, accessMode: .create) else {
             GGLog.error("Could not create archive. Attempted path: \(archiveUrl.absoluteString)")
             return false
@@ -194,7 +199,7 @@ class CrashReportService {
         }
         
         let archiveData = try! Data(contentsOf: archiveUrl)
-
+        
         if FileManager.exists(archiveUrl) {
             GGLog.info("Cleaning up zip archive")
             try! FileManager.default.removeItem(at: archiveUrl)
