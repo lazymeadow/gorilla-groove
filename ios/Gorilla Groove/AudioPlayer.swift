@@ -108,9 +108,16 @@ class AudioPlayer : CachingPlayerItemDelegate {
                         if stalledTrackId != nil && enableOfflineModeAfterLongBuffer && !OfflineStorageService.offlineModeEnabled {
                             DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
                                 if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id && isPlaybackWanted {
-                                    OfflineStorageService.offlineModeEnabled = true
-                                    Toast.show("Offline mode automatically enabled")
-                                    GGLog.warning("Offline mode was automatically enabled due to a long stall")
+                                    // I think that more could be done to make this process better. But for now, just make sure that anything in the now playing
+                                    // of the user are actually available offline. Otherwise we'd be putting them in offline mode for no real benefit to them.
+                                    let anySongsAvailableOffline = NowPlayingTracks.getNowPlayingTracks().contains(where: { $0.songCachedAt != nil })
+                                    if anySongsAvailableOffline {
+                                        OfflineStorageService.offlineModeEnabled = true
+                                        Toast.show("Offline mode automatically enabled")
+                                        GGLog.warning("Offline mode was automatically enabled due to a long stall")
+                                    } else {
+                                        GGLog.warning("User has enabled 'offline mode after stall' but no songs in their now playing were available offline. Not engaging it.")
+                                    }
                                 }
                             }
                         }
