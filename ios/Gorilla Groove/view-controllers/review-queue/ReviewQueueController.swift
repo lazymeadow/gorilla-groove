@@ -543,7 +543,8 @@ extension ReviewQueueController: UICollectionViewDataSource {
             DispatchQueue.main.async {
                 Toast.show("\(track.name) was approved")
                 self.activitySpinner.stopAnimating()
-                self.handleTrackChanges(updated: [track])
+                let playNext = !AudioPlayer.isPaused && NowPlayingTracks.currentTrack?.id == track.id
+                self.handleTrackChanges(updated: [track], playNext: playNext)
             }
             
             TrackDao.save(track)
