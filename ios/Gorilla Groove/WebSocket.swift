@@ -13,7 +13,7 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 
     init(_ url: String) {
         super.init()
-        logger.info("WebSocket init with URL \(url)")
+        logger.debug("WebSocket init with URL \(url)")
 
         onError = { _, message, error in
             self.logger.error("Got fatal error code \(error.code) from WebSocket message: \(message). Error: \(error.localizedDescription)")
@@ -31,15 +31,15 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        logger.info("Websocket finished connecting")
+        logger.debug("Websocket finished connecting")
     }
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        logger.info("Socket disconnected")
+        logger.debug("Socket disconnected")
     }
     
     func connect() {
-        logger.info("Connecting WebSocket...")
+        logger.debug("Connecting WebSocket...")
         webSocketTask.resume()
         
         listen()
@@ -50,51 +50,57 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
     }
     
     func listen()  {
-        webSocketTask.receive { result in
-            self.logger.info("Received websocket message")
+        webSocketTask.receive { [weak self] result in
+            guard let this = self else { return }
+            this.logger.debug("Received websocket message")
+            
             switch result {
             case .failure(let error):
-                self.onError?(self, "", error as NSError)
+                this.onError?(this, "", error as NSError)
             case .success(let message):
                 switch message {
                 case .string(let text):
-                    self.onMessage?(self, text)
+                    this.onMessage?(this, text)
                 case .data(let data):
-                    self.onDataMessage?(self, data)
+                    this.onDataMessage?(this, data)
                 @unknown default:
                     fatalError()
                 }
                 
-                self.listen()
+                this.listen()
             }
         }
     }
     
     func send(_ text: String, _ retry: Int = 1) {
-        logger.info("WebSocket Send (try \(retry) - \(text)")
-        webSocketTask.send(URLSessionWebSocketTask.Message.string(text)) { error in
+        logger.debug("WebSocket Send (try \(retry) - \(text)")
+        webSocketTask.send(URLSessionWebSocketTask.Message.string(text)) { [weak self] error in
+            guard let this = self else { return }
+
             if let error = error as NSError? {
                 if error.code == 53 || error.code == 57 || error.code == 89 {
-                    self.logger.info("Websocket was disconnected. About to reconnect")
+                    this.logger.info("Websocket was disconnected. About to reconnect")
                     WebSocket.reset()
                     
                     if retry < 3 {
                         sleep(1)
-                        self.send(text, retry + 1)
+                        this.send(text, retry + 1)
                     } else {
-                        self.logger.error("Failed to send WebSocket message \(text) after retry limit was reached")
+                        this.logger.error("Failed to send WebSocket message \(text) after retry limit was reached")
                     }
                 } else {
-                    self.onError?(self, text, error)
+                    this.onError?(this, text, error)
                 }
             }
         }
     }
     
     func send(_ data: Data) {
-        webSocketTask.send(URLSessionWebSocketTask.Message.data(data)) { error in
+        webSocketTask.send(URLSessionWebSocketTask.Message.data(data)) { [weak self] error in
+            guard let this = self else { return }
+
             if let error = error {
-                self.onError?(self, data.toString(), error as NSError)
+                this.onError?(this, data.toString(), error as NSError)
             }
         }
     }

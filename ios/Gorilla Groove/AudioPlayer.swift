@@ -89,16 +89,22 @@ class AudioPlayer : CachingPlayerItemDelegate {
         player.addObserver(timeControlStatusObserver, forKeyPath: "timeControlStatus", options: [.old, .new], context: nil)
     }
     
-    private static var isStalled = false
+    private static var isStalled = false {
+        didSet {
+            stallCheckPending = false
+        }
+    }
+    private static var stallCheckPending = false
     fileprivate static func onTimeControlStatusChange() {
         if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
-            if !isStalled {
-                isStalled = true
+            if !stallCheckPending {
+                stallCheckPending = true
                 
                 // Give the app a chance to catch up before we notify everything that we're buffering.
                 // It can take a second for the "playing" event to kick in, even if it's already available.
                 DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
-                    if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && isStalled {
+                    if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && stallCheckPending {
+                        isStalled = true
                         GGLog.warning("Playback was stalled")
                         AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
                         
@@ -106,7 +112,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
                         // is fucking with stuff don't interfere with them.
                         let stalledTrackId = NowPlayingTracks.currentTrack?.id
                         if stalledTrackId != nil && enableOfflineModeAfterLongBuffer && !OfflineStorageService.offlineModeEnabled {
-                            DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
+                            DispatchQueue.global().asyncAfter(deadline: .now() + 12) {
                                 if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id && isPlaybackWanted {
                                     // I think that more could be done to make this process better. But for now, just make sure that anything in the now playing
                                     // of the user are actually available offline. Otherwise we'd be putting them in offline mode for no real benefit to them.
@@ -305,6 +311,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     }
     
     @objc private static func playerDidFinishPlayingItem() {
+        GGLog.info("Finished playing current audio item")
         NowPlayingTracks.playNext()
     }
     
