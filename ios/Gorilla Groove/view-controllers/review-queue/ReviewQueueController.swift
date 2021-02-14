@@ -642,8 +642,10 @@ class ReviewTrackCollectionCell : UICollectionViewCell {
                 ) { trackLinkResponse in
                     if self.track?.id == track.id {
                         guard let response = trackLinkResponse else {
-                            Toast.show("Could not fetch album art")
-                            self.setNoAlbumArtPicture()
+                            DispatchQueue.main.async {
+                                Toast.show("Could not fetch album art")
+                                self.setNoAlbumArtPicture()
+                            }
 
                             return
                         }
