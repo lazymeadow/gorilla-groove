@@ -34,6 +34,14 @@ class TrackContextMenu {
                 parentVc.present(vc, animated: true)
             }))
             
+            alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { _ in
+                let usersController = TrimTrackController(track)
+                usersController.modalPresentationStyle = .pageSheet
+                
+                let vc = UINavigationController(rootViewController: usersController)
+                parentVc.present(vc, animated: true)
+            }))
+            
             alert.addAction(UIAlertAction(title: "Add to Playlist", style: .default, handler: { _ in
                 let playlistsController = SelectPlaylistsController(track)
                 playlistsController.modalPresentationStyle = .pageSheet
@@ -78,11 +86,6 @@ class TrackContextMenu {
                 }
             }))
         }
-        
-//        alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { _ in
-//            print("Trim")
-//        }))
-        
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
             GGNavLog.info("User clicked context menu 'Cancel' button")

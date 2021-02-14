@@ -20,6 +20,15 @@
         }
       },
       {
+        "package": "FDWaveformView",
+        "repositoryURL": "https://github.com/fulldecent/FDWaveformView",
+        "state": {
+          "branch": null,
+          "revision": "8ddf6107d54dccb3892f0a1aa70d5431d61d75f6",
+          "version": "5.0.1"
+        }
+      },
+      {
         "package": "InAppSettingsKit",
         "repositoryURL": "https://github.com/futuretap/InAppSettingsKit.git",
         "state": {

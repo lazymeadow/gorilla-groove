@@ -526,7 +526,7 @@ class OfflineStorageService {
 
 
 class CacheService {
-    private static func baseDir() -> URL {
+    static func baseDir() -> URL {
         return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 

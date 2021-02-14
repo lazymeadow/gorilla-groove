@@ -110,19 +110,21 @@ class ErrorReportController : UIViewController {
         sendButton.isDisabled = true
         viewLogButton.isDisabled = true
         
-        DispatchQueue.global().async {
+        DispatchQueue.global().async { [weak self] in
+            guard let this = self else { return }
             let success = CrashReportService.sendManualProblemReport()
-
+            
             DispatchQueue.main.async {
                 if success {
                     AppDelegate.rootView?.makeToast("Problem report sent successfully")
                 } else {
                     AppDelegate.rootView?.makeToast("Failed to send problem report")
+                    this.sendButton.isDisabled = false
                 }
 
                 // Don't re-enable the send button as there SHOULDN'T need to be a reason to send yet another report
-                self.viewLogButton.isDisabled = false
-                self.activitySpinner.stopAnimating()
+                this.viewLogButton.isDisabled = false
+                this.activitySpinner.stopAnimating()
             }
         }
     }

@@ -45,6 +45,8 @@
 		E85966492440021200AA8727 /* UIExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85966482440021200AA8727 /* UIExtensions.swift */; };
 		E8597AF123F0C6150095450E /* AlbumViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF023F0C6150095450E /* AlbumViewController.swift */; };
 		E8597AF323F0CC7A0095450E /* AlbumViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */; };
+		E8597D8E25D4FB7F00946FAE /* TrimTrackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8597D8D25D4FB7F00946FAE /* TrimTrackController.swift */; };
+		E8597D9225D6489600946FAE /* FDWaveformView in Frameworks */ = {isa = PBXBuildFile; productRef = E8597D9125D6489600946FAE /* FDWaveformView */; };
 		E8598FB6250B17D900D70E9F /* WebSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8598FB5250B17D900D70E9F /* WebSocket.swift */; };
 		E85A365E25AA318A005C4FDD /* AddReviewSourceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A365D25AA318A005C4FDD /* AddReviewSourceController.swift */; };
 		E85A366125AA31B7005C4FDD /* AutocompleteInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */; };
@@ -132,6 +134,7 @@
 		E85966482440021200AA8727 /* UIExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIExtensions.swift; sourceTree = "<group>"; };
 		E8597AF023F0C6150095450E /* AlbumViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewController.swift; sourceTree = "<group>"; };
 		E8597AF223F0CC7A0095450E /* AlbumViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumViewCell.swift; sourceTree = "<group>"; };
+		E8597D8D25D4FB7F00946FAE /* TrimTrackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrimTrackController.swift; sourceTree = "<group>"; };
 		E8598FB5250B17D900D70E9F /* WebSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocket.swift; sourceTree = "<group>"; };
 		E85A365D25AA318A005C4FDD /* AddReviewSourceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReviewSourceController.swift; sourceTree = "<group>"; };
 		E85A366025AA31B7005C4FDD /* AutocompleteInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutocompleteInputField.swift; sourceTree = "<group>"; };
@@ -189,6 +192,7 @@
 				E873DDEB258078B100207F99 /* InAppSettingsKit in Frameworks */,
 				E840A582256CD15E009F3C9E /* ZIPFoundation in Frameworks */,
 				E8FBB74E257DC0DF007DB097 /* Connectivity in Frameworks */,
+				E8597D9225D6489600946FAE /* FDWaveformView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +253,7 @@
 				E8DB1B2425BDE39D00556175 /* GGCheckbox.swift */,
 				E8DB1B2825BFB46B00556175 /* TableFilter.swift */,
 				E889440F25CA3E4C005D5FB4 /* GGActionSheet.swift */,
+				E8597D8D25D4FB7F00946FAE /* TrimTrackController.swift */,
 			);
 			path = "view-controllers";
 			sourceTree = "<group>";
@@ -385,6 +390,7 @@
 				E8FBB74D257DC0DF007DB097 /* Connectivity */,
 				E873DDEA258078B100207F99 /* InAppSettingsKit */,
 				E873DDFC25883CEF00207F99 /* Toast */,
+				E8597D9125D6489600946FAE /* FDWaveformView */,
 			);
 			productName = "Gorilla Groove";
 			productReference = A89100EA23BD339D00D6EA2D /* Gorilla Groove.app */;
@@ -420,6 +426,7 @@
 				E8FBB74C257DC0DE007DB097 /* XCRemoteSwiftPackageReference "connectivity" */,
 				E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */,
 				E873DDFB25883CEF00207F99 /* XCRemoteSwiftPackageReference "Toast-Swift" */,
+				E8597D9025D6489600946FAE /* XCRemoteSwiftPackageReference "FDWaveformView" */,
 			);
 			productRefGroup = A89100EB23BD339D00D6EA2D /* Products */;
 			projectDirPath = "";
@@ -463,6 +470,7 @@
 				E86EB67824EC9AA40066CB4E /* BaseDao.swift in Sources */,
 				A829AC0A23CA57AD0034AD69 /* TrackService.swift in Sources */,
 				E873DDF6258711CB00207F99 /* ReviewQueueController.swift in Sources */,
+				E8597D8E25D4FB7F00946FAE /* TrimTrackController.swift in Sources */,
 				E873DDF925871E6D00207F99 /* ErrorReportController.swift in Sources */,
 				E86EB67E24ECA4F30066CB4E /* PlaylistTrack.swift in Sources */,
 				A815B08B23C2FC4C003899B8 /* FileState.swift in Sources */,
@@ -739,6 +747,14 @@
 				minimumVersion = 3.7.0;
 			};
 		};
+		E8597D9025D6489600946FAE /* XCRemoteSwiftPackageReference "FDWaveformView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fulldecent/FDWaveformView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.1;
+			};
+		};
 		E873DDE9258078B100207F99 /* XCRemoteSwiftPackageReference "InAppSettingsKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/futuretap/InAppSettingsKit.git";
@@ -780,6 +796,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E840A58A256DE2D2009F3C9E /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjack;
+		};
+		E8597D9125D6489600946FAE /* FDWaveformView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E8597D9025D6489600946FAE /* XCRemoteSwiftPackageReference "FDWaveformView" */;
+			productName = FDWaveformView;
 		};
 		E873DDEA258078B100207F99 /* InAppSettingsKit */ = {
 			isa = XCSwiftPackageProductDependency;

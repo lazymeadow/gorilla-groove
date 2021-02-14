@@ -8,7 +8,7 @@ class SelectPlaylistsController : UIViewController, UITableViewDataSource, UITab
     private let track: Track
     
     private let tableView = UITableView()
-
+    
     private let activitySpinner: UIActivityIndicatorView = {
         let spinner = UIActivityIndicatorView()
         
