@@ -288,6 +288,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
             object: playerItem
         )
         
+        lastTimeUpdateSeconds = 0
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
         
