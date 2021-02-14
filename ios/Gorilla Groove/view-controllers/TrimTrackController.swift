@@ -162,6 +162,8 @@ class TrimTrackController : UIViewController, FDWaveformViewDelegate {
         return icon
     }()
     
+    private lazy var sendButton = UIBarButtonItem(title: "Trim", style: .plain, action: { [weak self] in self?.sendTrimRequest() })
+
     private lazy var waveformView: FDWaveformView = {
         let view = FDWaveformView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -219,6 +221,8 @@ class TrimTrackController : UIViewController, FDWaveformViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Trim Track"
+        
+        self.navigationItem.rightBarButtonItem = sendButton
         
         self.view.backgroundColor = Colors.background
         
@@ -304,9 +308,9 @@ class TrimTrackController : UIViewController, FDWaveformViewDelegate {
         let previewLength = 3.0
         
         if trimmingFront {
-            player.seek(to: CMTime(seconds: timeToTrim, preferredTimescale: 1000))
+            player.seek(to: CMTime(seconds: timeToTrim, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
         } else {
-            player.seek(to: CMTime(seconds: totalTime - timeToTrim - previewLength, preferredTimescale: 1000))
+            player.seek(to: CMTime(seconds: totalTime - timeToTrim - previewLength, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
         }
         player.play()
 
@@ -470,6 +474,52 @@ class TrimTrackController : UIViewController, FDWaveformViewDelegate {
         }
     }
     
+    private func sendTrimRequest() {
+        // Prevent double taps
+        if trimActivitySpinner.isAnimating { return }
+        
+        if timeToTrim == 0 {
+            return
+        }
+        
+        trimActivitySpinner.startAnimating()
+        sendButton.tintColor = Colors.navigationBackground
+        
+        let request = TrimTrackRequest(
+            trackId: track.id,
+            startTime: trimmingFront ? timeToTrim.toTrimString() : nil,
+            duration: trimmingFront ? nil : (totalTime - timeToTrim).toTrimString()
+        )
+                
+        let this = self
+        HttpRequester.post("track/trim", TrackTrimResponse.self, request) { res, status, _ in
+            guard let newLength = res?.newLength, status.isSuccessful() else {
+                DispatchQueue.main.async {
+                    Toast.show("Failed to trim track", view: this.view)
+                    this.sendButton.tintColor = Colors.primary
+                    this.trimActivitySpinner.stopAnimating()
+                }
+                return
+            }
+            
+            guard let refreshedTrack = TrackDao.findById(this.track.id) else {
+                GGLog.error("Track no longer existed once it was trimmed??")
+                return
+            }
+            
+            refreshedTrack.length = newLength
+            TrackDao.save(refreshedTrack)
+            
+            CacheService.deleteCachedData(trackId: refreshedTrack.id, cacheType: .song, ignoreWarning: true)
+            TrackService.broadcastTrackChange(refreshedTrack, type: .MODIFICATION)
+            
+            DispatchQueue.main.async {
+                this.navigationController!.dismiss(animated: true)
+                Toast.show("Track trimmed successfully")
+            }
+        }
+    }
+    
     init(_ track: Track) {
         self.track = track
         
@@ -478,5 +528,25 @@ class TrimTrackController : UIViewController, FDWaveformViewDelegate {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+}
+
+struct TrimTrackRequest : Codable {
+    let trackId: Int
+    let startTime: String?
+    let duration: String?
+}
+
+struct TrackTrimResponse : Codable {
+    let newLength: Int
+}
+
+fileprivate extension Double {
+    // API wants something like 00:00:00.000 with hours:minute:seconds.decimal
+    func toTrimString() -> String {
+        let minutes = Int(self / 60)
+        let minutesStr = String(format: "%02d", minutes)
+        let secondsAndFraction = String(format: "%06.3f", self - (Double(minutes) * 60.0))
+        return "00:\(minutesStr):\(secondsAndFraction)"
     }
 }
