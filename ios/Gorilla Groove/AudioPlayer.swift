@@ -39,9 +39,13 @@ class AudioPlayer : CachingPlayerItemDelegate {
         }
     }
     
+    private static var lastTimeUpdateSeconds: Double = 0
     static var currentTime: Double {
         get {
-            return AudioPlayer.player.currentTime().seconds
+            // You'd think that just returning the player's current time would be ok, but I ran into this function taking SIX SECONDS to invoke on the main thread!
+            // I only saw it happen on the simulator so far, but it's still really annoying. So now I store the current time in a variable to avoid this.
+//            return AudioPlayer.player.currentTime().seconds
+            return lastTimeUpdateSeconds
         }
     }
     
@@ -66,7 +70,9 @@ class AudioPlayer : CachingPlayerItemDelegate {
             }
             
             let timeInSeconds = NSNumber(value: UInt64(time.value)).decimalValue / NSNumber(value: time.timescale.magnitude).decimalValue
-
+            let doubleSeconds = Double(truncating: timeInSeconds as NSNumber)
+            lastTimeUpdateSeconds = doubleSeconds
+            
             // This used to work this way because there was no socket, so continually sending events to the API was how the API
             // knew you were connected. Now that we are using a socket, this might be entirely unnecessary. But I'm feeling a bit
             // paranoid today so I'm not removing it outright. This does affect battery of the device though, so I've limited it to
@@ -76,7 +82,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
             }
             
             registeredCallbacks.forEach { callback in
-                callback(Double(truncating: timeInSeconds as NSNumber))
+                callback(doubleSeconds)
             }
         }
         
@@ -274,13 +280,24 @@ class AudioPlayer : CachingPlayerItemDelegate {
     static func playPlayerItem(_ playerItem: AVPlayerItem, _ track: Track) {
         isStalled = false
         isPlaybackWanted = true
-
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playerDidFinishPlayingItem),
+            name: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem
+        )
+        
         player.replaceCurrentItem(with: playerItem)
         player.playImmediately(atRate: 1.0)
         
         setRatingEnabled(track.inReview)
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
+    }
+    
+    @objc private static func playerDidFinishPlayingItem() {
+        NowPlayingTracks.playNext()
     }
     
     private static func sendPlayEvent(_ track: Track?) {

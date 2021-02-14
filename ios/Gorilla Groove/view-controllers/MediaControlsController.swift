@@ -326,7 +326,9 @@ class MediaControlsController: UIViewController {
         }
         
         // Round the time because that seems to be what the notification area does and it's good if they agree on time
-        self.currentTime.text = Formatters.timeFromSeconds(Int(round(time)))
+        // However the time seems to keep going past the time we list fairly often. It looks jank to see 4:10 out of 4:09. So don't show it.
+        let nextTime = min(Int(round(time)), NowPlayingTracks.currentTrack!.length)
+        self.currentTime.text = Formatters.timeFromSeconds(nextTime)
         
         // If we're grabbing the slider avoid updating it visually or it'll skip around while we drag it
         let percentDone = Float(time) / Float(NowPlayingTracks.currentTrack!.length)
@@ -340,17 +342,11 @@ class MediaControlsController: UIViewController {
         // If the time elapsed went negative, or had a large leap forward (more than 1 second), then it means that someone
         // manually altered the song's progress. Do no other checks or updates
         if (timeElapsed < 0 || timeElapsed > 1) {
-            return;
+            return
         }
         
         self.timeListened += timeElapsed
         handlePotentialSongListen()
-        
-        // This really doesn't belong in the CONTROLS file, does it Ayrton. Probably should move to a listener in NowPlayingTracks.
-        // There is an event AVPlayerItemDidPlayToEndTime that probably makes sense to use instead of checking the percent as well.
-        if (percentDone >= 1.0) {
-            NowPlayingTracks.playNext()
-        }
     }
     
     // I have noticed some songs getting double-listens at the same timestamp.
