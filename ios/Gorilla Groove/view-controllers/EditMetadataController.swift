@@ -40,7 +40,7 @@ class EditMetadataController : UIViewController {
         // as it's presented inside of a pageSheet. So I need to either present it differently or come up with a
         // new way for presenting options that isn't the native iOS actionSheet
         view.isUserInteractionEnabled = true
-
+        
         return view
     }()
     
@@ -196,7 +196,7 @@ class EditMetadataController : UIViewController {
             
             isCached.topAnchor.constraint(equalTo: fileSize.bottomAnchor, constant: spacing),
             isCached.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 14),
-            isCached.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -5),
+            isCached.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -8),
             
             isCachedValue.topAnchor.constraint(equalTo: isCached.topAnchor),
             isCachedValue.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: labelWidth + 15),
@@ -244,10 +244,13 @@ class EditMetadataController : UIViewController {
         offlineAlways.isUserInteractionEnabled = true
         offlineNormal.isUserInteractionEnabled = true
         offlineNever.isUserInteractionEnabled = true
-
+        
         offlineAlways.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(setAlwaysAvailable)))
         offlineNormal.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(setNormalAvailabile)))
         offlineNever.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(setNeverAvailable)))
+        
+        // Doesn't work properly. See comment in albumArtView initializer
+//        albumArtView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(chooseNewArtFromUrl)))
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -319,6 +322,12 @@ class EditMetadataController : UIViewController {
     @objc private func setNeverAvailable() {
         newOfflineAvailability = .ONLINE_ONLY
         colorOfflineAvailability()
+    }
+    
+    @objc private func chooseNewArtFromUrl() {
+        ViewUtil.showTextFieldAlert(message: "Provide a URL for the new art", yesText: "Add", dismissText: "Cancel") { [weak self] url in
+            self?.displayUrl(url)
+        }
     }
     
     @objc private func save() {
