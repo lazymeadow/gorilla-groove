@@ -600,7 +600,7 @@ class CacheService {
 
 
 
-fileprivate extension Int {
+extension Int {
     func toByteString() -> String {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .decimal

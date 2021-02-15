@@ -111,6 +111,7 @@ struct UpdateTrackRequest: Codable {
     var hidden: Bool? = nil
     var `private`: Bool? = nil
     var albumArtUrl: String? = nil
+    var offlineAvailability: OfflineAvailabilityType? = nil
 }
 
 struct DeleteTrackRequest: Codable {

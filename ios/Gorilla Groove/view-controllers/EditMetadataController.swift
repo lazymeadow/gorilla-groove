@@ -14,6 +14,19 @@ class EditMetadataController : UIViewController {
     private let hiddenEntry = CheckboxEntry("Hidden")
     private let privateEntry = CheckboxEntry("Private")
     
+    private var newOfflineAvailability: OfflineAvailabilityType? = nil
+    private let offlineAvailability = createTextLabel("Offline Availability:")
+    private let offlineAlways = createTextLabel("Always")
+    private let offlineNormal = createTextLabel("Normal")
+    private let offlineNever = createTextLabel("Never")
+    private let offlineSlash1 = createTextLabel("/")
+    private let offlineSlash2 = createTextLabel("/")
+    
+    private let fileSize = createTextLabel("File Size:")
+    private let fileSizeValue = createTextLabel("")
+    private let isCached = createTextLabel("Is Cached:")
+    private let isCachedValue = createTextLabel("")
+    
     private let albumArtView: UIImageView = {
         let view = UIImageView()
         
@@ -103,7 +116,17 @@ class EditMetadataController : UIViewController {
         scrollView.addSubview(privateEntry)
         scrollView.addSubview(leftActivitySpinner)
         scrollView.addSubview(rightActivitySpinner)
-        
+        scrollView.addSubview(offlineAvailability)
+        scrollView.addSubview(offlineAlways)
+        scrollView.addSubview(offlineNormal)
+        scrollView.addSubview(offlineNever)
+        scrollView.addSubview(offlineSlash1)
+        scrollView.addSubview(offlineSlash2)
+        scrollView.addSubview(fileSize)
+        scrollView.addSubview(fileSizeValue)
+        scrollView.addSubview(isCached)
+        scrollView.addSubview(isCachedValue)
+
         self.view.addSubview(scrollView)
         
         NSLayoutConstraint.activate([
@@ -146,7 +169,37 @@ class EditMetadataController : UIViewController {
             
             privateEntry.topAnchor.constraint(equalTo: hiddenEntry.bottomAnchor, constant: spacing),
             privateEntry.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            privateEntry.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -5),
+            
+            offlineAvailability.topAnchor.constraint(equalTo: privateEntry.bottomAnchor, constant: spacing),
+            offlineAvailability.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 14),
+            
+            offlineAlways.topAnchor.constraint(equalTo: offlineAvailability.topAnchor),
+            offlineAlways.leadingAnchor.constraint(equalTo: offlineAvailability.trailingAnchor, constant: 8),
+            
+            offlineSlash1.topAnchor.constraint(equalTo: offlineAvailability.topAnchor),
+            offlineSlash1.leadingAnchor.constraint(equalTo: offlineAlways.trailingAnchor, constant: 8),
+            
+            offlineNormal.topAnchor.constraint(equalTo: offlineAvailability.topAnchor),
+            offlineNormal.leadingAnchor.constraint(equalTo: offlineSlash1.trailingAnchor, constant: 8),
+            
+            offlineSlash2.topAnchor.constraint(equalTo: offlineAvailability.topAnchor),
+            offlineSlash2.leadingAnchor.constraint(equalTo: offlineNormal.trailingAnchor, constant: 8),
+            
+            offlineNever.topAnchor.constraint(equalTo: offlineAvailability.topAnchor),
+            offlineNever.leadingAnchor.constraint(equalTo: offlineSlash2.trailingAnchor, constant: 8),
+            
+            fileSize.topAnchor.constraint(equalTo: offlineAvailability.bottomAnchor, constant: spacing),
+            fileSize.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 14),
+            
+            fileSizeValue.topAnchor.constraint(equalTo: fileSize.topAnchor),
+            fileSizeValue.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: labelWidth + 15),
+            
+            isCached.topAnchor.constraint(equalTo: fileSize.bottomAnchor, constant: spacing),
+            isCached.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 14),
+            isCached.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -5),
+            
+            isCachedValue.topAnchor.constraint(equalTo: isCached.topAnchor),
+            isCachedValue.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: labelWidth + 15),
             
             leftActivitySpinner.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 36),
             leftActivitySpinner.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 10),
@@ -165,10 +218,36 @@ class EditMetadataController : UIViewController {
         noteEntry.input.text = track.note
         hiddenEntry.input.isChecked = track.isHidden
         privateEntry.input.isChecked = track.isPrivate
-
+        fileSizeValue.text = (track.filesizeSongMp3 + track.filesizeArtPng).toByteString()
+        newOfflineAvailability = track.offlineAvailability
+        isCachedValue.text = {
+            if track.songCachedAt != nil {
+                if track.artCachedAt != nil {
+                    return "Yes"
+                } else {
+                    return "Audio Only"
+                }
+            } else {
+                if track.artCachedAt != nil {
+                    return "Art Only"
+                } else {
+                    return "No"
+                }
+            }
+        }()
+        colorOfflineAvailability()
+        
         let notificationCenter = NotificationCenter.default
         notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillHideNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+        
+        offlineAlways.isUserInteractionEnabled = true
+        offlineNormal.isUserInteractionEnabled = true
+        offlineNever.isUserInteractionEnabled = true
+
+        offlineAlways.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(setAlwaysAvailable)))
+        offlineNormal.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(setNormalAvailabile)))
+        offlineNever.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(setNeverAvailable)))
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -213,6 +292,35 @@ class EditMetadataController : UIViewController {
         }
     }
     
+    private func colorOfflineAvailability() {
+        [offlineAlways, offlineNormal, offlineNever].forEach {
+            $0.textColor = Colors.foreground
+        }
+        
+        switch newOfflineAvailability {
+        case .AVAILABLE_OFFLINE:
+            offlineAlways.textColor = Colors.primary
+        case .NORMAL:
+            offlineNormal.textColor = Colors.primary
+        case .ONLINE_ONLY:
+            offlineNever.textColor = Colors.primary
+        case .UNKNOWN, .none: break;
+        }
+    }
+    
+    @objc private func setAlwaysAvailable() {
+        newOfflineAvailability = .AVAILABLE_OFFLINE
+        colorOfflineAvailability()
+    }
+    @objc private func setNormalAvailabile() {
+        newOfflineAvailability = .NORMAL
+        colorOfflineAvailability()
+    }
+    @objc private func setNeverAvailable() {
+        newOfflineAvailability = .ONLINE_ONLY
+        colorOfflineAvailability()
+    }
+    
     @objc private func save() {
         GGNavLog.info("User tapped 'save'")
         self.navigationItem.rightBarButtonItem = nil
@@ -242,7 +350,8 @@ class EditMetadataController : UIViewController {
             releaseYear: Int(releaseYear),
             hidden: hiddenEntry.input.isChecked,
             private: privateEntry.input.isChecked,
-            albumArtUrl: newAlbumArtLink
+            albumArtUrl: newAlbumArtLink,
+            offlineAvailability: newOfflineAvailability
         )
 
         HttpRequester.put("track/simple-update", TrackUpdateResponse.self, request) { trackUpdateResponse, statusCode, _ in
@@ -259,6 +368,7 @@ class EditMetadataController : UIViewController {
                 upToDateTrack.releaseYear = updatedTrack.releaseYear
                 upToDateTrack.isHidden = updatedTrack.hidden
                 upToDateTrack.isPrivate = updatedTrack.`private`
+                upToDateTrack.offlineAvailability = OfflineAvailabilityType(rawValue: updatedTrack.offlineAvailability)!
                 
                 if self.newAlbumArtLink != nil {
                     upToDateTrack.filesizeArtPng = updatedTrack.filesizeArtPng
@@ -268,7 +378,17 @@ class EditMetadataController : UIViewController {
                 
                 TrackDao.save(upToDateTrack)
                 
+                if upToDateTrack.offlineAvailability == .ONLINE_ONLY && (upToDateTrack.songCachedAt != nil || upToDateTrack.artCachedAt != nil) {
+                    CacheService.deleteAllData(trackId: upToDateTrack.id)
+                    upToDateTrack.songCachedAt = nil
+                    upToDateTrack.artCachedAt = nil
+                }
+                
                 TrackService.broadcastTrackChange(upToDateTrack, type: .MODIFICATION)
+                
+                if upToDateTrack.offlineAvailability == .AVAILABLE_OFFLINE && upToDateTrack.songCachedAt == nil {
+                    OfflineStorageService.downloadAlwaysOfflineMusic()
+                }
                 
                 DispatchQueue.main.async {
                     self.navigationController!.dismiss(animated: true)
@@ -466,10 +586,10 @@ fileprivate class PropertyEntry : UIView, UITextFieldDelegate  {
         self.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 15),
+            label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 14),
             label.widthAnchor.constraint(equalToConstant: labelWidth),
             input.leadingAnchor.constraint(equalTo: label.trailingAnchor),
-            input.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -15),
+            input.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -14),
             bottomInputLine.leadingAnchor.constraint(equalTo: input.leadingAnchor),
             bottomInputLine.trailingAnchor.constraint(equalTo: input.trailingAnchor),
             bottomInputLine.topAnchor.constraint(equalTo: input.bottomAnchor, constant: 1),
@@ -516,7 +636,7 @@ fileprivate class CheckboxEntry : UIView {
         self.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 15),
+            label.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 14),
             label.widthAnchor.constraint(equalToConstant: labelWidth),
             input.leadingAnchor.constraint(equalTo: label.trailingAnchor),
             input.trailingAnchor.constraint(equalTo: self.trailingAnchor), // This constraint is somehow necessary for it being tappable
@@ -530,6 +650,17 @@ fileprivate class CheckboxEntry : UIView {
     }
 }
 
+fileprivate func createTextLabel(_ text: String) -> UILabel {
+    let field = UILabel()
+    field.font = field.font!.withSize(17)
+    field.translatesAutoresizingMaskIntoConstraints = false
+    field.textColor = Colors.foreground
+    field.text = text
+    
+    return field
+}
+
+
 struct TrackUpdateResponse : Codable {
-    let items: Array<TrackResponse>
+    let items: [TrackResponse]
 }
