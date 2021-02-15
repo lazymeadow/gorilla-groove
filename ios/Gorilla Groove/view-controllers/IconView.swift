@@ -14,6 +14,7 @@ class IconView : UIView {
         _ name: String,
         weight: UIImage.SymbolWeight = .ultraLight,
         scale: UIImage.SymbolScale = .small,
+        padding: CGFloat = 20,
         multiplier: CGFloat = 1.5
     ) {
         self.weight = weight
@@ -25,13 +26,15 @@ class IconView : UIView {
         
         super.init(frame: CGRect.zero)
         
-        let horizontalWrap = wrapView(imageView, isWidth: true)
-        let wrapper = wrapView(horizontalWrap, isWidth: false)
-                
+        let horizontalWrap = wrapView(imageView, isWidth: true, padding: padding)
+        let wrapper = wrapView(horizontalWrap, isWidth: false, padding: padding)
+        
+        self.translatesAutoresizingMaskIntoConstraints = false
+        
         self.addSubview(wrapper)
         
-        self.widthAnchor.constraint(equalTo: wrapper.widthAnchor).isActive = true
-        self.heightAnchor.constraint(equalTo: wrapper.heightAnchor).isActive = true
+        self.widthAnchor.constraint(greaterThanOrEqualTo: horizontalWrap.widthAnchor).isActive = true
+        self.heightAnchor.constraint(greaterThanOrEqualTo: wrapper.heightAnchor).isActive = true
     }
     
     func changeImage(_ name: String) {
@@ -39,7 +42,7 @@ class IconView : UIView {
     }
     
     // Because UIEdgeInsets doesn't actually work no matter what I try, do this hacky nonsense instead
-    private func wrapView(_ view: UIView, isWidth: Bool) -> UIView {
+    private func wrapView(_ view: UIView, isWidth: Bool, padding: CGFloat) -> UIView {
         let wrapper = UIStackView()
         wrapper.axis = isWidth ? .vertical : .horizontal
         wrapper.alignment = .center
@@ -47,13 +50,13 @@ class IconView : UIView {
         wrapper.translatesAutoresizingMaskIntoConstraints = false
 
         wrapper.addArrangedSubview(view)
-
+        
         wrapper.isUserInteractionEnabled = true
         
         if isWidth {
-            wrapper.widthAnchor.constraint(equalTo: view.widthAnchor, constant: 20).isActive = true
+            wrapper.widthAnchor.constraint(equalTo: view.widthAnchor, constant: padding).isActive = true
         } else {
-            wrapper.heightAnchor.constraint(equalTo: view.heightAnchor, constant: 20).isActive = true
+            wrapper.heightAnchor.constraint(equalTo: view.heightAnchor, constant: padding).isActive = true
         }
         
         return wrapper

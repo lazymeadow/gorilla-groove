@@ -4,7 +4,7 @@ import UIKit
 class SelectUsersController : BaseUsersController<SelectUserCell> {
     
     private var selectedUserIds = Set<Int>()
-    private let track: Track
+    private let tracks: [Track]
     
     private let activitySpinner: UIActivityIndicatorView = {
         let spinner = UIActivityIndicatorView()
@@ -73,7 +73,7 @@ class SelectUsersController : BaseUsersController<SelectUserCell> {
         // Hide the button by changing the text color. If we just remove it, then the filter option will shift weirdly
         sendButton.tintColor = Colors.navigationBackground
         
-        let request = ReviewQueueRecommendRequest(trackIds: [track.id], targetUserIds: selectedUserIds.toArray())
+        let request = ReviewQueueRecommendRequest(trackIds: tracks.map { $0.id }, targetUserIds: selectedUserIds.toArray())
         let this = self
         HttpRequester.post("review-queue/recommend", EmptyResponse.self, request) { _, status, _ in
             if !status.isSuccessful() {
@@ -94,8 +94,8 @@ class SelectUsersController : BaseUsersController<SelectUserCell> {
     
     // Yeah this is kind of stupid. This user selection thing is pretty reusable and I've gone and messed it up by adding
     // review queue specific stuff in here. I'll fix it if I end up reusing this
-    init(_ track: Track) {
-        self.track = track
+    init(_ tracks: [Track]) {
+        self.tracks = tracks
         
         super.init(nibName: nil, bundle: nil)
     }

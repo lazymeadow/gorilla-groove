@@ -2,8 +2,8 @@ import Foundation
 import UIKit
 
 class TrackContextMenu {
-    static func createMenuForTrack(
-        _ track: Track,
+    static func createMenuForTracks(
+        _ tracks: [Track],
         view: TrackContextView,
         playlist: Playlist?,
         parentVc: UIViewController
@@ -11,31 +11,34 @@ class TrackContextMenu {
         let alert = GGActionSheet.create()
         
         alert.addAction(UIAlertAction(title: "Play Next", style: .default, handler: { _ in
-            NowPlayingTracks.addTrackNext(track)
+            NowPlayingTracks.addTracksNext(tracks)
         }))
         alert.addAction(UIAlertAction(title: "Play Last", style: .default, handler: { _ in
-            NowPlayingTracks.addTrackLast(track)
+            NowPlayingTracks.addTracksLast(tracks)
         }))
         
         if view == .MY_LIBRARY || view == .NOW_PLAYING {
-            alert.addAction(UIAlertAction(title: "Edit Properties", style: .default, handler: { _ in
-                let metadataController = EditMetadataController(track: track)
-                metadataController.modalPresentationStyle = .pageSheet
+            // Not all menus are usable with multiple tracks selected
+            if tracks.count == 1 {
+                alert.addAction(UIAlertAction(title: "Edit Properties", style: .default, handler: { _ in
+                    let metadataController = EditMetadataController(track: tracks.first!)
+                    metadataController.modalPresentationStyle = .pageSheet
+                    
+                    let vc = UINavigationController(rootViewController: metadataController)
+                    parentVc.present(vc, animated: true)
+                }))
                 
-                let vc = UINavigationController(rootViewController: metadataController)
-                parentVc.present(vc, animated: true)
-            }))
+                alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { _ in
+                    let trackTrimController = TrimTrackController(tracks.first!)
+                    trackTrimController.modalPresentationStyle = .pageSheet
+                    
+                    let vc = UINavigationController(rootViewController: trackTrimController)
+                    parentVc.present(vc, animated: true)
+                }))
+            }
             
             alert.addAction(UIAlertAction(title: "Recommend", style: .default, handler: { _ in
-                let usersController = SelectUsersController(track)
-                usersController.modalPresentationStyle = .pageSheet
-                
-                let vc = UINavigationController(rootViewController: usersController)
-                parentVc.present(vc, animated: true)
-            }))
-            
-            alert.addAction(UIAlertAction(title: "Trim", style: .default, handler: { _ in
-                let usersController = TrimTrackController(track)
+                let usersController = SelectUsersController(tracks)
                 usersController.modalPresentationStyle = .pageSheet
                 
                 let vc = UINavigationController(rootViewController: usersController)
@@ -43,7 +46,7 @@ class TrackContextMenu {
             }))
             
             alert.addAction(UIAlertAction(title: "Add to Playlist", style: .default, handler: { _ in
-                let playlistsController = SelectPlaylistsController(track)
+                let playlistsController = SelectPlaylistsController(tracks)
                 playlistsController.modalPresentationStyle = .pageSheet
                 
                 let vc = UINavigationController(rootViewController: playlistsController)
@@ -53,21 +56,22 @@ class TrackContextMenu {
         
         if view == .MY_LIBRARY {
             alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
-                ViewUtil.showAlert(message: "Delete \(track.name)?", yesText: "Delete", yesStyle: .destructive, dismissText: "Cancel") {
-                    TrackService.deleteTrack(track)
+                let message = tracks.count == 1 ? tracks.first!.name : "the selected \(tracks.count) tracks"
+                ViewUtil.showAlert(message: "Delete \(message)?", yesText: "Delete", yesStyle: .destructive, dismissText: "Cancel") {
+                    TrackService.deleteTracks(tracks)
                 }
             }))
         }
         
         if view == .NOW_PLAYING {
             alert.addAction(UIAlertAction(title: "Remove", style: .default, handler: { _ in
-                NowPlayingTracks.removeTracks([track.id])
+                NowPlayingTracks.removeTracks(Set(tracks.map { $0.id }))
             }))
         }
         
         if view == .OTHER_USER {
             alert.addAction(UIAlertAction(title: "Import", style: .default, handler: { _ in
-                TrackService.importTrack(track)
+                TrackService.importTracks(tracks)
                 Toast.show("Track import started")
             }))
         }
@@ -75,14 +79,7 @@ class TrackContextMenu {
         if view == .PLAYLIST {
             alert.addAction(UIAlertAction(title: "Remove from Playlist", style: .destructive, handler: { _ in
                 DispatchQueue.global().async {
-                    let playlistTracks = PlaylistTrackDao.findByPlaylistAndTrack(playlistId: playlist!.id, trackId: track.id)
-                    if playlistTracks.count > 1 {
-                        GGLog.warning("The user is deleting a playlist track that has duplicates. The one they are intending to delete may be different from the one that is deleted")
-                    } else if playlistTracks.isEmpty {
-                        GGLog.critical("No playlist tracks found when removing a track from a playlist! Track \(track.id). Playlist \(playlist!.id)")
-                        return
-                    }
-                    PlaylistService.removeTrack(playlistTracks.first!)
+                    
                 }
             }))
         }

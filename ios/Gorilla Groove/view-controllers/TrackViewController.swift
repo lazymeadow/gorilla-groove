@@ -1,7 +1,7 @@
 import UIKit
 import Foundation
 
-class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class TrackViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, MultiSelectTable {
     
     private var loadTracksFunc: (() -> [TrackReturnable])? = nil
     var trackIds: [Int] = []
@@ -21,9 +21,27 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     private var showHiddenTracks: Bool
     private var lastOfflineMode: Bool
     
+    var multiSelectEnabled = false {
+        didSet {
+            setMultiSelect(multiSelectEnabled)
+        }
+    }
+    
+    private lazy var multiSelectActionItem = UIBarButtonItem(
+        image: SFIconCreator.create("ellipsis", weight: .medium, scale: .large, multiplier: 1.2),
+        style: .plain,
+        action: { [weak self] in
+            guard let this = self else { return }
+            let tracks = this.selectedIndexes.map { this.trackIdToTrack[this.visibleTrackIds[$0]]!.asTrack() }
+            this.bringUpSongContextMenu(tracks)
+        }
+    )
+    
     let originalView: LibraryViewType
     
     private let sortsIndex = 1
+    
+    private var selectedIndexes = Set<Int>()
     
     private lazy var filterOptions: [[FilterOption]] = {
         if originalView == .PLAYLIST || originalView == .NOW_PLAYING {
@@ -125,7 +143,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
 
         view.addSubview(tableView)
         view.addSubview(activitySpinner)
-        
+
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -184,6 +202,17 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         }
         
+        let multiSelectItem = UIBarButtonItem(
+            image: SFIconCreator.create("square.on.square", weight: .medium, scale: .large, multiplier: 1.2),
+            style: .plain,
+            action: { [weak self] in
+                guard let this = self else { return }
+                this.multiSelectEnabled = !this.multiSelectEnabled
+            }
+        )
+        
+        navigationItem.leftBarButtonItem = multiSelectItem
+        
         OfflineStorageService.addOfflineModeToggleObserverToVc(self)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeFilter))
@@ -227,13 +256,20 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         cell.addGestureRecognizer(tapGesture)
         
-        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(bringUpSongContextMenu))
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressMenu))
         cell.addGestureRecognizer(longPressGesture)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         let songViewCell = cell as! TrackViewCell
         songViewCell.checkIfPlaying()
+        
+        if multiSelectEnabled {
+            songViewCell.setSelectionModeEnabled(multiSelectEnabled)
+            if selectedIndexes.contains(indexPath.row) {
+                songViewCell.setSelected(true, animated: false)
+            }
+        }
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -267,14 +303,24 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     }
     
     @objc private func handleTap(sender: UITapGestureRecognizer) {
-        GGLog.info("\(sender.state)")
         filter?.setIsHiddenAnimated(true)
         
         let cell = sender.view as! TrackViewCell
-        
         let tableIndex = tableView.indexPath(for: cell)!
         
+        if multiSelectEnabled {
+            if cell.isSelected {
+                selectedIndexes.remove(tableIndex.row)
+            } else {
+                selectedIndexes.insert(tableIndex.row)
+            }
+            
+            cell.setSelected(!cell.isSelected, animated: true)
+            return
+        }
+        
         cell.animateSelectionColor()
+
         let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]!.asTrack() }
         NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
         
@@ -283,17 +329,22 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
-    @objc private func bringUpSongContextMenu(sender: UITapGestureRecognizer) {
-        if sender.state != .began {
+    @objc private func handleLongPressMenu(sender: UITapGestureRecognizer) {
+        if sender.state != .began || multiSelectEnabled {
             return
         }
         
         let cell = sender.view as! TrackViewCell
+        
         let tableIndex = tableView.indexPath(for: cell)!
         let trackId = visibleTrackIds[tableIndex.row]
         let track = trackIdToTrack[trackId]!.asTrack()
         
-        let alert = TrackContextMenu.createMenuForTrack(track, view: trackContextView, playlist: playlist, parentVc: self)
+        bringUpSongContextMenu([track])
+    }
+    
+    private func bringUpSongContextMenu(_ tracks: [Track]) {
+        let alert = TrackContextMenu.createMenuForTracks(tracks, view: trackContextView, playlist: playlist, parentVc: self)
         
         ViewUtil.showAlert(alert)
     }
@@ -425,6 +476,32 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
     }
     
+    private func addMultiSelectActionItem() {
+        var newNavItems = navigationItem.rightBarButtonItems ?? []
+        newNavItems.append(multiSelectActionItem)
+        navigationItem.rightBarButtonItems = newNavItems
+    }
+    
+    private func removeSelectActionItem() {
+        navigationItem.rightBarButtonItems = navigationItem.rightBarButtonItems?.filter { $0 != multiSelectActionItem }
+    }
+    
+    private func setMultiSelect(_ enabled: Bool) {
+        tableView.visibleCells.forEach { cell in
+            let songViewCell = cell as! TrackViewCell
+            songViewCell.setSelectionModeEnabled(enabled)
+        }
+        
+        if multiSelectEnabled {
+            filter?.removeFilterFromNavigation()
+            addMultiSelectActionItem()
+        } else {
+            removeSelectActionItem()
+            filter?.addFilterToNavigation()
+            selectedIndexes.removeAll()
+        }
+    }
+    
     init(
         _ title: String,
         scrollPlayedTrackIntoView: Bool = false,
@@ -476,9 +553,9 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             
             if changeType == .DELETION || (!vc.showHiddenTracks && changedTrack.isHidden) {
                 GGLog.info("Removing existing track from track list in response to change")
-                if let index = vc.visibleTrackIds.index(where: { $0 == changedTrack.id }) {
-                    vc.visibleTrackIds.remove(at: index)
-                    DispatchQueue.main.async {
+                DispatchQueue.main.async {
+                    if let index = vc.visibleTrackIds.index(where: { $0 == changedTrack.id }) {
+                        vc.visibleTrackIds.remove(at: index)
                         vc.tableView.deleteRows(at: [IndexPath(item: index, section: 0)], with: .automatic)
                     }
                 }
@@ -514,4 +591,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
 
 protocol TrackReturnable {
     func asTrack() -> Track
+}
+
+protocol MultiSelectTable {
+    var multiSelectEnabled: Bool { get set }
 }

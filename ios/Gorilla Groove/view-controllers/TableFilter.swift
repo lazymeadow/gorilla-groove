@@ -4,10 +4,24 @@ import Foundation
 class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
     
     let filterOptions: [[FilterOption]]
+    private weak var vc: UIViewController? = nil
+    
+    private lazy var navButton = UIBarButtonItem(
+        image: SFIconCreator.create("slider.horizontal.3", weight: .medium, scale: .large, multiplier: 1.2),
+        style: .plain,
+        action: { [weak self] in
+            guard let this = self else { return }
+            GGNavLog.info("Setting filter 'isHidden' to \(!this.isHidden)")
+            
+            this.setIsHiddenAnimated(!this.isHidden)
+        }
+    )
     
     init(_ filterOptions: [[FilterOption]], vc: UIViewController) {
         self.filterOptions = filterOptions
         super.init(frame: .zero, style: .plain)
+        
+        self.vc = vc
         
         self.translatesAutoresizingMaskIntoConstraints = false
         self.layer.borderWidth = 1
@@ -25,7 +39,7 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         self.separatorInset = UIEdgeInsets.init(top: 0, left: 0, bottom: 0, right: 0)
         self.separatorColor = Colors.tableText
         
-        addFilterToNavigation(controller: vc)
+        addFilterToNavigation()
         
         // Creating constraints to modify them later when content loads
         self.heightAnchor.constraint(equalToConstant: 0).isActive = true
@@ -35,27 +49,19 @@ class TableFilter : UITableView, UITableViewDataSource, UITableViewDelegate {
         self.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
     }
     
-    private func addFilterToNavigation(
-        controller: UIViewController
-    ) {
-        let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
-        let filterIcon = UIImage(systemName: "slider.horizontal.3", withConfiguration: config)!
+    func addFilterToNavigation() {
+        guard let vc = vc else { return }
 
-        weak var this = self
+        var newNavItems = vc.navigationItem.rightBarButtonItems ?? []
+        newNavItems.append(navButton)
+        vc.navigationItem.rightBarButtonItems = newNavItems
+    }
+    
+    func removeFilterFromNavigation() {
+        guard let vc = vc else { return }
         
-        let filterItem = UIBarButtonItem(
-            image: filterIcon,
-            style: .plain,
-            action: {
-                GGNavLog.info("Setting filter 'isHidden' to \(!this!.isHidden)")
-                
-                this?.setIsHiddenAnimated(!this!.isHidden)
-            }
-        )
-        
-        var newNavItems = controller.navigationItem.rightBarButtonItems ?? []
-        newNavItems.append(filterItem)
-        controller.navigationItem.rightBarButtonItems = newNavItems
+        setIsHiddenAnimated(true)
+        vc.navigationItem.rightBarButtonItems = vc.navigationItem.rightBarButtonItems?.filter { $0 != navButton }
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

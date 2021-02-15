@@ -242,29 +242,37 @@ class TrackService {
         }.sorted() { $0.name < $1.name }
     }
     
-    static func deleteTrack(_ track: Track) {
-        HttpRequester.delete("track?trackIds=\(track.id)") { _, statusCode, _ in
+    static func deleteTracks(_ tracks: [Track]) {
+        let trackDeleteStr = tracks.map { $0.id.toString() }.joined(separator: ",")
+        HttpRequester.delete("track?trackIds=\(trackDeleteStr)") { _, statusCode, _ in
             if statusCode.isSuccessful() {
-                TrackDao.delete(track)
-                broadcastTrackChange(track, type: .DELETION)
-                Toast.show("Track deleted")
+                tracks.forEach { track in
+                    TrackDao.delete(track)
+                    broadcastTrackChange(track, type: .DELETION)
+                }
+                
+                let plurality = tracks.count == 1 ? "Track" : "Tracks"
+                Toast.show("\(plurality) deleted")
             } else {
-                Toast.show("Failed to delete the track!")
+                let plurality = tracks.count == 1 ? "the track" : "tracks"
+                Toast.show("Failed to delete \(plurality)")
             }
         }
     }
     
-    static func importTrack(_ track: Track) {
-        let request = ImportTrackRequest(trackIds: [track.id])
+    static func importTracks(_ tracks: [Track]) {
+        let request = ImportTrackRequest(trackIds: tracks.map { $0.id })
         HttpRequester.post("track/import", ImportTrackResponse.self, request) { res, statusCode, _ in
-            guard let tracks = res?.items.map({ $0.asTrack() }), statusCode.isSuccessful() else {
-                Toast.show("Failed to import track!")
+            guard let trackResponses = res?.items.map({ $0.asTrack() }), statusCode.isSuccessful() else {
+                let plurality = tracks.count == 1 ? "track" : "tracks"
+                Toast.show("Failed to import \(plurality)!")
                 return
             }
             
-            // there should only be one track here as a response right now. But if we ever add in multi-selection to the tables it could change
-            tracks.forEach { TrackDao.save($0) }
-            Toast.show("Track imported")
+            trackResponses.forEach { TrackDao.save($0) }
+            
+            let plurality = tracks.count == 1 ? "Track" : "Tracks"
+            Toast.show("\(plurality) imported")
         }
     }
     

@@ -5,7 +5,7 @@ class SelectPlaylistsController : UIViewController, UITableViewDataSource, UITab
     
     private var playlists: [Playlist] = []
     private var selectedPlaylistIds = Set<Int>()
-    private let track: Track
+    private let tracks: [Track]
     
     private let tableView = UITableView()
     
@@ -103,7 +103,7 @@ class SelectPlaylistsController : UIViewController, UITableViewDataSource, UITab
         // Hide the button by changing the text color. If we just remove it, then the filter option will shift weirdly
         sendButton.tintColor = Colors.navigationBackground
         
-        let request = AddToPlaylistRequest(trackIds: [track.id], playlistIds: selectedPlaylistIds.toArray())
+        let request = AddToPlaylistRequest(trackIds: tracks.map { $0.id }, playlistIds: selectedPlaylistIds.toArray())
         let this = self
         let pluralWord = selectedPlaylistIds.count == 1 ? "playlist" : "playlists"
         HttpRequester.post("playlist/track", AddToPlaylistResponse.self, request) { res, status, _ in
@@ -127,8 +127,8 @@ class SelectPlaylistsController : UIViewController, UITableViewDataSource, UITab
         }
     }
 
-    init(_ track: Track) {
-        self.track = track
+    init(_ tracks: [Track]) {
+        self.tracks = tracks
         
         super.init(nibName: nil, bundle: nil)
     }

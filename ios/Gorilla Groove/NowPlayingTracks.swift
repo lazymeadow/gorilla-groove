@@ -461,9 +461,13 @@ class NowPlayingTracks {
         indexesToShuffle.shuffle()
     }
     
-    static func addTrackNext(_ track: Track) {
-        trackIdToTrack[track.id] = track
-        nowPlayingTrackIds.insert(track.id, at: nowPlayingIndex + 1)
+    static func addTracksNext(_ tracks: [Track]) {
+        var bonusIndex = 1
+        tracks.forEach { track in
+            trackIdToTrack[track.id] = track
+            nowPlayingTrackIds.insert(track.id, at: nowPlayingIndex + bonusIndex)
+            bonusIndex += 1
+        }
         
         notifyListeners(nil, .ADDED)
         
@@ -471,9 +475,11 @@ class NowPlayingTracks {
         doShuffle(preservePrevious: false)
     }
     
-    static func addTrackLast(_ track: Track) {
-        trackIdToTrack[track.id] = track
-        nowPlayingTrackIds.append(track.id)
+    static func addTracksLast(_ tracks: [Track]) {
+        tracks.reversed().forEach { track in
+            trackIdToTrack[track.id] = track
+            nowPlayingTrackIds.append(track.id)
+        }
         
         notifyListeners(nil, .ADDED)
 

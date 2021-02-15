@@ -501,8 +501,8 @@ class OfflineStorageService {
                     if offlineModeEnabled {
                         addOfflineDisableButtonIfNeeded(vc)
                     } else {
-                        if vc.navigationItem.leftBarButtonItem == disableOfflineModeButton {
-                            vc.navigationItem.leftBarButtonItem = nil
+                        if vc.navigationItem.leftBarButtonItems?.contains(disableOfflineModeButton) == true {
+                            vc.navigationItem.leftBarButtonItems = vc.navigationItem.leftBarButtonItems!.filter { $0 != disableOfflineModeButton }
                         }
                     }
                 }
@@ -515,12 +515,15 @@ class OfflineStorageService {
             return
         }
         
-        let existingIcons = vc.navigationItem.leftBarButtonItems ?? []
-        // If there are already icons in the VC, don't show the icon as it could look weird / make things too busy
-        if !existingIcons.isEmpty {
+        var existingIcons = vc.navigationItem.leftBarButtonItems ?? []
+        // If there is more than one icon in the view, don't add this one (or if it already exists for some reason)
+        if existingIcons.count > 1 || existingIcons.contains(disableOfflineModeButton) {
             return
         }
-        vc.navigationItem.leftBarButtonItem = disableOfflineModeButton
+        
+        existingIcons.append(disableOfflineModeButton)
+        
+        vc.navigationItem.leftBarButtonItems = existingIcons
     }
 }
 

@@ -10,9 +10,8 @@ class TableSearchAugmenter {
     ) {
         let searchController = GGSearchController()
         let searchDelegate = SearchControllerDelegate(controller, tableView, searchController, textChanged)
-
-        let config = UIImage.SymbolConfiguration(pointSize: UIFont.systemFontSize * 1.2, weight: .medium, scale: .large)
-        let searchIcon = UIImage(systemName: "magnifyingglass", withConfiguration: config)!
+        
+        let searchIcon = SFIconCreator.create("magnifyingglass", weight: .medium, scale: .large, multiplier: 1.2)
         
         let searchItem = UIBarButtonItem(
             image: searchIcon,
@@ -96,6 +95,9 @@ class TableSearchAugmenter {
         func search() {
             if (controller?.navigationItem.searchController == nil) {
                 controller?.navigationItem.searchController = searchController
+                if var multiSelectTable = controller as? MultiSelectTable {
+                    multiSelectTable.multiSelectEnabled = false
+                }
             } else {
                 controller?.navigationItem.searchController = nil
             }

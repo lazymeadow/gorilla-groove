@@ -19,6 +19,14 @@ class TrackViewCell: UITableViewCell {
         }
     }
     
+    let multiSelectIndicator: IconView = {
+        let icon = IconView("square", weight: .medium, scale: .medium, padding: 0)
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.tintColor = Colors.foreground
+        
+        return icon
+    }()
+    
     let nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.boldSystemFont(ofSize: 16)
@@ -64,8 +72,31 @@ class TrackViewCell: UITableViewCell {
         }
     }
     
+    func setSelectionModeEnabled(_ enabled: Bool) {
+        let widthConstraint = multiSelectIndicator.constraints.filter({ $0.firstAttribute == .width && $0.secondAttribute != .width }).first!
+        
+        if enabled {
+            widthConstraint.constant = 40
+        } else {
+            widthConstraint.constant = 0
+            setSelected(false, animated: false)
+        }
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        
+        if selected {
+            multiSelectIndicator.changeImage("checkmark.square")
+        } else {
+            multiSelectIndicator.changeImage("square")
+        }
+    }
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+//        selectionStyle = .none
         
         let containerView = UIStackView()
         containerView.axis = .vertical
@@ -87,16 +118,21 @@ class TrackViewCell: UITableViewCell {
         
         containerView.setCustomSpacing(6.0, after: topRow)
         containerView.setCustomSpacing(8.0, after: nameLabel)
-
+        
         self.contentView.addSubview(containerView)
+        self.contentView.addSubview(multiSelectIndicator)
         
         NSLayoutConstraint.activate([
             containerView.centerYAnchor.constraint(equalTo: self.contentView.centerYAnchor),
-            containerView.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor, constant: 16),
+            containerView.leadingAnchor.constraint(equalTo: multiSelectIndicator.trailingAnchor),
             containerView.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor, constant: -16),
             artistLabel.widthAnchor.constraint(equalTo: topRow.widthAnchor, constant: -40),
             topRow.widthAnchor.constraint(equalTo: containerView.widthAnchor),
             
+            multiSelectIndicator.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            multiSelectIndicator.widthAnchor.constraint(equalToConstant: 0),
+            multiSelectIndicator.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+
             self.contentView.heightAnchor.constraint(equalTo: containerView.heightAnchor, constant: 10)
         ])
     }
