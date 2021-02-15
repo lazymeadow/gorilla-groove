@@ -15,6 +15,7 @@ class IconView : UIView {
         weight: UIImage.SymbolWeight = .ultraLight,
         scale: UIImage.SymbolScale = .small,
         padding: CGFloat = 20,
+        allowGrowing: Bool = false,
         multiplier: CGFloat = 1.5
     ) {
         self.weight = weight
@@ -33,8 +34,14 @@ class IconView : UIView {
         
         self.addSubview(wrapper)
         
-        self.widthAnchor.constraint(greaterThanOrEqualTo: horizontalWrap.widthAnchor).isActive = true
-        self.heightAnchor.constraint(greaterThanOrEqualTo: wrapper.heightAnchor).isActive = true
+        if allowGrowing {
+            self.widthAnchor.constraint(greaterThanOrEqualTo: horizontalWrap.widthAnchor).isActive = true
+            self.heightAnchor.constraint(greaterThanOrEqualTo: wrapper.heightAnchor).isActive = true
+        } else {
+            self.widthAnchor.constraint(equalTo: horizontalWrap.widthAnchor).isActive = true
+            self.heightAnchor.constraint(equalTo: wrapper.heightAnchor).isActive = true
+        }
+
     }
     
     func changeImage(_ name: String) {

@@ -20,7 +20,7 @@ class TrackViewCell: UITableViewCell {
     }
     
     let multiSelectIndicator: IconView = {
-        let icon = IconView("square", weight: .medium, scale: .medium, padding: 0)
+        let icon = IconView("square", weight: .medium, scale: .medium, padding: 0, allowGrowing: true)
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.tintColor = Colors.foreground
         
@@ -95,9 +95,7 @@ class TrackViewCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
-//        selectionStyle = .none
-        
+                
         let containerView = UIStackView()
         containerView.axis = .vertical
         containerView.distribution  = .fill
