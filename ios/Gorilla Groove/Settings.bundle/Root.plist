@@ -196,6 +196,68 @@
 			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 			<key>Title</key>
+			<string>Informational Voice</string>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>Enabled</string>
+			<key>Key</key>
+			<string>text_speech_voice_enabled</string>
+			<key>DefaultValue</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>Titles</key>
+			<array>
+				<string>Aaron (American)</string>
+				<string>Alex (American)</string>
+				<string>Fred (American)</string>
+				<string>Nicky (American)</string>
+				<string>Samantha (American)</string>
+				<string>Catherine (Australian)</string>
+				<string>Gordon (Australian)</string>
+				<string>Karen (Australian)</string>
+				<string>Arthur (British)</string>
+				<string>Daniel (British)</string>
+				<string>Martha (British)</string>
+				<string>Moira (Irish)</string>
+				<string>Rishi (Indian)</string>
+				<string>Kyoko (Japanese)</string>
+				<string>Tessa (South African)</string>
+			</array>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Voice</string>
+			<key>Key</key>
+			<string>text_speech_voice_identifier</string>
+			<key>DefaultValue</key>
+			<string>com.apple.ttsbundle.siri_female_en-GB_compact</string>
+			<key>Values</key>
+			<array>
+				<string>com.apple.ttsbundle.siri_male_en-US_compact</string>
+				<string>com.apple.speech.voice.Alex</string>
+				<string>com.apple.speech.synthesis.voice.Fred</string>
+				<string>com.apple.ttsbundle.siri_female_en-US_compact</string>
+				<string>com.apple.ttsbundle.Samantha-compact</string>
+				<string>com.apple.ttsbundle.siri_female_en-AU_compact</string>
+				<string>com.apple.ttsbundle.siri_male_en-AU_compact</string>
+				<string>com.apple.ttsbundle.Karen-compact</string>
+				<string>com.apple.ttsbundle.siri_male_en-GB_compact</string>
+				<string>com.apple.ttsbundle.Daniel-compact</string>
+				<string>com.apple.ttsbundle.siri_female_en-GB_compact</string>
+				<string>com.apple.ttsbundle.Moira-compact</string>
+				<string>com.apple.ttsbundle.Rishi-compact</string>
+				<string>com.apple.ttsbundle.Kyoko-compact</string>
+				<string>com.apple.ttsbundle.Tessa-compact</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSGroupSpecifier</string>
+			<key>Title</key>
 			<string>Error Reporting</string>
 		</dict>
 		<dict>

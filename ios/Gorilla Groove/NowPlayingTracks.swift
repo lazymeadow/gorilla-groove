@@ -305,6 +305,7 @@ class NowPlayingTracks {
     }
     
     private static func updatePlayingTrackInfo(_ track: Track) {
+        GGLog.debug("Setting now playing info from track \(track.id)")
         var nowPlayingInfo = [String : Any]()
         
         nowPlayingInfo[MPMediaItemPropertyTitle] = track.name
@@ -348,6 +349,7 @@ class NowPlayingTracks {
     }
     
     static func playNext() {
+        GGLog.debug("Playing next track if it exists")
         if (nowPlayingTrackIds.isEmpty) {
             return
         }

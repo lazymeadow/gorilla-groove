@@ -97,39 +97,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     private static var stallCheckPending = false
     fileprivate static func onTimeControlStatusChange() {
         if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
-            if !stallCheckPending {
-                stallCheckPending = true
-                
-                // Give the app a chance to catch up before we notify everything that we're buffering.
-                // It can take a second for the "playing" event to kick in, even if it's already available.
-                DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
-                    if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && stallCheckPending {
-                        isStalled = true
-                        GGLog.warning("Playback was stalled")
-                        AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
-                        
-                        // If we're still stalled after a while, then enable offline mode. But only if the track didn't change. If the user
-                        // is fucking with stuff don't interfere with them.
-                        let stalledTrackId = NowPlayingTracks.currentTrack?.id
-                        if stalledTrackId != nil && enableOfflineModeAfterLongBuffer && !OfflineStorageService.offlineModeEnabled {
-                            DispatchQueue.global().asyncAfter(deadline: .now() + 12) {
-                                if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id && isPlaybackWanted {
-                                    // I think that more could be done to make this process better. But for now, just make sure that anything in the now playing
-                                    // of the user are actually available offline. Otherwise we'd be putting them in offline mode for no real benefit to them.
-                                    let anySongsAvailableOffline = NowPlayingTracks.getNowPlayingTracks().contains(where: { $0.songCachedAt != nil })
-                                    if anySongsAvailableOffline {
-                                        OfflineStorageService.offlineModeEnabled = true
-                                        Toast.show("Offline mode automatically enabled")
-                                        GGLog.warning("Offline mode was automatically enabled due to a long stall")
-                                    } else {
-                                        GGLog.warning("User has enabled 'offline mode after stall' but no songs in their now playing were available offline. Not engaging it.")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            checkStall()
         } else if player.timeControlStatus == .playing {
             AudioPlayer.observers.values.forEach { $0(.PLAYING) }
             if isStalled {
@@ -138,6 +106,52 @@ class AudioPlayer : CachingPlayerItemDelegate {
             isStalled = false
         } else if player.timeControlStatus == .paused {
             AudioPlayer.observers.values.forEach { $0(.PAUSED) }
+        }
+    }
+    
+    private static func checkStall() {
+        if !stallCheckPending {
+            stallCheckPending = true
+            
+            // Give the app a chance to catch up before we notify everything that we're buffering.
+            // It can take a second for the "playing" event to kick in, even if it's already available.
+            DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
+                if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && stallCheckPending {
+                    isStalled = true
+                    GGLog.warning("Playback was stalled")
+                    
+                    
+                    AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
+                    
+                    // If we're still stalled after a while, then enable offline mode. But only if the track didn't change. If the user
+                    // is fucking with stuff don't interfere with them.
+                    let stalledTrackId = NowPlayingTracks.currentTrack?.id
+                    if stalledTrackId != nil && enableOfflineModeAfterLongBuffer && !OfflineStorageService.offlineModeEnabled {
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 4) {
+                            if isStalled && !OfflineStorageService.offlineModeEnabled && stalledTrackId == NowPlayingTracks.currentTrack?.id && isPlaybackWanted {
+                                
+                                // I think that more could be done to make this process better. But for now, just make sure that anything in the now playing
+                                // of the user are actually available offline. Otherwise we'd be putting them in offline mode for no real benefit to them.
+                                let anySongsAvailableOffline = NowPlayingTracks.getNowPlayingTracks().contains(where: { $0.songCachedAt != nil })
+                                
+                                if anySongsAvailableOffline {
+                                    // Temporarily mute the player in case the song comes back while we're doing text to speech as that would be annoying
+                                    let oldVolume = player.volume
+                                    player.volume = 0
+                                    TextSpeaker.speak("Playing offline music") {
+                                        OfflineStorageService.offlineModeEnabled = true
+                                        player.volume = oldVolume
+                                    }
+                                    Toast.show("Offline mode automatically enabled")
+                                    GGLog.warning("Offline mode was automatically enabled due to a long stall")
+                                } else {
+                                    GGLog.warning("User has enabled 'offline mode after stall' but no songs in their now playing were available offline. Not engaging it.")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     

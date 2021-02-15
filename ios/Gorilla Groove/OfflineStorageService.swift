@@ -68,7 +68,6 @@ class OfflineStorageService {
         let currentId = UUID()
         lastRecalculationId = currentId
         
-        logger.debug("Enqueueing storage recalculation in \(delaySeconds) seconds")
         DispatchQueue.global().asyncAfter(deadline: .now() + delaySeconds) {
             if currentId == lastRecalculationId {
                 OfflineStorageService.recalculateUsedOfflineStorage()

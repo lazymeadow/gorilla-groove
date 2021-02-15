@@ -25,6 +25,7 @@
 		E840A58C256DE2D2009F3C9E /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E840A58B256DE2D2009F3C9E /* CocoaLumberjackSwift */; };
 		E840A58E256DE2D2009F3C9E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = E840A58D256DE2D2009F3C9E /* CocoaLumberjack */; };
 		E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E840A5902575EA26009F3C9E /* OfflineStorageService.swift */; };
+		E8539C1E25DB02C50086E5B1 /* TextSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8539C1D25DB02C40086E5B1 /* TextSpeaker.swift */; };
 		E85692BA24F4D46500A741D2 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692B924F4D46500A741D2 /* ViewUtil.swift */; };
 		E85692BC24F4D9AA00A741D2 /* TrackContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */; };
 		E85692BE24F4DD4E00A741D2 /* TrackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */; };
@@ -114,6 +115,7 @@
 		E840A57D256C88C2009F3C9E /* CrashReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportService.swift; sourceTree = "<group>"; };
 		E840A587256DA19F009F3C9E /* GGLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGLog.swift; sourceTree = "<group>"; };
 		E840A5902575EA26009F3C9E /* OfflineStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineStorageService.swift; sourceTree = "<group>"; };
+		E8539C1D25DB02C40086E5B1 /* TextSpeaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSpeaker.swift; sourceTree = "<group>"; };
 		E85692B924F4D46500A741D2 /* ViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtil.swift; sourceTree = "<group>"; };
 		E85692BB24F4D9AA00A741D2 /* TrackContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackContextMenu.swift; sourceTree = "<group>"; };
 		E85692BD24F4DD4E00A741D2 /* TrackViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackViewController.swift; sourceTree = "<group>"; };
@@ -308,6 +310,7 @@
 				E86F97FE25B627380015C6CE /* BackgroundTaskService.swift */,
 				E86F980125B921A20015C6CE /* ObservationToken.swift */,
 				E875AC3525D07DCB00AAE877 /* PlaylistService.swift */,
+				E8539C1D25DB02C40086E5B1 /* TextSpeaker.swift */,
 			);
 			path = "Gorilla Groove";
 			sourceTree = "<group>";
@@ -477,6 +480,7 @@
 				E840A5912575EA26009F3C9E /* OfflineStorageService.swift in Sources */,
 				E8588F6E258D1ADB00ACA919 /* UserSynchronizer.swift in Sources */,
 				E85A366425AA3395005C4FDD /* Extensions.swift in Sources */,
+				E8539C1E25DB02C50086E5B1 /* TextSpeaker.swift in Sources */,
 				A89100EE23BD339D00D6EA2D /* AppDelegate.swift in Sources */,
 				E8598FB6250B17D900D70E9F /* WebSocket.swift in Sources */,
 				E889441425CA4352005D5FB4 /* LoginViewController.swift in Sources */,

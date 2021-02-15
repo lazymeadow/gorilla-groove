@@ -53,6 +53,13 @@ class SettingsService {
             options: [.new, .old],
             context: nil
         )
+        
+        UserDefaults.standard.addObserver(
+            observer,
+            forKeyPath: "text_speech_voice_identifier",
+            options: [.new, .old],
+            context: nil
+        )
     }
 
     static func openAppSettings() {
@@ -163,6 +170,8 @@ class SettingsChangeObserver: NSObject {
                     ServerSynchronizer.syncWithServer(abortIfRecentlySynced: true)
                 }
             }
+        } else if keyPath == "text_speech_voice_identifier" {
+            TextSpeaker.speak("Your sound card works perfectly")
         } else {
             super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
         }
