@@ -211,6 +211,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
             }
         )
         
+        navigationItem.leftItemsSupplementBackButton = true
         navigationItem.leftBarButtonItem = multiSelectItem
         
         OfflineStorageService.addOfflineModeToggleObserverToVc(self)

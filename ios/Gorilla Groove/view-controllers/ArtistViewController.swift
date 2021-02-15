@@ -208,7 +208,11 @@ class ArtistViewController: UIViewController, UITableViewDataSource, UITableView
         // If we only have one album to view, may as well just load it and save ourselves a tap
         let view: UIViewController = {
             if (albums.count == 1) {
-                return TrackViewController(albums.first!.name, originalView: .ARTIST, artistFilter: artist, albumFilter: albums.first!.name, user: user, showingHidden: showHiddenTracks)
+                var trackViewTitle = albums.first!.name
+                if trackViewTitle.isEmpty {
+                    trackViewTitle = artist
+                }
+                return TrackViewController(trackViewTitle, originalView: .ARTIST, artistFilter: artist, albumFilter: albums.first!.name, user: user, showingHidden: showHiddenTracks)
             } else {
                 return AlbumViewController(cell.nameLabel.text!, albums, tracks, cell.artist!, user: user, showingHidden: showHiddenTracks)
             }
