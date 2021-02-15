@@ -109,32 +109,44 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 class WebSocket {
     static private var socket: WebSocketTaskConnection? = nil
     
+    private static let this = WebSocket()
+    
+    private init() {}
+    
     static func sendMessage(_ message: Encodable) {
         let messageJson = message.toJSONData()!.toString()
         socket?.send(messageJson)
     }
     
     static func connect() {
-        if socket != nil {
-            return
+        synchronized(this) {
+            if socket != nil {
+                return
+            }
+            if OfflineStorageService.offlineModeEnabled {
+                return
+            }
+            
+            socket = WebSocketTaskConnection(HttpRequester.wsUrl)
         }
-        if OfflineStorageService.offlineModeEnabled {
-            return
-        }
-        
-        socket = WebSocketTaskConnection(HttpRequester.wsUrl)
+
         socket?.connect()
     }
     
     static func disconnect() {
-        if socket != nil {
-            socket!.disconnect()
-            socket = nil
+        synchronized(this) {
+            if let liveSocket = socket {
+                liveSocket.disconnect()
+                socket = nil
+            }
         }
     }
     
     static func reset() {
-        socket = nil
+        synchronized(this) {
+            socket = nil
+        }
+        
         connect()
     }
 }
