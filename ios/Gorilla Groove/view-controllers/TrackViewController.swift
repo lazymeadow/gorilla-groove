@@ -185,7 +185,8 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 DispatchQueue.main.async {
                     vc.tableView.visibleCells.forEach { cell in
                         let songViewCell = cell as! TrackViewCell
-                        songViewCell.checkIfPlaying()
+                        let indexPath = vc.tableView.indexPath(for: cell)!
+                        vc.checkIfCellIsPlaying(songViewCell, indexPath: indexPath)
                     }
                 }
             }
@@ -263,7 +264,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         let songViewCell = cell as! TrackViewCell
-        songViewCell.checkIfPlaying()
+        checkIfCellIsPlaying(songViewCell, indexPath: indexPath)
         
         if multiSelectEnabled {
             songViewCell.setSelectionModeEnabled(multiSelectEnabled)
@@ -271,6 +272,10 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 songViewCell.setSelected(true, animated: false)
             }
         }
+    }
+    
+    func checkIfCellIsPlaying(_ cell: TrackViewCell, indexPath: IndexPath) {
+        cell.checkIfPlaying()
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -321,9 +326,13 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         }
         
         cell.animateSelectionColor()
-
-        let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]!.asTrack() }
-        NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
+        
+        if originalView == .NOW_PLAYING {
+            NowPlayingTracks.nowPlayingIndex = tableIndex.row
+        } else {
+            let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]!.asTrack() }
+            NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)
+        }
         
         if let search = navigationItem.searchController {
             search.searchBar.delegate!.searchBarTextDidEndEditing!(search.searchBar)
@@ -352,7 +361,11 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
     
     // TBH I don't really like how I've done this. Now that this can take either DB or Web tracks, I'd rather rework this so that
     // the tracks are loaded in from either source, and then sorted by this controller
-    func loadTracks() {
+    func loadTracks(scrollIntoView: Bool = false) {
+        if multiSelectEnabled {
+            multiSelectEnabled = false
+        }
+        
         activitySpinner.startAnimating()
         
         if user == nil {

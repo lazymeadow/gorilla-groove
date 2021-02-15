@@ -18,7 +18,22 @@ class NowPlayingTracks {
     private static var playedShuffleIndexes: [Int] = []
     private static var indexesToShuffle: [Int] = []
     
-    private(set) static var nowPlayingIndex: Int = -1
+    static var nowPlayingIndex: Int = -1 {
+        didSet {
+            let trackId = nowPlayingTrackIds[nowPlayingIndex]
+            let trackToPlay = trackIdToTrack[trackId]!
+            
+            currentTrack = trackToPlay
+            
+            if (shuffleOn) {
+                doShuffle(preservePrevious: false)
+            }
+            
+            playTrack(trackToPlay)
+            notifyListeners([trackToPlay], .NOW_PLAYING)
+        }
+    }
+    
     static var shuffleOn: Bool = false {
         didSet {
             if (shuffleOn) {
@@ -109,7 +124,7 @@ class NowPlayingTracks {
         }
         
         playTrack(currentTrack!)
-        notifyListeners(nil, .RESET)
+        notifyListeners([], .RESET)
     }
     
     static func removeTracks(_ trackIds: Set<Int>, playNext: Bool? = nil) {
@@ -170,10 +185,10 @@ class NowPlayingTracks {
                     GGLog.info("The user was listening to the track that was removed. Starting up the next track: \(currentTrack.id)")
                     playTrack(currentTrack)
                 } else {
-                    notifyListeners(currentTrack, .NOW_PLAYING)
+                    notifyListeners([currentTrack], .NOW_PLAYING)
                 }
             } else {
-                notifyListeners(currentTrack, .NOW_PLAYING)
+                notifyListeners([currentTrack], .NOW_PLAYING)
             }
         }
         
@@ -182,9 +197,7 @@ class NowPlayingTracks {
         // But that sounds annoying so I'm not going to.
         doShuffle(preservePrevious: false)
         
-        tracks.forEach { track in
-            notifyListeners(track, .REMOVED)
-        }
+        notifyListeners(tracks, .REMOVED)
     }
     
     // This is used to determine cache eviction policy.
@@ -217,7 +230,7 @@ class NowPlayingTracks {
         }
         
         updatePlayingTrackInfo(track)
-        notifyListeners(currentTrack, .NOW_PLAYING)
+        notifyListeners([currentTrack], .NOW_PLAYING)
         
         // First check if this song is already cached so we don't have to fetch it
         let (existingSongData, existingArtData) = getCachedData(track)
@@ -361,7 +374,8 @@ class NowPlayingTracks {
         }
         
         if (currentTrack == nil) {
-            notifyListeners(currentTrack, .NOW_PLAYING)
+            AudioPlayer.stop()
+            notifyListeners([currentTrack], .NOW_PLAYING)
         } else {
             playTrack(currentTrack!)
         }
@@ -471,7 +485,7 @@ class NowPlayingTracks {
             bonusIndex += 1
         }
         
-        notifyListeners(nil, .ADDED)
+        notifyListeners(tracks, .ADDED)
         
         // Not dealing with re-calculating shuffle indexes properly because I can't be assed right now
         doShuffle(preservePrevious: false)
@@ -483,28 +497,28 @@ class NowPlayingTracks {
             nowPlayingTrackIds.append(track.id)
         }
         
-        notifyListeners(nil, .ADDED)
+        notifyListeners(tracks, .ADDED)
 
         // Not dealing with re-calculating shuffle indexes properly because I can't be assed right now
         doShuffle(preservePrevious: false)
     }
     
-    private static var observers = [UUID : (Track?, TrackChangeType) -> Void]()
+    private static var observers = [UUID : ([Track?], TrackChangeType) -> Void]()
 
     @discardableResult
     static func addTrackChangeObserver<T: AnyObject>(
         _ observer: T,
-        closure: @escaping (T, Track?, TrackChangeType) -> Void
+        closure: @escaping (T, [Track?], TrackChangeType) -> Void
     ) -> ObservationToken {
         let id = UUID()
         
-        observers[id] = { [weak observer] track, type in
+        observers[id] = { [weak observer] tracks, type in
             guard let observer = observer else {
                 observers.removeValue(forKey: id)
                 return
             }
 
-            closure(observer, track, type)
+            closure(observer, tracks, type)
         }
         
         return ObservationToken {
@@ -512,9 +526,9 @@ class NowPlayingTracks {
         }
     }
     
-    private static func notifyListeners(_ track: Track?, _ type: TrackChangeType) {
+    private static func notifyListeners(_ tracks: [Track?], _ type: TrackChangeType) {
         DispatchQueue.global().async {
-            observers.values.forEach { $0(track, type) }
+            observers.values.forEach { $0(tracks, type) }
         }
     }
 }

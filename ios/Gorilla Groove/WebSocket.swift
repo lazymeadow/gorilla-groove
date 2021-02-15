@@ -13,8 +13,7 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
 
     init(_ url: String) {
         super.init()
-        logger.debug("WebSocket init with URL \(url)")
-
+        
         onError = { _, message, error in
             self.logger.error("Got fatal error code \(error.code) from WebSocket message: \(message). Error: \(error.localizedDescription)")
             
@@ -52,7 +51,6 @@ class WebSocketTaskConnection: NSObject, URLSessionWebSocketDelegate {
     func listen()  {
         webSocketTask.receive { [weak self] result in
             guard let this = self else { return }
-            this.logger.debug("Received websocket message")
             
             switch result {
             case .failure(let error):

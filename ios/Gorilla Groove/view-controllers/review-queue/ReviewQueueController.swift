@@ -146,7 +146,7 @@ class ReviewQueueController : UIViewController {
         NowPlayingTracks.addTrackChangeObserver(self) { vc, newTrack, type in
             if type == .NOW_PLAYING {
                 DispatchQueue.main.async {
-                    vc.handleTrackChange(newTrack)
+                    vc.handleTrackChange(newTrack.first!)
                 }
             }
         }

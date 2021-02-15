@@ -175,7 +175,7 @@ class MediaControlsController: UIViewController {
         
         NowPlayingTracks.addTrackChangeObserver(self) { vc, nillableTrack, type in
             if type == .NOW_PLAYING {
-                DispatchQueue.main.async { vc.handleTrackChange(nillableTrack) }
+                DispatchQueue.main.async { vc.handleTrackChange(nillableTrack.first!) }
             }
         }
         
@@ -299,8 +299,6 @@ class MediaControlsController: UIViewController {
             self.songText.text = " "
             self.pauseIcon.isHidden = true
             self.playIcon.isHidden = false
-            
-            AudioPlayer.stop()
             
             return
         }

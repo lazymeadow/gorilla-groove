@@ -391,8 +391,6 @@ class AudioPlayerCacheDelegate : CachingPlayerItemDelegate {
         GGLog.info("Track \(trackId) is downloaded and ready for storing")
 
         CacheService.setCachedData(trackId: trackId, data: data, cacheType: .song)
-        
-        GGLog.info("Track \(trackId) is saved")
     }
     
     private var playbackStalledTrackId: Int?

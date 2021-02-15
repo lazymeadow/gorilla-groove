@@ -33,6 +33,10 @@ class NowPlayingController : TrackViewController {
         super.viewDidAppear(animated)
     }
     
+    override func checkIfCellIsPlaying(_ cell: TrackViewCell, indexPath: IndexPath) {
+        cell.setIsPlaying(indexPath.row == NowPlayingTracks.nowPlayingIndex)
+    }
+    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

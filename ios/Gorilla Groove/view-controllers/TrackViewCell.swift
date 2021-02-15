@@ -61,7 +61,11 @@ class TrackViewCell: UITableViewCell {
     }()
     
     func checkIfPlaying(idToCheckAgainst: Int? = NowPlayingTracks.currentTrack?.id) {
-        if (track != nil && track?.id == idToCheckAgainst) {
+        setIsPlaying(track != nil && track?.id == idToCheckAgainst)
+    }
+    
+    func setIsPlaying(_ isPlaying: Bool) {
+        if isPlaying {
             artistLabel.textColor = Colors.primary
             nameLabel.textColor = Colors.playingSongtitle
             albumLabel.textColor = Colors.primary

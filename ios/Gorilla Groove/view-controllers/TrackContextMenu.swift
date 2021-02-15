@@ -92,12 +92,6 @@ class TrackContextMenu {
     }
 }
 
-
-struct SetPrivateRequest: Codable {
-    let trackIds: Array<Int>
-    let isPrivate: Bool
-}
-
 struct UpdateTrackRequest: Codable {
     let trackIds: [Int]
     var name: String? = nil
@@ -112,10 +106,6 @@ struct UpdateTrackRequest: Codable {
     var `private`: Bool? = nil
     var albumArtUrl: String? = nil
     var offlineAvailability: OfflineAvailabilityType? = nil
-}
-
-struct DeleteTrackRequest: Codable {
-    let trackIds: Array<Int>
 }
 
 enum TrackContextView {
