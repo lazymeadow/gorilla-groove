@@ -565,7 +565,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
                 }
             }
             
-            if changeType == .DELETION || (!vc.showHiddenTracks && changedTrack.isHidden) {
+            if changeType == .DELETION || (!vc.showHiddenTracks && changedTrack.isHidden && originalView != .NOW_PLAYING) {
                 GGLog.info("Removing existing track from track list in response to change")
                 DispatchQueue.main.async {
                     if let index = vc.visibleTrackIds.index(where: { $0 == changedTrack.id }) {
