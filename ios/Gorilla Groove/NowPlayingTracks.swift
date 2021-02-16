@@ -18,21 +18,7 @@ class NowPlayingTracks {
     private static var playedShuffleIndexes: [Int] = []
     private static var indexesToShuffle: [Int] = []
     
-    static var nowPlayingIndex: Int = -1 {
-        didSet {
-            let trackId = nowPlayingTrackIds[nowPlayingIndex]
-            let trackToPlay = trackIdToTrack[trackId]!
-            
-            currentTrack = trackToPlay
-            
-            if (shuffleOn) {
-                doShuffle(preservePrevious: false)
-            }
-            
-            playTrack(trackToPlay)
-            notifyListeners([trackToPlay], .NOW_PLAYING)
-        }
-    }
+    private(set) static var nowPlayingIndex: Int = -1
     
     static var shuffleOn: Bool = false {
         didSet {
@@ -125,6 +111,20 @@ class NowPlayingTracks {
         
         playTrack(currentTrack!)
         notifyListeners([], .RESET)
+    }
+    
+    static func setNowPlayingIndex(_ newIndex: Int) {
+        let trackId = nowPlayingTrackIds[newIndex]
+        let trackToPlay = trackIdToTrack[trackId]!
+        
+        currentTrack = trackToPlay
+        
+        if (shuffleOn) {
+            doShuffle(preservePrevious: false)
+        }
+        
+        playTrack(trackToPlay)
+        notifyListeners([trackToPlay], .NOW_PLAYING)
     }
     
     static func removeTracks(_ trackIds: Set<Int>, playNext: Bool? = nil) {

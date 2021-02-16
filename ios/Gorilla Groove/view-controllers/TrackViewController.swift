@@ -328,7 +328,7 @@ class TrackViewController: UIViewController, UITableViewDataSource, UITableViewD
         cell.animateSelectionColor()
         
         if originalView == .NOW_PLAYING {
-            NowPlayingTracks.nowPlayingIndex = tableIndex.row
+            NowPlayingTracks.setNowPlayingIndex(tableIndex.row)
         } else {
             let visibleTracks = visibleTrackIds.map { trackIdToTrack[$0]!.asTrack() }
             NowPlayingTracks.setNowPlayingTracks(visibleTracks, playFromIndex: tableIndex.row)

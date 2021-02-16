@@ -71,8 +71,6 @@ class OfflineStorageService {
         DispatchQueue.global().asyncAfter(deadline: .now() + delaySeconds) {
             if currentId == lastRecalculationId {
                 OfflineStorageService.recalculateUsedOfflineStorage()
-            } else {
-                logger.debug("Not running delayed recalculation as another one has been enqueued")
             }
         }
     }
