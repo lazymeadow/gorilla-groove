@@ -73,7 +73,7 @@ class TrackService {
             )
         }
         
-        if OfflineStorageService.offlineModeEnabled || retry > 3 {
+        if ProcessInfo.processInfo.isLowPowerModeEnabled || OfflineStorageService.offlineModeEnabled || retry > 3 {
             if retry > 3 {
                 GGLog.error("Retry limit was reached!")
             }

@@ -57,32 +57,46 @@ class AudioPlayer : CachingPlayerItemDelegate {
     
     private init() { }
     
+    private static var nextChangeQueued = false
+    
     static func initialize() {
         initializeControlCenter()
 
         player.automaticallyWaitsToMinimizeStalling = true
         player.volume = 1.0
-
+        
         let time = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         player.addPeriodicTimeObserver(forInterval: time, queue: .main) { time in
             if (time.timescale.magnitude != 1_000_000_000) {
                 return
             }
             
-            let timeInSeconds = NSNumber(value: UInt64(time.value)).decimalValue / NSNumber(value: time.timescale.magnitude).decimalValue
-            let doubleSeconds = Double(truncating: timeInSeconds as NSNumber)
-            lastTimeUpdateSeconds = doubleSeconds
-            
-            // This used to work this way because there was no socket, so continually sending events to the API was how the API
-            // knew you were connected. Now that we are using a socket, this might be entirely unnecessary. But I'm feeling a bit
-            // paranoid today so I'm not removing it outright. This does affect battery of the device though, so I've limited it to
-            // sending an event once every minute.
-            if (CACurrentMediaTime() - lastSongPlayHeartbeatTime > 60.0) {
-                sendPlayEvent(NowPlayingTracks.currentTrack)
-            }
+            let timeInSeconds = time.timeInSeconds
+            lastTimeUpdateSeconds = timeInSeconds
             
             registeredCallbacks.forEach { callback in
-                callback(doubleSeconds)
+                callback(timeInSeconds)
+            }
+            
+            if let totalTime = player.currentItem?.duration.timeInSeconds {
+                // Depending on the timing, the observer may never fire after the totalTime (though it CAN).
+                // So we need to do an async function and change the song ourselves if we're within a given amount.
+                // Inexplicably, even with a low threshhold of like 0.33333, we might not get an event when there's still 0.7 seconds of song left?
+                // So we need to get pretty aggressive in our capture window to make sure we don't miss it
+                if !nextChangeQueued && timeInSeconds + 1.0 >= totalTime {
+                    nextChangeQueued = true
+                    
+                    let timeToWait = (totalTime - timeInSeconds) > 0 ? (totalTime - timeInSeconds) : 0
+                    let currentTrackIndex = NowPlayingTracks.nowPlayingIndex
+                    DispatchQueue.main.asyncAfter(deadline: .now() + timeToWait) {
+                        // Help guard against users changing song at the very end doing a double change
+                        if currentTrackIndex == NowPlayingTracks.nowPlayingIndex && nextChangeQueued {
+                            NowPlayingTracks.playNext()
+                        }
+                    }
+                }
+            } else {
+                GGLog.error("Could not get total time from player. Is there a current item? I'd really think there should be")
             }
         }
         
@@ -119,7 +133,6 @@ class AudioPlayer : CachingPlayerItemDelegate {
                 if player.timeControlStatus == .waitingToPlayAtSpecifiedRate && stallCheckPending {
                     isStalled = true
                     GGLog.warning("Playback was stalled")
-                    
                     
                     AudioPlayer.observers.values.forEach { $0(.BUFFERING) }
                     
@@ -263,6 +276,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     static func play() {
         player.play()
         isPlaybackWanted = true
+        nextChangeQueued = false
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
     }
@@ -270,6 +284,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     static func pause() {
         player.pause()
         isPlaybackWanted = false
+        nextChangeQueued = false
 
         sendPlayEvent(nil)
     }
@@ -278,6 +293,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
         player.pause()
         player.replaceCurrentItem(with: nil)
         isPlaybackWanted = false
+        nextChangeQueued = false
 
         sendPlayEvent(nil)
         self.observers.values.forEach { $0(.STOPPED) }
@@ -307,13 +323,7 @@ class AudioPlayer : CachingPlayerItemDelegate {
     static func playPlayerItem(_ playerItem: AVPlayerItem, _ track: Track) {
         isStalled = false
         isPlaybackWanted = true
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(playerDidFinishPlayingItem),
-            name: .AVPlayerItemDidPlayToEndTime,
-            object: playerItem
-        )
+        nextChangeQueued = false
         
         lastTimeUpdateSeconds = 0
         player.replaceCurrentItem(with: playerItem)
@@ -322,11 +332,6 @@ class AudioPlayer : CachingPlayerItemDelegate {
         setRatingEnabled(track.inReview)
         
         sendPlayEvent(NowPlayingTracks.currentTrack)
-    }
-    
-    @objc private static func playerDidFinishPlayingItem() {
-        GGLog.info("Finished playing current audio item")
-        NowPlayingTracks.playNext()
     }
     
     private static func sendPlayEvent(_ track: Track?) {
@@ -425,5 +430,14 @@ class SongCachingPlayerItem : CachingPlayerItem {
         self.shouldCache = shouldCache
 
         super.init(url: url, customFileExtension: nil)
+    }
+}
+
+extension CMTime {
+    var timeInSeconds: Double {
+        get {
+            let timeInSeconds = NSNumber(value: UInt64(self.value)).decimalValue / NSNumber(value: self.timescale.magnitude).decimalValue
+            return Double(truncating: timeInSeconds as NSNumber)
+        }
     }
 }

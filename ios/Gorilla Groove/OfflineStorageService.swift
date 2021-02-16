@@ -124,7 +124,7 @@ class OfflineStorageService {
         // This is some paranoia, but I am adding in a buffer here (50 MB) to make this size check a bit more aggressive. I don't think there are
         // very many instances of people wanting to 100% max out the storage on their phone in order to store offline music....
         if additionalSpaceToUse + 50_000_000 > FileManager.systemFreeSizeBytes() {
-            GGLog.warning("User is running out of storage space on their phone. \(FileManager.systemFreeSizeBytes()) bytes remaining")
+            logger.warning("User is running out of storage space on their phone. \(FileManager.systemFreeSizeBytes()) bytes remaining")
             return true
         }
         
@@ -194,7 +194,7 @@ class OfflineStorageService {
             if let updatedTrack = TrackDao.findById(track.id) {
                 TrackService.broadcastTrackChange(updatedTrack, type: .MODIFICATION)
             } else {
-                GGLog.error("Could not find track after deleting its cache data!")
+                logger.error("Could not find track after deleting its cache data!")
             }
         }
         
@@ -212,7 +212,7 @@ class OfflineStorageService {
     static var backgroundDownloadInterrupted: Bool = false
     
     static func downloadAlwaysOfflineMusic() {
-        GGLog.debug("Running offline music download routine")
+        logger.debug("Running offline music download routine")
         if Thread.isMainThread {
             fatalError("Do not attempt to download music on the main thread!")
         }
@@ -612,7 +612,7 @@ fileprivate extension FileManager {
         if let freeBytes = try? FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())[.systemFreeSize] as! Int64 {
             return freeBytes
         } else {
-            GGLog.critical("Could not calculate free bytes on device!")
+            logger.critical("Could not calculate free bytes on device!")
             return 0
         }
     }
@@ -621,7 +621,7 @@ fileprivate extension FileManager {
         if let freeBytes = try? FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())[.systemSize] as! Int64 {
             return freeBytes
         } else {
-            GGLog.critical("Could not calculate device storage capacity!")
+            logger.critical("Could not calculate device storage capacity!")
             return 0
         }
     }

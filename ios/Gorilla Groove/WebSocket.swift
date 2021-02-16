@@ -124,6 +124,11 @@ class WebSocket {
             if OfflineStorageService.offlineModeEnabled {
                 return
             }
+            // We only ever (currently) use the socket to broadcast when we listen to stuff. This isn't very important,
+            // and sockets do use up battery. So do not connect if we are in low power mode
+            if ProcessInfo.processInfo.isLowPowerModeEnabled {
+                return
+            }
             
             socket = WebSocketTaskConnection(HttpRequester.wsUrl)
         }
