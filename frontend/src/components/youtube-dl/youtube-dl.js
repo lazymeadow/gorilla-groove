@@ -9,8 +9,8 @@ export class YoutubeDlModal extends React.Component {
 		super(props);
 
 		this.state = {
-			modalOpen: false,
-			cropArtToSquare: true
+			cropArtToSquare: true,
+			confirmationModalOpen: false
 		}
 	}
 
@@ -26,15 +26,43 @@ export class YoutubeDlModal extends React.Component {
 		}
 	}
 
-	setModalOpen(isOpen) {
-		this.setState({ modalOpen: isOpen })
-	}
-
 	submitDownloadForm(event) {
 		event.preventDefault();
 		event.nativeEvent.propagationStopped = true;
 
 		const url = document.getElementById('song-url').value;
+
+		if (url.includes('&list')) {
+			this.setState({ confirmationModalOpen: true });
+		} else {
+			this.doTheDownload(url);
+		}
+	}
+
+	confirmationModalCallback(e, userIntent) {
+		e.stopPropagation();
+
+		this.setState({ confirmationModalOpen: false });
+
+		const url = document.getElementById('song-url').value;
+
+		// If the user just wanted to download the video (without the playlist) remove the &list from the URL
+		if (userIntent === videoOnly) {
+			console.log('video only');
+			const [urlPath, queryString] = url.split('?');
+			const params = new URLSearchParams(queryString);
+			params.delete('list');
+			params.delete('index');
+
+			console.log(urlPath, queryString);
+			console.log(params.toString());
+			return this.doTheDownload(urlPath + '?' + params.toString());
+		} else if (userIntent === playlist) {
+			this.doTheDownload(url);
+		}
+	}
+
+	doTheDownload(url) {
 		const name = document.getElementById('song-name').value;
 		const artist = document.getElementById('song-artist').value;
 		const featuring = document.getElementById('song-featuring').value;
@@ -71,6 +99,7 @@ export class YoutubeDlModal extends React.Component {
 		}
 
 		this.props.setDownloading(true);
+		console.log("About to call close fn'");
 		this.props.closeFunction();
 
 		Api.post('background-task/youtube-dl', params).then(() => {
@@ -86,6 +115,11 @@ export class YoutubeDlModal extends React.Component {
 	render() {
 		return (
 			<form id="youtube-dl" className="form-modal" onSubmit={this.submitDownloadForm.bind(this)}>
+				<ConfirmPlaylistDownloadModal
+					modalOpen={this.state.confirmationModalOpen}
+					callback={this.confirmationModalCallback.bind(this)}
+				/>
+
 				<div className="flex-label">
 					<label htmlFor="song-url">URL</label>
 					<input id="song-url" name="song-url" type="text" required/>
@@ -158,6 +192,36 @@ export class YoutubeDlModal extends React.Component {
 	}
 }
 YoutubeDlModal.contextType = MusicContext;
+
+const cancel = 2;
+const playlist = 1;
+const videoOnly = 0;
+
+function ConfirmPlaylistDownloadModal(props) {
+	const closeFunction = e => props.callback(e, cancel);
+
+	return (
+		<div id="confirm-playlist-download-modal">
+			<Modal
+				isOpen={props.modalOpen}
+				closeFunction={closeFunction}
+			>
+				{ props.modalOpen ? <div>
+					<h3 className="text-center">Playlist Download</h3>
+					<p>
+						You are about to download every video off of this playlist.<br/>
+						Are you sure this is what you want to do?
+					</p>
+					<div className="flex-between confirm-modal-buttons">
+						<button onClick={e => props.callback(e, playlist)}>Yes</button>
+						<button onClick={e => props.callback(e, videoOnly)}>No, just the one video only</button>
+						<button onClick={e => props.callback(e, cancel)}>What?</button>
+					</div>
+				</div> : null }
+			</Modal>
+		</div>
+	)
+}
 
 export default function YoutubeDlButton(props) {
 	const [modalOpen, setModalOpen] = useState(false);

@@ -106,7 +106,6 @@ export class SocketProvider extends React.Component {
 	}
 
 	handleBackgroundTaskMessage(message) {
-		console.log(message);
 		this.props.backgroundTaskContext.handleTaskChange(message.task, message.trackId, this.props.musicContext);
 	}
 

@@ -40,6 +40,10 @@ class BackgroundTaskController(
 			listOf(backgroundTaskProcessor.addBackgroundTask(type = BackgroundProcessType.YT_DOWNLOAD, payload = body))
 		}
 
+		require(tasks.isNotEmpty()) {
+			"Invalid URL supplied"
+		}
+
 		return BackgroundTaskResponse(items = tasks)
     }
 

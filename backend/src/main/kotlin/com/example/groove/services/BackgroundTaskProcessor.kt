@@ -144,6 +144,8 @@ class BackgroundTaskProcessor(
 
 				task.status = FAILED
 				backgroundTaskItemRepository.save(task)
+
+				backgroundTaskSocketHandler.broadcastBackgroundTaskStatus(task)
 			}
 		}
 
