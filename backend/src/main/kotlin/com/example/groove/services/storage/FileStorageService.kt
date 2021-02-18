@@ -1,4 +1,4 @@
-package com.example.groove.services
+package com.example.groove.services.storage
 
 import com.example.groove.db.dao.TrackLinkRepository
 import com.example.groove.db.dao.TrackRepository
@@ -6,6 +6,7 @@ import com.example.groove.db.model.Track
 import com.example.groove.db.model.TrackLink
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.services.ArtSize
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.get
 import com.example.groove.util.loadLoggedInUser

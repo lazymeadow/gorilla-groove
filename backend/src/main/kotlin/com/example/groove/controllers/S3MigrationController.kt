@@ -10,9 +10,9 @@ import com.example.groove.db.dao.TrackRepository
 import com.example.groove.db.model.Track
 import com.example.groove.properties.S3Properties
 import com.example.groove.services.ArtSize
-import com.example.groove.services.FileStorageService
+import com.example.groove.services.storage.FileStorageService
 import com.example.groove.services.ImageService
-import com.example.groove.services.S3StorageService
+import com.example.groove.services.storage.S3StorageService
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
 import com.example.groove.util.logger

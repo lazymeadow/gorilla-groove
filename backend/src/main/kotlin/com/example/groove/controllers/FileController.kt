@@ -1,10 +1,9 @@
 package com.example.groove.controllers
 
 import com.example.groove.db.model.Track
-import com.example.groove.db.model.enums.DeviceType
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.services.ArtSize
-import com.example.groove.services.FileStorageService
+import com.example.groove.services.storage.FileStorageService
 import com.example.groove.services.SongIngestionService
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.FileUtils
@@ -14,14 +13,6 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import javax.servlet.http.HttpServletResponse
 import kotlin.system.measureTimeMillis
-import org.springframework.http.ResponseEntity
-import java.nio.file.Files
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import java.io.File
-import java.nio.file.Paths
 
 
 @RestController
