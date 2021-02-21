@@ -5,6 +5,7 @@ import SiteLayout from "../site-layout/site-layout";
 import AccountCreation from "../account-creation/account-creation";
 import {LoginPage} from "..";
 import PrivacyPolicy from "../privacy-policy/privacy-policy";
+import PasswordReset from "../password-reset/password-reset";
 
 // NOTE - These routes are served up from the backend in a pretty naive way right now.
 // Any additional routes we add need to be whitelisted for unauthenticated users (if applicable)
@@ -17,6 +18,7 @@ export function PageRouter() {
 				<Route path="/privacy-policy" component={PrivacyPolicy}/>
 				<Route path="/track-link/:trackId" component={SongLinkPlayer}/>
 				<Route path="/create-account/:key" component={AccountCreation}/>
+				<Route path="/password-reset/:key" component={PasswordReset}/>
 				<Route path="/" component={SiteLayout}/>
 				<Route render={() => <h1>Yo dawg where the page at</h1>}/>
 			</Switch>

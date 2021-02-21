@@ -12,6 +12,8 @@ import com.example.groove.properties.S3Properties
 import com.example.groove.services.ArtSize
 import com.example.groove.services.storage.FileStorageService
 import com.example.groove.services.ImageService
+import com.example.groove.services.PasswordResetService
+import com.example.groove.services.email.EmailSender
 import com.example.groove.services.storage.S3StorageService
 import com.example.groove.util.DateUtils.now
 import com.example.groove.util.get
@@ -33,7 +35,8 @@ class S3MigrationController(
 		s3Properties: S3Properties,
 		private val trackRepository: TrackRepository,
 		private val imageService: ImageService,
-		private val storageService: FileStorageService
+		private val storageService: FileStorageService,
+		private val passwordResetService: PasswordResetService
 ) {
 	final val s3Client: AmazonS3
 
@@ -156,7 +159,12 @@ class S3MigrationController(
 		}
 	}
 
+	@GetMapping("/email")
+	fun testEmail() {
+		passwordResetService.sendPasswordResetEmail()
+	}
+
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 }

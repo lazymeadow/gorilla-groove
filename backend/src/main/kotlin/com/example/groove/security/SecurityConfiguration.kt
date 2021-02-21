@@ -51,6 +51,7 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/login"), // These are routes used in the frontend. Probably a better way to handle this
 			AntPathRequestMatcher("/track-link/*"),
 			AntPathRequestMatcher("/create-account/*"),
+			AntPathRequestMatcher("/password-reset/*"),
 			AntPathRequestMatcher("/privacy-policy"),
 			AntPathRequestMatcher("/dist/bundle.js"),
 			AntPathRequestMatcher("/dist/index.css"),

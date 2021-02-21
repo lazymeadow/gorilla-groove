@@ -25,6 +25,11 @@ class ForwardingController {
 		return "forward:/"
 	}
 
+	@RequestMapping("/password-reset/{resetIdentifier}")
+	fun forwardPasswordReset(): String {
+		return "forward:/"
+	}
+
 	@RequestMapping("/privacy-policy")
 	fun forwardPrivacyPolicy(): String {
 		return "forward:/"
