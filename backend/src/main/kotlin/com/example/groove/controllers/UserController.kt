@@ -49,7 +49,7 @@ class UserController(
 			@field:Email
 			val email: String,
 
-			@field:Size(min = 10, max = 255, message = "Password must be between 10 and 255 characters long")
+			@field:Size(min = 9, max = 255, message = "Password must be between 9 and 255 characters long")
 			val password: String,
 
 			val inviteLinkIdentifier: String

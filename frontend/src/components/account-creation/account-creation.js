@@ -75,12 +75,12 @@ export default function AccountCreation(props) {
 
 					<div className="flex-label">
 						<label htmlFor="password">Password</label>
-						<input id="password" name="password" type="password" minLength="10" required/>
+						<input id="password" name="password" type="password" minLength="9" required/>
 					</div>
 
 					<div className="flex-label">
 						<label htmlFor="password2">Password... again</label>
-						<input id="password2" name="password2" type="password" minLength="10" required/>
+						<input id="password2" name="password2" type="password" minLength="9" required/>
 					</div>
 
 					<button>Take me to the Groove Zone</button>

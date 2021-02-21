@@ -3,7 +3,6 @@ package com.example.groove.services
 import com.example.groove.db.dao.PasswordResetRepository
 import com.example.groove.db.dao.UserRepository
 import com.example.groove.db.model.PasswordReset
-import com.example.groove.db.model.User
 import com.example.groove.exception.ResourceNotFoundException
 import com.example.groove.services.email.EmailSender
 import com.example.groove.util.DateUtils
@@ -36,12 +35,9 @@ class PasswordResetService(
 		)
 	}
 
-	fun findPasswordReset(user: User, uniqueKey: String): PasswordReset {
+	fun findPasswordReset(uniqueKey: String): PasswordReset {
 		val passwordReset = passwordResetRepository.findByUniqueKey(uniqueKey)
-
-		if (passwordReset == null || passwordReset.user.id != user.id) {
-			throw ResourceNotFoundException("No password reset found with uniqueKey '$uniqueKey'")
-		}
+				?: throw ResourceNotFoundException("No password reset found with uniqueKey '$uniqueKey'")
 
 		val oneWeekAgo = DateUtils.now().minusWeeks(1)
 		if (passwordReset.createdAt.before(oneWeekAgo)) {
@@ -51,10 +47,11 @@ class PasswordResetService(
 		return passwordReset
 	}
 
-	fun changePassword(user: User, uniqueKey: String, newPassword: String) {
-		val passwordReset = findPasswordReset(user, uniqueKey)
+	fun changePassword(uniqueKey: String, newPassword: String) {
+		val passwordReset = findPasswordReset(uniqueKey)
+		val user = passwordReset.user
 
-		user.encryptedPassword = BCrypt.hashpw(user.password, BCrypt.gensalt())
+		user.encryptedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt())
 		userRepository.save(user)
 
 		passwordResetRepository.delete(passwordReset)

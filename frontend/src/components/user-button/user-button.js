@@ -28,7 +28,6 @@ export default function UserButton() {
 		Api.post('authentication/logout').catch(error => {
 			console.error(error)
 		}).finally(() => {
-			sessionStorage.removeItem('token');
 			deleteCookie('cookieToken');
 			deleteCookie('loggedInEmail');
 

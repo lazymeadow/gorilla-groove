@@ -44,7 +44,10 @@ class AuthenticationController(
 
 	@PostMapping("/logout")
 	fun logout(): ResponseEntity<String> {
-		userAuthenticationService.logout(loadLoggedInUser())
+		val user = loadLoggedInUser()
+		logger.info("${user.name} is logging out")
+
+		userAuthenticationService.logout(user)
 		return ResponseEntity.ok().build()
 	}
 

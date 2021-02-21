@@ -18,16 +18,17 @@ class PasswordResetController(
 	}
 
 	@GetMapping("/unique-key/{uniqueKey}")
-	fun getPasswordReset(@PathVariable uniqueKey: String) {
-		passwordResetService.findPasswordReset(loadLoggedInUser(), uniqueKey)
+	fun getPasswordReset(@PathVariable uniqueKey: String): PasswordResetResponse {
+		val passwordReset = passwordResetService.findPasswordReset(uniqueKey)
+
+		return PasswordResetResponse(passwordReset.user.name)
 	}
 
 	@PutMapping
 	fun changePassword(@RequestBody body: PasswordChangeDTO) {
 		passwordResetService.changePassword(
-				user = loadLoggedInUser(),
 				newPassword = body.newPassword,
-				uniqueKey = body.passwordResetUniqueKey
+				uniqueKey = body.uniqueKey
 		)
 	}
 
@@ -35,9 +36,13 @@ class PasswordResetController(
 		private val logger = logger()
 	}
 
+	data class PasswordResetResponse(
+		val username: String,
+	)
+
 	data class PasswordChangeDTO(
 			val newPassword: String,
-			val passwordResetUniqueKey: String
+			val uniqueKey: String
 	)
 
 	data class PasswordResetDTO(
