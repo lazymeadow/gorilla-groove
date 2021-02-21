@@ -13,18 +13,17 @@ import javax.mail.internet.MimeMessage
 
 
 @Service
-@ConditionalOnProperty(name = ["aws.email.ses"], havingValue = "false")
-class SMTPEmailSender(
+class EmailSender(
 		private val javaMailSender: JavaMailSender,
-) : EmailSender() {
+) {
 
-	override fun sendEmail(subject: String, message: String, toEmail: String) {
+	fun sendEmail(subject: String, message: String, toEmail: String) {
 		logger.info("Sending email with subject '$subject' to email '$toEmail'")
 		val mimeMessage: MimeMessage = javaMailSender.createMimeMessage()
 
 		val email = MimeMessageHelper(mimeMessage, "utf-8")
 		email.setText(message, true)
-		email.setFrom("noreply@shoopufnetworks.com")
+		email.setFrom("no-reply@gorillagroove.net")
 		email.setTo(toEmail)
 		email.setSubject(subject)
 
@@ -37,23 +36,52 @@ class SMTPEmailSender(
 }
 
 @Configuration
-class JavaMailConfiguration(
+@ConditionalOnProperty(name = ["aws.email.ses"], havingValue = "false")
+class GmailJavaMailConfiguration(
 		private val emailProperties: EmailProperties
 ) {
 	@Bean
 	fun getJavaMailSender(): JavaMailSender {
 		val mailSender = JavaMailSenderImpl()
+		val props = mailSender.javaMailProperties
+
 		mailSender.host = "smtp.gmail.com"
 		mailSender.port = 587
 		mailSender.username = "shoopufnetworks@gmail.com"
-		mailSender.password = emailProperties.smtpPassword
+		mailSender.password = emailProperties.gmailPassword
 
-		val props = mailSender.javaMailProperties
 		props["mail.transport.protocol"] = "smtp"
 		props["mail.smtp.auth"] = "true"
 		props["mail.smtp.starttls.enable"] = "true"
-		props["mail.debug"] = "true"
+		props["mail.debug"] = "false"
 
 		return mailSender
 	}
 }
+
+
+@Configuration
+@ConditionalOnProperty(name = ["aws.email.ses"], havingValue = "true")
+class SesJavaMailConfiguration(
+		private val emailProperties: EmailProperties
+) {
+	@Bean
+	fun getJavaMailSender(): JavaMailSender {
+		val mailSender = JavaMailSenderImpl()
+		val props = mailSender.javaMailProperties
+
+		mailSender.host = "email-smtp.us-west-2.amazonaws.com"
+		mailSender.port = 587
+		mailSender.username = emailProperties.sesUsername
+		mailSender.password = emailProperties.sesPassword
+
+		props["mail.transport.protocol"] = "smtp"
+		props["mail.smtp.auth"] = "true"
+		props["mail.smtp.starttls.enable"] = "true"
+		props["mail.smtp.starttls.required"] = "true"
+
+		return mailSender
+	}
+}
+
+
