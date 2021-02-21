@@ -5,14 +5,22 @@ import {Api} from "../../api";
 import {addCookie} from "../../cookie";
 import {getDeviceIdentifier} from "../../services/version";
 import {DeviceType} from "../../enums/device-type";
+import {Modal} from "../modal/modal";
+import {LoadingSpinner} from "../loading-spinner/loading-spinner";
 
 class LoginPageInternal extends React.Component {
 	constructor(props) {
 		super(props);
+
+		this.state = {
+			isModalOpen: false,
+			isLoading: false
+		};
 	}
 
-	submit(event) {
+	submitLogin(event) {
 		event.preventDefault();
+		event.stopPropagation();
 
 		let params = {
 			email: document.getElementById('email').value,
@@ -36,10 +44,44 @@ class LoginPageInternal extends React.Component {
 			})
 	}
 
+	submitPasswordReset(event) {
+		event.preventDefault();
+		event.stopPropagation();
+
+		this.setState({ isLoading: true });
+
+		const email = document.getElementById('reset-email').value;
+
+		if (email.trim().length === 0) {
+			toast.info('An email is required');
+			return;
+		}
+
+		Api.post('password-reset', { email }).then(() => {
+			toast.success('Password reset sent. Check your email');
+			this.setState({ isLoading: false, isModalOpen: false });
+		}).catch(() => {
+			toast.error('A password reset could not be sent');
+			this.setState({ isLoading: false });
+		})
+	}
+
+	openModal() {
+		const preexistingEmail = document.getElementById('email').value;
+
+		this.setState({ isModalOpen: true }, () => {
+			// More jank timeout to put stuff on the end of react's queue of stuff to do.
+			// Otherwise the input won't yet be defined.
+			setTimeout(() => {
+				document.getElementById('reset-email').value = preexistingEmail
+			}, 0);
+		});
+	}
+
 	render() {
 		return (
 			<div className="full-screen">
-				<form onSubmit={this.submit.bind(this)}>
+				<form onSubmit={this.submitLogin.bind(this)}>
 					<div className="login-container">
 						<div>
 							<h1>Gorilla Groove</h1>
@@ -56,6 +98,34 @@ class LoginPageInternal extends React.Component {
 							</div>
 
 							<button>Login</button>
+						</div>
+
+						<div className="password-reset">
+							<span className="span-link" onClick={this.openModal.bind(this)}>
+								Forgot your password?
+							</span>
+							<Modal
+								isOpen={this.state.isModalOpen}
+								closeFunction={() => this.setState({ isModalOpen: false })}
+							>
+								<div className="password-reset-modal">
+									<LoadingSpinner
+										visible={this.state.isLoading}
+										small={true}
+									/>
+									<form onSubmit={this.submitPasswordReset.bind(this)}>
+										<label>Email
+											<div>
+												<input id="reset-email" className="password-reset-input" type="email"/>
+											</div>
+										</label>
+
+										<div className="text-center">
+											<button type="submit">Reset</button>
+										</div>
+									</form>
+								</div>
+							</Modal>
 						</div>
 					</div>
 				</form>
