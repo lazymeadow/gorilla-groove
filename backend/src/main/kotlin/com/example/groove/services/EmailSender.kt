@@ -23,7 +23,7 @@ class EmailSender(
 
 		val email = MimeMessageHelper(mimeMessage, "utf-8")
 		email.setText(message, true)
-		email.setFrom("no-reply@gorillagroove.net")
+		email.setFrom("Gorilla Groove <no-reply@gorillagroove.net>")
 		email.setTo(toEmail)
 		email.setSubject(subject)
 
