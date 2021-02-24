@@ -44,6 +44,8 @@ export default function MiniPlayer(props) {
 		}
 	};
 
+	const albumArtLink = props.trackData.albumArtLink;
+
 	return (
 		<div className="song-player mini-player">
 			{ props.title !== undefined
@@ -54,7 +56,10 @@ export default function MiniPlayer(props) {
 				{/* Use a background image here because it behaves better at staying within boundaries */}
 				<div
 					className="album-art"
-					style={{ backgroundImage: `url(${props.trackData.albumArtLink})` }}
+					style={ albumArtLink
+						? { backgroundImage: `url(${albumArtLink})` }
+						: {}
+					}
 				/>
 				<div className="song-information">
 					<ul>
