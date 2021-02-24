@@ -30,9 +30,23 @@ export class VersionDisplay extends React.Component {
 		}
 	}
 
+	isVersionOutOfDate(newVersion) {
+		// The versions look like x.x.x-1234abc or w/e but if only the git hash changes then
+		// let's not say that someone's stuff is out of date. If we want someone to update
+		// we should at least be bumping the minor version in almost all cases.
+
+		let newVersionDotIndex = newVersion.lastIndexOf('-');
+		let newVersionWithoutHash = newVersion.substring(0, newVersionDotIndex);
+
+		let oldVersionDotIndex = __VERSION__.lastIndexOf('-');
+		let oldVersionWithoutHash = __VERSION__.substring(0, oldVersionDotIndex);
+
+		return newVersionWithoutHash !== oldVersionWithoutHash
+	}
+
 	checkForNewerVersion() {
 		Api.get('version').then(serverVersion => {
-			if (serverVersion.version !== __VERSION__) {
+			if (this.isVersionOutOfDate(serverVersion.version)) {
 				// Once we've marked it as out of date, there is no reason to continue checking
 				clearInterval(updateIntervalId);
 				updateIntervalId = null;
