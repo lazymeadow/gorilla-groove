@@ -47,6 +47,7 @@ class SecurityConfiguration(
 			AntPathRequestMatcher("/api/file/track-link/*"),
 			AntPathRequestMatcher("/api/password-reset/**"),
 			AntPathRequestMatcher("/api/track/preview/public/*"),
+			AntPathRequestMatcher("/api/oembed/**"),
 			AntPathRequestMatcher("/api/version**"),
 			AntPathRequestMatcher("/"), // Allow serving the frontend through 'index.html' from our static files
 			AntPathRequestMatcher("/login"), // These are routes used in the frontend. Probably a better way to handle this
@@ -147,7 +148,7 @@ class SecurityConfiguration(
 	}
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 
 		val allowedOrigins = arrayOf(
 				"http://127.0.0.1:8080",
