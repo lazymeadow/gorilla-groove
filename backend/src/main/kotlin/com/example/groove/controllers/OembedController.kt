@@ -29,7 +29,9 @@ class OembedController(private val trackService: TrackService) {
 			return ResponseEntity(HttpStatus.NOT_FOUND)
 		}
 
-		return ResponseEntity.ok(OembedResponse())
+		val response = OembedResponse(url = trackInfo.albumArtLink ?: "")
+
+		return ResponseEntity.ok(response)
 	}
 
 	companion object {
