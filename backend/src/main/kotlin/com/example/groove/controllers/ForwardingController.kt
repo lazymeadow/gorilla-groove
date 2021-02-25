@@ -96,7 +96,7 @@ class MainPageTransformer(
 		${createMetaTag("music:duration", trackInfo.length.toString())}
 		${createMetaTag("music:musician", trackInfo.artist)}
 		${createMetaTag("og:audio", trackInfo.trackLink)}
-		${createMetaTag("og:audio:type", "audio/mp3")}
+		${createMetaTag("og:audio:type", "audio/mpeg")}
 		""".trimIndent())
 	}
 
