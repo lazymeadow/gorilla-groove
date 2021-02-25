@@ -1,5 +1,8 @@
 package com.example.groove.controllers
 
+import com.example.groove.services.TrackService
+import com.example.groove.services.enums.AudioFormat
+import com.example.groove.util.logger
 import org.apache.commons.io.IOUtils
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -53,6 +56,7 @@ class ForwardingController {
 @Configuration
 class MainPageTransformer(
 		private val environment: Environment,
+		private val trackService: TrackService
 ) : ResourceTransformer {
 	override fun transform(request: HttpServletRequest, resource: Resource, transformerChain: ResourceTransformerChain): Resource {
 		val originalUri = request.getAttribute("javax.servlet.forward.request_uri") as? String
@@ -61,6 +65,40 @@ class MainPageTransformer(
 			return resource
 		}
 
+//		val finalHtml = transformForOembed(originalUri, request, resource)
+		val finalHtml = transformForOgp(originalUri, request, resource)
+		return TransformedResource(resource, finalHtml.toByteArray())
+	}
+
+	private fun transformForOgp(originalUri: String, request: HttpServletRequest, resource: Resource): String {
+		val trackId = originalUri.split('/').lastOrNull()?.toLong() ?: run {
+			logger.error("Could not parse a track ID from request URI! URI was: '$originalUri'")
+			return IOUtils.toString(resource.inputStream, "UTF-8")
+		}
+
+		val trackInfo = try {
+			trackService.getPublicTrackInfo(trackId, true, AudioFormat.MP3)
+		} catch (e: Throwable) {
+			logger.warn("No track info found for oembed link for track ID: $trackId. It may have expired.")
+			return IOUtils.toString(resource.inputStream, "UTF-8")
+		}
+
+		val titleElement = """<meta property="og:title" content="${trackInfo.name}">"""
+		val typeElement = """<meta property="og:type" content="music.song">"""
+		val urlElement = """<meta property="og:url" content="https://gorillagroove.net/track-link/$trackId">"""
+		val imageElement = """<meta property="og:image" content="${trackInfo.albumArtLink ?: ""}">"""
+		
+		val html = IOUtils.toString(resource.inputStream, "UTF-8")
+		return html.replace("<head>", """
+			<head>
+			$titleElement
+			$typeElement
+			$urlElement
+			$imageElement
+		""".trimIndent())
+	}
+
+	private fun transformForOembed(originalUri: String, request: HttpServletRequest, resource: Resource): String {
 		val isProd = environment.activeProfiles.contains("prod")
 		val port = if (isProd) "" else ":" + request.serverPort
 		val serverName = if (isProd) "gorillagroove.net" else "localhost"
@@ -72,8 +110,11 @@ class MainPageTransformer(
 		val linkElement = """<link href="$oembedUrl" rel="alternate" type="application/json+oembed" title="Gorilla Groove Track Link">"""
 
 		val html = IOUtils.toString(resource.inputStream, "UTF-8")
-		val finalHtml = html.replace("<head>", "<head>$linkElement")
 
-		return TransformedResource(resource, finalHtml.toByteArray())
+		return html.replace("<head>", "<head>$linkElement")
+	}
+
+	companion object {
+		private val logger = logger()
 	}
 }
