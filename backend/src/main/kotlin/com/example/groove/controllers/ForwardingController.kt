@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import org.springframework.core.env.Environment
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
+import java.net.URLEncoder
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -28,7 +29,7 @@ class ForwardingController(
 		val scheme = if (isProd) "https://" else "http://"
 
 		val ggUrl = scheme + serverName + port
-		val userUrl = ggUrl + request.servletPath
+		val userUrl = URLEncoder.encode(ggUrl + request.servletPath, "UTF-8")
 		val oembedUrl = "$ggUrl/api/oembed?url=$userUrl"
 		val header = """<$oembedUrl>; rel="alternate"; type="application/json+oembed"; title="Gorilla Groove Track Link""""
 
