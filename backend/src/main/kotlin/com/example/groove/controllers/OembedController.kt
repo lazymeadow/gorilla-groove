@@ -1,39 +1,32 @@
 package com.example.groove.controllers
 
-import com.example.groove.services.TrackService
-import com.example.groove.services.enums.AudioFormat
+import com.example.groove.services.EmbedService
+import com.example.groove.services.OembedResponse
 import com.example.groove.util.logger
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
+// This controller is currently unused because I see no advantage to using oembed right now.
+// Facebook's OGP is better supported and does the same stuff everywhere that I have tried it.
+// I wanted to use this because it seemed to let you have a custom video player. But the only place
+// that even seems to support oEmbed that I tried (slack) removes <audio> tags and only lets you play
+// audio from sources that they have deemed worthy in their almighty wisdom....
+// However, it could easily happen that some big messaging provider starts supporting oEmbed and this
+// could make sense to turn on and start supporting. So I am leaving the code in place as it is.
 @RestController
 @RequestMapping("api/oembed")
-class OembedController(private val trackService: TrackService) {
+class OembedController(private val embedService: EmbedService) {
 
 	@GetMapping
 	fun getOembedForTrack(@RequestParam url: String): ResponseEntity<OembedResponse?> {
-		logger.info("Returning oembed link for url: '$url'")
-		val trackId = url.split('/').lastOrNull()?.toLong() ?: run {
-			logger.error("Could not parse a track ID from oembed URL! URL was: '$url'")
-			return ResponseEntity(HttpStatus.BAD_REQUEST)
-		}
+		logger.info("Oembed link requested for URL '$url'")
 
-		// It's probably safer to just always use MP3 here. As much as I want to use an OGG, not all clients may support it
-		// and we have no way of knowing what our client necessarily is. Could be a damn Safari web browser
-		val trackInfo = try {
-			trackService.getPublicTrackInfo(trackId, true, AudioFormat.MP3)
-		} catch (e: Throwable) {
-			logger.warn("No track info found for oembed link for track ID: $trackId. It may have expired.")
-			return ResponseEntity(HttpStatus.NOT_FOUND)
-		}
-
-		val response = OembedResponse(
-				title = listOf(trackInfo.name, trackInfo.artist).joinToString(" - "),
-				url = trackInfo.trackLink
-		)
+		val response = embedService.getOembedResponse(url)
+				?: return ResponseEntity(HttpStatus.NOT_FOUND)
 
 		return ResponseEntity.ok(response)
 	}
@@ -43,41 +36,3 @@ class OembedController(private val trackService: TrackService) {
 	}
 }
 
-//data class OembedResponse(
-//		val version: String = "1.0",
-//		val type: String = "photo",
-//		val width: Int = 240,
-//		val height: Int = 240,
-//		val title: String,
-//		val url: String,
-//
-//		@JsonProperty("provider_name")
-//		val providerName: String = "Gorilla Groove",
-//
-//		@JsonProperty("provider_url")
-//		val providerUrl: String = "https://gorillagroove.net/",
-//)
-
-data class OembedResponse(
-		val version: String = "1.0",
-		val type: String = "video",
-		val width: Int = 240,
-		val height: Int = 180,
-		val title: String = "This is a test",
-
-		@JsonProperty("provider_name")
-		val providerName: String = "Gorilla Groove",
-
-		@JsonProperty("provider_url")
-		val providerUrl: String = "https://gorillagroove.net",
-
-		@JsonIgnore
-		val url: String,
-) {
-	val html: String = """
-			<div>
-			<audio src="$url" controls></audio>
-			Damn this is a sick video player
-			</div>
-		""".trimIndent()
-}

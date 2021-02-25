@@ -1,7 +1,7 @@
 package com.example.groove.config
 
-import com.example.groove.controllers.MainPageTransformer
 import com.example.groove.properties.FileStorageProperties
+import com.example.groove.services.TrackLinkHtmlTransformer
 import com.example.groove.util.endWith
 import com.example.groove.util.logger
 import org.springframework.context.annotation.Configuration
@@ -15,7 +15,7 @@ import java.nio.file.Paths
 class StaticResourceConfiguration(
 		private val fileStorageProperties: FileStorageProperties,
 		private val environment: Environment,
-		private val transformer: MainPageTransformer
+		private val transformer: TrackLinkHtmlTransformer
 ): WebMvcConfigurer {
 	override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
 		// Create an authenticated path for the frontend to grab songs from
