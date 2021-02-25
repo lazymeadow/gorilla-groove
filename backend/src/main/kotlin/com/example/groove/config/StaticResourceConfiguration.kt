@@ -1,5 +1,6 @@
 package com.example.groove.config
 
+import com.example.groove.controllers.MainPageTransformer
 import com.example.groove.properties.FileStorageProperties
 import com.example.groove.util.endWith
 import com.example.groove.util.logger
@@ -13,7 +14,8 @@ import java.nio.file.Paths
 @Configuration
 class StaticResourceConfiguration(
 		private val fileStorageProperties: FileStorageProperties,
-		private val environment: Environment
+		private val environment: Environment,
+		private val transformer: MainPageTransformer
 ): WebMvcConfigurer {
 	override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
 		// Create an authenticated path for the frontend to grab songs from
@@ -38,9 +40,22 @@ class StaticResourceConfiguration(
 					.endWith("/")
 
 			logger.info("Setting static content directory: $normalizedPath")
+
 			registry
 					.addResourceHandler("/**")
 					.addResourceLocations("file:$normalizedPath")
+			registry
+					.addResourceHandler("/index.html")
+					.addResourceLocations("file:$normalizedPath")
+					.resourceChain(false)
+					.addTransformer(transformer)
+
+		} else {
+			registry
+					.addResourceHandler("/index.html")
+					.addResourceLocations("classpath:/static/index.html")
+					.resourceChain(false)
+					.addTransformer(transformer)
 		}
 	}
 
