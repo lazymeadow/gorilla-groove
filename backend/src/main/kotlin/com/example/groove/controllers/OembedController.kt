@@ -29,7 +29,10 @@ class OembedController(private val trackService: TrackService) {
 			return ResponseEntity(HttpStatus.NOT_FOUND)
 		}
 
-		val response = OembedResponse(url = trackInfo.albumArtLink ?: "")
+		val response = OembedResponse(
+				title = listOf(trackInfo.name, trackInfo.artist).joinToString(" - "),
+				url = trackInfo.albumArtLink ?: ""
+		)
 
 		return ResponseEntity.ok(response)
 	}
@@ -43,21 +46,15 @@ data class OembedResponse(
 		val version: String = "1.0",
 		val type: String = "photo",
 		val width: Int = 240,
-		val height: Int = 160,
-		val title: String = "ZB8T0193",
-		val url: String = "http://farm4.static.flickr.com/3123/2341623661_7c99f48bbf_m.jpg",
-
-		@JsonProperty("author_name")
-		val authorName: String = "Bees",
-
-		@JsonProperty("author_url")
-		val authorUrl: String = "http://www.flickr.com/photos/bees/",
+		val height: Int = 240,
+		val title: String,
+		val url: String,
 
 		@JsonProperty("provider_name")
-		val providerName: String = "Flickr",
+		val providerName: String = "Gorilla Groove",
 
 		@JsonProperty("provider_url")
-		val providerUrl: String = "http://www.flickr.com/",
+		val providerUrl: String = "https://gorillagroove.net/",
 )
 
 //data class OembedResponse(
