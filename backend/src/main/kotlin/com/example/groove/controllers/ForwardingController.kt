@@ -65,8 +65,9 @@ class MainPageTransformer(
 			return resource
 		}
 
-//		val finalHtml = transformForOembed(originalUri, request, resource)
-		val finalHtml = transformForOgp(originalUri, request, resource)
+		val ogpHtml = transformForOgp(originalUri, request, resource)
+		val finalHtml = transformForOembed(ogpHtml, request, resource)
+
 		return TransformedResource(resource, finalHtml.toByteArray())
 	}
 
@@ -88,7 +89,6 @@ class MainPageTransformer(
 			<head>
 		${createMetaTag("og:title", trackInfo.name)}
 		${createMetaTag("og:type", "music.song")}
-		${createMetaTag("og:description", "Gorilla Groove music for the song ${trackInfo.name}")}
 		${createMetaTag("og:url", "https://gorillagroove.net/track-link/$trackId")}
 		${createMetaTag("og:image", trackInfo.albumArtLink ?: "")}
 		${createMetaTag("og:image:width", "250")}

@@ -31,7 +31,7 @@ class OembedController(private val trackService: TrackService) {
 
 		val response = OembedResponse(
 				title = listOf(trackInfo.name, trackInfo.artist).joinToString(" - "),
-				url = trackInfo.albumArtLink ?: ""
+//				url = trackInfo.albumArtLink ?: ""
 		)
 
 		return ResponseEntity.ok(response)
@@ -42,37 +42,37 @@ class OembedController(private val trackService: TrackService) {
 	}
 }
 
-data class OembedResponse(
-		val version: String = "1.0",
-		val type: String = "photo",
-		val width: Int = 240,
-		val height: Int = 240,
-		val title: String,
-		val url: String,
-
-		@JsonProperty("provider_name")
-		val providerName: String = "Gorilla Groove",
-
-		@JsonProperty("provider_url")
-		val providerUrl: String = "https://gorillagroove.net/",
-)
-
 //data class OembedResponse(
 //		val version: String = "1.0",
-//		val type: String = "video",
+//		val type: String = "photo",
 //		val width: Int = 240,
-//		val height: Int = 180,
-//		val title: String = "This is a test",
+//		val height: Int = 240,
+//		val title: String,
+//		val url: String,
 //
 //		@JsonProperty("provider_name")
 //		val providerName: String = "Gorilla Groove",
 //
 //		@JsonProperty("provider_url")
-//		val providerUrl: String = "https://gorillagroove.net",
-//
-//		val html: String = """
-//			<div>
-//			Damn this is a sick video
-//			</div>
-//		""".trimIndent()
+//		val providerUrl: String = "https://gorillagroove.net/",
 //)
+
+data class OembedResponse(
+		val version: String = "1.0",
+		val type: String = "video",
+		val width: Int = 240,
+		val height: Int = 180,
+		val title: String = "This is a test",
+
+		@JsonProperty("provider_name")
+		val providerName: String = "Gorilla Groove",
+
+		@JsonProperty("provider_url")
+		val providerUrl: String = "https://gorillagroove.net",
+
+		val html: String = """
+			<div>
+			Damn this is a sick video player
+			</div>
+		""".trimIndent()
+)
