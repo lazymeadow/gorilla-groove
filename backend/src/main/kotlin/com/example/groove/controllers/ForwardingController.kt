@@ -83,19 +83,29 @@ class MainPageTransformer(
 			return IOUtils.toString(resource.inputStream, "UTF-8")
 		}
 
-		val titleElement = """<meta property="og:title" content="${trackInfo.name}">"""
-		val typeElement = """<meta property="og:type" content="music.song">"""
-		val urlElement = """<meta property="og:url" content="https://gorillagroove.net/track-link/$trackId">"""
-		val imageElement = """<meta property="og:image" content="${trackInfo.albumArtLink ?: ""}">"""
-		
 		val html = IOUtils.toString(resource.inputStream, "UTF-8")
 		return html.replace("<head>", """
 			<head>
-			$titleElement
-			$typeElement
-			$urlElement
-			$imageElement
+		${createMetaTag("og:title", trackInfo.name)}
+		${createMetaTag("og:type", "music.song")}
+		${createMetaTag("og:url", "https://gorillagroove.net/track-link/$trackId")}
+		${createMetaTag("og:image", trackInfo.albumArtLink ?: "")}
+		${createMetaTag("og:image:width", "250")}
+		${createMetaTag("og:image:height", "250")}
+		${createMetaTag("og:image:alt", "Album art for ${trackInfo.album}")}
+		${createMetaTag("music:duration", trackInfo.length.toString())}
+		${createMetaTag("music:musician", trackInfo.artist)}
+		${createMetaTag("og:audio", trackInfo.trackLink)}
+		${createMetaTag("og:audio:type", "audio/mp3")}
 		""".trimIndent())
+	}
+
+	private fun createMetaTag(tag: String, content: String): String {
+		return if (content.isNotBlank()) {
+			return """<meta property="$tag" content="$content">"""
+		} else {
+			""
+		}
 	}
 
 	private fun transformForOembed(originalUri: String, request: HttpServletRequest, resource: Resource): String {
