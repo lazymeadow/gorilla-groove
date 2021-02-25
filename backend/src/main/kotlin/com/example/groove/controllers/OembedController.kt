@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.services.TrackService
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.logger
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -31,7 +32,7 @@ class OembedController(private val trackService: TrackService) {
 
 		val response = OembedResponse(
 				title = listOf(trackInfo.name, trackInfo.artist).joinToString(" - "),
-//				url = trackInfo.albumArtLink ?: ""
+				url = trackInfo.trackLink
 		)
 
 		return ResponseEntity.ok(response)
@@ -70,9 +71,13 @@ data class OembedResponse(
 		@JsonProperty("provider_url")
 		val providerUrl: String = "https://gorillagroove.net",
 
-		val html: String = """
+		@JsonIgnore
+		val url: String,
+) {
+	val html: String = """
 			<div>
+			<audio src="$url" controls></audio>
 			Damn this is a sick video player
 			</div>
 		""".trimIndent()
-)
+}
