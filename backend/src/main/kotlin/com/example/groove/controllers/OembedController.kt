@@ -14,6 +14,7 @@ class OembedController(private val trackService: TrackService) {
 
 	@GetMapping
 	fun getOembedForTrack(@RequestParam url: String): ResponseEntity<OembedResponse?> {
+		logger.info("Returning oembed link for url: '$url'")
 		val trackId = url.split('/').lastOrNull()?.toLong() ?: run {
 			logger.error("Could not parse a track ID from oembed URL! URL was: '$url'")
 			return ResponseEntity(HttpStatus.BAD_REQUEST)
