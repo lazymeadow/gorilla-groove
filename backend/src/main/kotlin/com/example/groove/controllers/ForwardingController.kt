@@ -1,5 +1,6 @@
 package com.example.groove.controllers
 
+import com.example.groove.services.PublicTrackInfoDTO
 import com.example.groove.services.TrackService
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.logger
@@ -65,26 +66,27 @@ class MainPageTransformer(
 			return resource
 		}
 
-		val ogpHtml = transformForOgp(originalUri, request, resource)
-		val finalHtml = transformForOembed(ogpHtml, request, resource)
-
-		return TransformedResource(resource, finalHtml.toByteArray())
-	}
-
-	private fun transformForOgp(originalUri: String, request: HttpServletRequest, resource: Resource): String {
 		val trackId = originalUri.split('/').lastOrNull()?.toLong() ?: run {
 			logger.error("Could not parse a track ID from request URI! URI was: '$originalUri'")
-			return IOUtils.toString(resource.inputStream, "UTF-8")
+			return resource
 		}
 
 		val trackInfo = try {
 			trackService.getPublicTrackInfo(trackId, true, AudioFormat.MP3)
 		} catch (e: Throwable) {
 			logger.warn("No track info found for oembed link for track ID: $trackId. It may have expired.")
-			return IOUtils.toString(resource.inputStream, "UTF-8")
+			return resource
 		}
 
 		val html = IOUtils.toString(resource.inputStream, "UTF-8")
+
+		val ogpHtml = transformForOgp(html, trackId, trackInfo)
+		val finalHtml = transformForOembed(ogpHtml, originalUri, request)
+
+		return TransformedResource(resource, finalHtml.toByteArray())
+	}
+
+	private fun transformForOgp(html: String, trackId: Long, trackInfo: PublicTrackInfoDTO): String {
 		return html.replace("<head>", """
 			<head>
 		${createMetaTag("og:title", trackInfo.name)}
@@ -109,7 +111,7 @@ class MainPageTransformer(
 		}
 	}
 
-	private fun transformForOembed(originalUri: String, request: HttpServletRequest, resource: Resource): String {
+	private fun transformForOembed(html: String, originalUri: String, request: HttpServletRequest): String {
 		val isProd = environment.activeProfiles.contains("prod")
 		val port = if (isProd) "" else ":" + request.serverPort
 		val serverName = if (isProd) "gorillagroove.net" else "localhost"
@@ -119,8 +121,6 @@ class MainPageTransformer(
 		val userUrl = URLEncoder.encode(ggUrl + originalUri, "UTF-8")
 		val oembedUrl = "$ggUrl/api/oembed?url=$userUrl"
 		val linkElement = """<link href="$oembedUrl" rel="alternate" type="application/json+oembed" title="Gorilla Groove Track Link">"""
-
-		val html = IOUtils.toString(resource.inputStream, "UTF-8")
 
 		return html.replace("<head>", "<head>$linkElement")
 	}
