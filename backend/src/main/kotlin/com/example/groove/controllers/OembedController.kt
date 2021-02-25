@@ -39,20 +39,41 @@ class OembedController(private val trackService: TrackService) {
 
 data class OembedResponse(
 		val version: String = "1.0",
-		val type: String = "video",
+		val type: String = "photo",
 		val width: Int = 240,
-		val height: Int = 180,
-		val title: String = "This is a test",
+		val height: Int = 160,
+		val title: String = "ZB8T0193",
+		val url: String = "http://farm4.static.flickr.com/3123/2341623661_7c99f48bbf_m.jpg",
+
+		@JsonProperty("author_name")
+		val authorName: String = "Bees",
+
+		@JsonProperty("author_url")
+		val authorUrl: String = "http://www.flickr.com/photos/bees/",
 
 		@JsonProperty("provider_name")
-		val providerName: String = "Gorilla Groove",
+		val providerName: String = "Flickr",
 
 		@JsonProperty("provider_url")
-		val providerUrl: String = "https://gorillagroove.net",
-
-		val html: String = """
-			<div>
-			Damn this is a sick video
-			</div>
-		""".trimIndent()
+		val providerUrl: String = "http://www.flickr.com/",
 )
+
+//data class OembedResponse(
+//		val version: String = "1.0",
+//		val type: String = "video",
+//		val width: Int = 240,
+//		val height: Int = 180,
+//		val title: String = "This is a test",
+//
+//		@JsonProperty("provider_name")
+//		val providerName: String = "Gorilla Groove",
+//
+//		@JsonProperty("provider_url")
+//		val providerUrl: String = "https://gorillagroove.net",
+//
+//		val html: String = """
+//			<div>
+//			Damn this is a sick video
+//			</div>
+//		""".trimIndent()
+//)
