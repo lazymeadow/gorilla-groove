@@ -324,7 +324,7 @@ class TrackService(
 		return track
 	}
 
-	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): Map<String, Any?> {
+	fun getPublicTrackInfo(trackId: Long, anonymousAccess: Boolean, audioFormat: AudioFormat): PublicTrackInfoDTO {
 		// This will throw an exception if anonymous access is not allowed for this file
 		val trackLink = fileStorageService.getSongLink(trackId, anonymousAccess, audioFormat)
 
@@ -332,14 +332,14 @@ class TrackService(
 
 		val track = trackRepository.get(trackId)!!
 
-		return mapOf(
-				"trackLink" to trackLink,
-				"albumArtLink" to albumLink,
-				"name" to track.name,
-				"artist" to track.artist,
-				"album" to track.album,
-				"releaseYear" to track.releaseYear,
-				"length" to track.length
+		return PublicTrackInfoDTO(
+				trackLink = trackLink,
+				albumArtLink = albumLink,
+				name = track.name,
+				artist = track.artist,
+				album = track.album,
+				releaseYear = track.releaseYear,
+				length = track.length
 		)
 	}
 
@@ -408,3 +408,13 @@ class TrackService(
 		val logger = logger()
 	}
 }
+
+data class PublicTrackInfoDTO(
+		val trackLink: String,
+		val albumArtLink: String?,
+		val name: String,
+		val artist: String,
+		val album: String,
+		val releaseYear: Int?,
+		val length: Int
+)

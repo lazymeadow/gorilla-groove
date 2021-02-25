@@ -3,6 +3,7 @@ package com.example.groove.controllers
 import com.example.groove.db.model.Track
 import com.example.groove.dto.*
 import com.example.groove.services.MetadataRequestService
+import com.example.groove.services.PublicTrackInfoDTO
 import com.example.groove.services.TrackService
 import com.example.groove.services.enums.AudioFormat
 import com.example.groove.util.createMapper
@@ -208,7 +209,7 @@ class TrackController(
 	fun getInfoForTrackAnonymous(
 			@PathVariable trackId: Long,
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
-	): Map<String, Any?> {
+	): PublicTrackInfoDTO {
 		logger.info("Public track info requested for track $trackId, format $audioFormat")
 		return trackService.getPublicTrackInfo(trackId, true, audioFormat)
 	}
@@ -220,7 +221,7 @@ class TrackController(
 	fun getInfoForTrack(
 			@PathVariable trackId: Long,
 			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
-	): Map<String, Any?> {
+	): PublicTrackInfoDTO {
 		logger.info("Private track info requested for track $trackId, format $audioFormat by user ${loadLoggedInUser().name}")
 		return trackService.getPublicTrackInfo(trackId, false, audioFormat)
 	}

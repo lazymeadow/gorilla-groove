@@ -2,6 +2,8 @@ package com.example.groove.controllers
 
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 
 // This controller maps routes that the UI uses to the root which goes to index.html
@@ -16,7 +18,15 @@ class ForwardingController {
 	}
 
 	@RequestMapping("/track-link/{trackId}")
-	fun forwardTrackLink(): String {
+	fun forwardTrackLink(response: HttpServletResponse, request: HttpServletRequest): String {
+		val port = if (request.serverName == "localhost") ":" + request.serverPort else ""
+		val ggUrl = "${request.scheme}://${request.serverName}$port"
+		val userUrl = ggUrl + request.servletPath
+		val oembedUrl = "$ggUrl/api/oembed?url=$userUrl"
+		val header = """<$oembedUrl>; rel="alternate"; type="application/json+oembed"; title="Gorilla Groove Track Link""""
+
+		response.addHeader("Link", header)
+
 		return "forward:/"
 	}
 

@@ -45,6 +45,6 @@ class StaticResourceConfiguration(
 	}
 
 	companion object {
-		val logger = logger()
+		private val logger = logger()
 	}
 }
