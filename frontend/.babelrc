@@ -3,8 +3,8 @@
     "@babel/react",
     ["@babel/env", {
       "targets": {
-        "chrome": 69,
-        "firefox": 63
+        "chrome": 80,
+        "firefox": 74
       }
     }]
   ]
