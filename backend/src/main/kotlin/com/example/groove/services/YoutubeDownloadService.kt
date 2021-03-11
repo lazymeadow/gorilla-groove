@@ -109,10 +109,13 @@ class YoutubeDownloadService(
 				"(lyrics)",
 				"(lyric video)",
 				"[Monstercat Release]",
+				"[Monstercat Official Music Video]",
 				"[Monstercat Lyric Video]",
 				"(Official Video)",
+				"(Official Audio)",
+				"(Original Mix)",
+				"(Original Music)",
 				"[Copyright Free Electronic]",
-				"(Original Music)"
 		)
 
 		var finalTitle = inputStr
