@@ -55,6 +55,8 @@ export default function ReviewQueue() {
 
 	const loadNextTrack = () => {
 		let nextTrack = undefined;
+		let lastTrack = reviewQueueContext.reviewQueueTracks[0];
+
 		if (reviewQueueContext.reviewQueueTracks.length > 1) {
 			nextTrack = reviewQueueContext.reviewQueueTracks[1];
 
@@ -63,7 +65,7 @@ export default function ReviewQueue() {
 
 			// FIXME This is inefficient, since this is also going to request its own links. But I don't want
 			// to deal with making this more optimal right now
-			if (playbackContext.isPlaying) {
+			if (playbackContext.isPlaying && lastTrack.id === musicContext.playedTrack.id) {
 				musicContext.playTracks([nextTrack]);
 			}
 		}
