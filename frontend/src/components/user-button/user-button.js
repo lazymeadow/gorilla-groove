@@ -13,6 +13,7 @@ import DeviceManagement from "../device-management/device-management";
 import {toast} from "react-toastify";
 import {MusicContext} from "../../services/music-provider";
 import CrashReport from "../crash-report/crash-report";
+import {clearMediaSession} from "../../media-key";
 
 const originalTitle = document.title;
 
@@ -30,6 +31,8 @@ export default function UserButton() {
 		}).finally(() => {
 			deleteCookie('cookieToken');
 			deleteCookie('loggedInEmail');
+
+			clearMediaSession();
 
 			musicContext.resetSessionState();
 			history.push('/login'); // Redirect to the login page now that we logged out

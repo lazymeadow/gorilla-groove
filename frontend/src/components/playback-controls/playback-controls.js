@@ -7,6 +7,7 @@ import {SocketContext} from "../../services/socket-provider";
 import {getVolumeIcon, isSafari} from "../../util";
 import {PlaybackContext} from "../../services/playback-provider";
 import {markTrackListened} from "../../services/mark-track-listened";
+import {setMediaKeyTrack, setupMediaKeySessionIfNeeded} from "../../media-key";
 
 const originalTitle = document.title;
 
@@ -33,6 +34,8 @@ export default function PlaybackControls() {
 	const musicContext = useContext(MusicContext);
 	const playbackContext = useContext(PlaybackContext);
 	const socketContext = useContext(SocketContext);
+
+	setupMediaKeySessionIfNeeded(playbackContext, musicContext);
 
 	const handleSongEnd = () => {
 		const playingNewSong = musicContext.playNext();
@@ -85,6 +88,8 @@ export default function PlaybackControls() {
 			playbackContext.setProviderState({ isPlaying: true });
 			setPageTitle(newTrack);
 			setSongUrl(links.songLink);
+
+			setMediaKeyTrack(newTrack, links.albumArtLink);
 
 			previousCurrentSessionPlayCounter = currentSessionPlayCounter;
 			setCurrentSessionPlayCounter(musicContext.sessionPlayCounter);
