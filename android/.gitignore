@@ -1,2 +1,8 @@
-.idea
+# Project exclude paths
+/.gradle/
+/build
+/.idea
+/gradle
+gradlew
+gradlew.bat
 local.properties
