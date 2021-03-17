@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.gorilla.gorillagroove.ui.login.LoginFragment"
+        android:label="LoginFragment" >
+        <action
+            android:id="@+id/action_loginFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.LibraryFragment"
+        android:label="MainFragment" >
+        <action
+            android:id="@+id/action_mainFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_playingFragment"
+            app:destination="@id/playingFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_playlistsFragment"
+            app:destination="@id/playlistsFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_usersFragment"
+            app:destination="@id/usersFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_trackPropertiesFragment"
+            app:destination="@id/trackPropertiesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playingFragment"
+        android:name="com.gorilla.gorillagroove.ui.playing.PlayingFragment"
+        android:label="PlayingFragment" >
+        <action
+            android:id="@+id/action_playingFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playlistsFragment"
+        android:name="com.gorilla.gorillagroove.ui.playlists.PlaylistsFragment"
+        android:label="PlaylistsFragment" >
+        <action
+            android:id="@+id/action_playlistsFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+        <action
+            android:id="@+id/action_playlistsFragment_to_playlistFragment"
+            app:destination="@id/playlistFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.gorilla.gorillagroove.ui.settings.SettingsFragment"
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_settingsFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/usersFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UsersFragment"
+        android:label="UsersFragment" >
+        <action
+            android:id="@+id/action_usersFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playlistFragment"
+        android:name="com.gorilla.gorillagroove.ui.playlists.playlist.PlaylistFragment"
+        android:label="PlaylistFragment" >
+
+        <argument
+            android:name="playlistKeyId"
+            android:defaultValue="None"/>
+        <action
+            android:id="@+id/action_playlistFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/trackPropertiesFragment"
+        android:name="com.gorilla.gorillagroove.ui.TrackPropertiesFragment"
+        android:label="TrackPropertiesFragment" >
+        <action
+            android:id="@+id/action_trackPropertiesFragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+</navigation>
