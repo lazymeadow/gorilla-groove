@@ -17,9 +17,18 @@ interface TrackDTO {
 		name?.let { track.name = it.trim() }
 		artist?.let { track.artist = it.trim() }
 		album?.let { track.album = it.trim() }
-		trackNumber?.let { track.trackNumber = it }
-		releaseYear?.let { track.releaseYear = it }
 		genre?.let { track.genre = it.trim() }
+
+		// If the user passes in a negative number, treat it as null.
+		// If we didn't do this, there would be no way to let them delete stuff as a null value in the DTO indicates that we should do nothing.
+		// There are ways around this but they're ugly and I don't want to do them. This closed GitHub issue is still seeing traffic.
+		// So maybe one day there will be an easy way to do this. https://github.com/FasterXML/jackson-databind/issues/578#issuecomment-58443025
+		trackNumber?.let { number ->
+			track.trackNumber = number.takeIf { it >= 0 }
+		}
+		releaseYear?.let { year ->
+			track.releaseYear = year.takeIf { it >= 0 }
+		}
 	}
 }
 

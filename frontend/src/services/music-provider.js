@@ -616,6 +616,14 @@ export class MusicProvider extends React.Component {
 			}
 		});
 
+		// Due to API limitations, the track number and year need to be set to a negative value to indicate that it should be removed.
+		// Sending down null is instead treated the same way as the key being absent, so no change takes place.
+		['trackNumber', 'releaseYear'].forEach(field => {
+			if (trackData[field] === '') {
+                trackData[field] = -1;
+			}
+		});
+
 		const params = { updateTrackJson: JSON.stringify(trackData) };
 		if (albumArt) {
 			params.albumArt = albumArt;
