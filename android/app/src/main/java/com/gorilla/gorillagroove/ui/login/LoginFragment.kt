@@ -11,12 +11,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.ui.LoginStateEvent
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.util.Constants.KEY_FIRST_TIME_TOGGLE
+import com.gorilla.gorillagroove.util.CurrentDevice
 import com.gorilla.gorillagroove.util.StateEvent
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,7 +43,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if(!isFirstAppOpen) {
+        if (!isFirstAppOpen) {
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(R.id.mainFragment, true)
                 .build()
@@ -56,14 +58,15 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         button_login.setOnClickListener {
             val deviceId = fetchDeviceUUID()
-            val loginRequest =
-                LoginRequest(
-                    edit_text_email.text.toString(),
-                    edit_text_password.text.toString(),
-                    deviceId.toString(),
-                    "",
-                    "ANDROID"
-                )
+
+            val loginRequest = LoginRequest(
+                email = edit_text_email.text.toString(),
+                password = edit_text_password.text.toString(),
+                deviceId = deviceId.toString(),
+                preferredDeviceName = CurrentDevice.getDeviceName(context),
+                version = BuildConfig.VERSION_NAME,
+                deviceType = "ANDROID"
+            )
             viewModel.setLoginStateEvent(LoginStateEvent.LoginEvent(loginRequest))
 
         }
@@ -78,7 +81,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     private fun subscribeObservers() {
         viewModel.loginState.observe(requireActivity(), Observer {
-            when(it.stateEvent) {
+            when (it.stateEvent) {
                 is StateEvent.AuthSuccess -> {
                     displayProgressBar(false)
                     hideKeyboard(activity as MainActivity)
@@ -99,11 +102,11 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     }
 
     private fun displayProgressBar(isDisplayed: Boolean) {
-        if(isDisplayed){
+        if (isDisplayed) {
             progress_bar_login.visibility = View.VISIBLE
             progress_bar_login.bringToFront()
         } else {
-            progress_bar_login.visibility =  View.GONE
+            progress_bar_login.visibility = View.GONE
         }
     }
 
