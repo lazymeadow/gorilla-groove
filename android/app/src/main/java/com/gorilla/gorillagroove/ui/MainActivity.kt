@@ -185,13 +185,12 @@ class MainActivity : AppCompatActivity() {
         })
 
         playerControlsViewModel.mediaPosition.observe(this, Observer {
-            track_position_textview.text = it?.getSongTimeFromMilliseconds() ?: "0"
-            audio_seek_bar.progress = (it?.toInt() ?: 0) / 1000
-//            //Log.d(TAG, "subscribeObservers: $it")
+            track_position_textview.text = it.getSongTimeFromMilliseconds()
+            audio_seek_bar.progress = it.toInt() / 1000
         })
 
         playerControlsViewModel.bufferPosition.observe(this, Observer {
-            audio_seek_bar.secondaryProgress = (it?.toInt() ?: 0) / 1000
+            audio_seek_bar.secondaryProgress = it.toInt() / 1000
             //Log.d(TAG, "subscribeObservers: BUFFERED AMOUNT:  $it")
         })
 

@@ -35,6 +35,11 @@ class MusicService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var repo: MainRepository
 
+    // This is used. By simply having a reference, it gets constructed and does its own thing. Probably dumb. Idk how I'm supposed to start up a standalone singleton "service" in Dagger / Hilt
+    @Suppress("unused")
+    @Inject
+    lateinit var markListenedService: MarkListenedService
+
     private lateinit var musicNotificationManager: MusicNotificationManager
 
     private val serviceJob = Job()
@@ -46,11 +51,6 @@ class MusicService : MediaBrowserServiceCompat() {
     var isForegroundService = false
 
     private val musicPlayerEventListener = PlayerEventListener()
-    
-    companion object {
-        var curSongDuration = 0L
-            private set
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -67,13 +67,9 @@ class MusicService : MediaBrowserServiceCompat() {
         musicNotificationManager = MusicNotificationManager(
             this,
             mediaSession.sessionToken,
-            MusicPlayerNotificationListener(
-                this
-            ),
+            MusicPlayerNotificationListener(this),
             repo
-        ) {
-            curSongDuration = exoPlayer.duration
-        }
+        )
 
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlaybackPreparer(MusicPlaybackPreparer())
@@ -95,7 +91,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 }
                 //Player.STATE_BUFFERING -> //Log.d(TAG, "onPlayerStateChanged: Buffering...")
                 Player.STATE_READY -> {
-                //Log.d(TAG, "onPlayerStateChanged: Ready!")
+                    //Log.d(TAG, "onPlayerStateChanged: Ready!")
 
 
                     musicNotificationManager.showNotification(exoPlayer)
@@ -124,7 +120,7 @@ class MusicService : MediaBrowserServiceCompat() {
             super.onPositionDiscontinuity(reason)
             val sourceIndex: Int = exoPlayer.currentWindowIndex
 
-            when(reason) {
+            when (reason) {
                 Player.DISCONTINUITY_REASON_PERIOD_TRANSITION -> {
                     //Log.d(TAG, "onPositionDiscontinuity: next track window")
                 }
@@ -162,12 +158,12 @@ class MusicService : MediaBrowserServiceCompat() {
                     PlaybackStateCompat.ACTION_SET_REPEAT_MODE
 
         override fun onPrepare(playWhenReady: Boolean) = Unit
-        override fun onPrepareFromMediaId( mediaId: String, playWhenReady: Boolean, extras: Bundle?) {
-            
+        override fun onPrepareFromMediaId(mediaId: String, playWhenReady: Boolean, extras: Bundle?) {
+
             val itemToPlay = repo.nowPlayingMetadataList.find { it.id == mediaId }
             val songIndex = if (itemToPlay == null) 0 else repo.nowPlayingMetadataList.indexOf(itemToPlay)
-            
-            if(repo.dataSetChanged) {
+
+            if (repo.dataSetChanged) {
                 preparePlayer(repo.nowPlayingConcatenatingMediaSource, songIndex, true)
                 repo.dataSetChanged = false
             } else {
@@ -175,6 +171,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 exoPlayer.playWhenReady = true
             }
         }
+
         override fun onPrepareFromSearch(query: String, playWhenReady: Boolean, extras: Bundle?) = Unit
         override fun onPrepareFromUri(uri: Uri, playWhenReady: Boolean, extras: Bundle?) = Unit
         override fun onCommand(
@@ -211,12 +208,12 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.release()
     }
 
-    override fun onGetRoot( clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot? {
+    override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot? {
         return BrowserRoot(MEDIA_ROOT_ID, null)
     }
 
-    override fun onLoadChildren( parentId: String, result: Result<MutableList<MediaBrowserCompat.MediaItem>> ) {
-        when(parentId) {
+    override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaBrowserCompat.MediaItem>>) {
+        when (parentId) {
             MEDIA_ROOT_ID -> {
                 result.sendResult(null)
             }

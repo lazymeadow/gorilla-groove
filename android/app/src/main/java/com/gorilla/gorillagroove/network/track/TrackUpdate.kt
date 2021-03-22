@@ -14,3 +14,11 @@ data class TrackUpdate(
     val albumArtUrl: String?,
     val cropArtToSquare: Boolean?
 )
+
+data class MarkListenedRequest(
+    val trackId: Long,
+    val timeListenedAt: String,
+    val ianaTimezone: String,
+    val latitude: Double?,
+    val longitude: Double?
+)

@@ -4,10 +4,7 @@ import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.network.login.LoginResponseNetworkEntity
 import com.gorilla.gorillagroove.network.playlist.PlaylistKeyNetworkEntity
 import com.gorilla.gorillagroove.network.playlist.PlaylistNetworkEntity
-import com.gorilla.gorillagroove.network.track.TrackLinkResponse
-import com.gorilla.gorillagroove.network.track.TrackNetworkEntity
-import com.gorilla.gorillagroove.network.track.TrackUpdate
-import com.gorilla.gorillagroove.network.track.TrackWrapper
+import com.gorilla.gorillagroove.network.track.*
 import retrofit2.http.*
 
 interface NetworkApi {
@@ -44,4 +41,9 @@ interface NetworkApi {
         @Body updateTrackJson: TrackUpdate
     )
 
+    @POST("api/track/mark-listened")
+    suspend fun markTrackListened(
+        @Header("Authorization") token: String,
+        @Body body: MarkListenedRequest
+    )
 }

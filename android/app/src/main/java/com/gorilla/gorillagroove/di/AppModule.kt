@@ -14,6 +14,8 @@ import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.gorilla.gorillagroove.repository.MainRepository
+import com.gorilla.gorillagroove.service.MarkListenedService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,13 +40,24 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideMusicServiceConnection(@ApplicationContext context: Context): MusicServiceConnection {
+    fun provideMusicServiceConnection(
+        @ApplicationContext context: Context
+    ): MusicServiceConnection {
         return MusicServiceConnection.getInstance(
             context,
             ComponentName(context, MusicService::class.java)
         )
     }
 
+    @Singleton
+    @Provides
+    fun provideMarkListenedService(
+        mainRepository: MainRepository,
+        musicServiceConnection: MusicServiceConnection
+    ) = MarkListenedService.getInstance(
+        mainRepository,
+        musicServiceConnection
+    )
 
     @Singleton
     @Provides
@@ -66,6 +79,4 @@ object AppModule {
     @Provides
     fun provideUserToken(sharedPref: SharedPreferences) =
         sharedPref.getString(KEY_USER_TOKEN, "")
-
-
 }

@@ -3,38 +3,29 @@ package com.gorilla.gorillagroove.service
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.lifecycle.MutableLiveData
+import com.gorilla.gorillagroove.ui.currentPlayBackPosition
+import com.gorilla.gorillagroove.util.KtLiveData
 
-class MusicServiceConnection(context: Context, serviceComponent: ComponentName) {
+class MusicServiceConnection(
+    context: Context,
+    serviceComponent: ComponentName
+) {
 
-    private val TAG = "AppDebug : MusicServiceConnection"
-
-    val isConnected = MutableLiveData<Boolean>()
-        .apply { postValue(false) }
-
-    val networkFailure = MutableLiveData<Boolean>()
-        .apply { postValue(false) }
-
-    val rootMediaId: String
-        get() = mediaBrowser.root
-
-    val playbackState = MutableLiveData<PlaybackStateCompat>()
-        .apply { postValue(EMPTY_PLAYBACK_STATE) }
-
-    val repeatState = MutableLiveData<Int>()
-        .apply { postValue(PlaybackStateCompat.REPEAT_MODE_NONE) }
-
-    val nowPlaying = MutableLiveData<MediaMetadataCompat>()
-        .apply { postValue(NOTHING_PLAYING) }
+    val isConnected = KtLiveData(false)
+    val networkFailure = KtLiveData(false)
+    val playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
+    val repeatState = KtLiveData(PlaybackStateCompat.REPEAT_MODE_NONE)
+    val nowPlaying = KtLiveData(NOTHING_PLAYING)
+    val currentSongTimeMillis = KtLiveData(0L)
 
     val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
-
 
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
     private val mediaBrowser = MediaBrowserCompat(
@@ -45,12 +36,28 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         connect()
     }
 
+    // The exoplayer somehow doesn't have the ability to add a periodic time observer. So this is legitimately the "recommended" way to do it. Stupid.
+    private val handler = Handler()
+    private val runnable: Runnable by lazy {
+        Runnable {
+            handler.postDelayed(runnable, 1000)
+
+            val nextSongTime = playbackState.value.currentPlayBackPosition
+
+            if (currentSongTimeMillis.value != nextSongTime) {
+                currentSongTimeMillis.postValue(nextSongTime)
+            }
+        }
+    }
+
+    init {
+        handler.postDelayed(runnable, 0)
+    }
+
     private lateinit var mediaController: MediaControllerCompat
 
 
-    private inner class MediaBrowserConnectionCallback(private val context: Context) :
-        MediaBrowserCompat.ConnectionCallback() {
-
+    private inner class MediaBrowserConnectionCallback(private val context: Context) : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             // Get a MediaController for the MediaSession.
             mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken).apply {
@@ -78,8 +85,6 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         override fun onRepeatModeChanged(repeatMode: Int) {
             repeatState.postValue(repeatMode)
         }
-
-
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             nowPlaying.postValue(
@@ -110,7 +115,7 @@ class MusicServiceConnection(context: Context, serviceComponent: ComponentName) 
         private var instance: MusicServiceConnection? = null
 
         fun getInstance(context: Context, serviceComponent: ComponentName) =
-            instance ?: synchronized(this) {
+            synchronized(this) {
                 instance ?: MusicServiceConnection(context, serviceComponent)
                     .also { instance = it }
             }

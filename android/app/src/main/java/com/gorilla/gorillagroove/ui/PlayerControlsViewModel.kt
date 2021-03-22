@@ -9,13 +9,17 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import com.gorilla.gorillagroove.model.Track
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.EMPTY_PLAYBACK_STATE
 import com.gorilla.gorillagroove.service.MusicServiceConnection
 import com.gorilla.gorillagroove.util.Constants
-
+import com.gorilla.gorillagroove.util.KtLiveData
 
 class PlayerControlsViewModel @ViewModelInject constructor(
     private val repository: MainRepository,
@@ -35,7 +39,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     val currentTrackItem: LiveData<MediaMetadataCompat>
         get() = _currentTrackItem
 
-    private val _playbackState: MutableLiveData<PlaybackStateCompat> = MutableLiveData()
+    private val _playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
     val playbackState: LiveData<PlaybackStateCompat>
         get() = _playbackState
 
@@ -48,26 +52,20 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         get() = _isBuffering
 
 
-    val mediaPosition = MutableLiveData<Long>().apply {
-        postValue(0L)
-    }
-
-    val bufferPosition = MutableLiveData<Long>().apply {
-        postValue(0L)
-    }
-
+    val mediaPosition = KtLiveData(0L)
+    val bufferPosition = KtLiveData(0L)
 
     private var isPlaying = false
-    private var currentMetadata : MediaMetadataCompat? = null
+    private var currentMetadata: MediaMetadataCompat? = null
     private fun sendPlayStatusToServer() {
-        if(isPlaying && currentMetadata != null) {
+        if (isPlaying && currentMetadata != null) {
             currentMetadata?.description?.let { currTrack ->
 //                //Log.d(TAG, "Sending Now Playing to server: ${currTrack.title}: ")
                 repository.sendNowPlayingToServer(
                     currTrack
                 )
             }
-        } else if(!isPlaying && currentMetadata != null) {
+        } else if (!isPlaying && currentMetadata != null) {
             repository.sendStoppedPlayingToServer()
         } else {
             //probably initialization
@@ -85,7 +83,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
 //            PlaybackStateCompat.STATE_BUFFERING -> ////Log.d(TAG, "STATE: BUFFERING")
 //        }
 
-        when{
+        when {
             it.isPlaying -> {
                 isPlaying = true
                 sendPlayStatusToServer()
@@ -101,44 +99,39 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     private val repeatStateObserver = Observer<Int> {
         _repeatState.postValue(it)
     }
-    private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
-        _currentTrackItem.postValue(it)
-        if(it?.description?.mediaId != "") {
-            if(currentMetadata?.description?.mediaId != it.description?.mediaId) {
-                currentMetadata = it
+
+    private val currentTimeObserver = Observer<Long> { newTime ->
+        if (mediaPosition.value != newTime) {
+            mediaPosition.postValue(newTime)
+        }
+    }
+
+    private val mediaMetadataObserver = Observer<MediaMetadataCompat> { newMetadataItem ->
+        _currentTrackItem.postValue(newMetadataItem)
+
+        if (newMetadataItem.description?.mediaId != "") {
+            if (currentMetadata?.description?.mediaId != newMetadataItem.description?.mediaId) {
+                currentMetadata = newMetadataItem
                 sendPlayStatusToServer()
-                it.description.mediaId?.let { it1 -> Integer.parseInt(it1).toLong() }?.let {
-                    val trackInNP = repository.nowPlayingTracks.find { track -> it == track.id }
+                newMetadataItem.description.mediaId?.toLongOrNull()?.let { newMediaId ->
+                    val trackInNP = repository.nowPlayingTracks.find { track -> newMediaId == track.id }
                     val index = repository.nowPlayingTracks.indexOf(trackInNP)
                     repository.currentIndex = index
 
 //                    ////Log.d(TAG, "current index: ${repository.currentIndex}")
                 }
-
             }
         }
-
-
     }
 
     private val musicServiceConnection = musicServiceConnection.also {
-
         it.playbackState.observeForever(playbackStateObserver)
         it.nowPlaying.observeForever(mediaMetadataObserver)
         it.repeatState.observeForever(repeatStateObserver)
-        checkPlaybackPosition()
+        it.currentSongTimeMillis.observeForever(currentTimeObserver)
     }
 
-    private fun checkPlaybackPosition(): Boolean = handler.postDelayed({
-        if (mediaPosition.value != _playbackState.value?.currentPlayBackPosition) {
-            mediaPosition.postValue(_playbackState.value?.currentPlayBackPosition)
-        }
-        if (updatePosition)
-            checkPlaybackPosition()
-    }, POSITION_UPDATE_INTERVAL_MILLIS)
-
     fun playMedia(track: Track, callingFragment: String, playlistId: Long?) {
-
         repository.changeMediaSource(callingFragment, playlistId)
 
         val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
@@ -151,7 +144,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     }
 
     fun playPause(): Boolean {
-        return if(_playbackState.value?.isPaused == true) {
+        return if (_playbackState.value.isPaused) {
             transportControls.play()
             true
         } else {
@@ -174,7 +167,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
 
 
     fun repeat() {
-        when(_repeatState.value) {
+        when (_repeatState.value) {
             PlaybackStateCompat.REPEAT_MODE_NONE -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE)
             }
@@ -193,16 +186,14 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         musicServiceConnection.playbackState.removeObserver(playbackStateObserver)
         musicServiceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
         musicServiceConnection.repeatState.removeObserver(repeatStateObserver)
+        musicServiceConnection.currentSongTimeMillis.observeForever(currentTimeObserver)
         updatePosition = false
     }
 
     fun logout() {
         musicServiceConnection.transportControls.stop()
     }
-
 }
-
-private const val POSITION_UPDATE_INTERVAL_MILLIS = 1000L
 
 inline val PlaybackStateCompat.isPaused
     get() = (state == PlaybackStateCompat.STATE_PAUSED) ||
@@ -214,8 +205,8 @@ inline val PlaybackStateCompat.isPlaying
 
 inline val PlaybackStateCompat.currentPlayBackPosition: Long
     get() = if (state == PlaybackStateCompat.STATE_PLAYING) {
-                val timeDelta = SystemClock.elapsedRealtime() - lastPositionUpdateTime
-                (position + (timeDelta * playbackSpeed)).toLong()
-            } else {
-                position
-            }
+        val timeDelta = SystemClock.elapsedRealtime() - lastPositionUpdateTime
+        (position + (timeDelta * playbackSpeed)).toLong()
+    } else {
+        position
+    }

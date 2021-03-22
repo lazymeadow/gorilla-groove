@@ -6,7 +6,7 @@ import androidx.core.content.ContextCompat
 import com.gorilla.gorillagroove.util.Constants.NOTIFICATION_ID
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 
-class   MusicPlayerNotificationListener(
+class MusicPlayerNotificationListener(
     private val musicService: MusicService
 ) : PlayerNotificationManager.NotificationListener {
 
@@ -26,7 +26,7 @@ class   MusicPlayerNotificationListener(
     ) {
         super.onNotificationPosted(notificationId, notification, ongoing)
         musicService.apply {
-            if(ongoing && !isForegroundService) {
+            if (ongoing && !isForegroundService) {
                 ContextCompat.startForegroundService(
                     this,
                     Intent(applicationContext, this::class.java)
@@ -36,9 +36,8 @@ class   MusicPlayerNotificationListener(
             }
         }
     }
-
-
 }
+
 
 
 
