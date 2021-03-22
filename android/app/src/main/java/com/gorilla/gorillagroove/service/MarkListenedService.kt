@@ -1,8 +1,9 @@
 package com.gorilla.gorillagroove.service
 
 import android.support.v4.media.MediaMetadataCompat
-import android.util.Log
 import com.gorilla.gorillagroove.repository.MainRepository
+import com.gorilla.gorillagroove.service.GGLog.logError
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,12 +40,12 @@ class MarkListenedService(
 
     @Synchronized
     private fun handleMarkListened(nextPositionMillis: Long) {
-        val trackId = musicServiceConnection.nowPlaying.value.description?.mediaId?.toLongOrNull() ?: run {
-            Log.e("e", "Could not find track ID when marking song as listened to!")
+        if (currentSongMarkedListenedTo) {
             return
         }
 
-        if (currentSongMarkedListenedTo) {
+        val trackId = musicServiceConnection.nowPlaying.value.description?.mediaId?.toLongOrNull() ?: run {
+            logError("Could not find track ID when marking song as listened to!")
             return
         }
 
@@ -52,11 +53,7 @@ class MarkListenedService(
         lastSongListenedMillis = nextPositionMillis
 
         if (timeChange < 0 || timeChange > 1500) {
-            Log.i(
-                "i",
-                "Time change between last listen check was $timeChange ms, which was an abnormal amount. Assuming user skipped around the seek bar."
-            )
-
+            logInfo("Time change between last listen check was $timeChange ms, which was an abnormal amount. Assuming user skipped around the seek bar.")
             return
         }
 
@@ -69,9 +66,9 @@ class MarkListenedService(
                 mainRepository.markTrackListenedTo(trackId)
             }
 
-            Log.i("i", "User finished listening to the song")
+            logInfo("User finished listening to the song")
         } else {
-            Log.i("i", "$currentSongListenedAmount, $currentSongListenTarget, $timeChange")
+            logInfo("$currentSongListenedAmount, $currentSongListenTarget, $timeChange")
         }
     }
 
