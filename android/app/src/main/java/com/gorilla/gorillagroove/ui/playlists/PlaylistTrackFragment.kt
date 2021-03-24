@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.Observer
+import com.gorilla.gorillagroove.model.PlaylistKey
 import com.gorilla.gorillagroove.model.Track
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.ui.PlaylistsEvent
@@ -11,19 +12,21 @@ import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.StateEvent
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @AndroidEntryPoint
 class PlaylistTrackFragment : TrackListFragment() {
 
-    // Not actually nullable
-    private var playlistKeyId: Long? = null
+    private lateinit var playlist: PlaylistKey
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        playlistKeyId = arguments?.getLong("PLAYLIST_KEY_ID")
-            ?: throw IllegalArgumentException("PLAYLIST_KEY_ID must be provided to the PlaylistFragment!")
+        playlist = arguments?.getSerializable("PLAYLIST") as? PlaylistKey
+            ?: throw IllegalArgumentException("PLAYLIST key must be provided to the PlaylistFragment!")
+
+        requireActivity().title_tv.text = playlist.name
     }
 
     @ExperimentalCoroutinesApi
@@ -31,7 +34,7 @@ class PlaylistTrackFragment : TrackListFragment() {
         super.onViewCreated(view, savedInstanceState)
         subscribeObservers()
 
-        viewModel.setPlaylistsEvent(PlaylistsEvent.GetPlaylist(playlistKeyId!!))
+        viewModel.setPlaylistsEvent(PlaylistsEvent.GetPlaylist(playlist.id))
     }
 
     private fun subscribeObservers() {
@@ -55,6 +58,6 @@ class PlaylistTrackFragment : TrackListFragment() {
 
     override fun onTrackClick(position: Int) {
         val clickedTrack = trackCellAdapter.filteredList[position]
-        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_PLAYLIST, playlistKeyId!!)
+        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_PLAYLIST, playlist.id)
     }
 }

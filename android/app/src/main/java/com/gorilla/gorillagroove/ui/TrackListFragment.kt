@@ -221,7 +221,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
                     viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
                     trackCellAdapter.trackList.find { track -> track.id == selectedTracks[0] }?.let {
-                        playerControlsViewModel.playNow(it, Constants.CALLING_FRAGMENT_LIBRARY, null)
+                        playerControlsViewModel.playNow(it, Constants.CALLING_FRAGMENT_LIBRARY)
                     }
                     mode?.finish()
                     true
@@ -230,7 +230,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
                     viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
                     trackCellAdapter.trackList.find { track -> track.id == selectedTracks[0] }?.let {
-                        playerControlsViewModel.playNow(it, Constants.CALLING_FRAGMENT_LIBRARY, null)
+                        playerControlsViewModel.playNow(it, Constants.CALLING_FRAGMENT_LIBRARY)
                     }
                     mode?.finish()
                     true

@@ -65,9 +65,8 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistKeyAdap
 
     @ExperimentalCoroutinesApi
     override fun onPlaylistClick(position: Int) {
-        //Log.d(TAG, "onPlaylistClick: Clicked: $position")
-        val playlistKeyId = playlistKeyAdapter.playlistKeyList[position].id
-        val bundle = bundleOf("PLAYLIST_KEY_ID" to playlistKeyId)
+        val playlist = playlistKeyAdapter.playlistKeyList[position]
+        val bundle = bundleOf("PLAYLIST" to playlist)
 
         findNavController().navigate(
             R.id.action_playlistsFragment_to_playlistFragment,

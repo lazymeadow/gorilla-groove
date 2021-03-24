@@ -1,18 +1,14 @@
 package com.gorilla.gorillagroove.ui
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.gorilla.gorillagroove.model.Track
 import com.gorilla.gorillagroove.repository.MainRepository
@@ -23,16 +19,11 @@ import com.gorilla.gorillagroove.util.KtLiveData
 
 class PlayerControlsViewModel @ViewModelInject constructor(
     private val repository: MainRepository,
-    musicServiceConnection: MusicServiceConnection,
-    @Assisted private val savedStateHandle: SavedStateHandle
+    musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
-    private val TAG = "AppDebug: PlayerControlsViewModel: "
-
     private val transportControls: MediaControllerCompat.TransportControls by lazy { musicServiceConnection.transportControls }
 
     private var updatePosition = true
-    private val handler = Handler(Looper.getMainLooper())
-
 
     //Controls and Player Data
     private val _currentTrackItem: MutableLiveData<MediaMetadataCompat> = MutableLiveData()
@@ -131,6 +122,9 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         it.currentSongTimeMillis.observeForever(currentTimeObserver)
     }
 
+    // TODO Feels like it makes more sense to have the fragments pass a list of tracks and the position that they want to start from.
+    // The fragments already have the list of tracks / the playlist. Why not just supply them? Then you don't have to look them up again.
+    // You also then wouldn't need to even provide the "calling fragment". Seems like we are providing information to this view model for no real reason.
     fun playMedia(track: Track, callingFragment: String, playlistId: Long? = null) {
         repository.changeMediaSource(callingFragment, playlistId)
 
@@ -138,7 +132,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         transportControls.playFromMediaId(track.id.toString(), extras)
     }
 
-    fun playNow(track: Track, callingFragment: String, playlistId: Int?) {
+    fun playNow(track: Track, callingFragment: String) {
         val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
         transportControls.playFromMediaId(track.id.toString(), extras)
     }
