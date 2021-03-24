@@ -7,10 +7,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
-import com.gorilla.gorillagroove.ui.MainViewModel
-import com.gorilla.gorillagroove.ui.NowPlayingEvent
-import com.gorilla.gorillagroove.ui.isPlaying
+import com.gorilla.gorillagroove.ui.*
 import com.gorilla.gorillagroove.ui.library.PlaylistAdapter
 import com.gorilla.gorillagroove.util.Constants.CALLING_FRAGMENT_NOW_PLAYING
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,7 +16,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @AndroidEntryPoint
 class PlayingFragment : Fragment(R.layout.fragment_playing), PlaylistAdapter.OnTrackListener {
-    private val TAG = "AppDebug: Now Playing: "
 
     private val viewModel: MainViewModel by viewModels()
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
@@ -38,6 +34,7 @@ class PlayingFragment : Fragment(R.layout.fragment_playing), PlaylistAdapter.OnT
 
     private fun setupRecyclerView() = tracklist_rv.apply {
         trackListAdapter = PlaylistAdapter(this@PlayingFragment)
+        addItemDecoration(createDivider(context))
         adapter = trackListAdapter
         layoutManager = LinearLayoutManager(requireContext())
     }
@@ -52,7 +49,7 @@ class PlayingFragment : Fragment(R.layout.fragment_playing), PlaylistAdapter.OnT
         playerControlsViewModel.currentTrackItem.observe(requireActivity(), Observer {
 
             val mediaId = it.description.mediaId.toString()
-            if(mediaId != "") {
+            if (mediaId != "") {
                 trackListAdapter.playingTrackId = mediaId
                 trackListAdapter.notifyDataSetChanged()
             }
@@ -106,6 +103,7 @@ class PlayingFragment : Fragment(R.layout.fragment_playing), PlaylistAdapter.OnT
     override fun onAddToPlaylistSelection(position: Int) {
         //Log.d(TAG, "onAddToPlaylistSelection: ")
     }
+
     override fun onPropertiesSelection(position: Int) {
         //Log.d(TAG, "onPropertiesSelection: ")
     }

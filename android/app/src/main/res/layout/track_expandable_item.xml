@@ -34,7 +34,7 @@
                 android:textAlignment="textStart"
                 android:textAllCaps="true"
                 android:textColor="@color/grey6"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 app:layout_constraintEnd_toStartOf="@id/tv_length"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -82,6 +82,10 @@
             android:layout_height="50dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="0"
+            android:background="@null"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:tint="@color/ggPrimaryLight"
             android:visibility="invisible"
             app:srcCompat="@drawable/ic_pause_24" />
 
