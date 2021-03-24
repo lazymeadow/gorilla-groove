@@ -8,12 +8,14 @@ import android.view.MenuItem.SHOW_AS_ACTION_NEVER
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.Track
@@ -60,6 +62,10 @@ class LibraryFragment : Fragment(R.layout.fragment_main), PlaylistAdapter.OnTrac
 
     private fun setupRecyclerView() = playlist_rv.apply {
         playlistAdapter = PlaylistAdapter(this@LibraryFragment)
+
+        val dividerItemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
+        addItemDecoration(dividerItemDecoration)
+
         adapter = playlistAdapter
         layoutManager = LinearLayoutManager(requireContext())
     }

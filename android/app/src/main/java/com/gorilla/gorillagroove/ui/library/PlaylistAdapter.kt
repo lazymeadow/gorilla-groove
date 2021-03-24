@@ -2,6 +2,7 @@ package com.gorilla.gorillagroove.ui.library
 
 import android.content.Context
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.*
 import android.widget.*
@@ -21,7 +22,7 @@ import kotlin.collections.LinkedHashMap
 
 class PlaylistAdapter(
     private val listener: OnTrackListener
-) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>(), Filterable{
+) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>(), Filterable {
 
     var trackList = listOf<Track>()
     val filteredList: MutableList<Track> = trackList.toMutableList()
@@ -37,14 +38,12 @@ class PlaylistAdapter(
         filteredList.clear()
         filteredList.addAll(trackList)
         notifyDataSetChanged()
-
     }
 
     fun getSelectedTracks(): List<Long> {
         val tracks = mutableListOf<Long>()
-        for (id in checkedTracks.keys)
-        {
-            if(checkedTracks.getValue(id)) {
+        for (id in checkedTracks.keys) {
+            if (checkedTracks.getValue(id)) {
                 tracks.add(id)
             }
         }
@@ -76,42 +75,44 @@ class PlaylistAdapter(
         holder.tvArtist.text = currentTrack.artist
         holder.tvName.text = currentTrack.name
         holder.tvAlbum.text = currentTrack.album
+        holder.tvLength.text = currentTrack.length.getSongTimeFromSeconds()
 
-        if(currentTrack.id.toString() == playingTrackId) {
-            val activeColor = holder.itemView.context.getColorFromAttr(R.attr.colorPrimary)
-            holder.tvName.setTextColor(activeColor)
-            holder.tvArtist.setTextColor(activeColor)
-            holder.tvAlbum.setTextColor(activeColor)
+        val context = holder.itemView.context
+
+        if (currentTrack.id.toString() == playingTrackId) {
+            holder.tvName.setTextColor(context.getColor(R.color.ggPrimaryLight))
+            holder.tvArtist.setTextColor(context.getColor(R.color.ggPrimary))
+            holder.tvAlbum.setTextColor(context.getColor(R.color.ggPrimary))
+            holder.tvLength.visibility = View.GONE
             holder.imageButton.visibility = View.VISIBLE
 
+            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
         } else {
-
-
-            holder.tvName.setTextColor(holder.itemView.context.getColor(android.R.color.darker_gray))
-            holder.tvArtist.setTextColor(holder.itemView.context.getColor(android.R.color.tab_indicator_text))
-            holder.tvAlbum.setTextColor(holder.itemView.context.getColor(android.R.color.darker_gray))
+            holder.tvName.setTextColor(context.getColor(R.color.foreground))
+            holder.tvArtist.setTextColor(context.getColor(R.color.grey6))
+            holder.tvAlbum.setTextColor(context.getColor(R.color.grey6))
+            holder.tvLength.visibility = View.VISIBLE
             holder.imageButton.visibility = View.GONE
+
+            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.NORMAL) }
         }
 
-        if(isPlaying) {
+        if (isPlaying) {
             holder.imageButton.setImageResource(R.drawable.ic_pause_24)
 
         } else {
             holder.imageButton.setImageResource(R.drawable.ic_play_arrow_24)
         }
 
-
         holder.checkbox.isVisible = showingCheckBox
         holder.options.isVisible = !showingCheckBox
         holder.checkbox.isChecked = checkedTracks[filteredList[position].id] ?: false
         holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
-            if(buttonView.isShown) {
+            if (buttonView.isShown) {
                 buttonView.isChecked = isChecked
                 checkedTracks[filteredList[position].id] = isChecked
             }
         }
-
-
     }
 
 
@@ -125,6 +126,7 @@ class PlaylistAdapter(
         val tvArtist: TextView = itemView.tv_artist
         val tvName: TextView = itemView.tv_title
         val tvAlbum: TextView = itemView.tv_album
+        val tvLength: TextView = itemView.tv_length
         val imageButton: ImageButton = itemView.playStatusButton
         val checkbox: CheckBox = itemView.checkbox
         val options: TextView = itemView.tv_options
@@ -135,7 +137,7 @@ class PlaylistAdapter(
             itemView.setOnLongClickListener(this)
             imageButton.setOnClickListener {
                 val position = adapterPosition
-                if(position != RecyclerView.NO_POSITION) {
+                if (position != RecyclerView.NO_POSITION) {
                     listener.onPlayPauseClick(position)
                 }
             }
@@ -188,10 +190,10 @@ class PlaylistAdapter(
         override fun onClick(v: View?) {
             val position = adapterPosition
             //in event of animation
-            if(showingCheckBox){
+            if (showingCheckBox) {
                 checkbox.isChecked = !checkbox.isChecked
             } else {
-                if(position != RecyclerView.NO_POSITION) {
+                if (position != RecyclerView.NO_POSITION) {
                     listener.onTrackClick(position)
                 }
             }
@@ -199,14 +201,13 @@ class PlaylistAdapter(
 
         override fun onLongClick(v: View?): Boolean {
             val position = adapterPosition
-            if(position != RecyclerView.NO_POSITION) {
+            if (position != RecyclerView.NO_POSITION) {
                 listener.onTrackLongClick(position)
             }
             return true
         }
 
-        private fun expandViewHitArea(parent : View, child : View) {
-
+        private fun expandViewHitArea(parent: View, child: View) {
             parent.post {
 
                 val parentRect = Rect()
@@ -222,23 +223,21 @@ class PlaylistAdapter(
                 parent.touchDelegate = TouchDelegate(childRect, child)
             }
         }
-
-
     }
 
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val resultsList : List<Track> =
-                if (constraint.isNullOrEmpty()) {
-                    trackList
-                } else {
-                    val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
-                    trackList.filter {
-                        it.name.toLowerCase(Locale.ROOT).contains(filterPattern) ||
-                        it.artist.toLowerCase(Locale.ROOT).contains(filterPattern)
+                val resultsList: List<Track> =
+                    if (constraint.isNullOrEmpty()) {
+                        trackList
+                    } else {
+                        val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
+                        trackList.filter {
+                            it.name.toLowerCase(Locale.ROOT).contains(filterPattern) ||
+                                    it.artist.toLowerCase(Locale.ROOT).contains(filterPattern)
+                        }
                     }
-                }
 
                 val filterResults = FilterResults()
                 filterResults.values = resultsList
@@ -255,7 +254,7 @@ class PlaylistAdapter(
 
     interface OnTrackListener {
         fun onTrackClick(position: Int)
-        fun onTrackLongClick(position: Int) : Boolean
+        fun onTrackLongClick(position: Int): Boolean
         fun onPlayPauseClick(position: Int)
         fun onOptionsClick(position: Int)
 

@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorPrimary">#333333</color>
+    <color name="colorPrimaryDark">#333333</color>
     <color name="colorAccent">#03DAC5</color>
 
     <color name="reallyDarkBlue">#005A8A</color>
 
+    <color name="ggPrimary">#1D87BA</color>
+    <color name="ggPrimaryLight">#60B7ED</color>
     <color name="ggSecondary">#91F9E2</color>
     <color name="navBarUnselected">#99BDD0</color>
     <color name="grey1">#333333</color>
+    <color name="grey6">#F2F2F2</color>
+    <color name="background">#000000</color>
+    <color name="foreground">#FFFFFF</color>
 </resources>
