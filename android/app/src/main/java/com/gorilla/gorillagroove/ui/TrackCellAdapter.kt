@@ -222,7 +222,8 @@ class TrackCellAdapter(
                         val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
                         trackList.filter {
                             it.name.toLowerCase(Locale.ROOT).contains(filterPattern) ||
-                                    it.artist.toLowerCase(Locale.ROOT).contains(filterPattern)
+                                    it.artist.toLowerCase(Locale.ROOT).contains(filterPattern) ||
+                                    it.album.toLowerCase(Locale.ROOT).contains(filterPattern)
                         }
                     }
 
