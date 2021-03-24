@@ -21,6 +21,7 @@ import com.gorilla.gorillagroove.repository.Sort
 import com.gorilla.gorillagroove.ui.LibraryEvent
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlaylistsEvent
+import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.StateEvent
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,6 +48,7 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistKeyAdap
 
     private fun setupRecyclerView() = playlists_key_rv.apply {
         playlistKeyAdapter = PlaylistKeyAdapter(this@PlaylistsFragment)
+        addItemDecoration(createDivider(context))
         adapter = playlistKeyAdapter
         layoutManager = LinearLayoutManager(requireContext())
     }

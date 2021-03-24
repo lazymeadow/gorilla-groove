@@ -1,13 +1,12 @@
 package com.gorilla.gorillagroove.ui.library
 
-import android.content.Context
 import android.graphics.Rect
 import android.graphics.Typeface
-import android.util.TypedValue
-import android.view.*
+import android.view.LayoutInflater
+import android.view.TouchDelegate
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
-import androidx.annotation.AttrRes
-import androidx.annotation.ColorInt
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
@@ -49,16 +48,6 @@ class PlaylistAdapter(
         }
 
         return tracks
-    }
-
-    @ColorInt
-    fun Context.getColorFromAttr(
-        @AttrRes attrColor: Int,
-        typedValue: TypedValue = TypedValue(),
-        resolveRefs: Boolean = true
-    ): Int {
-        theme.resolveAttribute(attrColor, typedValue, resolveRefs)
-        return typedValue.data
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistViewHolder {
@@ -183,9 +172,7 @@ class PlaylistAdapter(
             }
 
             expandViewHitArea(menu_button_parent, options)
-
         }
-
 
         override fun onClick(v: View?) {
             val position = adapterPosition

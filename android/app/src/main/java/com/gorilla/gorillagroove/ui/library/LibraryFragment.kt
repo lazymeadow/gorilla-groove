@@ -21,10 +21,7 @@ import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.Track
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.repository.Sort
-import com.gorilla.gorillagroove.ui.LibraryEvent
-import com.gorilla.gorillagroove.ui.MainViewModel
-import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
-import com.gorilla.gorillagroove.ui.isPlaying
+import com.gorilla.gorillagroove.ui.*
 import com.gorilla.gorillagroove.util.Constants.CALLING_FRAGMENT_LIBRARY
 import com.gorilla.gorillagroove.util.Constants.KEY_SORT
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
@@ -62,10 +59,7 @@ class LibraryFragment : Fragment(R.layout.fragment_main), PlaylistAdapter.OnTrac
 
     private fun setupRecyclerView() = playlist_rv.apply {
         playlistAdapter = PlaylistAdapter(this@LibraryFragment)
-
-        val dividerItemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
-        addItemDecoration(dividerItemDecoration)
-
+        addItemDecoration(createDivider(context))
         adapter = playlistAdapter
         layoutManager = LinearLayoutManager(requireContext())
     }

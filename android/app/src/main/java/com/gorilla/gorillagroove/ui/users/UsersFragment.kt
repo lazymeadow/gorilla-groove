@@ -11,6 +11,7 @@ import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.User
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.UsersEvent
+import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.util.StateEvent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_users.*
@@ -34,6 +35,7 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
 
     private fun setupRecyclerView() = users_rv.apply {
         userAdapter = UserAdapter(this@UsersFragment)
+        addItemDecoration(createDivider(context))
         adapter = userAdapter
         layoutManager = LinearLayoutManager(requireContext())
     }
