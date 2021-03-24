@@ -1,7 +1,6 @@
 package com.gorilla.gorillagroove.ui
 
 import android.graphics.Rect
-import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.TouchDelegate
 import android.view.View
@@ -13,8 +12,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.Track
-import kotlinx.android.synthetic.main.playlist_track_info_item.view.checkbox
-import kotlinx.android.synthetic.main.playlist_track_info_item.view.playStatusButton
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -75,7 +72,7 @@ class TrackCellAdapter(
             holder.tvLength.visibility = View.GONE
             holder.imageButton.visibility = View.VISIBLE
 
-            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
+//            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
         } else {
             holder.tvName.setTextColor(context.getColor(R.color.foreground))
             holder.tvArtist.setTextColor(context.getColor(R.color.grey6))
@@ -83,7 +80,9 @@ class TrackCellAdapter(
             holder.tvLength.visibility = View.VISIBLE
             holder.imageButton.visibility = View.GONE
 
-            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.NORMAL) }
+            // For whatever dumb reason, it takes Android a while to update the typefaces visually, even though the colors update instantly.
+            // This makes it look far more jank than just not having it at all, even though we no longer match the mockup.
+//            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.NORMAL) }
         }
 
         if (isPlaying) {
@@ -103,7 +102,6 @@ class TrackCellAdapter(
             }
         }
     }
-
 
     private fun Long.getSongTimeFromSeconds(): String {
         val minutes = this / 60

@@ -10,12 +10,9 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.media.MediaBrowserServiceCompat
+import com.google.android.exoplayer2.*
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.util.Constants.MEDIA_ROOT_ID
-import com.google.android.exoplayer2.ControlDispatcher
-import com.google.android.exoplayer2.ExoPlaybackException
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -193,6 +190,7 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.prepare() // triggers buffering
         exoPlayer.playWhenReady = playWhenReady
         exoPlayer.seekTo(songIndex, 0) //triggers seeked
+        exoPlayer.setPlaybackParameters(PlaybackParameters(1f))
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
