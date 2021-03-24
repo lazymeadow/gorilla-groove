@@ -37,7 +37,7 @@
     </fragment>
     <fragment
         android:id="@+id/playingFragment"
-        android:name="com.gorilla.gorillagroove.ui.playing.PlayingFragment"
+        android:name="com.gorilla.gorillagroove.ui.playing.NowPlayingFragment"
         android:label="PlayingFragment" >
         <action
             android:id="@+id/action_playingFragment_to_mainFragment"
@@ -75,7 +75,7 @@
     </fragment>
     <fragment
         android:id="@+id/playlistFragment"
-        android:name="com.gorilla.gorillagroove.ui.playlists.playlist.PlaylistFragment"
+        android:name="com.gorilla.gorillagroove.ui.playlists.PlaylistTrackFragment"
         android:label="PlaylistFragment" >
 
         <argument

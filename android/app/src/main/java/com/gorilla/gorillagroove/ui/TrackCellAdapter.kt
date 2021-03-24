@@ -1,4 +1,4 @@
-package com.gorilla.gorillagroove.ui.library
+package com.gorilla.gorillagroove.ui
 
 import android.graphics.Rect
 import android.graphics.Typeface
@@ -19,9 +19,9 @@ import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
-class PlaylistAdapter(
+class TrackCellAdapter(
     private val listener: OnTrackListener
-) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>(), Filterable {
+) : RecyclerView.Adapter<TrackCellAdapter.PlaylistViewHolder>(), Filterable {
 
     var trackList = listOf<Track>()
     val filteredList: MutableList<Track> = trackList.toMutableList()

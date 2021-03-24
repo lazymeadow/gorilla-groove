@@ -93,7 +93,7 @@ class MainRepository(
     val nowPlayingMetadataList = mutableListOf<MediaMetadataCompat>()
 
     fun changeMediaSource(callingFragment: String, playlistId: Long?) {
-        when(callingFragment) {
+        when (callingFragment) {
             CALLING_FRAGMENT_LIBRARY -> {
                 dataSetChanged = true
                 nowPlayingTracks.clear()

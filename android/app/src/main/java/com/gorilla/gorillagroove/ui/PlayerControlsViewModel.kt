@@ -131,7 +131,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         it.currentSongTimeMillis.observeForever(currentTimeObserver)
     }
 
-    fun playMedia(track: Track, callingFragment: String, playlistId: Long?) {
+    fun playMedia(track: Track, callingFragment: String, playlistId: Long? = null) {
         repository.changeMediaSource(callingFragment, playlistId)
 
         val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }

@@ -6,9 +6,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.Toast
-import androidx.appcompat.widget.SearchView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,12 +15,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.PlaylistKey
-import com.gorilla.gorillagroove.repository.Sort
-import com.gorilla.gorillagroove.ui.LibraryEvent
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlaylistsEvent
 import com.gorilla.gorillagroove.ui.createDivider
-import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.StateEvent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_playlists.*
