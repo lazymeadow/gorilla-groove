@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.SeekBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-       // setupActionBarWithNavController(navController)
+        // setupActionBarWithNavController(navController)
         bottomNavigationView.setupWithNavController(navController)
 
         navHostFragment.findNavController()
@@ -142,7 +143,6 @@ class MainActivity : AppCompatActivity() {
     private fun initProgressBar() {
         audio_seek_bar.min = 0
         audio_seek_bar.max = 100
-
     }
 
     private fun subscribeObservers() {
@@ -155,15 +155,18 @@ class MainActivity : AppCompatActivity() {
         })
 
         playerControlsViewModel.repeatState.observe(this, Observer {
-            when(it) {
+            when (it) {
                 REPEAT_MODE_NONE -> {
                     repeat_button.setImageResource(R.drawable.ic_repeat_24)
+                    repeat_button.setColorFilter(ContextCompat.getColor(this, R.color.exo_white), android.graphics.PorterDuff.Mode.SRC_IN)
                 }
                 REPEAT_MODE_ONE -> {
                     repeat_button.setImageResource(R.drawable.ic_repeat_one_24)
+                    repeat_button.setColorFilter(ContextCompat.getColor(this, R.color.ggSecondary), android.graphics.PorterDuff.Mode.SRC_IN)
                 }
                 REPEAT_MODE_ALL -> {
-                    repeat_button.setImageResource(R.drawable.ic_repeat_black_24)
+                    repeat_button.setImageResource(R.drawable.ic_repeat_24)
+                    repeat_button.setColorFilter(ContextCompat.getColor(this, R.color.ggSecondary), android.graphics.PorterDuff.Mode.SRC_IN)
                 }
                 else -> {
                     //Log.d(TAG, "subscribeObservers: what is this? ${it}")
@@ -173,15 +176,20 @@ class MainActivity : AppCompatActivity() {
 
         playerControlsViewModel.isBuffering.observe(this, Observer {
             audio_seek_bar.isIndeterminate = it
-
         })
 
-        playerControlsViewModel.currentTrackItem.observe(this, Observer {
-            now_playing_textview.text = it.description?.title
-            track_duration_textview.text =
-                it.getLong(MediaMetadataCompat.METADATA_KEY_DURATION).getSongTimeFromMilliseconds()
-            audio_seek_bar.max =
-                it.getLong(MediaMetadataCompat.METADATA_KEY_DURATION).toInt() / 1000
+        playerControlsViewModel.currentTrackItem.observe(this, Observer { metadata ->
+            val artist = metadata.description?.subtitle?.takeIf { it.isNotBlank() }
+            val name = metadata.description?.title?.takeIf { it.isNotBlank() }
+
+            now_playing_textview.text = if (artist != null && name != null) {
+                "$name - $artist"
+            } else {
+                name ?: artist
+            }
+
+            track_duration_textview.text = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION).getSongTimeFromMilliseconds()
+            audio_seek_bar.max = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION).toInt() / 1000
         })
 
         playerControlsViewModel.mediaPosition.observe(this, Observer {
@@ -197,18 +205,10 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-private fun Long.getSongTimeFromSeconds(): String {
-    val minutes = this / 60
-    val seconds = this % 60
-    return "$minutes:${String.format("%02d", seconds)}"
-}
-
 fun Long.getSongTimeFromMilliseconds(): String {
     return String.format(
-        "%02d:%02d",
+        "%d:%02d",
         TimeUnit.MILLISECONDS.toMinutes(this),
-        TimeUnit.MILLISECONDS.toSeconds(this) -
-                TimeUnit.MINUTES.toSeconds((TimeUnit.MILLISECONDS.toMinutes(this))
-                )
+        TimeUnit.MILLISECONDS.toSeconds(this) % 60
     )
 }

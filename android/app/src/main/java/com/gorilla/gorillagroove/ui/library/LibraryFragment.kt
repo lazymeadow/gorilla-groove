@@ -38,12 +38,12 @@ import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTrackListener {
+class LibraryFragment : Fragment(R.layout.fragment_main), PlaylistAdapter.OnTrackListener {
     val TAG = "AppDebug"
     private val viewModel: MainViewModel by viewModels()
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
     lateinit var playlistAdapter: PlaylistAdapter
-    var actionMode : ActionMode? = null
+    var actionMode: ActionMode? = null
 
 
     @Inject
@@ -82,7 +82,7 @@ class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTra
         })
         playerControlsViewModel.currentTrackItem.observe(requireActivity(), Observer {
             val mediaId = it.description.mediaId.toString()
-            if(mediaId != "") {
+            if (mediaId != "") {
                 playlistAdapter.playingTrackId = mediaId
                 playlistAdapter.notifyDataSetChanged()
             }
@@ -102,7 +102,7 @@ class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTra
         val searchView = searchItem.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
 
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
             }
@@ -163,11 +163,11 @@ class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTra
     }
 
     private fun displayProgressBar(isDisplayed: Boolean) {
-        if(isDisplayed){
+        if (isDisplayed) {
             progress_bar.visibility = View.VISIBLE
             progress_bar.bringToFront()
         } else {
-            progress_bar.visibility =  View.GONE
+            progress_bar.visibility = View.GONE
         }
     }
 
@@ -241,7 +241,6 @@ class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTra
     }
 
 
-
     @ExperimentalCoroutinesApi
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu): Boolean {
@@ -296,7 +295,6 @@ class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTra
                 }
 
 
-
                 else -> false
             }
         }
@@ -308,7 +306,6 @@ class LibraryFragment : Fragment(R.layout.fragment_main),  PlaylistAdapter.OnTra
             actionMode = null
         }
     }
-
 
 
 }
