@@ -2,7 +2,7 @@ package com.gorilla.gorillagroove.service
 
 import android.support.v4.media.MediaMetadataCompat
 import com.gorilla.gorillagroove.repository.MainRepository
-import com.gorilla.gorillagroove.service.GGLog.logError
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,62 +13,87 @@ private const val TARGET_LISTEN_PERCENT = 0.60
 
 class MarkListenedService(
     private val mainRepository: MainRepository,
-    private val musicServiceConnection: MusicServiceConnection
+    musicServiceConnection: MusicServiceConnection
 ) {
 
-    private var currentSongMarkedListenedTo = false
-    private var lastSongListenedMillis = 0L
-    private var currentSongListenedAmount = 0L
-    private var currentSongListenTarget = 0L
+    private var currentTrackMarkedListenedTo = false
+    private var lastTrackListenedMillis = 0L
+    private var currentTrackListenedAmount = 0L
+    private var currentTrackListenTarget = 0L
+
+    private var currentTrackId: Long? = null
 
     init {
         musicServiceConnection.currentSongTimeMillis.observeForever { newTrackPosition ->
+            synchronized(this) {
+                if (currentTrackMarkedListenedTo && newTrackPosition < 1500) {
+                    logDebug("Track is at position $newTrackPosition when it has already been listened to. Assuming it is starting over and resetting listened state.")
+
+                    resetListenedState()
+                }
+            }
+
             handleMarkListened(newTrackPosition)
         }
 
         musicServiceConnection.nowPlaying.observeForever { newMetadataItem ->
             synchronized(this) {
-                val trackLength = newMetadataItem.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
+                // Not sure why, but this metadata item seems to get updated without any user interaction or the song switching.
+                // We obviously don't want to reset the "mark listened" progress unless the song actually changes
+                // (or starts over, but we handle that situation in the currentSongTimeMillis observer instead)
+                val trackId = newMetadataItem?.id?.toLongOrNull()
+                if (currentTrackId == trackId) {
+                    return@synchronized
+                }
 
-                currentSongMarkedListenedTo = false
-                currentSongListenTarget = (trackLength * TARGET_LISTEN_PERCENT).toLong()
-                lastSongListenedMillis = 0
-                currentSongListenedAmount = 0
+                // Once again, not sure why, but it is possible for these messages to come through with a negative length. I assume they are being initialized
+                // elsewhere in multiple steps and we are seeing partial updates broadcast before they are ready. Ignore these.
+                val trackLength = newMetadataItem.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)
+                if (trackLength < 0) {
+                    return@synchronized
+                }
+
+                logDebug("Metadata item changed. Resetting current song listen state. Last ID was ${currentTrackId}. New ID is $trackId. Track length is $trackLength")
+
+                currentTrackId = trackId
+                currentTrackListenTarget = (trackLength * TARGET_LISTEN_PERCENT).toLong()
+
+                resetListenedState()
             }
         }
     }
 
+    private fun resetListenedState() {
+        currentTrackMarkedListenedTo = false
+        lastTrackListenedMillis = 0
+        currentTrackListenedAmount = 0
+    }
+
     @Synchronized
     private fun handleMarkListened(nextPositionMillis: Long) {
-        if (currentSongMarkedListenedTo) {
+        val trackId = currentTrackId ?: return
+        if (currentTrackMarkedListenedTo || lastTrackListenedMillis == nextPositionMillis || currentTrackId == null) {
             return
         }
 
-        val trackId = musicServiceConnection.nowPlaying.value.description?.mediaId?.toLongOrNull() ?: run {
-            logError("Could not find track ID when marking song as listened to!")
-            return
-        }
-
-        val timeChange = nextPositionMillis - lastSongListenedMillis
-        lastSongListenedMillis = nextPositionMillis
+        val timeChange = nextPositionMillis - lastTrackListenedMillis
+        lastTrackListenedMillis = nextPositionMillis
 
         if (timeChange < 0 || timeChange > 1500) {
             logInfo("Time change between last listen check was $timeChange ms, which was an abnormal amount. Assuming user skipped around the seek bar.")
             return
         }
 
-        currentSongListenedAmount += timeChange
+        currentTrackListenedAmount += timeChange
 
-        if (currentSongListenedAmount > currentSongListenTarget) {
-            currentSongMarkedListenedTo = true
+        if (currentTrackListenedAmount > currentTrackListenTarget) {
+            currentTrackMarkedListenedTo = true
 
             CoroutineScope(Dispatchers.IO).launch {
                 mainRepository.markTrackListenedTo(trackId)
             }
 
-            logInfo("User finished listening to the song")
-        } else {
-            logInfo("$currentSongListenedAmount, $currentSongListenTarget, $timeChange")
+            logInfo("User finished listening to track $trackId")
         }
     }
 
