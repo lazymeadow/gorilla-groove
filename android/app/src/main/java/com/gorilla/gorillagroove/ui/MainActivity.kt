@@ -95,6 +95,11 @@ class MainActivity : AppCompatActivity() {
                         playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Problem Report"
                     }
+                    R.id.logViewFragment -> {
+                        bottomNavigationView.visibility = View.GONE
+                        playerControlView.visibility = View.GONE
+                        title_tv.text = "View Logs"
+                    }
                     else -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE

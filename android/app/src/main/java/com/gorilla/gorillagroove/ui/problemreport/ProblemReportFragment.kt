@@ -5,12 +5,12 @@ import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.getNullableLong
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_problem_report.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -23,7 +23,6 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
     @Inject
     lateinit var sharedPrefs: SharedPreferences
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -32,6 +31,7 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
         sharedPrefs.edit().remove(LAST_MANUAL_REPORT_KEY).apply()
 
         sendReportButton.setOnClickListener { sendProblemReport() }
+        viewLogsButton.setOnClickListener { findNavController().navigate(R.id.logViewFragment) }
 
         displayLastSentReportMessage()
     }

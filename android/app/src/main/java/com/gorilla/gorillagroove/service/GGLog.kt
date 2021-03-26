@@ -6,6 +6,8 @@ import android.util.Log
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.GGApplication
 import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -16,7 +18,7 @@ object GGLog {
 
     private var logBuffer = LinkedList<String>()
 
-    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
     private val minimumLogLevel = LogLevel.DEBUG
 
@@ -91,7 +93,9 @@ object GGLog {
             buffer
         }
 
-        getFileToLog().printWriter().use { writer ->
+        val activeLogFile = getFileToLog()
+
+        PrintWriter(FileOutputStream(activeLogFile, true)).use { writer ->
             statementsToLog.forEach { writer.println(it) }
         }
     }
@@ -126,14 +130,7 @@ object GGLog {
             }
         }
 
-        val logFile1 = logFile1 ?: throw IllegalStateException("logFile1 does not exist!")
-        val logFile2 = logFile2 ?: throw IllegalStateException("logFile2 does not exist!")
-
-        val (fileToLog, backupFile) = if (logFile1.lastModified() >= logFile2.lastModified()) {
-            logFile1 to logFile2
-        } else {
-            logFile2 to logFile1
-        }
+        val (fileToLog, backupFile) = getActiveAndBackupLogFile()
 
         return if (fileToLog.length() > MAX_LOG_SIZE) {
             // Should always exist. But paranoia
@@ -152,6 +149,26 @@ object GGLog {
 
             fileToLog
         }
+    }
+
+    private fun getActiveAndBackupLogFile(): Pair<File, File> {
+        val logFile1 = logFile1 ?: throw IllegalStateException("logFile1 does not exist!")
+        val logFile2 = logFile2 ?: throw IllegalStateException("logFile2 does not exist!")
+
+        return if (logFile1.lastModified() >= logFile2.lastModified()) {
+            logFile1 to logFile2
+        } else {
+            logFile2 to logFile1
+        }
+    }
+
+    fun getLogContent(): List<String> {
+        val (fileToLog, backupFile) = getActiveAndBackupLogFile()
+
+        flush()
+
+        // Backup file will have older content, so it needs to go first
+        return backupFile.readLines() + fileToLog.readLines()
     }
 }
 

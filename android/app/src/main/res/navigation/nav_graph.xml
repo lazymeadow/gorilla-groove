@@ -98,4 +98,9 @@
         android:name="com.gorilla.gorillagroove.ui.problemreport.ProblemReportFragment"
         android:label="ProblemReportFragment" >
     </fragment>
+    <fragment
+        android:id="@+id/logViewFragment"
+        android:name="com.gorilla.gorillagroove.ui.problemreport.LogViewFragment"
+        android:label="LogViewFragment" >
+    </fragment>
 </navigation>
