@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    tools:ignore="HardcodedText">
+
+    <TextView
+        android:id="@+id/headingText"
+        style="@style/HeadingText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send a problem report?"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/explanationText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="This will send Gorilla Groove's app logs and database off for troubleshooting."
+        android:textColor="@color/foreground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headingText" />
+
+    <TextView
+        android:id="@+id/lastLogsSentText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:textColor="@color/foreground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/explanationText"
+        tools:text="Your last manual problem report was sent more than a month ago. The last automated problem report was sent more than a month ago." />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/viewLogsButton"
+        style="@style/GGButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="View Logs"
+        app:layout_constraintEnd_toStartOf="@id/sendReportButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lastLogsSentText" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/sendReportButton"
+        style="@style/GGButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Send Report"
+        app:layout_constraintBottom_toBottomOf="@id/viewLogsButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/viewLogsButton"
+        app:layout_constraintTop_toTopOf="@id/viewLogsButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

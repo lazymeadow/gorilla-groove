@@ -15,7 +15,25 @@
     <style name="BottomNavigationView.Active" parent="@style/TextAppearance.AppCompat.Caption">
         <item name="android:textSize">10sp</item>
     </style>
-    
-    <!-- context action bar -->
+
+    <style name="HeadingText">
+        <item name="android:textColor">@color/foreground</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:layout_marginBottom">20dp</item>
+    </style>
+
+    <style name="GGButton" parent="Platform.MaterialComponents">
+        <item name="android:backgroundTint">@color/reallyDarkBlue</item>
+        <item name="android:textColor">@color/exo_white</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">16sp</item>
+
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="cornerRadius">4dp</item>
+    </style>
 
 </resources>

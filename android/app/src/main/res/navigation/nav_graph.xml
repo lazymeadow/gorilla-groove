@@ -93,4 +93,9 @@
             android:id="@+id/action_trackPropertiesFragment_to_mainFragment"
             app:destination="@id/mainFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/problemReportFragment"
+        android:name="com.gorilla.gorillagroove.ui.problemreport.ProblemReportFragment"
+        android:label="ProblemReportFragment" >
+    </fragment>
 </navigation>

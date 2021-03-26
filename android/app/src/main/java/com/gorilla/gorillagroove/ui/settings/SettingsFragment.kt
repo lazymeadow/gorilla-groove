@@ -1,6 +1,5 @@
 package com.gorilla.gorillagroove.ui.settings
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -12,22 +11,16 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.LibraryEvent
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
-import com.gorilla.gorillagroove.util.Constants
+import com.gorilla.gorillagroove.ui.getSongTimeFromMilliseconds
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import javax.inject.Inject
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
     private val viewModel: MainViewModel by viewModels()
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
-
-    @set:Inject
-    var isFirstAppOpen = true
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -36,13 +29,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         logInfo("Loading Settings view")
 
         logout_button.setOnClickListener {
-
             controlsViewModel.logout()
-
-           val completed = sharedPref.edit()
-                .putBoolean(Constants.KEY_FIRST_TIME_TOGGLE, true)
-                .commit() // commit runs synch and returns boolean
-
 
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(R.id.loginFragment, true)
@@ -59,5 +46,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
             viewModel.setLibraryEvent(LibraryEvent.UpdateAllTracks)
         }
 
+        openProblemReportButton.setOnClickListener {
+            findNavController().navigate(R.id.problemReportFragment)
+        }
     }
 }
