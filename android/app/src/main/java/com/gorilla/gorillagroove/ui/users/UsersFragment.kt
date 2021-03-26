@@ -9,6 +9,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.User
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.UsersEvent
 import com.gorilla.gorillagroove.ui.createDivider
@@ -27,6 +28,8 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading Users view")
 
         setupRecyclerView()
         subscribeObservers()

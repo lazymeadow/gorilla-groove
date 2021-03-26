@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.network.login.LoginRequest
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.LoginStateEvent
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.ui.MainViewModel
@@ -42,6 +43,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading Login view")
 
         if (!isFirstAppOpen) {
             val navOptions = NavOptions.Builder()

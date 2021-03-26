@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.PlaylistKey
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlaylistsEvent
 import com.gorilla.gorillagroove.ui.createDivider
@@ -34,6 +35,9 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistKeyAdap
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading Playlists view")
+
         setHasOptionsMenu(true)
         savedInstanceStateBundle = savedInstanceState
         setupRecyclerView()

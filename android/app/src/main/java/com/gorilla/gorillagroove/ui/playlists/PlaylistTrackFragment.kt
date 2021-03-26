@@ -7,6 +7,7 @@ import androidx.lifecycle.Observer
 import com.gorilla.gorillagroove.model.PlaylistKey
 import com.gorilla.gorillagroove.model.Track
 import com.gorilla.gorillagroove.service.GGLog.logError
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.PlaylistsEvent
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.util.Constants
@@ -32,6 +33,9 @@ class PlaylistTrackFragment : TrackListFragment() {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading PlaylistTracks view with playlist ID: ${playlist.id}")
+
         subscribeObservers()
 
         viewModel.setPlaylistsEvent(PlaylistsEvent.GetPlaylist(playlist.id))

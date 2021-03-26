@@ -3,6 +3,7 @@ package com.gorilla.gorillagroove.ui.playing
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.Observer
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.NowPlayingEvent
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.util.Constants
@@ -15,6 +16,8 @@ class NowPlayingFragment : TrackListFragment() {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading Now Playing view")
 
         subscribeObservers()
         viewModel.setNowPlayingEvent(NowPlayingEvent.GetNowPlayingTracksEvent)

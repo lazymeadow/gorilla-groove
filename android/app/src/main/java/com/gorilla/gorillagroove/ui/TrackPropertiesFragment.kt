@@ -10,6 +10,7 @@ import androidx.lifecycle.Observer
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.model.Track
 import com.gorilla.gorillagroove.network.track.TrackUpdate
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.StateEvent
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
@@ -56,6 +57,8 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading TrackProperties view with track ID: $trackId")
 
         subscribeObservers()
 
