@@ -5,7 +5,9 @@ import com.gorilla.gorillagroove.network.login.LoginResponseNetworkEntity
 import com.gorilla.gorillagroove.network.playlist.PlaylistKeyNetworkEntity
 import com.gorilla.gorillagroove.network.playlist.PlaylistNetworkEntity
 import com.gorilla.gorillagroove.network.track.*
+import okhttp3.MultipartBody
 import retrofit2.http.*
+import java.io.File
 
 interface NetworkApi {
     @GET("/api/track?page=0&size=4000&sort=id,asc")
@@ -45,5 +47,12 @@ interface NetworkApi {
     suspend fun markTrackListened(
         @Header("Authorization") token: String,
         @Body body: MarkListenedRequest
+    )
+
+    @Multipart
+    @POST("api/crash-report")
+    suspend fun uploadCrashReport(
+        @Header("Authorization") token: String,
+        @Part zip: MultipartBody.Part
     )
 }

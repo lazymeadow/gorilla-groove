@@ -24,7 +24,7 @@
     </style>
 
     <style name="GGButton" parent="Platform.MaterialComponents">
-        <item name="android:backgroundTint">@color/reallyDarkBlue</item>
+        <item name="android:backgroundTint">@color/color_states_button</item>
         <item name="android:textColor">@color/exo_white</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">16sp</item>

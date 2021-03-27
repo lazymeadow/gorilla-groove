@@ -4,7 +4,6 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import android.util.Log
 import com.gorilla.gorillagroove.network.*
 import com.gorilla.gorillagroove.database.CacheMapper
 import com.gorilla.gorillagroove.database.DatabaseDao
@@ -32,13 +31,17 @@ import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
+import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import retrofit2.HttpException
+import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -54,8 +57,6 @@ class MainRepository(
     private val dataSourceFactory: DefaultDataSourceFactory,
     private val okClient: OkHttpClient
 ) {
-    private val TAG = "AppDebug: Repository"
-
     lateinit var webSocket: WebSocket
 
     private var userToken: String = sharedPreferences.getString(KEY_USER_TOKEN, "") ?: ""
@@ -222,7 +223,7 @@ class MainRepository(
             lastVerifiedTrack = id
             lastFetchedLinks
         } catch (e: Exception) {
-            //Log.d(TAG, "$e")
+            logNetworkException("Could not fetch track links!", e)
             TrackLinkResponse(" ", null)
         }
     }
@@ -338,7 +339,7 @@ class MainRepository(
             val list = networkApi.get(userToken).trackList
             networkMapper.mapFromTrackEntityList(list)
         } catch (e: Exception) {
-            //Log.d(TAG, "$e")
+            logNetworkException("Could not fetch tracks!", e)
             emptyList()
         }
     }
@@ -391,7 +392,7 @@ class MainRepository(
         return try {
             networkMapper.mapFromUserEntityList(networkApi.getAllUsers(userToken))
         } catch (e: Exception) {
-            //Log.d(TAG, "$e")
+            logNetworkException("Could not fetch users!", e)
             emptyList()
         }
     }
@@ -462,7 +463,7 @@ class MainRepository(
         return try {
             networkMapper.mapFromPlaylistKeyEntityList(networkApi.getAllPlaylists(userToken))
         } catch (e: Exception) {
-            //Log.d(TAG, "$e")
+            logNetworkException("Could not fetch playlist keys!", e)
             emptyList()
         }
     }
@@ -548,10 +549,9 @@ class MainRepository(
             )
             theList
         } catch (e: Exception) {
-            //Log.d(TAG, "$e")
+            logNetworkException("Could not fetch playlists!", e)
             null
         }
-
     }
 
     suspend fun updateTrack(trackUpdate: TrackUpdate): Flow<DataState<*>> = flow {
@@ -713,7 +713,30 @@ class MainRepository(
         try {
             networkApi.markTrackListened(userToken, markListenedRequest)
         } catch (e: Throwable) {
-            Log.e("", "Could not mark track as listened to! \n${e.httpErrorString}")
+            logNetworkException("Could not mark track as listened to!", e)
+        }
+    }
+
+    suspend fun uploadCrashReport(zip: File) {
+        val multipartFile = MultipartBody.Part.createFormData(
+            "file",
+            "crash-report.zip",
+            zip.asRequestBody()
+        )
+
+        try {
+            networkApi.uploadCrashReport(userToken, multipartFile)
+        } catch (e: Throwable) {
+            logNetworkException("Could not upload crash report!", e)
+        }
+    }
+
+    private fun logNetworkException(message: String, e: Throwable) {
+        if (e is HttpException) {
+            val errorBody = e.response()?.errorBody()?.string() ?: "No http error provided"
+            logError("message \n${errorBody}")
+        } else {
+            logError(message, e)
         }
     }
 }
@@ -754,5 +777,3 @@ private fun String.toSort(): Sort {
 //enum class Sort(i: Int) {ID(5), A_TO_Z, NEWEST, OLDEST}
 enum class Sort { ID, A_TO_Z, NEWEST, OLDEST, ARTIST_A_TO_Z }
 enum class SelectionOperation { PLAY_NOW, PLAY_NEXT, PLAY_LAST }
-
-val Throwable.httpErrorString get() = (this as? HttpException)?.response()?.errorBody()?.string() ?: "No http error provided"

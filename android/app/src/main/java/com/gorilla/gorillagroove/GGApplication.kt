@@ -5,6 +5,7 @@ import android.util.Log
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import dagger.hilt.android.HiltAndroidApp
+import kotlin.system.exitProcess
 
 
 @HiltAndroidApp
@@ -18,26 +19,21 @@ class GGApplication : Application() {
         // Setup handler for uncaught exceptions.
 
         // Setup handler for uncaught exceptions.
-        Thread.setDefaultUncaughtExceptionHandler { thread, e -> handleUncaughtException(thread, e) }
+        Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }
     }
 
-    private fun handleUncaughtException(thread: Thread, e: Throwable) {
+    private fun handleUncaughtException(e: Throwable) {
         logCrit("Unhandled fatal exception encountered!", e)
 
         GGLog.flush()
 
-        // TODO send logs
+        // TODO send logs once an actual settings menu has been configured and it can be disabled
 
         // If this is a debug build we probably want to bring down the app so it's very obvious that bad stuff happened
         if (BuildConfig.DEBUG) {
-            Thread.getDefaultUncaughtExceptionHandler()?.uncaughtException(thread, e) ?: run {
-                // Use the android logger here because we are unlikely to actually have the time to log this to a file with our actual logger before the app crashes anyway.
-                Log.wtf("GGApplication", "No default uncaught exception handler was defined. Crashing the app the old-fashioned way")
+            Log.wtf("GGApplication", "[APP] Attempting to crash the app because this is a debug build")
 
-                val uhOhNull = null
-                @Suppress("ALWAYS_NULL")
-                uhOhNull!!
-            }
+            exitProcess(1)
         }
     }
 
