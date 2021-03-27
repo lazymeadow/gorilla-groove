@@ -7,6 +7,12 @@
         <item name="colorAccent">@android:color/holo_blue_light</item>
     </style>
 
+    <!-- Launcher / Splash screen -->
+    <style name="AppTheme.Launcher">
+        <item name="android:windowBackground">@drawable/launch_screen</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    </style>
+
     <!--Bottom Nav View -->
     <style name="BottomNavigationView" parent="@style/TextAppearance.AppCompat.Caption">
         <item name="android:textSize">10sp</item>

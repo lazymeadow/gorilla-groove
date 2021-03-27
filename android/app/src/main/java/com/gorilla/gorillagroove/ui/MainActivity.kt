@@ -30,6 +30,9 @@ class MainActivity : AppCompatActivity() {
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // We are using the AppTheme.Launcher theme to load the app. Swap back to the normal AppTheme now that we've loaded
+        setTheme(R.style.AppTheme)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
