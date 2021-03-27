@@ -11,11 +11,9 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.LibraryEvent
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
-import com.gorilla.gorillagroove.ui.getSongTimeFromMilliseconds
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment(R.layout.fragment_settings) {

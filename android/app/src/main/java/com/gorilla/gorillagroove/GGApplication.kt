@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import dagger.hilt.android.HiltAndroidApp
 import kotlin.system.exitProcess
 
@@ -20,6 +21,8 @@ class GGApplication : Application() {
 
         // Setup handler for uncaught exceptions.
         Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }
+
+        logInfo("\n\nAPP WAS BOOTED\n")
     }
 
     private fun handleUncaughtException(e: Throwable) {

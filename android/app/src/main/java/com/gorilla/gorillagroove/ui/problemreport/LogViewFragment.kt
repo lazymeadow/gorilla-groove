@@ -20,7 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-const val LOG_REGEX = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} \\[.*\\] \\[.*\\]:.*"
+const val LOG_REGEX = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3} \\[.*] \\[.*]:.*"
 
 @AndroidEntryPoint
 class LogViewFragment : Fragment(R.layout.fragment_log_view) {
@@ -37,6 +37,8 @@ class LogViewFragment : Fragment(R.layout.fragment_log_view) {
         super.onStart()
 
         CoroutineScope(Dispatchers.IO).launch {
+            var lastColor = R.color.dangerRed
+
             val logContent = GGLog.getLogContent()
                 .takeLast(300)
                 .map { logLine ->
@@ -49,17 +51,17 @@ class LogViewFragment : Fragment(R.layout.fragment_log_view) {
                         // It looks like [info]: (which is backed up by the regex match, so we know this to be true)
                         val logLevelWord = logLevel.drop(1).dropLast(2)
 
-                        val color = when (logLevelWord) {
+                        lastColor = when (logLevelWord) {
                             LogLevel.VERBOSE.logName, LogLevel.DEBUG.logName -> R.color.debugGrey
                             LogLevel.INFO.logName -> R.color.foreground
                             LogLevel.WARNING.logName -> R.color.warningYellow
                             else -> R.color.dangerRed
                         }
 
-                        stringToShow.withColor(color)
+                        stringToShow.withColor(lastColor)
                     } else {
-                        // This most likely means we're logging an exception if it doesn't match the regex
-                        logLine.withColor(R.color.dangerRed)
+                        // If we have a line that doesn't match the regex, then there was probably \n in the string and we should continue using the last color
+                        logLine.withColor(lastColor)
                     }
                 }
 
@@ -82,7 +84,7 @@ private fun CharSequence.withColor(colorId: Int): SpannableString {
     val color = GGApplication.application.getColor(colorId)
 
     val spannableString = SpannableString("$this\n")
-    spannableString.setSpan(ForegroundColorSpan(color), 0, this.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    spannableString.setSpan(ForegroundColorSpan(color), 0, this.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
     return spannableString
 }

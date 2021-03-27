@@ -1,26 +1,30 @@
 package com.gorilla.gorillagroove.network
 
+import com.gorilla.gorillagroove.service.GGLog.logDebug
+import com.gorilla.gorillagroove.service.GGLog.logError
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 
 class OkHttpWebSocket : WebSocketListener() {
-    private val TAG = "AppDebug: WebSocket"
-
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
-//        //Log.d(TAG, "onOpen: ")
+
+        logDebug("WebSocket was opened")
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
+
+        logDebug("WebSocket was closed")
 //        //Log.d(TAG, "onClosed: $reason")
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
-//        //Log.d(TAG, "onFailure: ${t.message}")
+
+        logError("WebSocket failure", t)
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -32,6 +36,4 @@ class OkHttpWebSocket : WebSocketListener() {
         super.onMessage(webSocket, bytes)
         //Log.d(TAG, "onMessage: ${bytes.hex()}")
     }
-
-
 }

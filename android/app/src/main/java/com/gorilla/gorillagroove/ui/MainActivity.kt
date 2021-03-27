@@ -8,7 +8,6 @@ import android.widget.SeekBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
@@ -23,8 +22,6 @@ const val TAG = "AppDebug"
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    private val TAG = "AppDebug : MainActivity"
 
     @Inject
     lateinit var glide: RequestManager
@@ -155,7 +152,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun subscribeObservers() {
-        playerControlsViewModel.playbackState.observe(this, Observer {
+        playerControlsViewModel.playbackState.observe(this, {
             if (it.isPlaying) {
                 playpause_button.setImageResource(R.drawable.ic_pause_24)
             } else {
@@ -163,7 +160,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        playerControlsViewModel.repeatState.observe(this, Observer {
+        playerControlsViewModel.repeatState.observe(this, {
             when (it) {
                 REPEAT_MODE_NONE -> {
                     repeat_button.setImageResource(R.drawable.ic_repeat_24)
@@ -183,11 +180,11 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        playerControlsViewModel.isBuffering.observe(this, Observer {
+        playerControlsViewModel.isBuffering.observe(this, {
             audio_seek_bar.isIndeterminate = it
         })
 
-        playerControlsViewModel.currentTrackItem.observe(this, Observer { metadata ->
+        playerControlsViewModel.currentTrackItem.observe(this, { metadata ->
             val artist = metadata.description?.subtitle?.takeIf { it.isNotBlank() }
             val name = metadata.description?.title?.takeIf { it.isNotBlank() }
 
@@ -201,14 +198,13 @@ class MainActivity : AppCompatActivity() {
             audio_seek_bar.max = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION).toInt() / 1000
         })
 
-        playerControlsViewModel.mediaPosition.observe(this, Observer {
+        playerControlsViewModel.mediaPosition.observe(this, {
             track_position_textview.text = it.getSongTimeFromMilliseconds()
             audio_seek_bar.progress = it.toInt() / 1000
         })
 
-        playerControlsViewModel.bufferPosition.observe(this, Observer {
+        playerControlsViewModel.bufferPosition.observe(this, {
             audio_seek_bar.secondaryProgress = it.toInt() / 1000
-            //Log.d(TAG, "subscribeObservers: BUFFERED AMOUNT:  $it")
         })
 
     }

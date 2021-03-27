@@ -7,7 +7,6 @@ import com.gorilla.gorillagroove.network.playlist.PlaylistNetworkEntity
 import com.gorilla.gorillagroove.network.track.*
 import okhttp3.MultipartBody
 import retrofit2.http.*
-import java.io.File
 
 interface NetworkApi {
     @GET("/api/track?page=0&size=4000&sort=id,asc")
@@ -35,7 +34,6 @@ interface NetworkApi {
         @Query("sort") sort: String,
         @Query("size") size: Long
     ): PlaylistNetworkEntity
-
 
     @PUT("api/track/simple-update")
     suspend fun updateTrack(

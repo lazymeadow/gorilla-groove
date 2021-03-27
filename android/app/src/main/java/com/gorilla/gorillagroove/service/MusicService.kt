@@ -16,6 +16,10 @@ import com.gorilla.gorillagroove.util.Constants.MEDIA_ROOT_ID
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.gorilla.gorillagroove.service.GGLog.logDebug
+import com.gorilla.gorillagroove.service.GGLog.logError
+import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGLog.logWarn
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import javax.inject.Inject
@@ -83,13 +87,13 @@ class MusicService : MediaBrowserServiceCompat() {
 
             when (playbackState) {
                 Player.STATE_IDLE -> {
-                    //Log.d(TAG, "onPlayerStateChanged: Awaiting media source...")
+                    logDebug("Player state became IDLE")
+
                     musicNotificationManager.hideNotification()
                 }
                 //Player.STATE_BUFFERING -> //Log.d(TAG, "onPlayerStateChanged: Buffering...")
                 Player.STATE_READY -> {
-                    //Log.d(TAG, "onPlayerStateChanged: Ready!")
-
+                    logDebug("Player state became READY")
 
                     musicNotificationManager.showNotification(exoPlayer)
                     if (playbackState == Player.STATE_READY) {
@@ -99,18 +103,20 @@ class MusicService : MediaBrowserServiceCompat() {
                     }
                 }
                 Player.STATE_ENDED -> {
-                    //Log.d(TAG, "onPlayerStateChanged: Finished Playing.")
+                    logDebug("Player state became ENDED")
 
                     musicNotificationManager.hideNotification()
                 }
                 else -> {
+                    logWarn("Player state became UNKNOWN ($playbackState)")
+
                     musicNotificationManager.hideNotification()
                 }
             }
         }
 
         override fun onPlayerError(error: ExoPlaybackException) {
-            //Log.d(TAG, "onPlayerError: A player error has occurred $error")
+            logError("Player encountered an error", error)
         }
 
         override fun onPositionDiscontinuity(reason: Int) {
@@ -130,9 +136,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 Player.DISCONTINUITY_REASON_INTERNAL -> {
                     //Log.d(TAG, "onPositionDiscontinuity: reason internal")
                 }
-                Player.DISCONTINUITY_REASON_AD_INSERTION -> {
-                    //Log.d(TAG, "onPositionDiscontinuity: AD insertion...")
-                }
+                Player.DISCONTINUITY_REASON_AD_INSERTION -> { }
             }
         }
     }
@@ -156,12 +160,13 @@ class MusicService : MediaBrowserServiceCompat() {
 
         override fun onPrepare(playWhenReady: Boolean) = Unit
         override fun onPrepareFromMediaId(mediaId: String, playWhenReady: Boolean, extras: Bundle?) {
+            logDebug("Preparing media with ID: $mediaId")
 
             val itemToPlay = repo.nowPlayingMetadataList.find { it.id == mediaId }
             val songIndex = if (itemToPlay == null) 0 else repo.nowPlayingMetadataList.indexOf(itemToPlay)
 
             if (repo.dataSetChanged) {
-                preparePlayer(repo.nowPlayingConcatenatingMediaSource, songIndex, true)
+                preparePlayer(repo.nowPlayingConcatenatingMediaSource, songIndex)
                 repo.dataSetChanged = false
             } else {
                 exoPlayer.seekTo(songIndex, 0)
@@ -183,30 +188,37 @@ class MusicService : MediaBrowserServiceCompat() {
     private fun preparePlayer(
         concatSource: ConcatenatingMediaSource,
         songIndex: Int,
-        playWhenReady: Boolean
     ) {
+        logDebug("Preparing player")
+
         exoPlayer.stop(true)
         exoPlayer.setMediaSource(concatSource)
         exoPlayer.prepare() // triggers buffering
-        exoPlayer.playWhenReady = playWhenReady
+        exoPlayer.playWhenReady = true
         exoPlayer.seekTo(songIndex, 0) //triggers seeked
         exoPlayer.setPlaybackParameters(PlaybackParameters(1f))
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
+
+        logInfo("Player task was removed. Stopping player")
+
         exoPlayer.stop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+
+        logWarn("Player is being destroyed")
+
         serviceScope.cancel()
 
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
     }
 
-    override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot? {
+    override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot {
         return BrowserRoot(MEDIA_ROOT_ID, null)
     }
 
