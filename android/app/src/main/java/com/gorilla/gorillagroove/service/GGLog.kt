@@ -133,6 +133,7 @@ object GGLog {
         val (fileToLog, backupFile) = getActiveAndBackupLogFile()
 
         return if (fileToLog.length() > MAX_LOG_SIZE) {
+            logInfo("Log file length ${fileToLog.length()} exceeds the log length limit of $MAX_LOG_SIZE")
             // Should always exist. But paranoia
             if (backupFile.exists()) {
                 backupFile.delete()

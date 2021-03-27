@@ -107,6 +107,9 @@ class MusicService : MediaBrowserServiceCompat() {
 
                     musicNotificationManager.hideNotification()
                 }
+                Player.STATE_BUFFERING -> {
+                    logDebug("Player state became BUFFERING")
+                }
                 else -> {
                     logWarn("Player state became UNKNOWN ($playbackState)")
 
