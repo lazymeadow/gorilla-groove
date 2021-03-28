@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:ignore="HardcodedText">
+
+    <ImageView
+        android:id="@+id/updateTrackIcon"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:src="@drawable/ic_add_24"
+        app:layout_constraintBottom_toBottomOf="@id/updateTracksButton"
+        app:layout_constraintEnd_toStartOf="@id/updateTracksButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/updateTracksButton"
+        app:tint="@color/foreground" />
+    <Button
+        android:id="@+id/updateTracksButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:text="Update Tracks"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/updateTrackIcon"
+        app:layout_constraintTop_toTopOf="parent" />
+    <View
+        android:id="@+id/updateTracksDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/grey1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/logoutDivider"
+        app:layout_constraintTop_toBottomOf="@id/updateTracksButton" />
+
+    <ImageView
+        android:id="@+id/problemReportIcon"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:src="@drawable/ic_warning_amber_24px"
+        app:layout_constraintBottom_toBottomOf="@id/openProblemReportButton"
+        app:layout_constraintEnd_toStartOf="@id/openProblemReportButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/openProblemReportButton"
+        app:tint="@color/foreground" />
+    <Button
+        android:id="@+id/openProblemReportButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:text="Problem Report"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/problemReportIcon"
+        app:layout_constraintTop_toBottomOf="@id/updateTracksDivider" />
+    <View
+        android:id="@+id/openProblemReportDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/grey1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/logoutDivider"
+        app:layout_constraintTop_toBottomOf="@id/openProblemReportButton" />
+
+    <ImageView
+        android:id="@+id/logoutIcon"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:src="@drawable/ic_logout_24px"
+        app:layout_constraintBottom_toBottomOf="@id/logoutButton"
+        app:layout_constraintEnd_toStartOf="@id/logoutButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/logoutButton"
+        app:tint="@color/foreground" />
+    <Button
+        android:id="@+id/logoutButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:text="Logout"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/logoutIcon"
+        app:layout_constraintTop_toBottomOf="@id/openProblemReportDivider" />
+    <View
+        android:id="@+id/logoutDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/grey1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/logoutButton"
+        app:layout_constraintTop_toBottomOf="@id/logoutButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

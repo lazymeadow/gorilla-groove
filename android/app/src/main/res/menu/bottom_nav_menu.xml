@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="HardcodedText">
 
-    <item android:id="@+id/mainFragment"
-        android:title="My Library"
-        android:icon="@drawable/ic_my_library_24" />
+    <item
+        android:id="@+id/mainFragment"
+        android:icon="@drawable/ic_my_library_24"
+        android:title="My Library" />
 
-    <item android:id="@+id/playingFragment"
-        android:title="Now Playing"
-        android:icon="@drawable/ic_now_playing_24" />
+    <item
+        android:id="@+id/playingFragment"
+        android:icon="@drawable/ic_now_playing_24"
+        android:title="Now Playing" />
 
+    <item
+        android:id="@+id/usersFragment"
+        android:icon="@drawable/ic_users_24"
+        android:title="Users" />
 
-    <item android:id="@+id/usersFragment"
-        android:title="Users"
-        android:icon="@drawable/ic_users_24" />
+    <item
+        android:id="@+id/playlistsFragment"
+        android:icon="@drawable/ic_playlists_24"
+        android:title="Playlists" />
 
-    <item android:id="@+id/playlistsFragment"
-        android:title="Playlists"
-        android:icon="@drawable/ic_playlists_24" />
-
-    <item android:id="@+id/settingsFragment"
-        android:title="Settings"
-        android:icon="@drawable/ic_settings_24" />
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/ic_more_horiz_24px"
+        android:title="More" />
 
 </menu>

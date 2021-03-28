@@ -12,11 +12,11 @@ import com.gorilla.gorillagroove.ui.LibraryEvent
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_settings.*
+import kotlinx.android.synthetic.main.fragment_more_menu.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @AndroidEntryPoint
-class SettingsFragment : Fragment(R.layout.fragment_settings) {
+class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
     private val viewModel: MainViewModel by viewModels()
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
 
@@ -24,23 +24,21 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        logInfo("Loading Settings view")
+        logInfo("Loading More Menu view")
 
-        logout_button.setOnClickListener {
+        logoutButton.setOnClickListener {
             controlsViewModel.logout()
 
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(R.id.loginFragment, true)
                 .build()
 
-            findNavController().navigate(
-                R.id.action_settingsFragment_to_loginFragment,
-                savedInstanceState,
-                navOptions
-            )
+            findNavController().navigate(R.id.loginFragment, null, navOptions)
+
+//            findNavController().navigate(R.id.loginFragment)
         }
 
-        update_tracks_button.setOnClickListener {
+        updateTracksButton.setOnClickListener {
             viewModel.setLibraryEvent(LibraryEvent.UpdateAllTracks)
         }
 
