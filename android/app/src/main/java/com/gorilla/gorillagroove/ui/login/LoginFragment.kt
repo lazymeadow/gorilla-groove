@@ -18,6 +18,7 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.LoginStateEvent
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.ui.MainViewModel
+import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.KEY_FIRST_TIME_TOGGLE
 import com.gorilla.gorillagroove.util.CurrentDevice
 import com.gorilla.gorillagroove.util.StateEvent
@@ -37,24 +38,25 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     @Inject
     lateinit var sharedPref: SharedPreferences
 
-    @set:Inject
-    var isFirstAppOpen = true
-
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Login view")
 
-        if (!isFirstAppOpen) {
+        // If we have an auth token then they launched the app while logged in. Redirect to the main screen.
+        if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(R.id.mainFragment, true)
                 .build()
+
             findNavController().navigate(
                 R.id.action_loginFragment_to_mainFragment,
                 savedInstanceState,
                 navOptions
             )
+
+            return
         }
 
         edit_text_email.requestFocus()

@@ -1,5 +1,6 @@
 package com.gorilla.gorillagroove.ui.settings
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -11,14 +12,19 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.LibraryEvent
 import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
+import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_more_menu.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
     private val viewModel: MainViewModel by viewModels()
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
+
+    @Inject
+    lateinit var sharedPref: SharedPreferences
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -27,6 +33,10 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
         logInfo("Loading More Menu view")
 
         logoutButton.setOnClickListener {
+            logInfo("User tapped log out")
+
+            sharedPref.edit().remove(Constants.KEY_USER_TOKEN).apply()
+
             controlsViewModel.logout()
 
             val navOptions = NavOptions.Builder()
@@ -34,8 +44,6 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
                 .build()
 
             findNavController().navigate(R.id.loginFragment, null, navOptions)
-
-//            findNavController().navigate(R.id.loginFragment)
         }
 
         updateTracksButton.setOnClickListener {
