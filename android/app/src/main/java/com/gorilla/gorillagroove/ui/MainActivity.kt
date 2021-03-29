@@ -80,10 +80,10 @@ class MainActivity : AppCompatActivity() {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
                     }
-                    R.id.settingsFragment -> {
+                    R.id.moreMenuFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "Settings"
+                        title_tv.text = "More"
                     }
                     R.id.trackPropertiesFragment -> {
                         bottomNavigationView.visibility = View.GONE

@@ -24,7 +24,7 @@
         android:title="Playlists" />
 
     <item
-        android:id="@+id/settingsFragment"
+        android:id="@+id/moreMenuFragment"
         android:icon="@drawable/ic_more_horiz_24px"
         android:title="More" />
 

@@ -29,8 +29,8 @@
             android:id="@+id/action_mainFragment_to_usersFragment"
             app:destination="@id/usersFragment" />
         <action
-            android:id="@+id/action_mainFragment_to_settingsFragment"
-            app:destination="@id/settingsFragment" />
+            android:id="@+id/action_mainFragment_to_moreMenuFragment"
+            app:destination="@id/moreMenuFragment" />
         <action
             android:id="@+id/action_mainFragment_to_trackPropertiesFragment"
             app:destination="@id/trackPropertiesFragment" />
@@ -55,7 +55,7 @@
             app:destination="@id/playlistFragment" />
     </fragment>
     <fragment
-        android:id="@+id/settingsFragment"
+        android:id="@+id/moreMenuFragment"
         android:name="com.gorilla.gorillagroove.ui.settings.MoreMenuFragment"
         android:label="SettingsFragment" >
         <action
