@@ -18,11 +18,11 @@ import kotlin.math.abs
 
 @Service
 class YoutubeDownloadService(
-		private val songIngestionService: SongIngestionService,
-		private val fileStorageProperties: FileStorageProperties,
-		private val youTubeDlProperties: YouTubeDlProperties,
-		private val imageService: ImageService,
-		private val metadataRequestService: MetadataRequestService
+	private val songIngestionService: SongIngestionService,
+	private val fileStorageProperties: FileStorageProperties,
+	private val youTubeDlProperties: YouTubeDlProperties,
+	private val imageService: ImageService,
+	private val metadataRequestService: MetadataRequestService
 ) {
 
 	val mapper = createMapper()
@@ -44,15 +44,15 @@ class YoutubeDownloadService(
 		val filePath = fileStorageProperties.tmpDir + fileName
 
 		val pb = ProcessBuilder(
-				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
-				url,
-				"--extract-audio",
-				"--audio-format",
-				"vorbis",
-				"-o",
-				"$filePath.ogg",
-				"--no-cache-dir", // Ran into issues with YT giving us 403s unless we cleared cache often, so just ignore cache
-				"--write-thumbnail" // this started to plop things out as .webp randomly one day
+			youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
+			url,
+			"--extract-audio",
+			"--audio-format",
+			"vorbis",
+			"-o",
+			"$filePath.ogg",
+			"--no-cache-dir", // Ran into issues with YT giving us 403s unless we cleared cache often, so just ignore cache
+			"--write-thumbnail" // this started to plop things out as .webp randomly one day
 		)
 		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
 		pb.redirectError(ProcessBuilder.Redirect.INHERIT)
@@ -91,11 +91,11 @@ class YoutubeDownloadService(
 		// But now that the video has been parsed and its data parsed, try to find the song on spotify too.
 		// That will give us the true best data possible, and we don't have to overwrite any user-provided data
 		val spotifyMetadataRequest = MetadataUpdateRequestDTO(
-				trackIds = listOf(track.id),
-				changeAlbum = MetadataOverrideType.IF_EMPTY,
-				changeAlbumArt = MetadataOverrideType.ALWAYS, // We should always get art from youtube, so gotta always replace
-				changeReleaseYear = MetadataOverrideType.IF_EMPTY,
-				changeTrackNumber = MetadataOverrideType.IF_EMPTY
+			trackIds = listOf(track.id),
+			changeAlbum = MetadataOverrideType.IF_EMPTY,
+			changeAlbumArt = MetadataOverrideType.ALWAYS, // We should always get art from youtube, so gotta always replace
+			changeReleaseYear = MetadataOverrideType.IF_EMPTY,
+			changeTrackNumber = MetadataOverrideType.IF_EMPTY
 		)
 		val (successTracks, _) = metadataRequestService.requestTrackMetadata(spotifyMetadataRequest, user)
 
@@ -106,16 +106,17 @@ class YoutubeDownloadService(
 	// I'd like to make this be something users can customize on the fly to suit their channels
 	fun stripYouTubeSpecificTerms(inputStr: String): String {
 		val thingsToStrip = setOf(
-				"(lyrics)",
-				"(lyric video)",
-				"[Monstercat Release]",
-				"[Monstercat Official Music Video]",
-				"[Monstercat Lyric Video]",
-				"(Official Video)",
-				"(Official Audio)",
-				"(Original Mix)",
-				"(Original Music)",
-				"[Copyright Free Electronic]",
+			"(lyrics)",
+			"(lyric video)",
+			"[Monstercat Release]",
+			"[Monstercat Official Music Video]",
+			"[Monstercat Lyric Video]",
+			"(Official Video)",
+			"(Official Music Video)",
+			"(Official Audio)",
+			"(Original Mix)",
+			"(Original Music)",
+			"[Copyright Free Electronic]",
 		)
 
 		var finalTitle = inputStr
@@ -178,9 +179,9 @@ class YoutubeDownloadService(
 
 	// target length is used to try to find videos that closely match what is found in Spotify
 	fun searchYouTube(
-			artist: String,
-			trackName: String,
-			targetLength: Int
+		artist: String,
+		trackName: String,
+		targetLength: Int
 	): List<VideoProperties> {
 		val searchTerm = "$artist - $trackName"
 
@@ -189,12 +190,12 @@ class YoutubeDownloadService(
 		// This combination of arguments will have Youtube-DL not actually download the videos, but instead write the
 		// video details to standard out. We redirect standard out to a file to process it afterwards
 		val pb = ProcessBuilder(
-				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
-				// ¯\_(ツ)_/¯ windows + java is stupid and removes the quotes unless there's two of them I GUESS?
-				if (isWindowsEnv()) "ytsearch$videosToSearch:\"\"$searchTerm\"\"" else "ytsearch$videosToSearch:\"$searchTerm\"",
-				"--skip-download",
-				"--dump-json",
-				"--no-cache-dir"
+			youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
+			// ¯\_(ツ)_/¯ windows + java is stupid and removes the quotes unless there's two of them I GUESS?
+			if (isWindowsEnv()) "ytsearch$videosToSearch:\"\"$searchTerm\"\"" else "ytsearch$videosToSearch:\"$searchTerm\"",
+			"--skip-download",
+			"--dump-json",
+			"--no-cache-dir"
 		)
 
 		val destination = fileStorageProperties.tmpDir + UUID.randomUUID().toString()
@@ -256,15 +257,15 @@ class YoutubeDownloadService(
 		// additionally get rid of words that have little value or little hope or being matched correctly
 		val unimportantWords = setOf("with", "feat", "ft", "featuring")
 		val titleWords = this.title
-				.toLowerCase()
-				.replace("(", "")
-				.replace(")", "")
-				.replace("[", "")
-				.replace("]", "")
-				.replace(".", "")
-				.replace("-", "")
-				.split(" ")
-				.filter { it.isNotBlank() && !unimportantWords.contains(it) }
+			.toLowerCase()
+			.replace("(", "")
+			.replace(")", "")
+			.replace("[", "")
+			.replace("]", "")
+			.replace(".", "")
+			.replace("-", "")
+			.split(" ")
+			.filter { it.isNotBlank() && !unimportantWords.contains(it) }
 
 		return titleWords.all { titleWord ->
 			val found = lowerTitle.contains(titleWord)
@@ -277,12 +278,12 @@ class YoutubeDownloadService(
 
 	fun getVideoPropertiesOnPlaylist(url: String): List<VideoProperties> {
 		val pb = ProcessBuilder(
-				youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
-				"-i", // this ignores errors, such as a video not being found somewhere on the playlist
-				"--skip-download",
-				"--dump-json",
-				"--no-cache-dir",
-				url
+			youTubeDlProperties.youtubeDlBinaryLocation + "youtube-dl",
+			"-i", // this ignores errors, such as a video not being found somewhere on the playlist
+			"--skip-download",
+			"--dump-json",
+			"--no-cache-dir",
+			url
 		)
 
 		val destination = fileStorageProperties.tmpDir + UUID.randomUUID().toString()
@@ -307,17 +308,17 @@ class YoutubeDownloadService(
 
 	@Suppress("unused")
 	data class VideoProperties(
-			@JsonAlias("display_id")
-			val id: String,
+		@JsonAlias("display_id")
+		val id: String,
 
-			@JsonAlias("webpage_url")
-			val videoUrl: String,
+		@JsonAlias("webpage_url")
+		val videoUrl: String,
 
-			val duration: Int,
-			val title: String,
+		val duration: Int,
+		val title: String,
 
-			@JsonAlias("uploader")
-			val channelName: String = ""
+		@JsonAlias("uploader")
+		val channelName: String = ""
 	) {
 		val embedUrl: String
 			get() = "https://www.youtube.com/embed/$id"
