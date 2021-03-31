@@ -95,6 +95,7 @@ class DeviceController(
 	}
 
 	// Hmm. Probably should have made this not use the base URL... since it's really only for the version
+    @Deprecated("This endpoint requires clients to send in their device ID and device type. This is no longer required and we should sunset this endpoint since a rename is good anyway.")
 	@PutMapping
 	fun updateDeviceVersion(
 			@RequestBody body: UpdateDeviceVersionDTO,
@@ -125,6 +126,36 @@ class DeviceController(
 		userService.updateOwnLastLogin()
 	}
 
+	@PutMapping("/version")
+	fun updateDeviceVersionV2(
+		@RequestBody body: UpdateDeviceVersionV2DTO,
+		request: HttpServletRequest
+	) {
+		val ipAddress = request.getHeader("x-forwarded-for")
+		val user = loadLoggedInUser()
+
+		val device = user.currentAuthToken!!.device ?: run {
+			logger.error("User did not have a device associated to their current session!")
+			throw IllegalStateException("No auth token associated with device!")
+		}
+
+		if (body.version != device.applicationVersion) {
+			logger.info("User updated from version ${device.applicationVersion} to ${body.version}")
+		}
+
+		deviceService.createOrUpdateDevice(
+			user = user,
+			deviceId = device.deviceId,
+			deviceType = device.deviceType,
+			version = body.version,
+			ipAddress = ipAddress,
+			additionalData = body.additionalData
+		)
+
+		// This basically is a "log in", since the clients use this to check in on page refresh / app open
+		userService.updateOwnLastLogin()
+	}
+
 	data class UpdateDeviceDTO(val deviceName: String)
 
 	data class ArchiveDeviceDTO(val archived: Boolean)
@@ -134,11 +165,17 @@ class DeviceController(
 			val targetId: Long
 	)
 
+    @Deprecated("The endpoint using this is being sunset")
 	data class UpdateDeviceVersionDTO(
 			val deviceId: String,
 			val deviceType: DeviceType,
 			val version: String,
 			val additionalData: String?
+	)
+
+	data class UpdateDeviceVersionV2DTO(
+		val version: String,
+		val additionalData: String?
 	)
 
 	data class PartyModeDTO(

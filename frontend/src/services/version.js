@@ -7,11 +7,7 @@ export function notifyVersion() {
 	// noinspection JSUnresolvedVariable
 	const version = __VERSION__; // Defined in webpack at build time
 
-	return Api.put('device', {
-		deviceId: getDeviceIdentifier(),
-		version,
-		deviceType: 'WEB'
-	})
+	return Api.put('device/version', { version })
 }
 
 export function getDeviceIdentifier() {
