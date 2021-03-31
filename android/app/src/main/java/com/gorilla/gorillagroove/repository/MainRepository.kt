@@ -37,7 +37,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
 import retrofit2.HttpException
@@ -128,12 +127,12 @@ class MainRepository(
     private fun insertNowPlayingTrack(track: Track) {
         if (nowPlayingTracks.size > 0) {
             nowPlayingTracks.add(currentIndex + 1, track)
-            nowPlayingConcatenatingMediaSource.addCustomMediaSource(currentIndex + 1, track)
+            nowPlayingConcatenatingMediaSource.addCustomMediaSource(track, currentIndex + 1)
             nowPlayingMetadataList.add(currentIndex + 1, track.toMediaMetadataItem())
         } else {
             dataSetChanged = true
             nowPlayingTracks.add(currentIndex, track)
-            nowPlayingConcatenatingMediaSource.addCustomMediaSource(currentIndex, track)
+            nowPlayingConcatenatingMediaSource.addCustomMediaSource(track, currentIndex)
             nowPlayingMetadataList.add(currentIndex, track.toMediaMetadataItem())
         }
     }
@@ -608,20 +607,19 @@ class MainRepository(
                 .build()
             webSocket = okClient.newWebSocket(request, OkHttpWebSocket())
         }
-
     }
 
     fun cleanUpAndCloseConnections() {
         okClient.dispatcher.executorService.shutdown()
     }
 
-    private fun ConcatenatingMediaSource.addCustomMediaSource(track: Track) {
+    private fun ConcatenatingMediaSource.addCustomMediaSource(track: Track, index: Int? = null) {
         val resolvingDataSourceFactory = ResolvingDataSource.Factory(dataSourceFactory, object : ResolvingDataSource.Resolver {
             var oldUri: Uri? = null
             var newUri: Uri? = null
 
             override fun resolveDataSpec(dataSpec: DataSpec): DataSpec {
-                if (dataSpec.uri == oldUri || dataSpec.uri == newUri) {
+                if ((dataSpec.uri == oldUri || dataSpec.uri == newUri) && newUri?.path?.isNotBlank() == true) {
                     newUri?.let { return dataSpec.buildUpon().setUri(it).build() }
                 }
 
@@ -636,48 +634,16 @@ class MainRepository(
                 fetchedUri = Uri.parse(fetchedUris.trackLink)
                 newUri = fetchedUri
 
-
-
                 return dataSpec.buildUpon().setUri(fetchedUri).build()
-
             }
         })
 
         val progressiveMediaSource = ProgressiveMediaSource.Factory(resolvingDataSourceFactory)
-        this.addMediaSource(progressiveMediaSource.createMediaSource(track.toMediaItem()))
-    }
-
-    private fun ConcatenatingMediaSource.addCustomMediaSource(index: Int, track: Track) {
-        val resolvingDataSourceFactory =
-            ResolvingDataSource.Factory(dataSourceFactory, object : ResolvingDataSource.Resolver {
-                var oldUri: Uri? = null
-                var newUri: Uri? = null
-
-                override fun resolveDataSpec(dataSpec: DataSpec): DataSpec {
-                    if (dataSpec.uri == oldUri || dataSpec.uri == newUri) {
-                        newUri?.let { return dataSpec.buildUpon().setUri(it).build() }
-                    }
-
-                    oldUri = dataSpec.uri
-                    lateinit var fetchedUri: Uri
-                    lateinit var fetchedUris: TrackLinkResponse
-                    runBlocking {
-                        fetchedUris =
-                            getTrackLinks(Integer.parseInt(dataSpec.uri.toString()).toLong())
-                    }
-
-                    fetchedUri = Uri.parse(fetchedUris.trackLink)
-                    newUri = fetchedUri
-
-
-
-                    return dataSpec.buildUpon().setUri(fetchedUri).build()
-
-                }
-            })
-
-        val progressiveMediaSource = ProgressiveMediaSource.Factory(resolvingDataSourceFactory)
-        this.addMediaSource(index, progressiveMediaSource.createMediaSource(track.toMediaItem()))
+        if (index != null) {
+            this.addMediaSource(index, progressiveMediaSource.createMediaSource(track.toMediaItem()))
+        } else {
+            this.addMediaSource(progressiveMediaSource.createMediaSource(track.toMediaItem()))
+        }
     }
 
     fun sortLibrary(sorting: Sort) {

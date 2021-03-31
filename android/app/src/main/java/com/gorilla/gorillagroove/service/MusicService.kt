@@ -91,7 +91,6 @@ class MusicService : MediaBrowserServiceCompat() {
 
                     musicNotificationManager.hideNotification()
                 }
-                //Player.STATE_BUFFERING -> //Log.d(TAG, "onPlayerStateChanged: Buffering...")
                 Player.STATE_READY -> {
                     logDebug("Player state became READY")
 
@@ -120,11 +119,14 @@ class MusicService : MediaBrowserServiceCompat() {
 
         override fun onPlayerError(error: ExoPlaybackException) {
             logError("Player encountered an error", error)
+
+            // If the exoplayer encounters an error, you have to re-prepare the entire thing. Pretty jank. It won't even try to play anything anymore unless you do so.
+            // https://github.com/google/ExoPlayer/issues/4343
+            preparePlayer(repo.nowPlayingConcatenatingMediaSource, repo.currentIndex, exoPlayer.currentPosition)
         }
 
         override fun onPositionDiscontinuity(reason: Int) {
             super.onPositionDiscontinuity(reason)
-            val sourceIndex: Int = exoPlayer.currentWindowIndex
 
             when (reason) {
                 Player.DISCONTINUITY_REASON_PERIOD_TRANSITION -> {
@@ -191,6 +193,7 @@ class MusicService : MediaBrowserServiceCompat() {
     private fun preparePlayer(
         concatSource: ConcatenatingMediaSource,
         songIndex: Int,
+        currentPosition: Long = 0
     ) {
         logDebug("Preparing player")
 
@@ -198,7 +201,7 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.setMediaSource(concatSource)
         exoPlayer.prepare() // triggers buffering
         exoPlayer.playWhenReady = true
-        exoPlayer.seekTo(songIndex, 0) //triggers seeked
+        exoPlayer.seekTo(songIndex, currentPosition) //triggers seeked
         exoPlayer.setPlaybackParameters(PlaybackParameters(1f))
     }
 
