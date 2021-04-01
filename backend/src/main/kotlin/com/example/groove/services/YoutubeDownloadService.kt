@@ -113,6 +113,7 @@ class YoutubeDownloadService(
 			"[Monstercat Lyric Video]",
 			"(Official Video)",
 			"(Official Music Video)",
+			"(Official Lyric Video)",
 			"(Official Audio)",
 			"(Original Mix)",
 			"(Original Music)",

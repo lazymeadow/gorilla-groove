@@ -1,5 +1,6 @@
 package com.gorilla.gorillagroove.ui
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
@@ -11,22 +12,26 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
-import com.bumptech.glide.RequestManager
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.repository.MainRepository
+import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-
-const val TAG = "AppDebug"
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var glide: RequestManager
+    lateinit var sharedPref: SharedPreferences
 
-    private val viewModel: MainViewModel by viewModels()
+    @Inject
+    lateinit var mainRepository: MainRepository
+
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,8 +46,7 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
 
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
         // setupActionBarWithNavController(navController)
@@ -147,6 +151,12 @@ class MainActivity : AppCompatActivity() {
 
             }
         )
+
+        if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
+            CoroutineScope(Dispatchers.IO).launch {
+                mainRepository.postDeviceVersion()
+            }
+        }
     }
 
     private fun initProgressBar() {

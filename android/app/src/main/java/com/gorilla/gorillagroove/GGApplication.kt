@@ -6,7 +6,6 @@ import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import dagger.hilt.android.HiltAndroidApp
-import kotlin.system.exitProcess
 
 
 @HiltAndroidApp
@@ -23,6 +22,8 @@ class GGApplication : Application() {
         Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }
 
         logInfo("\n\nAPP WAS BOOTED\n")
+
+        logInfo("Device is running version ${BuildConfig.VERSION_NAME}")
     }
 
     private fun handleUncaughtException(e: Throwable) {
@@ -34,9 +35,9 @@ class GGApplication : Application() {
 
         // If this is a debug build we probably want to bring down the app so it's very obvious that bad stuff happened
         if (BuildConfig.DEBUG) {
-            Log.wtf("GGApplication", "[APP] Attempting to crash the app because this is a debug build")
+            Log.e("GGApplication", "[APP] Attempting to crash the app because this is a debug build")
 
-            exitProcess(1)
+            throw Throwable("Uh oh")
         }
     }
 

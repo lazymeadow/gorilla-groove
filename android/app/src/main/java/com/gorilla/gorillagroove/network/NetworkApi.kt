@@ -2,6 +2,7 @@ package com.gorilla.gorillagroove.network
 
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.network.login.LoginResponseNetworkEntity
+import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.playlist.PlaylistKeyNetworkEntity
 import com.gorilla.gorillagroove.network.playlist.PlaylistNetworkEntity
 import com.gorilla.gorillagroove.network.track.*
@@ -52,5 +53,11 @@ interface NetworkApi {
     suspend fun uploadCrashReport(
         @Header("Authorization") token: String,
         @Part zip: MultipartBody.Part
+    )
+
+    @PUT("api/device/version")
+    suspend fun updateDeviceVersion(
+        @Header("Authorization") token: String,
+        @Body body: UpdateDeviceVersionRequest
     )
 }

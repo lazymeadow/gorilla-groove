@@ -30,8 +30,12 @@ import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
+import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
+import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -694,6 +698,28 @@ class MainRepository(
             networkApi.uploadCrashReport(userToken, multipartFile)
         } catch (e: Throwable) {
             logNetworkException("Could not upload crash report!", e)
+        }
+    }
+
+    suspend fun postDeviceVersion() {
+        val lastPostedVersionKey = "LAST_POSTED_VERSION"
+
+        val version = BuildConfig.VERSION_NAME
+        val lastPostedVersion = sharedPreferences.getString(lastPostedVersionKey, null)
+
+        if (version == lastPostedVersion) {
+            return
+        }
+
+        logInfo("The API hasn't been told that we are running version $version. Our last posted value was $lastPostedVersion. Updating API")
+
+        try {
+            networkApi.updateDeviceVersion(userToken, UpdateDeviceVersionRequest(version))
+
+            sharedPreferences.edit().putString(lastPostedVersionKey, version).apply()
+            logInfo("Posted version $version to the API")
+        } catch (e: Throwable) {
+            logNetworkException("Could not update device version!", e)
         }
     }
 
