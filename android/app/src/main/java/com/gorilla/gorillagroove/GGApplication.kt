@@ -16,9 +16,6 @@ class GGApplication : Application() {
 
         application = this
 
-        // Setup handler for uncaught exceptions.
-
-        // Setup handler for uncaught exceptions.
         Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }
 
         logInfo("\n\nAPP WAS BOOTED\n")
@@ -37,7 +34,7 @@ class GGApplication : Application() {
         if (BuildConfig.DEBUG) {
             Log.e("GGApplication", "[APP] Attempting to crash the app because this is a debug build")
 
-            throw Throwable("Uh oh")
+            throw e
         }
     }
 
