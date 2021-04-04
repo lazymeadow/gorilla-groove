@@ -15,7 +15,6 @@ import androidx.navigation.ui.setupWithNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
-import com.gorilla.gorillagroove.service.sync.SyncType
 import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
@@ -161,7 +160,7 @@ class MainActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 mainRepository.postDeviceVersion()
 
-                serverSynchronizer.syncWithServer(syncTypes = SyncType.values().toSet(), abortIfRecentlySynced = false)
+                serverSynchronizer.syncWithServer()
             }
         }
     }

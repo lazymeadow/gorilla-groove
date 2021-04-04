@@ -10,7 +10,6 @@ import com.gorilla.gorillagroove.util.toMutableMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Instant
-import java.time.OffsetDateTime
 
 private const val MIN_TIME_BETWEEN_SYNCS_SECONDS = 600L // 10 minutes
 
@@ -23,7 +22,7 @@ class ServerSynchronizer(
     private var lastSync = Instant.MIN
 
     suspend fun syncWithServer(
-        syncTypes: Set<SyncType>,
+        syncTypes: Set<SyncType> = SyncType.values().toSet(),
         abortIfRecentlySynced: Boolean = false
     ) = withContext(Dispatchers.IO) {
         logInfo("Running sync with API for the types: $syncTypes")

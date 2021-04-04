@@ -5,80 +5,30 @@ import com.gorilla.gorillagroove.database.entity.DbSyncStatus
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.network.NetworkApi
-import com.gorilla.gorillagroove.service.GGLog.logDebug
-import com.gorilla.gorillagroove.service.GGLog.logError
 import java.time.Instant
 
 class TrackSynchronizer(
     private val networkApi: NetworkApi,
-    private val trackDao: TrackDao,
-) {
-
-    suspend fun sync(
-        syncStatus: DbSyncStatus,
-        maximum: Instant
-    ): Boolean {
-        var currentPage = 0
-        var pagesToGet: Int
-
-        do {
-            val (pageToFetch, success) = savePageOfChanges(syncStatus, maximum, currentPage)
-            if (!success) {
-                return false
-            }
-
-            pagesToGet = pageToFetch
-            currentPage++
-        } while (currentPage < pagesToGet)
-
-        return true
+    trackDao: TrackDao,
+) : StandardSynchronizer<DbTrack, TrackResponse>(trackDao) {
+    override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<TrackResponse> {
+        return networkApi.getTrackSyncEntities(
+            minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,
+            maximum = maximum.toEpochMilli(),
+            page = page
+        )
     }
 
-    private suspend fun savePageOfChanges(syncStatus: DbSyncStatus, maximum: Instant, page: Int): Pair<Int, Boolean> {
-        logDebug("Syncing $syncStatus page $page")
-        val response = try {
-            networkApi.getTrackSyncEntities(
-                minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,
-                maximum = maximum.toEpochMilli(),
-                page = page
-            )
-        } catch (e: Throwable) {
-            logError("Could not sync page $page of tracks!", e)
-            return -1 to false
-        }
+    override suspend fun convertToDatabaseEntity(networkEntity: TrackResponse) = networkEntity.asTrack()
 
-        val pagesToGet = response.pageable.totalPages
-
-        val content = response.content
-
-        content.new.forEach { trackResponse ->
-            logDebug("Saving new track with ID: ${trackResponse.id}")
-            val track = trackResponse.asTrack()
-
-            trackDao.save(track)
-        }
-
-        content.modified.forEach { trackResponse ->
-            logDebug("Saving updated track with ID: ${trackResponse.id}")
-            val track = trackResponse.asTrack()
-
-            trackDao.save(track)
-
-            // TODO need to invalidate cache once caching is a thing
-        }
-
-        content.removed.forEach { trackId ->
-            logDebug("Deleting track with ID: $trackId")
-
-            trackDao.delete(trackId)
-        }
-
-        return pagesToGet to true
+    // TODO use this to invalidate cache once we have a cache
+    override fun onEntityUpdate(entity: DbTrack) {
+        super.onEntityUpdate(entity)
     }
 }
 
 data class TrackResponse(
-    val id: Long,
+    override val id: Long,
     val name: String,
     val artist: String,
     val featuring: String,
@@ -103,7 +53,7 @@ data class TrackResponse(
     val filesizeThumbnail64x64Png: Int,
     val reviewSourceId: Long?,
     val lastReviewed: Instant?,
-) {
+) : EntityResponse {
     fun asTrack() = DbTrack(
         id = id,
         name = name,

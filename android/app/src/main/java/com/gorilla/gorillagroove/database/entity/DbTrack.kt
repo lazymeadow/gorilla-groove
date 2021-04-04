@@ -8,7 +8,7 @@ import java.time.Instant
 data class DbTrack(
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "id")
-    val id: Long,
+    override val id: Long,
 
     @ColumnInfo(name = "name")
     var name: String,
@@ -84,7 +84,7 @@ data class DbTrack(
 
     @ColumnInfo(name = "last_reviewed")
     var lastReviewed: Instant?,
-)
+) : DbEntity
 
 enum class OfflineAvailabilityType {
     NORMAL,

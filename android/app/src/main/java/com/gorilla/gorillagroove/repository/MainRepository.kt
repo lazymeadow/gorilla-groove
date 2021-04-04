@@ -33,7 +33,6 @@ import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
-import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
@@ -579,7 +578,7 @@ class MainRepository(
     suspend fun getToken(loginRequest: LoginRequest): Flow<SessionState<*>> = flow {
         emit(SessionState(null, StateEvent.Loading))
         try {
-            val loginResponse = networkApi.getAuthorization(loginRequest)
+            val loginResponse = networkApi.login(loginRequest)
             userToken = loginResponse.token
 
             sharedPreferences.edit()

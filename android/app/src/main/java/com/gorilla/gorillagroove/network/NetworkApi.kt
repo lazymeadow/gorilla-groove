@@ -26,7 +26,7 @@ interface NetworkApi {
     suspend fun getTrackLink(@Path("id") songId: Long): TrackLinkResponse
 
     @POST("/api/authentication/login")
-    suspend fun getAuthorization(@Body loginRequest: LoginRequest): LoginResponseNetworkEntity
+    suspend fun login(@Body loginRequest: LoginRequest): LoginResponseNetworkEntity
 
     @GET("api/user")
     suspend fun getAllUsers(): List<UserNetworkEntity>

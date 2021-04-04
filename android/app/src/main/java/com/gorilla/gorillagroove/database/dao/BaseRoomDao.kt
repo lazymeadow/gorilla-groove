@@ -20,6 +20,17 @@ abstract class BaseRoomDao<T>(private val tableName: String) {
         executeSqlWithReturn(query)
     }
 
+    fun delete(ids: List<Long>) {
+        if (ids.isEmpty()) {
+            return
+        }
+
+        val idString = ids.joinToString(",")
+
+        val query = SimpleSQLiteQuery("DELETE FROM $tableName WHERE id IN ($idString)")
+        executeSqlWithReturn(query)
+    }
+
     fun findById(id: Long): T? {
         val query = SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id = $id")
         return executeSqlWithReturn(query).firstOrNull()

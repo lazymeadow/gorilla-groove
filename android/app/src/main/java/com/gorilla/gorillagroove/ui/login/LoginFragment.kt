@@ -8,13 +8,13 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.LoginStateEvent
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.ui.MainViewModel
@@ -25,7 +25,10 @@ import com.gorilla.gorillagroove.util.StateEvent
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_login.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
@@ -37,6 +40,9 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     @Inject
     lateinit var sharedPref: SharedPreferences
+
+    @Inject
+    lateinit var serverSynchronizer: ServerSynchronizer
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -85,13 +91,17 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     }
 
     private fun subscribeObservers() {
-        viewModel.loginState.observe(requireActivity(), Observer {
+        viewModel.loginState.observe(requireActivity(), {
             when (it.stateEvent) {
                 is StateEvent.AuthSuccess -> {
                     displayProgressBar(false)
                     hideKeyboard(activity as MainActivity)
 
                     writePersonalDataToSharedPref()
+
+                    GlobalScope.launch(Dispatchers.IO) {
+                        serverSynchronizer.syncWithServer()
+                    }
 
                     findNavController().navigate(R.id.action_loginFragment_to_mainFragment)
                 }
