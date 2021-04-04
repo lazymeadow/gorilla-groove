@@ -5,13 +5,11 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.User
+import com.gorilla.gorillagroove.database.entity.DbUser
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.MainViewModel
-import com.gorilla.gorillagroove.ui.UsersEvent
 import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.util.StateEvent
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,7 +31,6 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
 
         setupRecyclerView()
         subscribeObservers()
-        viewModel.setUsersEvent(UsersEvent.GetAllUsers)
     }
 
     private fun setupRecyclerView() = users_rv.apply {
@@ -44,11 +41,11 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
     }
 
     private fun subscribeObservers() {
-        viewModel.users.observe(requireActivity(), Observer {
+        viewModel.users.observe(requireActivity(), {
             when (it.stateEvent) {
                 is StateEvent.Success -> {
 //                    displayProgressBar(false)
-                    userAdapter.submitList(it.data as List<User>)
+                    userAdapter.submitList(it.data as List<DbUser>)
                 }
                 is StateEvent.Error -> {
 //                    displayProgressBar(false)

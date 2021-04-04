@@ -9,8 +9,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.LibraryEvent
-import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
 import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,7 +18,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
-    private val viewModel: MainViewModel by viewModels()
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
 
     @Inject
@@ -44,10 +41,6 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
                 .build()
 
             findNavController().navigate(R.id.loginFragment, null, navOptions)
-        }
-
-        updateTracksButton.setOnClickListener {
-            viewModel.setLibraryEvent(LibraryEvent.UpdateAllTracks)
         }
 
         openProblemReportButton.setOnClickListener {

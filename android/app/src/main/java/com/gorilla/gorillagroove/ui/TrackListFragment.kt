@@ -33,7 +33,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
-        viewModel.setLibraryEvent(LibraryEvent.GetAllTracksEvents)
         setupRecyclerView()
         subscribeObservers()
     }
@@ -119,10 +118,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
                 true
             }
 
-            R.id.action_update_tracks -> {
-                viewModel.setLibraryEvent(LibraryEvent.UpdateAllTracks)
-                true
-            }
             else -> super.onOptionsItemSelected(item)
         }
     }

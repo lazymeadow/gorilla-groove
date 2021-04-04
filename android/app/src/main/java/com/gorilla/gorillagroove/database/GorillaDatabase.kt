@@ -11,11 +11,6 @@ import java.time.Instant
 
 @Database(
     entities = [
-        TrackCacheEntity::class,
-        UserCacheEntity::class,
-        PlaylistKeyCacheEntity::class,
-        PlaylistItemReferenceData::class,
-
         DbUser::class,
         DbTrack::class,
         DbPlaylist::class,
@@ -27,7 +22,6 @@ import java.time.Instant
 @TypeConverters(InstantTypeConverter::class)
 abstract class GorillaDatabase: RoomDatabase() {
 
-    abstract fun databaseDao(): DatabaseDao
     abstract fun syncStatusDao(): SyncStatusDao
     abstract fun trackDao(): TrackDao
     abstract fun userDao(): UserDao

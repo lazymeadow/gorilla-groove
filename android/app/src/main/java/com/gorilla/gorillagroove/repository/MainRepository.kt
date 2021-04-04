@@ -5,8 +5,6 @@ import android.net.Uri
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import com.gorilla.gorillagroove.network.*
-import com.gorilla.gorillagroove.database.CacheMapper
-import com.gorilla.gorillagroove.database.DatabaseDao
 import com.gorilla.gorillagroove.model.*
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
@@ -51,10 +49,7 @@ import kotlin.collections.LinkedHashMap
 
 
 class MainRepository(
-    private val databaseDao: DatabaseDao,
     private val networkApi: NetworkApi,
-    private val cacheMapper: CacheMapper,
-    private val networkMapper: NetworkMapper,
     private val sharedPreferences: SharedPreferences,
     private val dataSourceFactory: DefaultDataSourceFactory,
     private val okClient: OkHttpClient
@@ -127,7 +122,7 @@ class MainRepository(
         }
     }
 
-    private fun insertNowPlayingTrack(track: Track) {
+    private fun insertNowPlayingTrack(track: DbTrack) {
         if (nowPlayingTracks.size > 0) {
             nowPlayingTracks.add(currentIndex + 1, track)
             nowPlayingConcatenatingMediaSource.addCustomMediaSource(track, currentIndex + 1)
@@ -140,7 +135,7 @@ class MainRepository(
         }
     }
 
-    private fun addToEndNowPlayingTrack(track: Track) {
+    private fun addToEndNowPlayingTrack(track: DbTrack) {
         if (nowPlayingTracks.size > 0) {
             nowPlayingTracks.add(track)
             nowPlayingConcatenatingMediaSource.addCustomMediaSource(track)
@@ -215,7 +210,6 @@ class MainRepository(
 
 
     suspend fun getTrackLinks(id: Long): TrackLinkResponse {
-
         if (lastVerifiedTrack == id) {
             return lastFetchedLinks
         }
@@ -230,7 +224,7 @@ class MainRepository(
         }
     }
 
-    private fun readyLibrarySources(tracks: List<Track>) {
+    private fun readyLibrarySources(tracks: List<DbTrack>) {
         libraryConcatenatingMediaSource.clear()
         libraryMetadataList.clear()
         tracks.map {
@@ -239,7 +233,7 @@ class MainRepository(
         }
     }
 
-    private fun readyPlaylistSources(tracks: List<Track>) {
+    private fun readyPlaylistSources(tracks: List<DbTrack>) {
         playlistConcatenatingMediaSource.clear()
         playlistMetadataList.clear()
         tracks.map {
@@ -248,332 +242,34 @@ class MainRepository(
         }
     }
 
-    suspend fun getNowPlayingTracks(): Flow<DataState<out List<Track>>> = flow {
+    suspend fun getNowPlayingTracks(): Flow<DataState<out List<DbTrack>>> = flow {
         emit(DataState(nowPlayingTracks, StateEvent.Success))
     }
 
-    fun getTrack(trackId: Long): Flow<DataState<out Track>> = flow {
+    fun getTrack(trackId: Long): Flow<DataState<out DbTrack>> = flow {
         emit(DataState(allTracks[trackId], StateEvent.Success))
     }
 
-    suspend fun updateAllTracks(): Flow<DataState<out List<Track>>> = flow {
-        val remoteCollection = fetchAllTracksFromNetwork()
-        val diff = remoteCollection.filterNot { allLibraryTracks.contains(it) }
-        diff.map {
-            databaseDao.insertTrack(cacheMapper.mapToTrackEntity(it))
-            allTracks[it.id] = it
-            allLibraryTracks.add(it)
-        }
-        sortLibrary(trackSorting)
-        readyLibrarySources(allLibraryTracks)
-        emit(DataState(allLibraryTracks, StateEvent.Success))
-    }
-
-    suspend fun getAllTracks(): Flow<DataState<out List<Track>>> = flow {
-
-        if (!allLibraryTracks.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllTracks: Retrieving Tracks From memory")
-            //sortTracks(trackSorting)
-            readyLibrarySources(allLibraryTracks)
-            emit(DataState(allLibraryTracks, StateEvent.Success))
-
-            return@flow
-        }
-
-        //if in memory, emit the memory
-        if (!allTracks.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllTracks: Retrieving Tracks From memory")
-            //sortTracks(trackSorting)
-            readyLibrarySources(allLibraryTracks)
-            emit(DataState(allLibraryTracks, StateEvent.Success))
-
-            return@flow
-        }
-
-        emit(DataState(null, StateEvent.Loading))
-
-        //else in database, fetch db, cache to memory and emit memory
-        val localCollection = fetchAllTracksFromDatabase()
-        if (!localCollection.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllTracks: Retrieving Tracks From database")
-            allTracks.clear()
-            localCollection.map {
-                allTracks[it.id] = it
-                allLibraryTracks.add(it)
-            }
-            //sortTracks(trackSorting)
-            readyLibrarySources(allTracks.values.toList())
-            emit(DataState(allTracks.values.toList(), StateEvent.Success))
-            return@flow
-        }
-
-        //else in network, fetch network, write to database and cache in memory, then emit memory
-        //Log.d(TAG, "getAllTracks: Retrieving Tracks From network")
-        val remoteCollection = fetchAllTracksFromNetwork()
-        if (!remoteCollection.isNullOrEmpty()) {
-            remoteCollection.map {
-                databaseDao.insertTrack(cacheMapper.mapToTrackEntity(it))
-                allTracks[it.id] = it
-                allLibraryTracks.add(it)
-            }
-//            sortTracks(trackSorting)
-            readyLibrarySources(allTracks.values.toList())
-            emit(DataState(allLibraryTracks, StateEvent.Success))
-            return@flow
-        }
-
-        //else unable to retrieve data
-        emit(DataState(null, StateEvent.Error))
-    }
-
-    private suspend fun fetchAllTracksFromDatabase(): List<Track> {
-        return when (sharedPreferences.getString(KEY_SORT, SORT_BY_ID)?.toSort()) {
-            Sort.ID -> cacheMapper.mapFromTrackEntityList(databaseDao.getAllTracks())
-            Sort.A_TO_Z -> cacheMapper.mapFromTrackEntityList(databaseDao.getAllTracksSortedAz())
-            Sort.NEWEST -> cacheMapper.mapFromTrackEntityList(databaseDao.getAllTracksSortedDateAddedNewest())
-            Sort.OLDEST -> cacheMapper.mapFromTrackEntityList(databaseDao.getAllTracksSortedDateAddedOldest())
-            else -> cacheMapper.mapFromTrackEntityList(databaseDao.getAllTracks())
-        }
-    }
-
-    private suspend fun fetchAllTracksFromNetwork(): List<Track> {
-        return try {
-            val list = networkApi.get().trackList
-            networkMapper.mapFromTrackEntityList(list)
-        } catch (e: Exception) {
-            logNetworkException("Could not fetch tracks!", e)
-            emptyList()
-        }
-    }
-
-    suspend fun getAllUsers(): Flow<DataState<out List<User>>> = flow {
-
-        //if in memory, emit the memory
-        if (!allUsers.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllTracks: Retrieving Users From memory")
-            emit(DataState(allUsers, StateEvent.Success))
-
-            return@flow
-        }
-        emit(DataState(null, StateEvent.Loading))
-
-        //else in database, fetch db, cache to memory and emit memory
-        val localCollection = fetchAllUsersFromDatabase()
-        if (!localCollection.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllUsers: Retrieving Users From database")
-            allUsers.clear()
-            localCollection.map {
-                allUsers.add(it)
-            }
-            emit(DataState(allUsers, StateEvent.Success))
-            return@flow
-        }
-
-        //else in network, fetch network, write to database and cache in memory, then emit memory
-        //Log.d(TAG, "getAllUsers: Retrieving Users from network")
-        val remoteCollection = fetchAllUsersFromNetwork()
-        if (!remoteCollection.isNullOrEmpty()) {
-            allUsers.clear()
-            remoteCollection.map {
-                databaseDao.insertUser(cacheMapper.mapToUserEntity(it))
-                allUsers.add(it)
-            }
-            emit(DataState(allUsers, StateEvent.Success))
-            return@flow
-        }
-
-        //else unable to retrieve data
-        emit(DataState(null, StateEvent.Error))
-    }
-
-    private suspend fun fetchAllUsersFromDatabase(): List<User> {
-        return cacheMapper.mapFromUserEntityList(databaseDao.getAllUsers())
-    }
-
-    private suspend fun fetchAllUsersFromNetwork(): List<User> {
-        return try {
-            networkMapper.mapFromUserEntityList(networkApi.getAllUsers())
-        } catch (e: Exception) {
-            logNetworkException("Could not fetch users!", e)
-            emptyList()
-        }
-    }
-
-
-    suspend fun updateAllPlaylists(): Flow<DataState<out List<PlaylistKey>>> = flow {
-        val remoteCollection = fetchAllPlaylistKeysFromNetwork()
-        if (!remoteCollection.isNullOrEmpty()) {
-            playlistKeys.clear()
-            playlists.clear()
-            databaseDao.deleteAllPlaylistData()
-            databaseDao.deleteAllPlaylists()
-            remoteCollection.map {
-                databaseDao.insertPlaylistKey(cacheMapper.mapToPlaylistKeyEntity(it))
-                playlistKeys.add(it)
-            }
-
-            emit(DataState(playlistKeys, StateEvent.Success))
-            return@flow
-        }
-        emit(DataState(null, StateEvent.Error))
-    }
-
-    suspend fun getAllPlaylistKeys(): Flow<DataState<out List<PlaylistKey>>> = flow {
-
-        if (!playlistKeys.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllPlaylistKeys: Retrieving playlists From sorted list in memory")
-            emit(DataState(playlistKeys, StateEvent.Success))
-
-            return@flow
-        }
-        emit(DataState(null, StateEvent.Loading))
-
-        val localCollection = fetchAllPlaylistKeysFromDatabase()
-        if (!localCollection.isNullOrEmpty()) {
-            //Log.d(TAG, "getAllPlaylistKeys: Retrieving playlists From database")
-            playlistKeys.clear()
-            localCollection.map {
-                playlistKeys.add(it)
-            }
-            emit(DataState(playlistKeys, StateEvent.Success))
-            return@flow
-        }
-
-        //Log.d(TAG, "getAllPlaylistKeys: Retrieving playlists from network")
-        val remoteCollection = fetchAllPlaylistKeysFromNetwork()
-        if (!remoteCollection.isNullOrEmpty()) {
-            playlistKeys.clear()
-            playlists.clear()
-            remoteCollection.map {
-                databaseDao.insertPlaylistKey(cacheMapper.mapToPlaylistKeyEntity(it))
-                playlistKeys.add(it)
-            }
-
-            emit(DataState(playlistKeys, StateEvent.Success))
-            return@flow
-        }
-
-        emit(DataState(null, StateEvent.Error))
-    }
-
-    private suspend fun fetchAllPlaylistKeysFromDatabase(): List<PlaylistKey> {
-        return cacheMapper.mapFromPlaylistEntityList(databaseDao.getAllPlaylists())
-            .sortedBy { it.name }
-    }
-
-    private suspend fun fetchAllPlaylistKeysFromNetwork(): List<PlaylistKey> {
-        return try {
-            networkMapper.mapFromPlaylistKeyEntityList(networkApi.getAllPlaylists())
-        } catch (e: Exception) {
-            logNetworkException("Could not fetch playlist keys!", e)
-            emptyList()
-        }
-    }
-
-    suspend fun getPlaylist(playlistKeyId: Long): Flow<DataState<out Playlist>> = flow {
-
-        val playlist = playlists.find { plist -> plist.id == playlistKeyId }
-
-        //if in memory, emit the memory
-        if (playlist != null) {
-            readyPlaylistSources(playlist.playlistItems.map { it.track })
-            emit(DataState(playlist, StateEvent.Success))
-            //Log.d(TAG, "getPlaylist: Retrieved Playlist From memory")
-            return@flow
-        }
-
-        val playlistKey = playlistKeys.find { playlistKeyId == it.id } ?: return@flow
-        emit(DataState(null, StateEvent.Loading))
-
-        //else in database, fetch db, cache to memory and emit memory
-        val localCollection = fetchPlaylistFromDatabase(playlistKey)
-        if (!localCollection.playlistItems.isNullOrEmpty()) {
-            playlists.add(localCollection)
-            readyPlaylistSources(localCollection.playlistItems.map { it.track })
-            //Log.d(TAG, "getPlaylist: Retrieved Playlist From database")
-            emit(DataState(localCollection, StateEvent.Success))
-            return@flow
-        }
-
-        //else in network, fetch network, write to database and cache in memory, then emit memory
-        val remotePlaylist = fetchPlaylistFromNetwork(playlistKey)
-        if (remotePlaylist != null) {
-            cacheMapper.mapToPlaylistItemList(remotePlaylist).map {
-                databaseDao.insertPlaylistReferenceData(it)
-            }
-            playlists.add(remotePlaylist)
-            readyPlaylistSources(remotePlaylist.playlistItems.map { it.track })
-            //Log.d(TAG, "getPlaylist: Retrieved Playlist From network")
-            emit(DataState(remotePlaylist, StateEvent.Success))
-            return@flow
-        }
-
-        //else unable to retrieve data
-        emit(DataState(null, StateEvent.Error))
-    }
-
-    private suspend fun fetchPlaylistFromDatabase(playlistKey: PlaylistKey): Playlist {
-        val referenceDataList = databaseDao.getPlaylistReferenceData(playlistKey.id)
-
-        val trackCacheEntityList = referenceDataList.map {
-            databaseDao.getTrackById(it.trackId)
-        }
-
-        val trackList = cacheMapper.mapFromTrackEntityList(trackCacheEntityList)
-
-        val trackMap = trackList.map { it.id to it }.toMap()
-
-        val playlistItemList = referenceDataList.map {
-
-            PlaylistItem(
-                id = it.id,
-                track = trackMap[it.trackId] ?: error("Lost it already somehow?"),
-                createdAt = it.createdAt,
-                updatedAt = it.updatedAt
-            )
-        }.sortedBy { it.id }
-
-        return Playlist(
-            id = playlistKey.id,
-            name = playlistKey.name,
-            playlistItems = playlistItemList,
-            createdAt = playlistKey.createdAt,
-            updatedAt = playlistKey.updatedAt
-
-        )
-    }
-
-    private suspend fun fetchPlaylistFromNetwork(playlistKey: PlaylistKey): Playlist? {
-        return try {
-            val theList = networkMapper.mapToPlaylist(
-                playlistKey,
-                networkApi.getAllPlaylistTracks(playlistKey.id, "id,ASC", 1000)
-            )
-            theList
-        } catch (e: Exception) {
-            logNetworkException("Could not fetch playlists!", e)
-            null
-        }
-    }
-
-    suspend fun updateTrack(trackUpdate: TrackUpdate): Flow<DataState<*>> = flow {
-        emit(DataState(null, StateEvent.Loading))
-        try {
-
-            networkApi.updateTrack(trackUpdate)
-            val updatedTrack = networkMapper.mapFromTrackEntity(
-                networkApi.getTrack(trackUpdate.trackIds[0])
-            )
-            val oldTrack = allTracks[updatedTrack.id]
-            allTracks[updatedTrack.id] = updatedTrack
-            allLibraryTracks[allLibraryTracks.indexOf(oldTrack)] = updatedTrack
-            databaseDao.updateTrack(cacheMapper.mapToTrackEntity(updatedTrack))
-
-            emit(DataState(null, StateEvent.Success))
-        } catch (e: Exception) {
-            emit(DataState(null, StateEvent.Error))
-        }
-    }
+    // Needs to be rewritten with new entities in mind and maybe not being event-based
+//    suspend fun updateTrack(trackUpdate: TrackUpdate): Flow<DataState<*>> = flow {
+//        emit(DataState(null, StateEvent.Loading))
+//        try {
+//
+//            networkApi.updateTrack(trackUpdate)
+//            val updatedTrack = networkMapper.mapFromTrackEntity(
+//                networkApi.getTrack(trackUpdate.trackIds[0])
+//            )
+//            val oldTrack = allTracks[updatedTrack.id]
+//            allTracks[updatedTrack.id] = updatedTrack
+//            allLibraryTracks[allLibraryTracks.indexOf(oldTrack)] = updatedTrack
+//
+//            databaseDao.updateTrack(cacheMapper.mapToTrackEntity(updatedTrack))
+//
+//            emit(DataState(null, StateEvent.Success))
+//        } catch (e: Exception) {
+//            emit(DataState(null, StateEvent.Error))
+//        }
+//    }
 
     suspend fun getToken(loginRequest: LoginRequest): Flow<SessionState<*>> = flow {
         emit(SessionState(null, StateEvent.Loading))

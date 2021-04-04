@@ -6,21 +6,20 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.PlaylistKey
+import com.gorilla.gorillagroove.database.entity.DbPlaylist
 import kotlinx.android.synthetic.main.playlists_info_item.view.*
 import java.util.*
 
 
-class PlaylistKeyAdapter(
-    private val playlistKeyListener: OnPlaylistListener
-) : RecyclerView.Adapter<PlaylistKeyAdapter.PlaylistViewHolder>(), Filterable {
+class PlaylistAdapter(
+    private val playlistListener: OnPlaylistListener
+) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>(), Filterable {
 
-    val TAG = "AppDebug"
-    var playlistKeyList = mutableListOf<PlaylistKey>()
+    var playlists = mutableListOf<DbPlaylist>()
 
-    fun submitPlaylistMap(playlistKeys: List<PlaylistKey>) {
-        playlistKeyList.clear()
-        playlistKeyList.addAll(playlistKeys)
+    fun submitPlaylistMap(playlists: List<DbPlaylist>) {
+        this.playlists.clear()
+        this.playlists.addAll(playlists)
         notifyDataSetChanged()
     }
 
@@ -31,10 +30,10 @@ class PlaylistKeyAdapter(
         return PlaylistViewHolder(itemView)
     }
 
-    override fun getItemCount() = playlistKeyList.size
+    override fun getItemCount() = playlists.size
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
-        holder.playlistName.text = playlistKeyList[position].name
+        holder.playlistName.text = playlists[position].name
     }
 
     inner class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
@@ -50,14 +49,14 @@ class PlaylistKeyAdapter(
 
             //in event of animation
             if (position != RecyclerView.NO_POSITION) {
-                playlistKeyListener.onPlaylistClick(position)
+                playlistListener.onPlaylistClick(position)
             }
         }
 
         override fun onLongClick(v: View?): Boolean {
             val position = adapterPosition
             if (position != RecyclerView.NO_POSITION) {
-                playlistKeyListener.onPlaylistLongClick(position)
+                playlistListener.onPlaylistLongClick(position)
             }
             return true
         }
@@ -67,12 +66,12 @@ class PlaylistKeyAdapter(
         return object : Filter() {
 
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val resultsList: List<PlaylistKey> =
+                val resultsList: List<DbPlaylist> =
                     if (constraint.isNullOrEmpty()) {
-                        playlistKeyList
+                        playlists
                     } else {
                         val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
-                        playlistKeyList.filter {
+                        playlists.filter {
                             it.name.toLowerCase(Locale.ROOT).contains(filterPattern)
                         }
                     }

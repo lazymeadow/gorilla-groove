@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.User
+import com.gorilla.gorillagroove.database.entity.DbUser
 import kotlinx.android.synthetic.main.user_info_item.view.*
 import java.util.*
 
@@ -14,13 +14,11 @@ class UserAdapter(
     private val listener: OnUserListener
 ) : RecyclerView.Adapter<UserAdapter.PlaylistViewHolder>(), Filterable{
 
-    var userList = listOf<User>()
+    var userList = listOf<DbUser>()
 
-
-    fun submitList(users: List<User>) {
+    fun submitList(users: List<DbUser>) {
         userList = users
         notifyDataSetChanged()
-
     }
 
 
@@ -35,13 +33,11 @@ class UserAdapter(
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
         val currentUser = userList[position]
-        holder.tvUsername.text = currentUser.username
-
+        holder.tvUsername.text = currentUser.name
     }
 
     inner class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
         val tvUsername: TextView = itemView.user_name
-
 
         init {
             itemView.setOnClickListener(this)
@@ -69,13 +65,13 @@ class UserAdapter(
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val resultsList : List<User> =
+                val resultsList: List<DbUser> =
                 if (constraint.isNullOrEmpty()) {
                     userList
                 } else {
                     val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
                     userList.filter {
-                        it.username.toLowerCase(Locale.ROOT).contains(filterPattern)
+                        it.name.toLowerCase(Locale.ROOT).contains(filterPattern)
                     }
                 }
 

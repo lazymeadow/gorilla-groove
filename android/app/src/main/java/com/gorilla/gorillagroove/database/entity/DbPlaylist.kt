@@ -1,6 +1,7 @@
 package com.gorilla.gorillagroove.database.entity
 
 import androidx.room.*
+import java.io.Serializable
 import java.time.Instant
 
 @Entity(tableName = "playlist")
@@ -17,4 +18,4 @@ data class DbPlaylist(
 
     @ColumnInfo(name = "updated_at")
     var updatedAt: Instant,
-) : DbEntity
+) : DbEntity, Serializable

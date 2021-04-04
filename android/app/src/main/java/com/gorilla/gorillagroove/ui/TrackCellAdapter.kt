@@ -11,7 +11,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.Track
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -20,8 +20,8 @@ class TrackCellAdapter(
     private val listener: OnTrackListener
 ) : RecyclerView.Adapter<TrackCellAdapter.PlaylistViewHolder>(), Filterable {
 
-    var trackList = listOf<Track>()
-    val filteredList: MutableList<Track> = trackList.toMutableList()
+    var trackList = listOf<DbTrack>()
+    val filteredList: MutableList<DbTrack> = trackList.toMutableList()
     var playingTrackId: String? = null
     var isPlaying = false
 
@@ -29,7 +29,7 @@ class TrackCellAdapter(
 
     var showingCheckBox = false
 
-    fun submitList(tracks: List<Track>) {
+    fun submitList(tracks: List<DbTrack>) {
         trackList = tracks
         filteredList.clear()
         filteredList.addAll(trackList)
@@ -103,7 +103,7 @@ class TrackCellAdapter(
         }
     }
 
-    private fun Long.getSongTimeFromSeconds(): String {
+    private fun Int.getSongTimeFromSeconds(): String {
         val minutes = this / 60
         val seconds = this % 60
         return "$minutes:${String.format("%02d", seconds)}"
@@ -213,7 +213,7 @@ class TrackCellAdapter(
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val resultsList: List<Track> =
+                val resultsList: List<DbTrack> =
                     if (constraint.isNullOrEmpty()) {
                         trackList
                     } else {
@@ -232,7 +232,7 @@ class TrackCellAdapter(
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
                 filteredList.clear()
-                filteredList.addAll(results?.values as List<Track>)
+                filteredList.addAll(results?.values as List<DbTrack>)
                 notifyDataSetChanged()
             }
         }

@@ -8,39 +8,6 @@
     tools:ignore="HardcodedText">
 
     <ImageView
-        android:id="@+id/updateTrackIcon"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_marginStart="13dp"
-        android:layout_marginEnd="13dp"
-        android:src="@drawable/ic_add_24"
-        app:layout_constraintBottom_toBottomOf="@id/updateTracksButton"
-        app:layout_constraintEnd_toStartOf="@id/updateTracksButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/updateTracksButton"
-        app:tint="@color/foreground" />
-    <Button
-        android:id="@+id/updateTracksButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/background"
-        android:text="Update Tracks"
-        android:textAlignment="textStart"
-        android:textAllCaps="false"
-        android:textSize="17sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/updateTrackIcon"
-        app:layout_constraintTop_toTopOf="parent" />
-    <View
-        android:id="@+id/updateTracksDivider"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="@color/grey1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/logoutDivider"
-        app:layout_constraintTop_toBottomOf="@id/updateTracksButton" />
-
-    <ImageView
         android:id="@+id/problemReportIcon"
         android:layout_width="25dp"
         android:layout_height="25dp"
@@ -63,7 +30,7 @@
         android:textSize="17sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/problemReportIcon"
-        app:layout_constraintTop_toBottomOf="@id/updateTracksDivider" />
+        app:layout_constraintTop_toTopOf="parent" />
     <View
         android:id="@+id/openProblemReportDivider"
         android:layout_width="0dp"

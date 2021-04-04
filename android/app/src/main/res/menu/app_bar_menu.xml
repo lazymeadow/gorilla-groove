@@ -25,9 +25,4 @@
         android:title="Sort Artist: a-z"
         app:showAsAction="never"/>
 
-
-    <item android:id="@+id/action_update_tracks"
-        android:icon="@drawable/ic_refresh_24"
-        android:title="Update Library"
-        app:showAsAction="ifRoom"/>
 </menu>

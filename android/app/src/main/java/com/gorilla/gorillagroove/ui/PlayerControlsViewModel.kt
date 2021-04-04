@@ -10,7 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
-import com.gorilla.gorillagroove.model.Track
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.EMPTY_PLAYBACK_STATE
 import com.gorilla.gorillagroove.service.MusicServiceConnection
@@ -125,14 +125,14 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     // TODO Feels like it makes more sense to have the fragments pass a list of tracks and the position that they want to start from.
     // The fragments already have the list of tracks / the playlist. Why not just supply them? Then you don't have to look them up again.
     // You also then wouldn't need to even provide the "calling fragment". Seems like we are providing information to this view model for no real reason.
-    fun playMedia(track: Track, callingFragment: String, playlistId: Long? = null) {
+    fun playMedia(track: DbTrack, callingFragment: String, playlistId: Long? = null) {
         repository.changeMediaSource(callingFragment, playlistId)
 
         val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
         transportControls.playFromMediaId(track.id.toString(), extras)
     }
 
-    fun playNow(track: Track, callingFragment: String) {
+    fun playNow(track: DbTrack, callingFragment: String) {
         val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
         transportControls.playFromMediaId(track.id.toString(), extras)
     }

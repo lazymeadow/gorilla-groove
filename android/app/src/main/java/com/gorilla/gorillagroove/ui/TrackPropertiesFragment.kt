@@ -6,9 +6,8 @@ import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.Track
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.StateEvent
@@ -23,7 +22,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     private val viewModel: MainViewModel by viewModels()
 
     var trackId: Long? = null
-    var track: Track? = null
+    var track: DbTrack? = null
 
     //differs
     var newName: String? = null
@@ -61,10 +60,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         logInfo("Loading TrackProperties view with track ID: $trackId")
 
         subscribeObservers()
-
-        trackId?.let {
-            viewModel.setLibraryEvent(LibraryEvent.GetTrack(it))
-        }
     }
 
     override fun onPause() {
@@ -73,7 +68,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     }
 
     private fun subscribeObservers() {
-        viewModel.selectedTrack.observe(requireActivity(), Observer {
+        viewModel.selectedTrack.observe(requireActivity(), {
             when (it.stateEvent) {
                 is StateEvent.Success -> {
                     it.data?.let { it1 ->
@@ -93,7 +88,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         })
     }
 
-    private fun populateFragmentText(track: Track) {
+    private fun populateFragmentText(track: DbTrack) {
         et_name.setText(track.name)
         et_artist.setText(track.artist)
         et_featuring.setText(track.featuring)
@@ -101,8 +96,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         et_genre.setText(track.genre ?: "")
         et_track_number.setText(track.trackNumber?.toString() ?: "")
         et_year.setText(track.releaseYear?.toString() ?: "")
-        et_bitrate.setText(track.bitRate.toString())
-        et_samplerate.setText(track.sampleRate.toString())
         et_note.setText(track.note ?: "")
     }
 
@@ -135,8 +128,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
                 cropArtToSquare = null
             )
             if (hasChanged) {
-                //Log.d(TAG, "update: making change!")
-                viewModel.setUpdateEvent(UpdateEvent.UpdateTrack(tu))
+//                viewModel.setUpdateEvent(UpdateEvent.UpdateTrack(tu))
             } else {
                 Toast.makeText(requireContext(), "No changes found", Toast.LENGTH_SHORT).show()
             }

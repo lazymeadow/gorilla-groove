@@ -19,19 +19,11 @@ class NowPlayingFragment : TrackListFragment() {
 
         logInfo("Loading Now Playing view")
 
-        subscribeObservers()
         viewModel.setNowPlayingEvent(NowPlayingEvent.GetNowPlayingTracksEvent)
-    }
-
-    private fun subscribeObservers() {
-        viewModel.nowPlayingTracks.observe(requireActivity(), Observer {
-            trackCellAdapter.submitList(it)
-            trackCellAdapter.notifyDataSetChanged()
-        })
     }
 
     override fun onTrackClick(position: Int) {
         val clickedTrack = trackCellAdapter.filteredList[position]
-        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_NOW_PLAYING)
+//        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_NOW_PLAYING)
     }
 }
