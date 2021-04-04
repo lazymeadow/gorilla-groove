@@ -23,7 +23,7 @@ constructor(
     val selectedTrack: LiveData<DataState<out DbTrack>>
         get() = _selectedTrack
 
-    fun setSelectedTracks(trackIds: List<Long>, selectionOperation: SelectionOperation) {
-        mainRepository.setSelectedTracks(trackIds, selectionOperation)
+    fun setSelectedTracks(tracks: List<DbTrack>, selectionOperation: SelectionOperation) {
+        mainRepository.setSelectedTracks(tracks, selectionOperation)
     }
 }

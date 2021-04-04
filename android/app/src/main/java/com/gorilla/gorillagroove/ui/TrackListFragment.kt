@@ -203,21 +203,10 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
             return when (item.itemId) {
-                R.id.action_play_now_button -> {
+                R.id.action_play_now_button, R.id.action_play_now -> {
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
                     viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
-                    trackCellAdapter.trackList.find { track -> track.id == selectedTracks[0] }?.let {
-                        playerControlsViewModel.playNow(it)
-                    }
-                    mode?.finish()
-                    true
-                }
-                R.id.action_play_now -> {
-                    val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
-                    trackCellAdapter.trackList.find { track -> track.id == selectedTracks[0] }?.let {
-                        playerControlsViewModel.playNow(it)
-                    }
+                    playerControlsViewModel.playNow(selectedTracks[0])
                     mode?.finish()
                     true
                 }

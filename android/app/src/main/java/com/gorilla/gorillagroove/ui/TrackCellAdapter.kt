@@ -36,15 +36,10 @@ class TrackCellAdapter(
         notifyDataSetChanged()
     }
 
-    fun getSelectedTracks(): List<Long> {
-        val tracks = mutableListOf<Long>()
-        for (id in checkedTracks.keys) {
-            if (checkedTracks.getValue(id)) {
-                tracks.add(id)
-            }
-        }
+    fun getSelectedTracks(): List<DbTrack> {
+        val checkedTrackIds = checkedTracks.keys
 
-        return tracks
+        return trackList.filter { checkedTrackIds.contains(it.id) }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistViewHolder {
