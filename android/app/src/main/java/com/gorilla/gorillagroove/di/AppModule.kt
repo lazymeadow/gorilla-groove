@@ -9,7 +9,6 @@ import com.bumptech.glide.request.RequestOptions
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.MusicService
 import com.gorilla.gorillagroove.service.MusicServiceConnection
-import com.gorilla.gorillagroove.util.Constants.KEY_FIRST_TIME_TOGGLE
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -112,11 +111,6 @@ object AppModule {
     @Provides
     fun provideSharedPreferences(@ApplicationContext app: Context) =
         app.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-
-    @Singleton
-    @Provides
-    fun provideFirstTimeToggle(sharedPref: SharedPreferences) =
-        sharedPref.getBoolean(KEY_FIRST_TIME_TOGGLE, true)
 
     @Singleton
     @Provides

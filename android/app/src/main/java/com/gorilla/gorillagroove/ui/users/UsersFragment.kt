@@ -19,8 +19,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListener {
 
-    val TAG = "AppDebug"
-    private val viewModel: MainViewModel by viewModels()
     lateinit var userAdapter: UserAdapter
 
     @ExperimentalCoroutinesApi
@@ -30,7 +28,6 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
         logInfo("Loading Users view")
 
         setupRecyclerView()
-        subscribeObservers()
     }
 
     private fun setupRecyclerView() = users_rv.apply {
@@ -38,24 +35,6 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
         addItemDecoration(createDivider(context))
         adapter = userAdapter
         layoutManager = LinearLayoutManager(requireContext())
-    }
-
-    private fun subscribeObservers() {
-        viewModel.users.observe(requireActivity(), {
-            when (it.stateEvent) {
-                is StateEvent.Success -> {
-//                    displayProgressBar(false)
-                    userAdapter.submitList(it.data as List<DbUser>)
-                }
-                is StateEvent.Error -> {
-//                    displayProgressBar(false)
-                    Toast.makeText(requireContext(), "Error occurred", Toast.LENGTH_SHORT).show()
-                }
-                is StateEvent.Loading -> {
-//                    displayProgressBar(true)
-                }
-            }
-        })
     }
 
     override fun onUserClick(position: Int) {
@@ -66,6 +45,4 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
         //Log.d(TAG, "onUserLongClick: long clicked ${userAdapter.userList[position].username}")
         return true
     }
-
-
 }

@@ -18,8 +18,6 @@ class NowPlayingFragment : TrackListFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Now Playing view")
-
-        viewModel.setNowPlayingEvent(NowPlayingEvent.GetNowPlayingTracksEvent)
     }
 
     override fun onTrackClick(position: Int) {

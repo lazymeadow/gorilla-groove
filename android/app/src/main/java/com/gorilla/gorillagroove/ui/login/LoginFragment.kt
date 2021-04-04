@@ -1,34 +1,31 @@
 package com.gorilla.gorillagroove.ui.login
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings.Secure
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.network.login.LoginRequest
+import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
-import com.gorilla.gorillagroove.ui.LoginStateEvent
-import com.gorilla.gorillagroove.ui.MainActivity
-import com.gorilla.gorillagroove.ui.MainViewModel
 import com.gorilla.gorillagroove.util.Constants
-import com.gorilla.gorillagroove.util.Constants.KEY_FIRST_TIME_TOGGLE
 import com.gorilla.gorillagroove.util.CurrentDevice
-import com.gorilla.gorillagroove.util.StateEvent
-import com.gorilla.gorillagroove.util.hideKeyboard
+import com.gorilla.gorillagroove.util.GGToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_login.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
 import javax.inject.Inject
 
@@ -36,13 +33,14 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
-    private val viewModel: MainViewModel by viewModels()
-
     @Inject
     lateinit var sharedPref: SharedPreferences
 
     @Inject
     lateinit var serverSynchronizer: ServerSynchronizer
+
+    @Inject
+    lateinit var networkApi: NetworkApi
 
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -52,15 +50,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         // If we have an auth token then they launched the app while logged in. Redirect to the main screen.
         if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
-            val navOptions = NavOptions.Builder()
-                .setPopUpTo(R.id.mainFragment, true)
-                .build()
-
-            findNavController().navigate(
-                R.id.action_loginFragment_to_mainFragment,
-                savedInstanceState,
-                navOptions
-            )
+            navigateToMainApp()
 
             return
         }
@@ -78,10 +68,34 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 version = BuildConfig.VERSION_NAME,
                 deviceType = "ANDROID"
             )
-            viewModel.setLoginStateEvent(LoginStateEvent.LoginEvent(loginRequest))
 
+            displayProgressBar(true)
+
+            getSystemService(requireContext(), InputMethodManager::class.java)?.hideSoftInputFromWindow(view.windowToken, InputMethodManager.RESULT_UNCHANGED_SHOWN)
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    val response = networkApi.login(loginRequest)
+
+                    sharedPref.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
+
+                    val toast = GGToast.show("Syncing first time data ...", Toast.LENGTH_LONG)
+                    // TODO This is currently blocking. Shouldn't be
+                    serverSynchronizer.syncWithServer()
+
+                    withContext(Dispatchers.Main) {
+                        toast.cancel()
+                        navigateToMainApp()
+                    }
+                } catch (e: Throwable) {
+                    logError("Failed to log in!", e)
+                    withContext(Dispatchers.Main) {
+                        displayProgressBar(false)
+                        GGToast.show("Failed to sign in")
+                    }
+                }
+            }
         }
-        subscribeObservers()
     }
 
     @SuppressLint("HardwareIds")
@@ -90,47 +104,25 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         return UUID.nameUUIDFromBytes(androidId.toByteArray(charset("utf8")))
     }
 
-    private fun subscribeObservers() {
-        viewModel.loginState.observe(requireActivity(), {
-            when (it.stateEvent) {
-                is StateEvent.AuthSuccess -> {
-                    displayProgressBar(false)
-                    hideKeyboard(activity as MainActivity)
-
-                    writePersonalDataToSharedPref()
-
-                    GlobalScope.launch(Dispatchers.IO) {
-                        serverSynchronizer.syncWithServer()
-                    }
-
-                    findNavController().navigate(R.id.action_loginFragment_to_mainFragment)
-                }
-                is StateEvent.Loading -> {
-                    displayProgressBar(true)
-                }
-                is StateEvent.Error -> {
-                    displayProgressBar(false)
-                    Toast.makeText(requireContext(), "Invalid Login", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
-    }
-
     private fun displayProgressBar(isDisplayed: Boolean) {
         if (isDisplayed) {
             progress_bar_login.visibility = View.VISIBLE
             progress_bar_login.bringToFront()
+            progress_bar_login.requestFocus()
         } else {
             progress_bar_login.visibility = View.GONE
         }
     }
 
-    private fun writePersonalDataToSharedPref() {
+    private fun navigateToMainApp() {
+        val navOptions = NavOptions.Builder()
+            .setPopUpTo(R.id.mainFragment, true)
+            .build()
 
-        sharedPref.edit()
-            .putBoolean(KEY_FIRST_TIME_TOGGLE, false)
-            .apply()
-
+        findNavController().navigate(
+            R.id.mainFragment,
+            null,
+            navOptions
+        )
     }
-
 }

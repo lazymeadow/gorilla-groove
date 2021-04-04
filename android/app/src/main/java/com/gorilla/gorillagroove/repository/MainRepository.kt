@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.*
 import com.gorilla.gorillagroove.model.*
 import com.gorilla.gorillagroove.network.login.LoginRequest
@@ -11,7 +12,6 @@ import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.util.Constants.CALLING_FRAGMENT_LIBRARY
 import com.gorilla.gorillagroove.util.Constants.CALLING_FRAGMENT_PLAYLIST
-import com.gorilla.gorillagroove.util.Constants.KEY_FIRST_TIME_TOGGLE
 import com.gorilla.gorillagroove.util.Constants.KEY_SORT
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_AZ
@@ -63,13 +63,6 @@ class MainRepository(
     private var lastVerifiedTrack: Long? = null
     private lateinit var lastFetchedLinks: TrackLinkResponse
 
-    //glorified memory for lookups
-    private val allTracks = LinkedHashMap<Long, Track>()
-    private val allUsers = mutableListOf<User>()
-    private val playlistKeys = mutableListOf<PlaylistKey>()
-    private val playlists = mutableListOf<Playlist>()
-
-
     init {
         initWebSocket()
     }
@@ -77,8 +70,6 @@ class MainRepository(
     var dataSetChanged = false
     var currentIndex = 0
 
-
-    val allLibraryTracks = mutableListOf<Track>()
     val libraryConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
     val libraryMetadataList = mutableListOf<MediaMetadataCompat>()
 
@@ -86,40 +77,41 @@ class MainRepository(
     val playlistMetadataList = mutableListOf<MediaMetadataCompat>()
 
     //This is directly tied to Now Playing Fragment display
-    val nowPlayingTracks = mutableListOf<Track>()
+    val nowPlayingTracks = mutableListOf<DbTrack>()
     val nowPlayingConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
     val nowPlayingMetadataList = mutableListOf<MediaMetadataCompat>()
 
     fun changeMediaSource(callingFragment: String, playlistId: Long?) {
-        when (callingFragment) {
-            CALLING_FRAGMENT_LIBRARY -> {
-                dataSetChanged = true
-                nowPlayingTracks.clear()
-                nowPlayingConcatenatingMediaSource.clear()
-                nowPlayingMetadataList.clear()
-
-                nowPlayingTracks.addAll(allTracks.values.toList())
-                nowPlayingTracks.sort(trackSorting)
-                nowPlayingTracks.map {
-                    nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
-                    nowPlayingMetadataList.add(it.toMediaMetadataItem())
-                }
-            }
-            CALLING_FRAGMENT_PLAYLIST -> {
-                dataSetChanged = true
-                nowPlayingTracks.clear()
-                nowPlayingConcatenatingMediaSource.clear()
-                nowPlayingMetadataList.clear()
-
-                val playlistItems = playlists.find { pId -> pId.id == playlistId }?.playlistItems
-
-                playlistItems?.map { it.track }?.let { nowPlayingTracks.addAll(it) }
-                nowPlayingTracks.map {
-                    nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
-                    nowPlayingMetadataList.add(it.toMediaMetadataItem())
-                }
-            }
-        }
+        return
+//        when (callingFragment) {
+//            CALLING_FRAGMENT_LIBRARY -> {
+//                dataSetChanged = true
+//                nowPlayingTracks.clear()
+//                nowPlayingConcatenatingMediaSource.clear()
+//                nowPlayingMetadataList.clear()
+//
+//                nowPlayingTracks.addAll(allTracks.values.toList())
+//                nowPlayingTracks.sort(trackSorting)
+//                nowPlayingTracks.map {
+//                    nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
+//                    nowPlayingMetadataList.add(it.toMediaMetadataItem())
+//                }
+//            }
+//            CALLING_FRAGMENT_PLAYLIST -> {
+//                dataSetChanged = true
+//                nowPlayingTracks.clear()
+//                nowPlayingConcatenatingMediaSource.clear()
+//                nowPlayingMetadataList.clear()
+//
+//                val playlistItems = playlists.find { pId -> pId.id == playlistId }?.playlistItems
+//
+//                playlistItems?.map { it.track }?.let { nowPlayingTracks.addAll(it) }
+//                nowPlayingTracks.map {
+//                    nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
+//                    nowPlayingMetadataList.add(it.toMediaMetadataItem())
+//                }
+//            }
+//        }
     }
 
     private fun insertNowPlayingTrack(track: DbTrack) {
@@ -175,36 +167,37 @@ class MainRepository(
 
 
     fun setSelectedTracks(trackIds: List<Long>, selectionOperation: SelectionOperation) {
-        when (selectionOperation) {
-            SelectionOperation.PLAY_NOW -> {
-                dataSetChanged = true
-                nowPlayingTracks.clear()
-                nowPlayingConcatenatingMediaSource.clear()
-                nowPlayingMetadataList.clear()
-
-                trackIds.map { allTracks[it]?.let { track -> nowPlayingTracks.add(track) } }
-                nowPlayingTracks.map {
-                    nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
-                    nowPlayingMetadataList.add(it.toMediaMetadataItem())
-                }
-
-
-            }
-            SelectionOperation.PLAY_NEXT -> {
-                trackIds.asReversed().map {
-                    allTracks[it]?.let { track ->
-                        insertNowPlayingTrack(track)
-                    }
-                }
-            }
-            SelectionOperation.PLAY_LAST -> {
-                trackIds.asReversed().map {
-                    allTracks[it]?.let { track ->
-                        addToEndNowPlayingTrack(track)
-                    }
-                }
-            }
-        }
+        return
+//        when (selectionOperation) {
+//            SelectionOperation.PLAY_NOW -> {
+//                dataSetChanged = true
+//                nowPlayingTracks.clear()
+//                nowPlayingConcatenatingMediaSource.clear()
+//                nowPlayingMetadataList.clear()
+//
+//                trackIds.map { allTracks[it]?.let { track -> nowPlayingTracks.add(track) } }
+//                nowPlayingTracks.map {
+//                    nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
+//                    nowPlayingMetadataList.add(it.toMediaMetadataItem())
+//                }
+//
+//
+//            }
+//            SelectionOperation.PLAY_NEXT -> {
+//                trackIds.asReversed().map {
+//                    allTracks[it]?.let { track ->
+//                        insertNowPlayingTrack(track)
+//                    }
+//                }
+//            }
+//            SelectionOperation.PLAY_LAST -> {
+//                trackIds.asReversed().map {
+//                    allTracks[it]?.let { track ->
+//                        addToEndNowPlayingTrack(track)
+//                    }
+//                }
+//            }
+//        }
 
     }
 
@@ -246,10 +239,6 @@ class MainRepository(
         emit(DataState(nowPlayingTracks, StateEvent.Success))
     }
 
-    fun getTrack(trackId: Long): Flow<DataState<out DbTrack>> = flow {
-        emit(DataState(allTracks[trackId], StateEvent.Success))
-    }
-
     // Needs to be rewritten with new entities in mind and maybe not being event-based
 //    suspend fun updateTrack(trackUpdate: TrackUpdate): Flow<DataState<*>> = flow {
 //        emit(DataState(null, StateEvent.Loading))
@@ -289,12 +278,6 @@ class MainRepository(
         }
     }
 
-    fun logoutUser() {
-        sharedPreferences.edit()
-            .putBoolean(KEY_FIRST_TIME_TOGGLE, true)
-            .apply()
-    }
-
     private fun initWebSocket() {
         if (userToken != "") {
             val request = Request.Builder()
@@ -308,7 +291,7 @@ class MainRepository(
         okClient.dispatcher.executorService.shutdown()
     }
 
-    private fun ConcatenatingMediaSource.addCustomMediaSource(track: Track, index: Int? = null) {
+    private fun ConcatenatingMediaSource.addCustomMediaSource(track: DbTrack, index: Int? = null) {
         val resolvingDataSourceFactory = ResolvingDataSource.Factory(dataSourceFactory, object : ResolvingDataSource.Resolver {
             var oldUri: Uri? = null
             var newUri: Uri? = null
@@ -338,27 +321,6 @@ class MainRepository(
             this.addMediaSource(index, progressiveMediaSource.createMediaSource(track.toMediaItem()))
         } else {
             this.addMediaSource(progressiveMediaSource.createMediaSource(track.toMediaItem()))
-        }
-    }
-
-    fun sortLibrary(sorting: Sort) {
-        trackSorting = sorting
-        when (sorting) {
-            Sort.ID -> allLibraryTracks.sortBy { it.id }
-            Sort.A_TO_Z -> allLibraryTracks.sortBy { it.name }
-            Sort.NEWEST -> allLibraryTracks.sortByDescending { it.addedToLibrary }
-            Sort.OLDEST -> allLibraryTracks.sortBy { it.addedToLibrary }
-            Sort.ARTIST_A_TO_Z -> allLibraryTracks.sortBy { it.artist }
-        }
-    }
-
-    private fun MutableList<Track>.sort(sorting: Sort) {
-        when (sorting) {
-            Sort.ID -> this.sortBy { it.id }
-            Sort.A_TO_Z -> this.sortBy { it.name }
-            Sort.NEWEST -> this.sortByDescending { it.addedToLibrary }
-            Sort.OLDEST -> this.sortBy { it.addedToLibrary }
-            Sort.ARTIST_A_TO_Z -> this.sortBy { it.artist }
         }
     }
 
@@ -424,8 +386,7 @@ class MainRepository(
     }
 }
 
-fun Track.toMediaMetadataItem(): MediaMetadataCompat =
-    MediaMetadataCompat.Builder()
+fun DbTrack.toMediaMetadataItem(): MediaMetadataCompat = MediaMetadataCompat.Builder()
         .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id.toString())
         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, name)
         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
@@ -433,13 +394,13 @@ fun Track.toMediaMetadataItem(): MediaMetadataCompat =
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, id.toString())
         .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, id.toString())
         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, id.toString())
-        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, length)
+        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, length.toLong())
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, name)
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist)
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, album)
         .build()
 
-fun Track.toMediaItem(): MediaItem =
+fun DbTrack.toMediaItem(): MediaItem =
     MediaItem.Builder()
         .setMediaId(id.toString())
         .setUri(id.toString())

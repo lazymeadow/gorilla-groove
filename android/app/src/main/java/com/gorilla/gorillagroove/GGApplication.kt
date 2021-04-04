@@ -29,13 +29,6 @@ class GGApplication : Application() {
         GGLog.flush()
 
         // TODO send logs once an actual settings menu has been configured and it can be disabled
-
-        // If this is a debug build we probably want to bring down the app so it's very obvious that bad stuff happened
-        if (BuildConfig.DEBUG) {
-            Log.e("GGApplication", "[APP] Attempting to crash the app because this is a debug build")
-
-            throw e
-        }
     }
 
     companion object {

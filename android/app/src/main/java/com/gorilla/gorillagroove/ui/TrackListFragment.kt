@@ -86,35 +86,30 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
                 sharedPref.edit()
                     .putString(Constants.KEY_SORT, Constants.SORT_BY_AZ)
                     .apply()
-                viewModel.sortTracks(Sort.A_TO_Z)
                 true
             }
             R.id.action_sort_id -> {
                 sharedPref.edit()
                     .putString(Constants.KEY_SORT, Constants.SORT_BY_ID)
                     .apply()
-                viewModel.sortTracks(Sort.ID)
                 true
             }
             R.id.action_sort_date_added_oldest -> {
                 sharedPref.edit()
                     .putString(Constants.KEY_SORT, Constants.SORT_BY_DATE_ADDED_OLDEST)
                     .apply()
-                viewModel.sortTracks(Sort.OLDEST)
                 true
             }
             R.id.action_sort_date_added_newest -> {
                 sharedPref.edit()
                     .putString(Constants.KEY_SORT, Constants.SORT_BY_DATE_ADDED_NEWEST)
                     .apply()
-                viewModel.sortTracks(Sort.NEWEST)
                 true
             }
             R.id.action_sort_artist_az -> {
                 sharedPref.edit()
                     .putString(Constants.KEY_SORT, Constants.SORT_BY_ARTIST_AZ)
                     .apply()
-                viewModel.sortTracks(Sort.ARTIST_A_TO_Z)
                 true
             }
 

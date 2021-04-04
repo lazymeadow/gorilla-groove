@@ -11,6 +11,7 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -33,7 +34,9 @@ class LibraryFragment : TrackListFragment() {
         lifecycleScope.launch(Dispatchers.Default) {
             val tracks = trackDao.findAll()
 
-            trackCellAdapter.submitList(tracks)
+            withContext(Dispatchers.Main) {
+                trackCellAdapter.submitList(tracks)
+            }
         }
     }
 
