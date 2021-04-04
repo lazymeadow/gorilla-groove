@@ -5,25 +5,20 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.util.StateEvent
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_track_properties.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 
 @AndroidEntryPoint
 class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
 
-    var trackId: Long? = null
-    var track: DbTrack? = null
+    private lateinit var track: DbTrack
 
-    //differs
     var newName: String? = null
     var newArtist: String? = null
     var newFeaturing: String? = null
@@ -39,7 +34,9 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        trackId = arguments?.getLong("KEY_TRACK_ID")
+        track = arguments?.getSerializable("KEY_TRACK") as? DbTrack ?: run {
+            throw IllegalArgumentException("KEY_TRACK was not supplied to TrackPropertiesFragment!")
+        }
     }
 
     override fun onCreateView(
@@ -55,7 +52,10 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        logInfo("Loading TrackProperties view with track ID: $trackId")
+        logInfo("Loading TrackProperties view with track ID: ${track.id}")
+
+        populateFragmentText()
+        listenForChanges()
     }
 
     override fun onPause() {
@@ -63,7 +63,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         super.onPause()
     }
 
-    private fun populateFragmentText(track: DbTrack) {
+    private fun populateFragmentText() {
         et_name.setText(track.name)
         et_artist.setText(track.artist)
         et_featuring.setText(track.featuring)
@@ -86,26 +86,24 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     }
 
     private fun update() {
-        track?.let {
-            val tu = TrackUpdate(
-                trackIds = listOf(it.id),
-                name = if (it.name != newName) newName.also { hasChanged = true } else null,
-                artist = if (it.artist != newArtist) newArtist.also { hasChanged = true } else null,
-                featuring = if (it.featuring != newFeaturing) newFeaturing.also { hasChanged = true } else null,
-                album = if (it.album != newAlbum) newAlbum.also { hasChanged = true } else null,
-                trackNumber = if (it.trackNumber != newTrackNum) newTrackNum.also { hasChanged = true } else null,
-                genre = if (it.genre != newGenre) newGenre.also { hasChanged = true } else null,
-                releaseYear = if (it.releaseYear != newYear) newYear.also { hasChanged = true } else null,
-                note = if (it.note != newNote) newNote.also { hasChanged = true } else null,
-                hidden = null,
-                albumArtUrl = null,
-                cropArtToSquare = null
-            )
-            if (hasChanged) {
+        val tu = TrackUpdate(
+            trackIds = listOf(track.id),
+            name = if (track.name != newName) newName.also { hasChanged = true } else null,
+            artist = if (track.artist != newArtist) newArtist.also { hasChanged = true } else null,
+            featuring = if (track.featuring != newFeaturing) newFeaturing.also { hasChanged = true } else null,
+            album = if (track.album != newAlbum) newAlbum.also { hasChanged = true } else null,
+            trackNumber = if (track.trackNumber != newTrackNum) newTrackNum.also { hasChanged = true } else null,
+            genre = if (track.genre != newGenre) newGenre.also { hasChanged = true } else null,
+            releaseYear = if (track.releaseYear != newYear) newYear.also { hasChanged = true } else null,
+            note = if (track.note != newNote) newNote.also { hasChanged = true } else null,
+            hidden = null,
+            albumArtUrl = null,
+            cropArtToSquare = null
+        )
+        if (hasChanged) {
 //                viewModel.setUpdateEvent(UpdateEvent.UpdateTrack(tu))
-            } else {
-                Toast.makeText(requireContext(), "No changes found", Toast.LENGTH_SHORT).show()
-            }
+        } else {
+            Toast.makeText(requireContext(), "No changes found", Toast.LENGTH_SHORT).show()
         }
     }
 

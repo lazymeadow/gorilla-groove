@@ -1,6 +1,7 @@
 package com.gorilla.gorillagroove.database.entity
 
 import androidx.room.*
+import java.io.Serializable
 import java.time.Instant
 
 @Entity(tableName = "track")
@@ -84,7 +85,7 @@ data class DbTrack(
 
     @ColumnInfo(name = "last_reviewed")
     var lastReviewed: Instant?,
-) : DbEntity
+) : DbEntity, Serializable
 
 enum class OfflineAvailabilityType {
     NORMAL,

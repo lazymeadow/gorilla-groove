@@ -173,7 +173,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
 
     override fun onPropertiesSelection(position: Int) {
         val track = trackCellAdapter.filteredList[position]
-        val bundle = bundleOf("KEY_TRACK_ID" to track.id)
+        val bundle = bundleOf("KEY_TRACK" to track)
 
         findNavController().navigate(
             R.id.trackPropertiesFragment,

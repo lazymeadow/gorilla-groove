@@ -13,7 +13,6 @@ import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
 import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_more_menu.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
 @AndroidEntryPoint
