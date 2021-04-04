@@ -12,6 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants
@@ -19,13 +20,15 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import javax.inject.Inject
 
 open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapter.OnTrackListener {
-    protected val viewModel: MainViewModel by viewModels()
     protected val playerControlsViewModel: PlayerControlsViewModel by viewModels()
     lateinit var trackCellAdapter: TrackCellAdapter
     var actionMode: ActionMode? = null
 
     @Inject
     lateinit var sharedPref: SharedPreferences
+
+    @Inject
+    lateinit var mainRepository: MainRepository
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -205,20 +208,20 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
             return when (item.itemId) {
                 R.id.action_play_now_button, R.id.action_play_now -> {
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
+                    mainRepository.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
                     playerControlsViewModel.playNow(selectedTracks[0])
                     mode?.finish()
                     true
                 }
                 R.id.action_play_next -> {
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NEXT)
+                    mainRepository.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NEXT)
                     mode?.finish()
                     true
                 }
                 R.id.action_play_last -> {
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_LAST)
+                    mainRepository.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_LAST)
                     mode?.finish()
                     true
                 }

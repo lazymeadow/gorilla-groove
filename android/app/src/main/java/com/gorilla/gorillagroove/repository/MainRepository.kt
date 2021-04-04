@@ -7,14 +7,11 @@ import android.support.v4.media.MediaMetadataCompat
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.*
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
-import com.gorilla.gorillagroove.util.Constants.KEY_SORT
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_AZ
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_DATE_ADDED_NEWEST
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_DATE_ADDED_OLDEST
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ID
-import com.gorilla.gorillagroove.util.DataState
-import com.gorilla.gorillagroove.util.StateEvent
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -29,8 +26,6 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import okhttp3.*
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.json.JSONObject
@@ -197,10 +192,6 @@ class MainRepository(
             playlistConcatenatingMediaSource.addCustomMediaSource(it)
             playlistMetadataList.add(it.toMediaMetadataItem())
         }
-    }
-
-    suspend fun getNowPlayingTracks(): Flow<DataState<out List<DbTrack>>> = flow {
-        emit(DataState(nowPlayingTracks, StateEvent.Success))
     }
 
     // Needs to be rewritten with new entities in mind and maybe not being event-based

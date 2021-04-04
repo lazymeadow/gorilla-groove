@@ -5,7 +5,6 @@ import android.os.Build
 import android.provider.Settings
 import java.util.*
 
-
 object CurrentDevice {
     // https://stackoverflow.com/a/12707479
     fun getDeviceName(context: Context?): String {
