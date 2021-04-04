@@ -17,6 +17,10 @@ class ServerSynchronizer(
     private val syncStatusDao: SyncStatusDao,
     private val networkApi: NetworkApi,
     private val trackSynchronizer: TrackSynchronizer,
+    private val userSynchronizer: UserSynchronizer,
+    private val playlistSynchronizer: PlaylistSynchronizer,
+    private val playlistTrackSynchronizer: PlaylistTrackSynchronizer,
+    private val reviewSourceSynchronizer: ReviewSourceSynchronizer,
 ) {
     private var syncRunning = false
     private var lastSync = Instant.MIN
@@ -76,7 +80,10 @@ class ServerSynchronizer(
 
                 val success = when (syncType) {
                     SyncType.TRACK -> trackSynchronizer.sync(syncStatus, syncTime)
-                    else -> { true }
+                    SyncType.PLAYLIST_TRACK -> playlistTrackSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.PLAYLIST -> playlistSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.USER -> userSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.REVIEW_SOURCE -> reviewSourceSynchronizer.sync(syncStatus, syncTime)
                 }
 
                 if (success) {

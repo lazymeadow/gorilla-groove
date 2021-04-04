@@ -9,7 +9,7 @@ import java.time.Instant
 data class DbSyncStatus(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    val id: Long = 0,
+    override val id: Long = 0,
 
     @ColumnInfo(name = "sync_type")
     var syncType: SyncType,
@@ -19,7 +19,7 @@ data class DbSyncStatus(
 
     @ColumnInfo(name = "last_synced_attempted")
     var lastSyncAttempted: Instant?,
-)
+) : DbEntity
 
 class SyncTypeConverter {
     @TypeConverter

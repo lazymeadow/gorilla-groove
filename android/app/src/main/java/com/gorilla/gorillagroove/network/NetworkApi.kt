@@ -65,6 +65,38 @@ interface NetworkApi {
         @Query("size") size: Int = 400,
     ): EntityChangeResponse<TrackResponse>
 
+    @GET("api/sync/entity-type/USER/minimum/{minimum}/maximum/{maximum}")
+    suspend fun getUserSyncEntities(
+        @Path("minimum") minimum: Long,
+        @Path("maximum") maximum: Long,
+        @Query("page") page: Int,
+        @Query("size") size: Int = 400,
+    ): EntityChangeResponse<UserResponse>
+
+    @GET("api/sync/entity-type/PLAYLIST/minimum/{minimum}/maximum/{maximum}")
+    suspend fun getPlaylistSyncEntities(
+        @Path("minimum") minimum: Long,
+        @Path("maximum") maximum: Long,
+        @Query("page") page: Int,
+        @Query("size") size: Int = 400,
+    ): EntityChangeResponse<PlaylistResponse>
+
+    @GET("api/sync/entity-type/PLAYLIST_TRACK/minimum/{minimum}/maximum/{maximum}")
+    suspend fun getPlaylistTrackSyncEntities(
+        @Path("minimum") minimum: Long,
+        @Path("maximum") maximum: Long,
+        @Query("page") page: Int,
+        @Query("size") size: Int = 400,
+    ): EntityChangeResponse<PlaylistTrackResponse>
+
+    @GET("api/sync/entity-type/REVIEW_SOURCE/minimum/{minimum}/maximum/{maximum}")
+    suspend fun getReviewSourceSyncEntities(
+        @Path("minimum") minimum: Long,
+        @Path("maximum") maximum: Long,
+        @Query("page") page: Int,
+        @Query("size") size: Int = 400,
+    ): EntityChangeResponse<ReviewSourceResponse>
+
     @GET("api/sync/last-modified")
     suspend fun getLastModifiedTimestamps(): LastModifiedTimesResponse
 

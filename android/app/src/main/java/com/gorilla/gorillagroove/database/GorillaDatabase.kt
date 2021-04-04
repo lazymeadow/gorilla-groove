@@ -5,8 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.gorilla.gorillagroove.database.dao.SyncStatusDao
-import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.database.dao.*
 import com.gorilla.gorillagroove.database.entity.*
 import java.time.Instant
 
@@ -31,6 +30,10 @@ abstract class GorillaDatabase: RoomDatabase() {
     abstract fun databaseDao(): DatabaseDao
     abstract fun syncStatusDao(): SyncStatusDao
     abstract fun trackDao(): TrackDao
+    abstract fun userDao(): UserDao
+    abstract fun playlistDao(): PlaylistDao
+    abstract fun playlistTrackDao(): PlaylistTrackDao
+    abstract fun reviewSourceDao(): ReviewSourceDao
 
     companion object {
         const val DATABASE_NAME: String = "gorilla_db"

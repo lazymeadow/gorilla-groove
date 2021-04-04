@@ -1,12 +1,13 @@
 package com.gorilla.gorillagroove.database.entity
 
 import androidx.room.*
+import java.time.Instant
 
 @Entity(tableName = "playlist_track")
 data class DbPlaylistTrack(
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "id")
-    val id: Long,
+    override val id: Long,
 
     @ColumnInfo(name = "track_id")
     var trackId: Long,
@@ -15,8 +16,8 @@ data class DbPlaylistTrack(
     var playlistId: Long,
 
     @ColumnInfo(name = "created_at")
-    var createdAt: Long,
+    var createdAt: Instant,
 
     @ColumnInfo(name = "sort_order")
     var sortOrder: Int,
-)
+) : DbEntity

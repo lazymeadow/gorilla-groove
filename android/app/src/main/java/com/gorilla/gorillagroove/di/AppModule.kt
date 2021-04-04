@@ -14,13 +14,11 @@ import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
-import com.gorilla.gorillagroove.database.dao.SyncStatusDao
-import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.database.dao.*
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.MarkListenedService
-import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
-import com.gorilla.gorillagroove.service.sync.TrackSynchronizer
+import com.gorilla.gorillagroove.service.sync.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -70,15 +68,39 @@ object AppModule {
         syncStatusDao: SyncStatusDao,
         networkApi: NetworkApi,
         trackSynchronizer: TrackSynchronizer,
+        userSynchronizer: UserSynchronizer,
+        playlistSynchronizer: PlaylistSynchronizer,
+        playlistTrackSynchronizer: PlaylistTrackSynchronizer,
+        reviewSourceSynchronizer: ReviewSourceSynchronizer
     ) = ServerSynchronizer(
         syncStatusDao,
         networkApi,
         trackSynchronizer,
+        userSynchronizer,
+        playlistSynchronizer,
+        playlistTrackSynchronizer,
+        reviewSourceSynchronizer
     )
 
     @Singleton
     @Provides
     fun provideTrackSynchronizer(networkApi: NetworkApi, trackDao: TrackDao) = TrackSynchronizer(networkApi, trackDao)
+
+    @Singleton
+    @Provides
+    fun providePlaylistSynchronizer(networkApi: NetworkApi, playlistDao: PlaylistDao) = PlaylistSynchronizer(networkApi, playlistDao)
+
+    @Singleton
+    @Provides
+    fun providePlaylistTrackSynchronizer(networkApi: NetworkApi, playlistTrackDao: PlaylistTrackDao) = PlaylistTrackSynchronizer(networkApi, playlistTrackDao)
+
+    @Singleton
+    @Provides
+    fun provideUserSynchronizer(networkApi: NetworkApi, userDao: UserDao) = UserSynchronizer(networkApi, userDao)
+
+    @Singleton
+    @Provides
+    fun provideReviewSourceSynchronizer(networkApi: NetworkApi, reviewSourceDao: ReviewSourceDao) = ReviewSourceSynchronizer(networkApi, reviewSourceDao)
 
     @Singleton
     @Provides

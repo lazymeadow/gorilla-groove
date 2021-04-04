@@ -41,4 +41,20 @@ object DatabaseModule {
     @Singleton
     @Provides
     fun provideTrackDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.trackDao()
+
+    @Singleton
+    @Provides
+    fun providePlaylistDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.playlistDao()
+
+    @Singleton
+    @Provides
+    fun providePlaylistTrackDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.playlistTrackDao()
+
+    @Singleton
+    @Provides
+    fun provideUserDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.userDao()
+
+    @Singleton
+    @Provides
+    fun provideReviewSourceDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.reviewSourceDao()
 }

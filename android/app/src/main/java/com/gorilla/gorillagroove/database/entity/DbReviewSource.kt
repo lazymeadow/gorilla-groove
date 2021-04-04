@@ -3,26 +3,26 @@ package com.gorilla.gorillagroove.database.entity
 import androidx.room.*
 
 @Entity(tableName = "review_source")
-@TypeConverters(SourceTypeConverter::class, OfflineAvailabilityTypeConverter::class)
+@TypeConverters(ReviewSourceTypeConverter::class, OfflineAvailabilityTypeConverter::class)
 data class DbReviewSource(
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "id")
-    val id: Long,
+    override val id: Long,
 
     @ColumnInfo(name = "source_type")
-    var sourceType: SourceType,
+    var sourceType: ReviewSourceType,
 
     @ColumnInfo(name = "display_name")
     var displayName: String,
 
     @ColumnInfo(name = "offline_availability")
-    var offlineAvailabilityType: OfflineAvailabilityType,
+    var offlineAvailability: OfflineAvailabilityType,
 
     @ColumnInfo(name = "active")
     var active: Boolean,
-)
+) : DbEntity
 
-enum class SourceType {
+enum class ReviewSourceType {
     USER_RECOMMEND,
     YOUTUBE_CHANNEL,
     ARTIST,
@@ -30,14 +30,14 @@ enum class SourceType {
     ;
 }
 
-object SourceTypeConverter {
+class ReviewSourceTypeConverter {
     @TypeConverter
-    fun fromEnum(type: SourceType): String {
-        return type.name
+    fun fromEnum(typeReview: ReviewSourceType): String {
+        return typeReview.name
     }
 
     @TypeConverter
-    fun fromInt(name: String): SourceType {
-        return SourceType.values().find { it.name == name } ?: SourceType.UNKNOWN
+    fun fromInt(name: String): ReviewSourceType {
+        return ReviewSourceType.values().find { it.name == name } ?: ReviewSourceType.UNKNOWN
     }
 }

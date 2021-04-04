@@ -9,14 +9,14 @@ import java.time.Instant
 data class DbUser(
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "id")
-    val id: Long,
+    override val id: Long,
 
     @ColumnInfo(name = "name")
     var name: String,
 
     @ColumnInfo(name = "last_login")
-    var lastLogin: Instant,
+    var lastLogin: Instant?,
 
     @ColumnInfo(name = "created_at")
     var createdAt: Instant,
-)
+) : DbEntity
