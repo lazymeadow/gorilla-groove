@@ -2,8 +2,6 @@ package com.gorilla.gorillagroove.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gorilla.gorillagroove.database.DatabaseDao
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.migrations.MIGRATION_1_2
@@ -27,14 +25,20 @@ object DatabaseModule {
             GorillaDatabase.DATABASE_NAME
         ).addMigrations(
             MIGRATION_1_2
-        )
-            .build()
+        ).build()
     }
-
 
     @Singleton
     @Provides
-    fun provideTrackDAO(gorillaDatabase: GorillaDatabase): DatabaseDao {
+    fun provideDatabaseDAO(gorillaDatabase: GorillaDatabase): DatabaseDao {
         return gorillaDatabase.databaseDao()
     }
+
+    @Singleton
+    @Provides
+    fun provideSyncStatusDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.syncStatusDao()
+
+    @Singleton
+    @Provides
+    fun provideTrackDAO(gorillaDatabase: GorillaDatabase) = gorillaDatabase.trackDao()
 }

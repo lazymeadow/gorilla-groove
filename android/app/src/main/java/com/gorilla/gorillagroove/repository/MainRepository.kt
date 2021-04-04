@@ -222,7 +222,7 @@ class MainRepository(
         }
 
         return try {
-            lastFetchedLinks = networkApi.getTrackLink(userToken, id)
+            lastFetchedLinks = networkApi.getTrackLink(id)
             lastVerifiedTrack = id
             lastFetchedLinks
         } catch (e: Exception) {
@@ -339,7 +339,7 @@ class MainRepository(
 
     private suspend fun fetchAllTracksFromNetwork(): List<Track> {
         return try {
-            val list = networkApi.get(userToken).trackList
+            val list = networkApi.get().trackList
             networkMapper.mapFromTrackEntityList(list)
         } catch (e: Exception) {
             logNetworkException("Could not fetch tracks!", e)
@@ -393,7 +393,7 @@ class MainRepository(
 
     private suspend fun fetchAllUsersFromNetwork(): List<User> {
         return try {
-            networkMapper.mapFromUserEntityList(networkApi.getAllUsers(userToken))
+            networkMapper.mapFromUserEntityList(networkApi.getAllUsers())
         } catch (e: Exception) {
             logNetworkException("Could not fetch users!", e)
             emptyList()
@@ -464,7 +464,7 @@ class MainRepository(
 
     private suspend fun fetchAllPlaylistKeysFromNetwork(): List<PlaylistKey> {
         return try {
-            networkMapper.mapFromPlaylistKeyEntityList(networkApi.getAllPlaylists(userToken))
+            networkMapper.mapFromPlaylistKeyEntityList(networkApi.getAllPlaylists())
         } catch (e: Exception) {
             logNetworkException("Could not fetch playlist keys!", e)
             emptyList()
@@ -548,7 +548,7 @@ class MainRepository(
         return try {
             val theList = networkMapper.mapToPlaylist(
                 playlistKey,
-                networkApi.getAllPlaylistTracks(userToken, playlistKey.id, "id,ASC", 1000)
+                networkApi.getAllPlaylistTracks(playlistKey.id, "id,ASC", 1000)
             )
             theList
         } catch (e: Exception) {
@@ -561,12 +561,9 @@ class MainRepository(
         emit(DataState(null, StateEvent.Loading))
         try {
 
-            networkApi.updateTrack(userToken, trackUpdate)
+            networkApi.updateTrack(trackUpdate)
             val updatedTrack = networkMapper.mapFromTrackEntity(
-                networkApi.getTrack(
-                    userToken,
-                    trackUpdate.trackIds[0]
-                )
+                networkApi.getTrack(trackUpdate.trackIds[0])
             )
             val oldTrack = allTracks[updatedTrack.id]
             allTracks[updatedTrack.id] = updatedTrack
@@ -607,7 +604,6 @@ class MainRepository(
         if (userToken != "") {
             val request = Request.Builder()
                 .url("wss://gorillagroove.net/api/socket")
-                .addHeader("Authorization", "Bearer $userToken")
                 .build()
             webSocket = okClient.newWebSocket(request, OkHttpWebSocket())
         }
@@ -681,7 +677,7 @@ class MainRepository(
         )
 
         try {
-            networkApi.markTrackListened(userToken, markListenedRequest)
+            networkApi.markTrackListened(markListenedRequest)
         } catch (e: Throwable) {
             logNetworkException("Could not mark track as listened to!", e)
         }
@@ -695,7 +691,7 @@ class MainRepository(
         )
 
         try {
-            networkApi.uploadCrashReport(userToken, multipartFile)
+            networkApi.uploadCrashReport(multipartFile)
         } catch (e: Throwable) {
             logNetworkException("Could not upload crash report!", e)
         }
@@ -714,7 +710,7 @@ class MainRepository(
         logInfo("The API hasn't been told that we are running version $version. Our last posted value was $lastPostedVersion. Updating API")
 
         try {
-            networkApi.updateDeviceVersion(userToken, UpdateDeviceVersionRequest(version))
+            networkApi.updateDeviceVersion(UpdateDeviceVersionRequest(version))
 
             sharedPreferences.edit().putString(lastPostedVersionKey, version).apply()
             logInfo("Posted version $version to the API")

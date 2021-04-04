@@ -14,8 +14,13 @@ import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.gorilla.gorillagroove.database.dao.SyncStatusDao
+import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.MarkListenedService
+import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
+import com.gorilla.gorillagroove.service.sync.TrackSynchronizer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -58,6 +63,22 @@ object AppModule {
         mainRepository,
         musicServiceConnection
     )
+
+    @Singleton
+    @Provides
+    fun provideServerSynchronizer(
+        syncStatusDao: SyncStatusDao,
+        networkApi: NetworkApi,
+        trackSynchronizer: TrackSynchronizer,
+    ) = ServerSynchronizer(
+        syncStatusDao,
+        networkApi,
+        trackSynchronizer,
+    )
+
+    @Singleton
+    @Provides
+    fun provideTrackSynchronizer(networkApi: NetworkApi, trackDao: TrackDao) = TrackSynchronizer(networkApi, trackDao)
 
     @Singleton
     @Provides

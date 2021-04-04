@@ -14,6 +14,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.repository.MainRepository
+import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
+import com.gorilla.gorillagroove.service.sync.SyncType
 import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
@@ -31,6 +33,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var mainRepository: MainRepository
+
+    @Inject
+    lateinit var serverSynchronizer: ServerSynchronizer
 
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
 
@@ -155,6 +160,8 @@ class MainActivity : AppCompatActivity() {
         if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
             CoroutineScope(Dispatchers.IO).launch {
                 mainRepository.postDeviceVersion()
+
+                serverSynchronizer.syncWithServer(syncTypes = SyncType.values().toSet(), abortIfRecentlySynced = false)
             }
         }
     }

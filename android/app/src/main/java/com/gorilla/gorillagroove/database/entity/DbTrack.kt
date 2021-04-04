@@ -26,7 +26,7 @@ data class DbTrack(
     var trackNumber: Int?,
 
     @ColumnInfo(name = "length")
-    var length: Long,
+    var length: Int,
 
     @ColumnInfo(name = "release_year")
     var releaseYear: Int?,
@@ -35,10 +35,10 @@ data class DbTrack(
     var genre: String?,
 
     @ColumnInfo(name = "play_count")
-    var playCount: Long,
+    var playCount: Int,
 
     @ColumnInfo(name = "is_private")
-    var isPrivate: Boolean,
+    var thePrivate: Boolean,
 
     @ColumnInfo(name = "is_hidden")
     var hidden: Boolean,
@@ -56,13 +56,13 @@ data class DbTrack(
     var note: String?,
 
     @ColumnInfo(name = "song_cached_at")
-    var songCachedAt: Instant?,
+    var songCachedAt: Instant? = null,
 
     @ColumnInfo(name = "art_cached_at")
-    var artCachedAt: Instant?,
+    var artCachedAt: Instant? = null,
 
     @ColumnInfo(name = "thumbnail_cached_at")
-    var thumbnailCachedAt: Instant?,
+    var thumbnailCachedAt: Instant? = null,
 
     @ColumnInfo(name = "offline_availability")
     var offlineAvailability: OfflineAvailabilityType,
@@ -77,7 +77,7 @@ data class DbTrack(
     var filesizeThumbnail: Int,
 
     @ColumnInfo(name = "started_on_device")
-    var startedOnDevice: Instant?,
+    var startedOnDevice: Instant? = null,
 
     @ColumnInfo(name = "review_source_id")
     var reviewSourceId: Long?,
@@ -94,7 +94,7 @@ enum class OfflineAvailabilityType {
     ;
 }
 
-object OfflineAvailabilityTypeConverter {
+class OfflineAvailabilityTypeConverter {
     @TypeConverter
     fun fromEnum(type: OfflineAvailabilityType): String {
         return type.name

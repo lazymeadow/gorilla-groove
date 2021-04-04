@@ -1,35 +1,27 @@
 package com.gorilla.gorillagroove.database.entity
 
 import androidx.room.*
+import com.gorilla.gorillagroove.service.sync.SyncType
 import java.time.Instant
 
 @Entity(tableName = "sync_status")
 @TypeConverters(SyncTypeConverter::class)
 data class DbSyncStatus(
-    @PrimaryKey(autoGenerate = false)
+    @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    val id: Long,
+    val id: Long = 0,
 
     @ColumnInfo(name = "sync_type")
     var syncType: SyncType,
 
     @ColumnInfo(name = "last_synced")
-    var lastSynced: Instant?,
+    var lastSynced: Instant? = null,
 
     @ColumnInfo(name = "last_synced_attempted")
     var lastSyncAttempted: Instant?,
 )
 
-enum class SyncType {
-    TRACK,
-    PLAYLIST_TRACK,
-    PLAYLIST,
-    USER,
-    REVIEW_SOURCE
-    ;
-}
-
-object SyncTypeConverter {
+class SyncTypeConverter {
     @TypeConverter
     fun fromEnum(type: SyncType): String {
         return type.name

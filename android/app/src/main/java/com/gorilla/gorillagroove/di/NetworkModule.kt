@@ -1,15 +1,17 @@
 package com.gorilla.gorillagroove.di
 
+import com.google.gson.*
 import com.gorilla.gorillagroove.network.NetworkApi
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ApplicationComponent
-import okhttp3.*
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.lang.reflect.Type
+import java.time.Instant
+import java.time.OffsetDateTime
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -26,6 +28,11 @@ object NetworkModule {
     @Provides
     fun provideGsonBuilder(): Gson {
         return GsonBuilder()
+            .registerTypeAdapter(Instant::class.java, object : JsonDeserializer<Instant> {
+                override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Instant {
+                    return OffsetDateTime.parse(json.asJsonPrimitive.asString).toInstant()
+                }
+            })
             .create()
     }
 
@@ -34,6 +41,7 @@ object NetworkModule {
     fun provideRetrofit(gson: Gson): Retrofit.Builder {
         return Retrofit.Builder()
             .baseUrl("https://gorillagroove.net/")
+            .client(provideOkHttpClient())
             .addConverterFactory(GsonConverterFactory.create(gson))
     }
 
@@ -49,7 +57,17 @@ object NetworkModule {
     @Provides
     @OkHttpClientProvider
     fun provideOkHttpClient(): OkHttpClient {
-           return  OkHttpClient.Builder()
-                .build()
+           return OkHttpClient.Builder()
+               // Automatically add the authorization header if we have a valid token
+               .addInterceptor { chain ->
+                   val request = NetworkApi.apiToken?.let { authToken ->
+                       chain.request().newBuilder().addHeader("Authorization", authToken).build()
+                   } ?: run {
+                       chain.request().newBuilder().build()
+                   }
+
+                   return@addInterceptor chain.proceed(request)
+               }
+               .build()
     }
 }
