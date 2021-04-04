@@ -23,7 +23,6 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
     @Inject
     lateinit var sharedPref: SharedPreferences
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

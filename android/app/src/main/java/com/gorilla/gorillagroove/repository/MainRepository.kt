@@ -74,7 +74,6 @@ class MainRepository(
     val playlistConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
     val playlistMetadataList = mutableListOf<MediaMetadataCompat>()
 
-    //This is directly tied to Now Playing Fragment display
     val nowPlayingTracks = mutableListOf<DbTrack>()
     val nowPlayingConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
     val nowPlayingMetadataList = mutableListOf<MediaMetadataCompat>()
@@ -270,24 +269,6 @@ class MainRepository(
 //            emit(DataState(null, StateEvent.Error))
 //        }
 //    }
-
-    suspend fun getToken(loginRequest: LoginRequest): Flow<SessionState<*>> = flow {
-        emit(SessionState(null, StateEvent.Loading))
-        try {
-            val loginResponse = networkApi.login(loginRequest)
-            userToken = loginResponse.token
-
-            sharedPreferences.edit()
-                .putString(KEY_USER_TOKEN, userToken)
-                .apply()
-
-            initWebSocket()
-
-            emit(SessionState(loginResponse, StateEvent.AuthSuccess))
-        } catch (e: Exception) {
-            emit(SessionState(null, StateEvent.Error))
-        }
-    }
 
     private fun initWebSocket() {
         if (userToken != "") {

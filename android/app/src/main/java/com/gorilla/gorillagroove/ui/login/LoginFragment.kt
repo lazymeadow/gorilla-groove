@@ -42,7 +42,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     @Inject
     lateinit var networkApi: NetworkApi
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

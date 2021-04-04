@@ -29,7 +29,6 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistAdapter
     @Inject
     lateinit var playlistDao: PlaylistDao
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

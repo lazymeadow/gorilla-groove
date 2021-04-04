@@ -20,7 +20,6 @@ class LibraryFragment : TrackListFragment() {
     @Inject
     lateinit var trackDao: TrackDao
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

@@ -13,11 +13,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.repository.SelectionOperation
-import com.gorilla.gorillagroove.repository.Sort
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants
 import kotlinx.android.synthetic.main.fragment_main.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
 open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapter.OnTrackListener {
@@ -29,7 +27,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
     @Inject
     lateinit var sharedPref: SharedPreferences
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
@@ -78,7 +75,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
         })
     }
 
-    @ExperimentalCoroutinesApi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         super.onOptionsItemSelected(item)
         return when (item.itemId) {
@@ -125,7 +121,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
         playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList)
     }
 
-    @ExperimentalCoroutinesApi
     override fun onTrackLongClick(position: Int): Boolean {
         //Log.d(TAG, "onTrackLongClick: Long clicked $position")
         return when (actionMode) {
@@ -187,7 +182,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
     }
 
 
-    @ExperimentalCoroutinesApi
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu): Boolean {
             val inflater: MenuInflater? = mode?.menuInflater

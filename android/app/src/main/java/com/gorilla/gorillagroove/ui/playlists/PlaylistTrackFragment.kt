@@ -32,7 +32,6 @@ class PlaylistTrackFragment : TrackListFragment() {
         requireActivity().title_tv.text = playlist.name
     }
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -51,10 +50,5 @@ class PlaylistTrackFragment : TrackListFragment() {
                 trackCellAdapter.submitList(tracks)
             }
         }
-    }
-
-    override fun onTrackClick(position: Int) {
-        val clickedTrack = trackCellAdapter.filteredList[position]
-//        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_PLAYLIST, playlist.id)
     }
 }

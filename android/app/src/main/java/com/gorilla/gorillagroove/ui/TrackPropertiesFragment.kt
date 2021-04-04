@@ -19,7 +19,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @AndroidEntryPoint
 class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
-    private val viewModel: MainViewModel by viewModels()
 
     var trackId: Long? = null
     var track: DbTrack? = null
@@ -53,39 +52,15 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     }
 
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading TrackProperties view with track ID: $trackId")
-
-        subscribeObservers()
     }
 
     override fun onPause() {
         hideKeyboard(requireActivity())
         super.onPause()
-    }
-
-    private fun subscribeObservers() {
-        viewModel.selectedTrack.observe(requireActivity(), {
-            when (it.stateEvent) {
-                is StateEvent.Success -> {
-                    it.data?.let { it1 ->
-                        track = it1
-                        populateFragmentText(it1)
-                    }
-                    listenForChanges()
-                    top_level_layout.requestFocus()
-                }
-                is StateEvent.Error -> {
-                    Toast.makeText(requireContext(), "Error occurred", Toast.LENGTH_SHORT).show()
-                }
-                is StateEvent.Loading -> {
-                    //nothing
-                }
-            }
-        })
     }
 
     private fun populateFragmentText(track: DbTrack) {
@@ -110,7 +85,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         et_note.doOnTextChanged { text, _, _, _ -> newNote = text.toString() }
     }
 
-    @ExperimentalCoroutinesApi
     private fun update() {
         track?.let {
             val tu = TrackUpdate(
@@ -141,7 +115,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         this.menu = menu
     }
 
-    @ExperimentalCoroutinesApi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.cancel_action -> {
