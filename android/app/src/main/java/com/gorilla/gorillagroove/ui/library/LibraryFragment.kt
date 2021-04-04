@@ -7,7 +7,6 @@ import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -37,15 +36,6 @@ class LibraryFragment : TrackListFragment() {
             withContext(Dispatchers.Main) {
                 trackCellAdapter.submitList(tracks)
             }
-        }
-    }
-
-    private fun displayProgressBar(isDisplayed: Boolean) {
-        if (isDisplayed) {
-            progress_bar.visibility = View.VISIBLE
-            progress_bar.bringToFront()
-        } else {
-            progress_bar.visibility = View.GONE
         }
     }
 }

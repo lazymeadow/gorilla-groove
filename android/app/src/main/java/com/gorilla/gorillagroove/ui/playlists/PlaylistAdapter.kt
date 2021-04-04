@@ -15,9 +15,9 @@ class PlaylistAdapter(
     private val playlistListener: OnPlaylistListener
 ) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>(), Filterable {
 
-    var playlists = mutableListOf<DbPlaylist>()
+    val playlists = mutableListOf<DbPlaylist>()
 
-    fun submitPlaylistMap(playlists: List<DbPlaylist>) {
+    fun setPlaylists(playlists: List<DbPlaylist>) {
         this.playlists.clear()
         this.playlists.addAll(playlists)
         notifyDataSetChanged()

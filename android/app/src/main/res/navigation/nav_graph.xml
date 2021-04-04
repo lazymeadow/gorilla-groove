@@ -47,12 +47,6 @@
         android:id="@+id/playlistsFragment"
         android:name="com.gorilla.gorillagroove.ui.playlists.PlaylistsFragment"
         android:label="PlaylistsFragment" >
-        <action
-            android:id="@+id/action_playlistsFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
-        <action
-            android:id="@+id/action_playlistsFragment_to_playlistFragment"
-            app:destination="@id/playlistFragment" />
     </fragment>
     <fragment
         android:id="@+id/moreMenuFragment"
@@ -74,16 +68,12 @@
             app:destination="@id/mainFragment" />
     </fragment>
     <fragment
-        android:id="@+id/playlistFragment"
+        android:id="@+id/playlistTrackFragment"
         android:name="com.gorilla.gorillagroove.ui.playlists.PlaylistTrackFragment"
-        android:label="PlaylistFragment" >
-
+        android:label="PlaylistTrackFragment" >
         <argument
             android:name="playlistKeyId"
             android:defaultValue="None"/>
-        <action
-            android:id="@+id/action_playlistFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
     </fragment>
     <fragment
         android:id="@+id/trackPropertiesFragment"

@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
                         playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Playlists"
                     }
-                    R.id.playlistFragment -> {
+                    R.id.playlistTrackFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
                     }
