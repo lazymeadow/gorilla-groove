@@ -10,6 +10,7 @@ import com.gorilla.gorillagroove.database.entity.*
 import java.time.Instant
 
 @Database(
+    exportSchema = false,
     entities = [
         DbUser::class,
         DbTrack::class,

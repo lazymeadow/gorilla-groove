@@ -122,7 +122,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
 
         logInfo("User tapped track with ID: ${clickedTrack.id}")
 
-        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_LIBRARY)
+        playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList)
     }
 
     @ExperimentalCoroutinesApi
@@ -213,7 +213,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
                     viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
                     trackCellAdapter.trackList.find { track -> track.id == selectedTracks[0] }?.let {
-                        playerControlsViewModel.playNow(it, Constants.CALLING_FRAGMENT_LIBRARY)
+                        playerControlsViewModel.playNow(it)
                     }
                     mode?.finish()
                     true
@@ -222,7 +222,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
                     val selectedTracks = trackCellAdapter.getSelectedTracks()
                     viewModel.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
                     trackCellAdapter.trackList.find { track -> track.id == selectedTracks[0] }?.let {
-                        playerControlsViewModel.playNow(it, Constants.CALLING_FRAGMENT_LIBRARY)
+                        playerControlsViewModel.playNow(it)
                     }
                     mode?.finish()
                     true

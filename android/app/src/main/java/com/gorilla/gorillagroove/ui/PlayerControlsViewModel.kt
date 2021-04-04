@@ -1,6 +1,5 @@
 package com.gorilla.gorillagroove.ui
 
-import android.os.Bundle
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
@@ -14,7 +13,6 @@ import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.EMPTY_PLAYBACK_STATE
 import com.gorilla.gorillagroove.service.MusicServiceConnection
-import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.KtLiveData
 
 class PlayerControlsViewModel @ViewModelInject constructor(
@@ -122,19 +120,18 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         it.currentSongTimeMillis.observeForever(currentTimeObserver)
     }
 
-    // TODO Feels like it makes more sense to have the fragments pass a list of tracks and the position that they want to start from.
-    // The fragments already have the list of tracks / the playlist. Why not just supply them? Then you don't have to look them up again.
-    // You also then wouldn't need to even provide the "calling fragment". Seems like we are providing information to this view model for no real reason.
-    fun playMedia(track: DbTrack, callingFragment: String, playlistId: Long? = null) {
-        repository.changeMediaSource(callingFragment, playlistId)
+    fun playMedia(startingIndex: Int, tracks: List<DbTrack>) {
+        val startingTrack = tracks[startingIndex]
 
-        val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
-        transportControls.playFromMediaId(track.id.toString(), extras)
+        repository.playTracks(tracks)
+
+        transportControls.playFromMediaId(startingTrack.id.toString(), null)
     }
 
-    fun playNow(track: DbTrack, callingFragment: String) {
-        val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
-        transportControls.playFromMediaId(track.id.toString(), extras)
+    fun playNow(track: DbTrack) {
+//        repository.playTracks(listOf(track))
+
+        transportControls.playFromMediaId(track.id.toString(), null)
     }
 
     fun playPause(): Boolean {

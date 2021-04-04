@@ -10,8 +10,6 @@ import com.gorilla.gorillagroove.model.*
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
-import com.gorilla.gorillagroove.util.Constants.CALLING_FRAGMENT_LIBRARY
-import com.gorilla.gorillagroove.util.Constants.CALLING_FRAGMENT_PLAYLIST
 import com.gorilla.gorillagroove.util.Constants.KEY_SORT
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_AZ
@@ -81,8 +79,21 @@ class MainRepository(
     val nowPlayingConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
     val nowPlayingMetadataList = mutableListOf<MediaMetadataCompat>()
 
-    fun changeMediaSource(callingFragment: String, playlistId: Long?) {
-        return
+    fun playTracks(tracks: List<DbTrack>) {
+        dataSetChanged = true
+
+        nowPlayingTracks.clear()
+        nowPlayingConcatenatingMediaSource.clear()
+        nowPlayingMetadataList.clear()
+
+        nowPlayingTracks.addAll(tracks)
+        nowPlayingTracks.map {
+            nowPlayingConcatenatingMediaSource.addCustomMediaSource(it)
+            nowPlayingMetadataList.add(it.toMediaMetadataItem())
+        }
+    }
+
+//    fun changeMediaSource(callingFragment: String, playlistId: Long?) {
 //        when (callingFragment) {
 //            CALLING_FRAGMENT_LIBRARY -> {
 //                dataSetChanged = true
@@ -112,7 +123,7 @@ class MainRepository(
 //                }
 //            }
 //        }
-    }
+//    }
 
     private fun insertNowPlayingTrack(track: DbTrack) {
         if (nowPlayingTracks.size > 0) {
