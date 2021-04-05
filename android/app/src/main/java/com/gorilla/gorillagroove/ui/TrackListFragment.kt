@@ -37,7 +37,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_main), TrackCellAdapte
         subscribeObservers()
     }
 
-    private fun setupRecyclerView() = playlist_rv.apply {
+    private fun setupRecyclerView() = track_rv.apply {
         trackCellAdapter = TrackCellAdapter(this@TrackListFragment)
         addItemDecoration(createDivider(context))
         adapter = trackCellAdapter

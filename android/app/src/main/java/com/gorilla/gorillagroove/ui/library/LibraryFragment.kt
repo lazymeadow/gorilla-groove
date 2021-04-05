@@ -24,6 +24,10 @@ class LibraryFragment : TrackListFragment() {
 
         logInfo("Loading My Library view")
 
+        // TODO every time this fragment is started, the tracks are reloaded. Can't simply check if tracks already exist because they are lost.
+        // Might need to save tracks in a view model so they aren't. This isn't a big deal, but it is most annoying when you edit the properties
+        // of a track, and then you go back a screen, and you lost your scroll position. Need to handle this higher up than just the LibraryFragment
+        // tho since it does affect every track screen with a menu.
         loadTracks()
     }
 

@@ -19,7 +19,7 @@
         />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/playlist_rv"
+        android:id="@+id/track_rv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:listitem="@layout/track_expandable_item"/>
