@@ -1,5 +1,7 @@
 package com.gorilla.gorillagroove.network.track
 
+import com.gorilla.gorillagroove.service.sync.TrackResponse
+
 data class TrackUpdate(
     val trackIds: List<Long>,
     val name: String?,
@@ -13,6 +15,10 @@ data class TrackUpdate(
     val hidden: Boolean?,
     val albumArtUrl: String?,
     val cropArtToSquare: Boolean?
+)
+
+data class MultiTrackResponse(
+    val items: List<TrackResponse>
 )
 
 data class MarkListenedRequest(

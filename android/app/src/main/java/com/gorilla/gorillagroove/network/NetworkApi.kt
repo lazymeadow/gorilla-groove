@@ -21,7 +21,7 @@ interface NetworkApi {
     suspend fun login(@Body loginRequest: LoginRequest): LoginResponseNetworkEntity
 
     @PUT("api/track/simple-update")
-    suspend fun updateTrack(@Body updateTrackJson: TrackUpdate)
+    suspend fun updateTrack(@Body updateTrackJson: TrackUpdate): MultiTrackResponse
 
     @POST("api/track/mark-listened")
     suspend fun markTrackListened(@Body body: MarkListenedRequest)

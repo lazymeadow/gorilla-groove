@@ -5,19 +5,33 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.track.TrackUpdate
+import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_track_properties.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
 
     private lateinit var track: DbTrack
+
+    @Inject
+    lateinit var mainRepository: MainRepository
+
+    @Inject
+    lateinit var trackDao: TrackDao
 
     var newName: String? = null
     var newArtist: String? = null
@@ -86,7 +100,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     }
 
     private fun update() {
-        val tu = TrackUpdate(
+        val request = TrackUpdate(
             trackIds = listOf(track.id),
             name = if (track.name != newName) newName.also { hasChanged = true } else null,
             artist = if (track.artist != newArtist) newArtist.also { hasChanged = true } else null,
@@ -100,8 +114,21 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
             albumArtUrl = null,
             cropArtToSquare = null
         )
+
         if (hasChanged) {
-//                viewModel.setUpdateEvent(UpdateEvent.UpdateTrack(tu))
+            lifecycleScope.launch(Dispatchers.IO) {
+                logInfo("User is updating metadata of track: ${track.id}")
+
+                val updatedTrack = mainRepository.updateTrack(request) ?: run {
+                    GGToast.show("Failed to update track")
+                    return@launch
+                }
+
+                logInfo("Finished updating metadata of track: ${track.id}")
+                trackDao.save(updatedTrack)
+
+                withContext(Dispatchers.Main) { activity?.onBackPressed() }
+            }
         } else {
             Toast.makeText(requireContext(), "No changes found", Toast.LENGTH_SHORT).show()
         }

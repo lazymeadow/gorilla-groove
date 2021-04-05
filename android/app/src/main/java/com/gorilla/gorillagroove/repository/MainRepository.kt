@@ -22,6 +22,7 @@ import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
+import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
@@ -194,26 +195,16 @@ class MainRepository(
         }
     }
 
-    // Needs to be rewritten with new entities in mind and maybe not being event-based
-//    suspend fun updateTrack(trackUpdate: TrackUpdate): Flow<DataState<*>> = flow {
-//        emit(DataState(null, StateEvent.Loading))
-//        try {
-//
-//            networkApi.updateTrack(trackUpdate)
-//            val updatedTrack = networkMapper.mapFromTrackEntity(
-//                networkApi.getTrack(trackUpdate.trackIds[0])
-//            )
-//            val oldTrack = allTracks[updatedTrack.id]
-//            allTracks[updatedTrack.id] = updatedTrack
-//            allLibraryTracks[allLibraryTracks.indexOf(oldTrack)] = updatedTrack
-//
-//            databaseDao.updateTrack(cacheMapper.mapToTrackEntity(updatedTrack))
-//
-//            emit(DataState(null, StateEvent.Success))
-//        } catch (e: Exception) {
-//            emit(DataState(null, StateEvent.Error))
-//        }
-//    }
+    suspend fun updateTrack(trackUpdate: TrackUpdate): DbTrack? {
+        return try {
+            val updatedTrack = networkApi.updateTrack(trackUpdate).items.first()
+
+            updatedTrack.asTrack()
+        } catch (e: Exception) {
+            logError("Failed to update track!")
+            null
+        }
+    }
 
     private fun initWebSocket() {
         if (userToken != "") {
