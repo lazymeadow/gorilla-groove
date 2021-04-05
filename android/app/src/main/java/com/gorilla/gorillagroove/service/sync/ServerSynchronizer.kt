@@ -30,7 +30,7 @@ class ServerSynchronizer(
         abortIfRecentlySynced: Boolean = false
     ) = withContext(Dispatchers.IO) {
         logInfo("Running sync with API for the types: $syncTypes")
-        if (abortIfRecentlySynced && lastSync.isAfter(Instant.now().plusSeconds(MIN_TIME_BETWEEN_SYNCS_SECONDS))) {
+        if (abortIfRecentlySynced && lastSync.plusSeconds(MIN_TIME_BETWEEN_SYNCS_SECONDS).isAfter(Instant.now())) {
             logDebug("Last sync was too recent. Not syncing")
             return@withContext
         }

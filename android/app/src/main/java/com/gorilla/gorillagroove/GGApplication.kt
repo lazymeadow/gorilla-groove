@@ -1,15 +1,20 @@
 package com.gorilla.gorillagroove
 
 import android.app.Application
-import android.util.Log
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
+import com.gorilla.gorillagroove.ui.GGLifecycleOwner
 import dagger.hilt.android.HiltAndroidApp
-
+import javax.inject.Inject
 
 @HiltAndroidApp
 class GGApplication : Application() {
+
+    @Inject
+    lateinit var serverSynchronizer: ServerSynchronizer
 
     override fun onCreate() {
         super.onCreate()
@@ -21,6 +26,8 @@ class GGApplication : Application() {
         logInfo("\n\nAPP WAS BOOTED\n")
 
         logInfo("Device is running version ${BuildConfig.VERSION_NAME}")
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(GGLifecycleOwner(serverSynchronizer))
     }
 
     private fun handleUncaughtException(e: Throwable) {

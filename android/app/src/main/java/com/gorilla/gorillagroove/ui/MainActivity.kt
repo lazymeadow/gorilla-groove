@@ -159,8 +159,6 @@ class MainActivity : AppCompatActivity() {
         if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
             CoroutineScope(Dispatchers.IO).launch {
                 mainRepository.postDeviceVersion()
-
-                serverSynchronizer.syncWithServer()
             }
         }
     }
