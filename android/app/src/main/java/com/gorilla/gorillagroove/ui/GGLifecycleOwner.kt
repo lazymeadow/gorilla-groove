@@ -3,6 +3,7 @@ package com.gorilla.gorillagroove.ui
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import kotlinx.coroutines.Dispatchers
@@ -17,8 +18,10 @@ class GGLifecycleOwner(
     fun onEnterForeground() {
         logInfo("App has entered the foreground")
 
-        GlobalScope.launch(Dispatchers.IO) {
-            serverSynchronizer.syncWithServer(abortIfRecentlySynced = true)
+        if (GGApplication.isUserSignedIn) {
+            GlobalScope.launch(Dispatchers.IO) {
+                serverSynchronizer.syncWithServer(abortIfRecentlySynced = true)
+            }
         }
     }
 

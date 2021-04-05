@@ -1,12 +1,15 @@
 package com.gorilla.gorillagroove
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.GGLifecycleOwner
+import com.gorilla.gorillagroove.util.Constants
+import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -45,5 +48,10 @@ class GGApplication : Application() {
         // Therefore I don't feel bad at all about having a static reference to a guaranteed context even if it is "bad practice".
         // This "bad practice" wouldn't exist if Android wasn't bad, and it is way less bad than passing contexts around pointlessly.
         lateinit var application: GGApplication
+
+        val isUserSignedIn get() = application
+            .getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_USER_TOKEN, null)
+            .takeIf { !it.isNullOrBlank() } != null
     }
 }
