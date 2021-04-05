@@ -23,11 +23,11 @@ class LibraryFragment : TrackListFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading My Library view")
+
+        loadTracks()
     }
 
-    override fun onStart() {
-        super.onStart()
-
+    private fun loadTracks() {
         lifecycleScope.launch(Dispatchers.Default) {
             val tracks = trackDao.findAll()
 

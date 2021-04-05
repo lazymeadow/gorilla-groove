@@ -4,14 +4,6 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import com.gorilla.gorillagroove.database.entity.DbTrack
-import com.gorilla.gorillagroove.network.*
-import com.gorilla.gorillagroove.network.track.TrackLinkResponse
-import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
-import com.gorilla.gorillagroove.util.Constants.SORT_BY_AZ
-import com.gorilla.gorillagroove.util.Constants.SORT_BY_DATE_ADDED_NEWEST
-import com.gorilla.gorillagroove.util.Constants.SORT_BY_DATE_ADDED_OLDEST
-import com.gorilla.gorillagroove.util.Constants.SORT_BY_ID
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -20,15 +12,22 @@ import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.database.entity.DbTrack
+import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.network.OkHttpWebSocket
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
+import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.util.Constants.SORT_BY_ARTIST_AZ
-import kotlinx.coroutines.*
-import okhttp3.*
+import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
+import kotlinx.coroutines.runBlocking
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.WebSocket
 import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.File
@@ -56,12 +55,6 @@ class MainRepository(
 
     var dataSetChanged = false
     var currentIndex = 0
-
-    val libraryConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
-    val libraryMetadataList = mutableListOf<MediaMetadataCompat>()
-
-    val playlistConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
-    val playlistMetadataList = mutableListOf<MediaMetadataCompat>()
 
     val nowPlayingTracks = mutableListOf<DbTrack>()
     val nowPlayingConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
@@ -174,24 +167,6 @@ class MainRepository(
         } catch (e: Exception) {
             logNetworkException("Could not fetch track links!", e)
             TrackLinkResponse(" ", null)
-        }
-    }
-
-    private fun readyLibrarySources(tracks: List<DbTrack>) {
-        libraryConcatenatingMediaSource.clear()
-        libraryMetadataList.clear()
-        tracks.map {
-            libraryConcatenatingMediaSource.addCustomMediaSource(it)
-            libraryMetadataList.add(it.toMediaMetadataItem())
-        }
-    }
-
-    private fun readyPlaylistSources(tracks: List<DbTrack>) {
-        playlistConcatenatingMediaSource.clear()
-        playlistMetadataList.clear()
-        tracks.map {
-            playlistConcatenatingMediaSource.addCustomMediaSource(it)
-            playlistMetadataList.add(it.toMediaMetadataItem())
         }
     }
 
@@ -334,18 +309,4 @@ fun DbTrack.toMediaItem(): MediaItem =
         .setUri(id.toString())
         .build()
 
-private fun String.toSort(): Sort {
-    return when (this) {
-        SORT_BY_ID -> Sort.ID
-        SORT_BY_AZ -> Sort.A_TO_Z
-        SORT_BY_DATE_ADDED_NEWEST -> Sort.NEWEST
-        SORT_BY_DATE_ADDED_OLDEST -> Sort.OLDEST
-        SORT_BY_ARTIST_AZ -> Sort.ARTIST_A_TO_Z
-        else -> Sort.ID
-    }
-}
-
-
-//enum class Sort(i: Int) {ID(5), A_TO_Z, NEWEST, OLDEST}
-enum class Sort { ID, A_TO_Z, NEWEST, OLDEST, ARTIST_A_TO_Z }
 enum class SelectionOperation { PLAY_NOW, PLAY_NEXT, PLAY_LAST }
