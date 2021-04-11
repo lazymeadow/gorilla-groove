@@ -41,7 +41,7 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
             findNavController().navigate(R.id.loginFragment, null, navOptions)
         }
 
-        openProblemReportButton.setOnClickListener {
+        menuText.setOnClickListener {
             findNavController().navigate(R.id.problemReportFragment)
         }
     }

@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
+import android.view.MotionEvent
 import android.view.View
 import android.widget.SeekBar
 import androidx.activity.viewModels
@@ -14,13 +15,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.repository.MainRepository
-import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -32,9 +33,6 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var mainRepository: MainRepository
-
-    @Inject
-    lateinit var serverSynchronizer: ServerSynchronizer
 
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
 
@@ -223,7 +221,13 @@ class MainActivity : AppCompatActivity() {
         playerControlsViewModel.bufferPosition.observe(this, {
             audio_seek_bar.secondaryProgress = it.toInt() / 1000
         })
+    }
 
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_DOWN) {
+            EventBus.getDefault().post(ev)
+        }
+        return super.dispatchTouchEvent(ev)
     }
 }
 
