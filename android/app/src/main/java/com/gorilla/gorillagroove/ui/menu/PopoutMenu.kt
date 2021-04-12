@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.dao.TrackSortType
 import kotlinx.android.synthetic.main.fragment_popout_menu.view.*
 
 
@@ -19,6 +20,7 @@ class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayo
 
     lateinit var menuItems: List<MenuItem>
     private var lastVisibilityChange = System.currentTimeMillis()
+    var onOptionTapped = {}
 
     fun toggleVisibility(ignoreIfRecent: Boolean = false) {
         if (ignoreIfRecent && System.currentTimeMillis() - lastVisibilityChange < 200) {
@@ -68,6 +70,8 @@ class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayo
                         }
 
                         menuItem.clickHandler()
+
+                        onOptionTapped()
                     }
                     menuItem.view = newView
                     this.menuItemContainer.addView(newView)
@@ -109,9 +113,10 @@ class CheckedMenuOption(
 
 class SortMenuOption(
     title: String,
+    val sortType: TrackSortType, // Could be made generic if it's ever used on another screen
     sortDirection: SortDirection = SortDirection.NONE,
     val initialSortOnTap: SortDirection = SortDirection.ASC,
-    private val onClick: (SortMenuOption) -> Unit,
+    private val onClick: (SortMenuOption) -> Unit = {},
 ) : MenuOption(
     title,
     iconResId = getIconFromSortDirection(sortDirection),

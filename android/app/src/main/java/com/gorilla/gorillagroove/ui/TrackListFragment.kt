@@ -14,6 +14,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -37,12 +38,14 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     @Inject
     lateinit var mainRepository: MainRepository
 
-    private lateinit var optionsMenu: Menu
-
     protected var sortType = TrackSortType.NAME
         private set
     protected var sortDirection = SortDirection.ASC
         private set
+
+    protected var activeSort = SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC)
+
+    protected var showHidden = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,28 +65,22 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
                     logInfo("Hey I was clicked 1")
                 },
                 MenuDivider(),
-                SortMenuOption(title = "Sort by Name", sortDirection = SortDirection.ASC) {
-                    logInfo("Hey I was clicked 2")
-                },
-                SortMenuOption(title = "Sort by Play Count", initialSortOnTap = SortDirection.DESC) {
-                    logInfo("Hey I was clicked 2")
-                },
-                SortMenuOption(title = "Sort by Date Added", initialSortOnTap = SortDirection.DESC) {
-                    logInfo("Hey I was clicked 2")
-                },
-                SortMenuOption(title = "Sort by Album") {
-                    logInfo("Hey I was clicked 2")
-                },
-                SortMenuOption(title = "Sort by Year") {
-                    logInfo("Hey I was clicked 2")
-                },
+                SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC),
+                SortMenuOption("Sort by Play Count", TrackSortType.PLAY_COUNT, initialSortOnTap = SortDirection.DESC),
+                SortMenuOption("Sort by Date Added", TrackSortType.DATE_ADDED, initialSortOnTap = SortDirection.DESC),
+                SortMenuOption("Sort by Album", TrackSortType.ALBUM),
+                SortMenuOption("Sort by Year", TrackSortType.YEAR),
                 MenuDivider(),
-                CheckedMenuOption(title = "Show Hidden Tracks", false) {
-                    logInfo("Hey I was clicked 1")
-                },
+                CheckedMenuOption(title = "Show Hidden Tracks", false) { showHidden = it.isChecked },
             )
         )
+
+        popoutMenu.onOptionTapped = {
+            onFiltersChanged()
+        }
     }
+
+    open fun onFiltersChanged() {}
 
     override fun onStart() {
         super.onStart()
@@ -150,8 +147,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.app_bar_menu, menu)
-
-        optionsMenu = menu
 
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
@@ -301,8 +296,4 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
             actionMode = null
         }
     }
-}
-
-enum class TrackSortType {
-    NAME, PLAY_COUNT, DATE_ADDED, ALBUM, YEAR
 }

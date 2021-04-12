@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
+import com.gorilla.gorillagroove.ui.menu.SortMenuOption
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,9 +32,16 @@ class LibraryFragment : TrackListFragment() {
         loadTracks()
     }
 
+    override fun onFiltersChanged() {
+        super.onFiltersChanged()
+
+        loadTracks()
+    }
+
     private fun loadTracks() {
         lifecycleScope.launch(Dispatchers.Default) {
-            val tracks = trackDao.findAll()
+            val isHidden = if (showHidden) null else false
+            val tracks = trackDao.findTracksWithSort(sortType = activeSort.sortType, isHidden = isHidden, sortDirection = activeSort.sortDirection)
 
             withContext(Dispatchers.Main) {
                 trackCellAdapter.submitList(tracks)
