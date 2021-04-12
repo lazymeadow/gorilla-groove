@@ -18,6 +18,7 @@ import com.gorilla.gorillagroove.ui.menu.LibraryViewType
 import com.gorilla.gorillagroove.ui.menu.MenuDivider
 import com.gorilla.gorillagroove.ui.menu.getNavigationOptions
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_album.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +37,17 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
     lateinit var trackDao: TrackDao
 
     protected var showHidden = false
+
+    private var artistFilter: String? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.getString("ARTIST")?.let { artistFilter ->
+            this.artistFilter = artistFilter
+            requireActivity().title_tv.text = artistFilter
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -71,7 +83,7 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
 
     private fun loadAlbums() {
         lifecycleScope.launch(Dispatchers.Default) {
-            val albums = trackDao.getDistinctAlbums()
+            val albums = trackDao.getDistinctAlbums(artistFilter = artistFilter)
 
             withContext(Dispatchers.Main) {
                 albumAdapter.submitList(albums)

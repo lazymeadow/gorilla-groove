@@ -52,12 +52,14 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         SELECT DISTINCT album 
         FROM track 
         WHERE in_review = :inReview
+        AND (:artistFilter IS NULL OR artist LIKE '%' || :artistFilter || '%')
         AND (:isHidden IS NULL OR is_hidden = :isHidden)
         ORDER BY album COLLATE NOCASE ASC    
  """)
     abstract fun getDistinctAlbums(
         inReview: Boolean = false,
         isHidden: Boolean? = null,
+        artistFilter: String? = null,
     ): List<String>
 }
 

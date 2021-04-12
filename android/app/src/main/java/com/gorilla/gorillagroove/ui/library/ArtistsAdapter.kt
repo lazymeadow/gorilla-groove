@@ -22,7 +22,6 @@ class ArtistsAdapter(
         notifyDataSetChanged()
     }
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ArtistViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(
             R.layout.simple_text_info_item, parent, false

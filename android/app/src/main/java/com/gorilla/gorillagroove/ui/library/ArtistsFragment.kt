@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.SearchView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackDao
@@ -114,8 +115,11 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
     }
 
     private fun setupRecyclerView() = artists_rv.apply {
-        artistAdapter = ArtistsAdapter {
-            logInfo("Artist '$it' was tapped")
+        artistAdapter = ArtistsAdapter { artist ->
+            logInfo("Artist '$artist' was tapped")
+
+            val bundle = bundleOf("ARTIST" to artist)
+            findNavController().navigate(R.id.albumFragment, bundle)
         }
         addItemDecoration(createDivider(context))
         adapter = artistAdapter
