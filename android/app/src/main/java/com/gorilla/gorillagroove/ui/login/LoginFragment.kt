@@ -1,7 +1,6 @@
 package com.gorilla.gorillagroove.ui.login
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings.Secure
@@ -115,11 +114,11 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     private fun navigateToMainApp() {
         val navOptions = NavOptions.Builder()
-            .setPopUpTo(R.id.mainFragment, true)
+            .setPopUpTo(R.id.libraryTrackFragment, true)
             .build()
 
         findNavController().navigate(
-            R.id.mainFragment,
+            R.id.libraryTrackFragment,
             null,
             navOptions
         )

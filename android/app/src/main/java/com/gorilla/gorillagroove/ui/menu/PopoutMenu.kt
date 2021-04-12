@@ -4,10 +4,15 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
+import com.gorilla.gorillagroove.ui.MainActivity
+import com.gorilla.gorillagroove.util.containsMotionEvent
 import kotlinx.android.synthetic.main.fragment_popout_menu.view.*
 
 
@@ -20,7 +25,7 @@ class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayo
 
     lateinit var menuItems: List<MenuItem>
     private var lastVisibilityChange = System.currentTimeMillis()
-    var onOptionTapped = {}
+    var onOptionTapped: (MenuItem) -> Unit = {}
 
     fun toggleVisibility(ignoreIfRecent: Boolean = false) {
         if (ignoreIfRecent && System.currentTimeMillis() - lastVisibilityChange < 200) {
@@ -71,7 +76,7 @@ class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayo
 
                         menuItem.clickHandler()
 
-                        onOptionTapped()
+                        onOptionTapped(menuItem)
                     }
                     menuItem.view = newView
                     this.menuItemContainer.addView(newView)
@@ -92,21 +97,48 @@ class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayo
             }
         }
     }
+
+    fun handleScreenTap(motionEvent: MotionEvent, containingFragment: Fragment) {
+        if (this.visibility == View.GONE) {
+            return
+        }
+
+        // If someone touched the menu, don't manage the event as the menu knows how to manage its own visibility
+        if (this.containsMotionEvent(
+                containingFragment.requireView(),
+                containingFragment.requireActivity() as MainActivity,
+                motionEvent
+            )
+        ) {
+            return
+        }
+
+        // If we got this far then we touched something that wasn't the popout menu or the toolbar and we can close it right away
+        this.toggleVisibility()
+    }
 }
 
 class CheckedMenuOption(
     title: String,
-    var isChecked: Boolean,
-    private val onClick: (CheckedMenuOption) -> Unit,
+    isChecked: Boolean,
+    var onClick: (CheckedMenuOption) -> Unit = {},
 ) : MenuOption(
     title = title,
     iconResId = if (isChecked) R.drawable.exo_ic_check else null,
 ) {
+    var isChecked = isChecked
+        set(value) {
+            // This setter is kind of expensive (it updates the view) so abort if no change happened
+            if (field == value) { return }
+
+            field = value
+            iconResId = if (isChecked) R.drawable.exo_ic_check else null
+            view.updateView(this)
+        }
+
     override fun clickHandler() {
         isChecked = !isChecked
-        iconResId = if (isChecked) R.drawable.exo_ic_check else null
 
-        view.updateView(this)
         onClick(this)
     }
 }
@@ -122,10 +154,10 @@ class SortMenuOption(
     iconResId = getIconFromSortDirection(sortDirection),
 ) {
     var sortDirection = sortDirection
-    set(value) {
-        field = value
-        iconResId = getIconFromSortDirection(sortDirection)
-    }
+        set(value) {
+            field = value
+            iconResId = getIconFromSortDirection(sortDirection)
+        }
 
     override fun clickHandler() {
         sortDirection = when (sortDirection) {
@@ -160,3 +192,45 @@ abstract class MenuOption(
 class MenuDivider : MenuItem
 
 interface MenuItem
+
+enum class LibraryViewType { TRACK, ARTIST, ALBUM }
+fun getNavigationOptions(view: View, libraryViewType: LibraryViewType): Array<CheckedMenuOption> {
+    val trackOption = CheckedMenuOption(title = "View by Track", libraryViewType == LibraryViewType.TRACK)
+    val artistOption = CheckedMenuOption(title = "View by Artist", libraryViewType == LibraryViewType.ARTIST)
+    val albumOption = CheckedMenuOption(title = "View by Album", libraryViewType == LibraryViewType.ALBUM)
+
+    trackOption.onClick = {
+        artistOption.isChecked = false
+        albumOption.isChecked = false
+        val destination = view.findNavController().currentDestination
+        if (destination!!.id != R.id.libraryTrackFragment) {
+            view.findNavController().navigate(R.id.libraryTrackFragment)
+        } else {
+            trackOption.isChecked = true
+        }
+    }
+    artistOption.onClick = {
+        trackOption.isChecked = false
+        albumOption.isChecked = false
+        val destination = view.findNavController().currentDestination
+        if (destination!!.id != R.id.artistsFragment) {
+            view.findNavController().navigate(R.id.artistsFragment)
+        } else {
+            artistOption.isChecked = true
+        }
+    }
+    albumOption.onClick = {
+        trackOption.isChecked = false
+        artistOption.isChecked = false
+        val destination = view.findNavController().currentDestination
+        if (destination!!.id != R.id.albumFragment) {
+            view.findNavController().navigate(R.id.albumFragment)
+        } else {
+            albumOption.isChecked = true
+        }
+    }
+
+    return arrayOf(trackOption, artistOption, albumOption)
+}
+
+

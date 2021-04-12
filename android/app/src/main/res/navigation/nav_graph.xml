@@ -10,11 +10,11 @@
         android:label="LoginFragment" >
         <action
             android:id="@+id/action_loginFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
-        android:id="@+id/mainFragment"
-        android:name="com.gorilla.gorillagroove.ui.library.LibraryFragment"
+        android:id="@+id/libraryTrackFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.LibraryTrackFragment"
         android:label="MainFragment" >
         <action
             android:id="@+id/action_mainFragment_to_loginFragment"
@@ -36,12 +36,22 @@
             app:destination="@id/trackPropertiesFragment" />
     </fragment>
     <fragment
+        android:id="@+id/artistsFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.ArtistsFragment"
+        android:label="ArtistsFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/albumFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.AlbumFragment"
+        android:label="AlbumFragment" >
+    </fragment>
+    <fragment
         android:id="@+id/playingFragment"
         android:name="com.gorilla.gorillagroove.ui.playing.NowPlayingFragment"
         android:label="PlayingFragment" >
         <action
             android:id="@+id/action_playingFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
         android:id="@+id/playlistsFragment"
@@ -54,7 +64,7 @@
         android:label="SettingsFragment" >
         <action
             android:id="@+id/action_settingsFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
@@ -65,7 +75,7 @@
         android:label="UsersFragment" >
         <action
             android:id="@+id/action_usersFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
         android:id="@+id/playlistTrackFragment"
@@ -81,7 +91,7 @@
         android:label="TrackPropertiesFragment" >
         <action
             android:id="@+id/action_trackPropertiesFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
         android:id="@+id/problemReportFragment"

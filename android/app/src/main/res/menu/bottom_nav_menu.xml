@@ -4,7 +4,7 @@
     tools:ignore="HardcodedText">
 
     <item
-        android:id="@+id/mainFragment"
+        android:id="@+id/libraryTrackFragment"
         android:icon="@drawable/ic_my_library_24"
         android:title="My Library" />
 

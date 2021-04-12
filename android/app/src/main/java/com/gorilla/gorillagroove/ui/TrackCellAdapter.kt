@@ -225,6 +225,7 @@ class TrackCellAdapter(
                 return filterResults
             }
 
+            @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
                 filteredList.clear()
                 filteredList.addAll(results?.values as List<DbTrack>)

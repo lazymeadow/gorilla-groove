@@ -62,7 +62,17 @@ class MainActivity : AppCompatActivity() {
                         playerControlView.visibility = View.GONE
                         title_tv.text = ""
                     }
-                    R.id.mainFragment -> {
+                    R.id.libraryTrackFragment -> {
+                        bottomNavigationView.visibility = View.VISIBLE
+                        playerControlView.visibility = View.VISIBLE
+                        title_tv.text = "My Library"
+                    }
+                    R.id.artistsFragment -> {
+                        bottomNavigationView.visibility = View.VISIBLE
+                        playerControlView.visibility = View.VISIBLE
+                        title_tv.text = "My Library"
+                    }
+                    R.id.albumFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
                         title_tv.text = "My Library"

@@ -6,19 +6,29 @@ import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
-import com.gorilla.gorillagroove.ui.menu.SortMenuOption
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-
 @AndroidEntryPoint
-class LibraryFragment : TrackListFragment() {
+class LibraryTrackFragment : TrackListFragment() {
 
     @Inject
     lateinit var trackDao: TrackDao
+
+    private var albumFilter: String? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.getString("ALBUM")?.let { albumFilter ->
+            this.albumFilter = albumFilter
+            requireActivity().title_tv.text = albumFilter
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,7 +51,12 @@ class LibraryFragment : TrackListFragment() {
     private fun loadTracks() {
         lifecycleScope.launch(Dispatchers.Default) {
             val isHidden = if (showHidden) null else false
-            val tracks = trackDao.findTracksWithSort(sortType = activeSort.sortType, isHidden = isHidden, sortDirection = activeSort.sortDirection)
+            val tracks = trackDao.findTracksWithSort(
+                sortType = activeSort.sortType,
+                isHidden = isHidden,
+                albumFilter = albumFilter,
+                sortDirection = activeSort.sortDirection
+            )
 
             withContext(Dispatchers.Main) {
                 trackCellAdapter.submitList(tracks)

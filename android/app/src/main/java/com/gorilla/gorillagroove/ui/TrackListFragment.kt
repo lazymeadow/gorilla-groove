@@ -1,7 +1,6 @@
 package com.gorilla.gorillagroove.ui
 
 import android.content.SharedPreferences
-import android.graphics.Rect
 import android.os.Bundle
 import android.view.*
 import android.view.MenuItem
@@ -38,11 +37,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     @Inject
     lateinit var mainRepository: MainRepository
 
-    protected var sortType = TrackSortType.NAME
-        private set
-    protected var sortDirection = SortDirection.ASC
-        private set
-
     protected var activeSort = SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC)
 
     protected var showHidden = false
@@ -54,16 +48,9 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         subscribeObservers()
 
         popoutMenu.setMenuList(
+
             listOf(
-                CheckedMenuOption(title = "View by Track", true) {
-                    logInfo("Hey I was clicked 1")
-                },
-                CheckedMenuOption(title = "View by Artist", false) {
-                    logInfo("Hey I was clicked 1")
-                },
-                CheckedMenuOption(title = "View by Album", false) {
-                    logInfo("Hey I was clicked 1")
-                },
+                *getNavigationOptions(requireView(), LibraryViewType.TRACK),
                 MenuDivider(),
                 SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC),
                 SortMenuOption("Sort by Play Count", TrackSortType.PLAY_COUNT, initialSortOnTap = SortDirection.DESC),
@@ -75,7 +62,10 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
             )
         )
 
-        popoutMenu.onOptionTapped = {
+        popoutMenu.onOptionTapped = { menuItem ->
+            if (menuItem is SortMenuOption) {
+                activeSort = menuItem
+            }
             onFiltersChanged()
         }
     }
@@ -114,35 +104,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     }
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
-    fun onTouchDownEvent(event: MotionEvent) {
-        if (popoutMenu.visibility == View.GONE) {
-            return
-        }
-
-        // If someone touched the menu, don't manage the event as the menu knows how to manage its own visibility
-        if (popoutMenu.containsMotionEvent(requireView(), event)) {
-            return
-        }
-
-        // If we got this far then we touched something that wasn't the popout menu or the toolbar and we can close it right away
-        popoutMenu.toggleVisibility()
-    }
-
-    private fun View.containsMotionEvent(parentView: View, event: MotionEvent): Boolean {
-        val bounds = Rect().apply { getHitRect(this) }
-        val locationOnScreen = IntArray(2)
-
-        requireActivity().activity_main_root.getLocationOnScreen(locationOnScreen)
-        val (activityOffsetWidth, activityOffsetHeight) = locationOnScreen
-
-        parentView.getLocationOnScreen(locationOnScreen)
-        val (viewOffsetWidth, viewOffsetHeight) = locationOnScreen
-
-        val effectiveWidth = event.x.toInt() + activityOffsetWidth - viewOffsetWidth
-        val effectiveHeight = event.y.toInt() + activityOffsetHeight - viewOffsetHeight
-
-        return (bounds.contains(effectiveWidth, effectiveHeight))
-    }
+    fun onTouchDownEvent(event: MotionEvent) = popoutMenu.handleScreenTap(event, this)
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)

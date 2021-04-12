@@ -68,7 +68,6 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistAdapter
     }
 
     override fun onPlaylistLongClick(position: Int): Boolean {
-
         return true
     }
 }
