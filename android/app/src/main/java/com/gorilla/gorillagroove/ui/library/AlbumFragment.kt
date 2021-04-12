@@ -17,6 +17,7 @@ import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
 import com.gorilla.gorillagroove.ui.menu.LibraryViewType
 import com.gorilla.gorillagroove.ui.menu.MenuDivider
 import com.gorilla.gorillagroove.ui.menu.getNavigationOptions
+import com.gorilla.gorillagroove.util.getNullableBoolean
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_album.*
@@ -36,7 +37,7 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
     @Inject
     lateinit var trackDao: TrackDao
 
-    protected var showHidden = false
+    private var showHidden = false
 
     private var artistFilter: String? = null
 
@@ -47,13 +48,15 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
             this.artistFilter = artistFilter
             requireActivity().title_tv.text = artistFilter
         }
+
+        arguments?.getNullableBoolean("SHOW_HIDDEN")?.let { showHidden = it }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
 
-        logInfo("Loading Users view")
+        logInfo("Loading Album view")
 
         setupRecyclerView()
 
@@ -61,12 +64,12 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
             listOf(
                 *getNavigationOptions(requireView(), LibraryViewType.ALBUM),
                 MenuDivider(),
-                CheckedMenuOption(title = "Show Hidden Tracks", false) { showHidden = it.isChecked },
+                CheckedMenuOption(title = "Show Hidden Tracks", showHidden) {
+                    showHidden = it.isChecked
+                    loadAlbums()
+                },
             )
         )
-
-        popoutMenu.onOptionTapped = {
-        }
 
         loadAlbums()
     }
@@ -83,7 +86,8 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
 
     private fun loadAlbums() {
         lifecycleScope.launch(Dispatchers.Default) {
-            val albums = trackDao.getDistinctAlbums(artistFilter = artistFilter)
+            val includeHidden = if (showHidden) null else false
+            val albums = trackDao.getDistinctAlbums(artistFilter = artistFilter, isHidden = includeHidden, inReview = false)
 
             withContext(Dispatchers.Main) {
                 albumAdapter.submitList(albums)
@@ -129,7 +133,10 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
         albumAdapter = AlbumAdapter { album ->
             logInfo("Album '$album' was tapped")
 
-            val bundle = bundleOf("ALBUM" to album)
+            val bundle = bundleOf(
+                "ALBUM" to album,
+                "SHOW_HIDDEN" to showHidden,
+            )
             findNavController().navigate(R.id.libraryTrackFragment, bundle)
         }
         addItemDecoration(createDivider(context))

@@ -18,6 +18,7 @@ import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.menu.*
+import com.gorilla.gorillagroove.util.getNullableBoolean
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import org.greenrobot.eventbus.EventBus
@@ -40,6 +41,12 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     protected var activeSort = SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC)
 
     protected var showHidden = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.getNullableBoolean("SHOW_HIDDEN")?.let { showHidden = it }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

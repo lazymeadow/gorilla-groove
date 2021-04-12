@@ -42,7 +42,7 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
 
-        logInfo("Loading Users view")
+        logInfo("Loading Artist view")
 
         setupRecyclerView()
 
@@ -50,12 +50,12 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
             listOf(
                 *getNavigationOptions(requireView(), LibraryViewType.ARTIST),
                 MenuDivider(),
-                CheckedMenuOption(title = "Show Hidden Tracks", false) { showHidden = it.isChecked },
+                CheckedMenuOption(title = "Show Hidden Tracks", false) {
+                    showHidden = it.isChecked
+                    loadArtists()
+                },
             )
         )
-
-        popoutMenu.onOptionTapped = {
-        }
 
         loadArtists()
     }
@@ -72,7 +72,8 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
 
     private fun loadArtists() {
         lifecycleScope.launch(Dispatchers.Default) {
-            val artists = trackDao.getDistinctArtists()
+            val includeHidden = if (showHidden) null else false
+            val artists = trackDao.getDistinctArtists(isHidden = includeHidden, inReview = false)
 
             withContext(Dispatchers.Main) {
                 artistAdapter.submitList(artists)
@@ -118,7 +119,10 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
         artistAdapter = ArtistsAdapter { artist ->
             logInfo("Artist '$artist' was tapped")
 
-            val bundle = bundleOf("ARTIST" to artist)
+            val bundle = bundleOf(
+                "ARTIST" to artist,
+                "SHOW_HIDDEN" to showHidden
+            )
             findNavController().navigate(R.id.albumFragment, bundle)
         }
         addItemDecoration(createDivider(context))
