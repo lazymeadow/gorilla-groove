@@ -9,6 +9,10 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class NowPlayingFragment : TrackListFragment() {
 
+    init {
+        showFilterMenu = false
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

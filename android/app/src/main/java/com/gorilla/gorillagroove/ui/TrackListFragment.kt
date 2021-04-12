@@ -42,6 +42,8 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
 
     protected var showHidden = false
 
+    protected var showFilterMenu = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -54,8 +56,25 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         setupRecyclerView()
         subscribeObservers()
 
-        popoutMenu.setMenuList(
+        if (showFilterMenu) {
+            setupFilterMenu()
+        }
+    }
 
+    open fun onFiltersChanged() {}
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    private fun setupFilterMenu() {
+        popoutMenu.setMenuList(
             listOf(
                 *getNavigationOptions(requireView(), LibraryViewType.TRACK),
                 MenuDivider(),
@@ -75,18 +94,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
             }
             onFiltersChanged()
         }
-    }
-
-    open fun onFiltersChanged() {}
-
-    override fun onStart() {
-        super.onStart()
-        EventBus.getDefault().register(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        EventBus.getDefault().unregister(this)
     }
 
     private fun setupRecyclerView() = track_rv.apply {
@@ -116,6 +123,10 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.app_bar_menu, menu)
+
+        if (!showFilterMenu) {
+            menu.findItem(R.id.action_filter_menu).isVisible = false
+        }
 
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView

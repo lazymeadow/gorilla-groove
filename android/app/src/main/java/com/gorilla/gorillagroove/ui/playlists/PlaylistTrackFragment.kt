@@ -19,6 +19,10 @@ class PlaylistTrackFragment : TrackListFragment() {
 
     private lateinit var playlist: DbPlaylist
 
+    init {
+        showFilterMenu = false
+    }
+
     @Inject
     lateinit var playlistTrackDao: PlaylistTrackDao
 

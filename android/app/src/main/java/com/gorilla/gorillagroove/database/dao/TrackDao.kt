@@ -52,7 +52,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         SELECT DISTINCT album 
         FROM track 
         WHERE in_review = :inReview
-        AND (:artistFilter IS NULL OR artist LIKE '%' || :artistFilter || '%')
+        AND (:artistFilter IS NULL OR (artist LIKE '%' || :artistFilter || '%' OR featuring LIKE '%' || :artistFilter || '%'))
         AND (:isHidden IS NULL OR is_hidden = :isHidden)
         ORDER BY album COLLATE NOCASE ASC    
  """)
