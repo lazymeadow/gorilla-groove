@@ -13,9 +13,9 @@
         android:layout_width="220dp"
         android:layout_height="match_parent"
         android:background="@drawable/border"
+        android:orientation="vertical"
         android:padding="1dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:orientation="vertical" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

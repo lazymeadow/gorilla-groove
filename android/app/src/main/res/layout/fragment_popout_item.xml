@@ -12,32 +12,34 @@
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_marginStart="13dp"
-        tools:src="@drawable/ic_warning_amber_24px"
         app:layout_constraintBottom_toBottomOf="@id/menuText"
         app:layout_constraintEnd_toStartOf="@id/menuText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/menuText"
-        app:tint="@color/ggPrimary" />
+        app:tint="@color/ggPrimary"
+        tools:src="@drawable/ic_warning_amber_24px" />
+
     <TextView
         android:id="@+id/menuText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingStart="13dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="13dp"
+        android:paddingBottom="10dp"
         android:text="Problem Report"
         android:textColor="@color/foreground"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
         android:textSize="16sp"
-        android:paddingStart="13dp"
-        android:paddingEnd="13dp"
         app:layout_constraintStart_toEndOf="@id/menuIcon"
         app:layout_constraintTop_toTopOf="parent" />
+
     <View
         android:id="@+id/divider"
         android:layout_width="0dp"
         android:layout_height="1dp"
         android:background="@color/grey1"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/menuText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
