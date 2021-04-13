@@ -11,6 +11,7 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
@@ -36,6 +37,9 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
 
     @Inject
     lateinit var trackDao: TrackDao
+
+    @Inject
+    lateinit var networkApi: NetworkApi
 
     private var showHidden = false
 
@@ -130,11 +134,11 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
     }
 
     private fun setupRecyclerView() = album_rv.apply {
-        albumAdapter = AlbumAdapter { album ->
+        albumAdapter = AlbumAdapter(networkApi) { album ->
             logInfo("Album '$album' was tapped")
 
             val bundle = bundleOf(
-                "ALBUM" to album,
+                "ALBUM" to album.name,
                 "SHOW_HIDDEN" to showHidden,
             )
             findNavController().navigate(R.id.libraryTrackFragment, bundle)

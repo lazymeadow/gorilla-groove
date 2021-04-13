@@ -1,5 +1,6 @@
 package com.gorilla.gorillagroove.database.dao
 
+import android.graphics.Bitmap
 import androidx.room.*
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.gorilla.gorillagroove.database.entity.DbTrack
@@ -25,7 +26,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
             FROM track 
             WHERE in_review = ${inReview.toInt()}
             AND ($isHidden IS NULL OR is_hidden = ${isHidden?.toInt()})
-            AND (${albumFilter?.let { 1 }} IS NULL OR album LIKE '%$albumFilter%')
+            AND (${albumFilter?.let { 1 }} IS NULL OR album = '${albumFilter?.sqlEscaped()}')
             ORDER BY ${sortType.trackPropertyName} ${sortType.collation} ${sortDirection.name}
         """.trimIndent()
 
@@ -49,18 +50,19 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
     ): List<String>
 
     @Query("""
-        SELECT DISTINCT album 
+        SELECT id, album 
         FROM track 
         WHERE in_review = :inReview
         AND (:artistFilter IS NULL OR (artist LIKE '%' || :artistFilter || '%' OR featuring LIKE '%' || :artistFilter || '%'))
         AND (:isHidden IS NULL OR is_hidden = :isHidden)
+        GROUP BY album
         ORDER BY album COLLATE NOCASE ASC    
  """)
     abstract fun getDistinctAlbums(
         inReview: Boolean = false,
         isHidden: Boolean? = null,
         artistFilter: String? = null,
-    ): List<String>
+    ): List<Album>
 }
 
 private const val NO_CASE = "COLLATE NOCASE"
@@ -74,3 +76,16 @@ enum class TrackSortType(val trackPropertyName: String, val collation: String = 
 
 fun Boolean.toInt() = if (this) 1 else 0
 
+data class Album(
+    @ColumnInfo(name = "album")
+    val name: String,
+
+    @ColumnInfo(name = "id")
+    val trackId: Long,
+) {
+    @Ignore
+    var imageData: Bitmap? = null
+
+    @Ignore
+    var albumArtFetched: Boolean = false
+}

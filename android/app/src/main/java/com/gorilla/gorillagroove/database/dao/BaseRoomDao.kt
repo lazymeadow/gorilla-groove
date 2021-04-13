@@ -55,3 +55,5 @@ abstract class BaseRoomDao<T>(private val tableName: String) {
     @RawQuery
     abstract fun executeSqlWithReturn(query: SupportSQLiteQuery): List<T>
 }
+
+fun String.sqlEscaped() = this.replace("'","''")
