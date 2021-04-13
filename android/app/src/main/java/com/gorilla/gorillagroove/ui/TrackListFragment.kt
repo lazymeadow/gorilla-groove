@@ -239,9 +239,10 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
 
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu): Boolean {
-            val inflater: MenuInflater? = mode?.menuInflater
-            mode?.title = "Selecting tracks..."
-            inflater?.inflate(R.menu.context_action_menu, menu)
+            val inflater: MenuInflater = mode?.menuInflater ?: return false
+
+            mode.title = "Selecting tracks..."
+            inflater.inflate(R.menu.context_action_menu, menu)
 
             //required because the XML is overridden
             menu[0].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
