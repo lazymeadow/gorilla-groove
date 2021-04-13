@@ -1,13 +1,10 @@
 package com.gorilla.gorillagroove.ui
 
-import android.graphics.Rect
 import android.view.LayoutInflater
-import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.PopupMenu
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
@@ -64,27 +61,12 @@ class TrackCellAdapter(
             holder.tvName.setTextColor(context.getColor(R.color.ggPrimaryLight))
             holder.tvArtist.setTextColor(context.getColor(R.color.ggPrimary))
             holder.tvAlbum.setTextColor(context.getColor(R.color.ggPrimary))
-            holder.tvLength.visibility = View.GONE
-            holder.imageButton.visibility = View.VISIBLE
-
-//            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
+            holder.tvLength.setTextColor(context.getColor(R.color.ggPrimary))
         } else {
             holder.tvName.setTextColor(context.getColor(R.color.foreground))
             holder.tvArtist.setTextColor(context.getColor(R.color.grey6))
             holder.tvAlbum.setTextColor(context.getColor(R.color.grey6))
-            holder.tvLength.visibility = View.VISIBLE
-            holder.imageButton.visibility = View.GONE
-
-            // For whatever dumb reason, it takes Android a while to update the typefaces visually, even though the colors update instantly.
-            // This makes it look far more jank than just not having it at all, even though we no longer match the mockup.
-//            listOf(holder.tvName, holder.tvArtist, holder.tvAlbum).forEach { it.setTypeface(it.typeface, Typeface.NORMAL) }
-        }
-
-        if (isPlaying) {
-            holder.imageButton.setImageResource(R.drawable.ic_pause_24)
-
-        } else {
-            holder.imageButton.setImageResource(R.drawable.ic_play_arrow_24)
+            holder.tvLength.setTextColor(context.getColor(R.color.grey6))
         }
 
         holder.checkbox.isVisible = showingCheckBox
@@ -109,20 +91,12 @@ class TrackCellAdapter(
         val tvName: TextView = itemView.tv_title
         val tvAlbum: TextView = itemView.tv_album
         val tvLength: TextView = itemView.tv_length
-        val imageButton: ImageButton = itemView.playStatusButton
         val checkbox: CheckBox = itemView.checkbox
         val options: TextView = itemView.tv_options
-        val menu_button_parent: ConstraintLayout = itemView.menu_button_layout
 
         init {
             itemView.setOnClickListener(this)
             itemView.setOnLongClickListener(this)
-            imageButton.setOnClickListener {
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onPlayPauseClick(position)
-                }
-            }
             options.setOnClickListener {
                 val position = adapterPosition
                 val popup = PopupMenu(itemView.context, it)
@@ -163,8 +137,6 @@ class TrackCellAdapter(
 
                 popup.show()
             }
-
-            expandViewHitArea(menu_button_parent, options)
         }
 
         override fun onClick(v: View?) {
@@ -185,23 +157,6 @@ class TrackCellAdapter(
                 listener.onTrackLongClick(position)
             }
             return true
-        }
-
-        private fun expandViewHitArea(parent: View, child: View) {
-            parent.post {
-
-                val parentRect = Rect()
-                val childRect = Rect()
-                parent.getHitRect(parentRect)
-                child.getHitRect(childRect)
-
-                childRect.left = 0
-                childRect.top = 0
-                childRect.right = parentRect.width()
-                childRect.bottom = parentRect.height()
-
-                parent.touchDelegate = TouchDelegate(childRect, child)
-            }
         }
     }
 

@@ -66,11 +66,30 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
+
+        (requireActivity() as MainActivity).multiselectIcon.setOnClickListener {
+            if (actionMode == null) {
+                logInfo("User started multiselect")
+                trackCellAdapter.showingCheckBox = true
+                trackCellAdapter.notifyDataSetChanged()
+                actionMode = activity?.startActionMode(actionModeCallback)!!
+            } else {
+                logInfo("User ended multiselect")
+                trackCellAdapter.showingCheckBox = false
+                trackCellAdapter.notifyDataSetChanged()
+                actionMode?.finish()
+            }
+        }
     }
 
     override fun onStop() {
         super.onStop()
         EventBus.getDefault().unregister(this)
+
+        requireActivity().toolbar.apply {
+            navigationIcon = null
+            setNavigationOnClickListener {}
+        }
     }
 
     private fun setupFilterMenu() {
@@ -164,17 +183,11 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     }
 
     override fun onTrackLongClick(position: Int): Boolean {
-        //Log.d(TAG, "onTrackLongClick: Long clicked $position")
         return when (actionMode) {
             null -> {
-                trackCellAdapter.showingCheckBox = true
-                trackCellAdapter.notifyDataSetChanged()
-                actionMode = activity?.startActionMode(actionModeCallback)!!
-                view?.isSelected = true
                 true
             }
             else -> {
-
                 false
             }
         }

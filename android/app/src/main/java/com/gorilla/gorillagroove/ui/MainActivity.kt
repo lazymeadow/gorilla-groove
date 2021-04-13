@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         navHostFragment.findNavController()
             .addOnDestinationChangedListener { _, destination, _ ->
+                multiselectIcon.visibility = View.GONE
                 when (destination.id) {
                     R.id.loginFragment -> {
                         bottomNavigationView.visibility = View.GONE
@@ -65,6 +66,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.libraryTrackFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
+                        multiselectIcon.visibility = View.VISIBLE
                         title_tv.text = "My Library"
                     }
                     R.id.artistsFragment -> {
@@ -80,6 +82,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.playingFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
+                        multiselectIcon.visibility = View.VISIBLE
                         title_tv.text = "Now Playing"
                     }
                     R.id.usersFragment -> {
@@ -95,6 +98,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.playlistTrackFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
+                        multiselectIcon.visibility = View.VISIBLE
                     }
                     R.id.moreMenuFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
