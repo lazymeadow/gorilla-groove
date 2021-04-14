@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:ignore="HardcodedText, RtlSymmetry">
+
+    <TextView
+        android:id="@+id/locationHeading"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/background"
+        android:text="Save location with track history"
+        android:textAlignment="textStart"
+        android:textAllCaps="true"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/locationEnabled"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:background="@color/grey1"
+        android:padding="10dp"
+        android:paddingStart="12dp"
+        android:text="Enabled"
+        android:textAlignment="textStart"
+        android:textColor="@color/foreground"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/locationHeading" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/locationEnabledSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:checked="true"
+        app:layout_constraintBottom_toBottomOf="@id/locationEnabled"
+        app:layout_constraintEnd_toEndOf="@id/locationEnabled"
+        app:layout_constraintTop_toTopOf="@id/locationEnabled" />
+
+    <View
+        android:id="@+id/locationDivider"
+        android:layout_width="0dp"
+        android:layout_height="0.5dp"
+        android:background="@color/foreground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/locationEnabled" />
+
+    <TextView
+        android:id="@+id/locationMinimumBattery"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/grey1"
+        android:padding="10dp"
+        android:paddingStart="12dp"
+        android:text="Minimum Required Battery"
+        android:textAlignment="textStart"
+        android:textColor="@color/foreground"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/locationDivider" />
+
+    <TextView
+        android:id="@+id/locationMinimumBatteryPercent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:textColor="@color/debugGrey"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toBottomOf="@id/locationMinimumBattery"
+        app:layout_constraintEnd_toStartOf="@id/locationMinimumBatteryChevron"
+        app:layout_constraintTop_toTopOf="@id/locationMinimumBattery"
+        tools:text="20%" />
+
+    <ImageView
+        android:id="@+id/locationMinimumBatteryChevron"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="Right Arrow"
+        android:src="@drawable/ic_arrow_forward_ios_black_24dp"
+        app:layout_constraintBottom_toBottomOf="@id/locationMinimumBattery"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/locationMinimumBattery"
+        app:tint="@color/debugGrey" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,6 +27,10 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
 
         logInfo("Loading More Menu view")
 
+        settingsText.setOnClickListener {
+            findNavController().navigate(R.id.settingsFragment)
+        }
+
         logoutButton.setOnClickListener {
             logInfo("User tapped log out")
 

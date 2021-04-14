@@ -8,6 +8,41 @@
     tools:ignore="HardcodedText">
 
     <ImageView
+        android:id="@+id/settingsIcon"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:src="@drawable/ic_settings_24"
+        app:layout_constraintBottom_toBottomOf="@id/settingsText"
+        app:layout_constraintEnd_toStartOf="@id/settingsText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/settingsText"
+        app:tint="@color/foreground" />
+
+    <Button
+        android:id="@+id/settingsText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:text="Settings"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/settingsIcon"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/settingsDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/grey1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/logoutDivider"
+        app:layout_constraintTop_toBottomOf="@id/settingsText" />
+
+    <ImageView
         android:id="@+id/menuIcon"
         android:layout_width="25dp"
         android:layout_height="25dp"
@@ -31,7 +66,7 @@
         android:textSize="17sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/menuIcon"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/settingsDivider" />
 
     <View
         android:id="@+id/divider"
