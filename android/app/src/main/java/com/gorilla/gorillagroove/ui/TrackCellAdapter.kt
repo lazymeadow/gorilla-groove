@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
@@ -70,7 +69,6 @@ class TrackCellAdapter(
         }
 
         holder.checkbox.isVisible = showingCheckBox
-        holder.options.isVisible = !showingCheckBox
         holder.checkbox.isChecked = checkedTracks[filteredList[position].id] ?: false
         holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
             if (buttonView.isShown) {
@@ -92,51 +90,10 @@ class TrackCellAdapter(
         val tvAlbum: TextView = itemView.tv_album
         val tvLength: TextView = itemView.tv_length
         val checkbox: CheckBox = itemView.checkbox
-        val options: TextView = itemView.tv_options
 
         init {
             itemView.setOnClickListener(this)
             itemView.setOnLongClickListener(this)
-            options.setOnClickListener {
-                val position = adapterPosition
-                val popup = PopupMenu(itemView.context, it)
-                popup.inflate(R.menu.track_floating_menu)
-                popup.setOnMenuItemClickListener { item ->
-                    when (item.itemId) {
-                        R.id.action_play_next -> {
-                            listener.onPlayNextSelection(position)
-                            true
-                        }
-                        R.id.action_play_last -> {
-                            listener.onPlayLastSelection(position)
-                            true
-                        }
-                        R.id.action_get_link -> {
-                            listener.onGetLinkSelection(position)
-                            true
-                        }
-                        R.id.action_download -> {
-                            listener.onDownloadSelection(position)
-                            true
-                        }
-                        R.id.action_recommend -> {
-                            listener.onRecommendSelection(position)
-                            true
-                        }
-                        R.id.action_add_to_playlist -> {
-                            listener.onAddToPlaylistSelection(position)
-                            true
-                        }
-                        R.id.action_properties -> {
-                            listener.onPropertiesSelection(position)
-                            true
-                        }
-                        else -> false
-                    }
-                }
-
-                popup.show()
-            }
         }
 
         override fun onClick(v: View?) {
@@ -191,17 +148,7 @@ class TrackCellAdapter(
 
     interface OnTrackListener {
         fun onTrackClick(position: Int)
-        fun onTrackLongClick(position: Int): Boolean
-        fun onPlayPauseClick(position: Int)
-        fun onOptionsClick(position: Int)
-
-        fun onPlayNextSelection(position: Int)
-        fun onPlayLastSelection(position: Int)
-        fun onGetLinkSelection(position: Int)
-        fun onDownloadSelection(position: Int)
-        fun onRecommendSelection(position: Int)
-        fun onAddToPlaylistSelection(position: Int)
-        fun onPropertiesSelection(position: Int)
+        fun onTrackLongClick(position: Int)
     }
 
 //    interface OnOptionsMenuListener {

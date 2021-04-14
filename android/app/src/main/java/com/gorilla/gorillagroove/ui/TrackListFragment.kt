@@ -6,11 +6,9 @@ import android.view.*
 import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.SearchView
-import androidx.core.os.bundleOf
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
@@ -182,60 +180,16 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList)
     }
 
-    override fun onTrackLongClick(position: Int): Boolean {
-        return when (actionMode) {
+    override fun onTrackLongClick(position: Int) {
+        when (actionMode) {
             null -> {
-                true
+                val track = trackCellAdapter.filteredList[position]
+                showLibraryActionSheet(track)
             }
             else -> {
-                false
             }
         }
     }
-
-    override fun onPlayPauseClick(position: Int) {
-        trackCellAdapter.isPlaying = playerControlsViewModel.playPause()
-        trackCellAdapter.notifyDataSetChanged()
-    }
-
-    override fun onOptionsClick(position: Int) {
-        //Log.d(TAG, "onOptionsClick: ")
-    }
-
-    override fun onPlayNextSelection(position: Int) {
-        //Log.d(TAG, "onPlayNextSelection: ")
-    }
-
-    override fun onPlayLastSelection(position: Int) {
-        //Log.d(TAG, "onPlayLastSelection: ")
-    }
-
-    override fun onGetLinkSelection(position: Int) {
-        //Log.d(TAG, "onGetLinkSelection: ")
-    }
-
-    override fun onDownloadSelection(position: Int) {
-        //Log.d(TAG, "onDownloadSelection: ")
-    }
-
-    override fun onRecommendSelection(position: Int) {
-        //Log.d(TAG, "onRecommendSelection: ")
-    }
-
-    override fun onAddToPlaylistSelection(position: Int) {
-        //Log.d(TAG, "onAddToPlaylistSelection: ")
-    }
-
-    override fun onPropertiesSelection(position: Int) {
-        val track = trackCellAdapter.filteredList[position]
-        val bundle = bundleOf("KEY_TRACK" to track)
-
-        findNavController().navigate(
-            R.id.trackPropertiesFragment,
-            bundle
-        )
-    }
-
 
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu): Boolean {

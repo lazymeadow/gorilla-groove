@@ -10,6 +10,7 @@
     <color name="ggPrimaryLight">#60B7ED</color>
     <color name="ggSecondary">#91F9E2</color>
     <color name="navBarUnselected">#99BDD0</color>
+    <color name="actionSheetBackground">#EE111111</color>
     <color name="grey1">#333333</color>
     <color name="grey6">#F2F2F2</color>
     <color name="debugGrey">#AAAAAA</color>
