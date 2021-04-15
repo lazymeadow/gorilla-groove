@@ -66,6 +66,7 @@ create table playlist_track (
 	id INTEGER not null primary key unique,
 	playlist_id INTEGER not null,
 	track_id INTEGER not null,
+	sort_order INTEGER not null,
 	created_at INTEGER not null
 );
 

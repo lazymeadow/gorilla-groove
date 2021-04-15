@@ -1,5 +1,7 @@
 package com.gorilla.gorillagroove.util
 
+import android.app.Activity
+import android.app.AlertDialog
 import android.graphics.Rect
 import android.view.MotionEvent
 import android.view.View
@@ -28,3 +30,34 @@ fun View.containsMotionEvent(parentView: View, activity: MainActivity, event: Mo
 
     return (bounds.contains(effectiveWidth, effectiveHeight))
 }
+
+fun showAlertDialog(
+    activity: Activity,
+    title: String? = null,
+    message: String? = null,
+    yesText: String? = null,
+    noText: String? = null,
+    yesAction: () -> Unit = {},
+    noAction: () -> Unit = {},
+) {
+    val builder = AlertDialog.Builder(activity)
+        .setTitle(title)
+        .setMessage(message)
+
+    if (yesText != null) {
+        builder.setPositiveButton(yesText) { _, _ ->
+            yesAction()
+        }
+    }
+
+    if (noText != null) {
+        builder.setNegativeButton(noText) { _, _ ->
+            noAction()
+        }
+    }
+
+    // Create the AlertDialog
+    builder.create().show()
+}
+
+

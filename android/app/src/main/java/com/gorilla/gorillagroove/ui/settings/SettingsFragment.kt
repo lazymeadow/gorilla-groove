@@ -24,16 +24,24 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         logInfo("Loading Settings view")
 
-        view.locationEnabledSwitch.isEnabled = locationEnabled
-        view.locationMinimumBatteryPercent.text = "$locationMinimumBattery%"
+        view.locationEnabledSwitch.isChecked = GGSettings.locationEnabled
+        view.locationMinimumBatteryPercent.text = "${GGSettings.locationMinimumBattery}%"
+
+        view.locationEnabledSwitch.setOnCheckedChangeListener { _, isChecked -> GGSettings.locationEnabled = isChecked }
+    }
+}
+
+object GGSettings {
+    private val sharedPreferences: SharedPreferences by lazy {
+        GGApplication.application.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
     }
 
-    companion object {
-        private val sharedPreferences: SharedPreferences by lazy {
-            GGApplication.application.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-        }
+    val locationConfigured get() = sharedPreferences.contains("LOCATION_ENABLED")
+    var locationEnabled
+        get() = sharedPreferences.getBoolean("LOCATION_ENABLED", true)
+        set(value) = sharedPreferences.edit().putBoolean("LOCATION_ENABLED", value).apply()
 
-        val locationEnabled = sharedPreferences.getBoolean("LOCATION_ENABLED", true)
-        val locationMinimumBattery = sharedPreferences.getInt("LOCATION_MINIMUM_BATTERY", 20)
-    }
+    var locationMinimumBattery
+        get() = sharedPreferences.getInt("LOCATION_MINIMUM_BATTERY", 20)
+        set(value) = sharedPreferences.edit().putInt("LOCATION_MINIMUM_BATTERY", value).apply()
 }

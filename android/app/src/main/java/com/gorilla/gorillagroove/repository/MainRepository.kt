@@ -22,6 +22,10 @@ import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
+import com.gorilla.gorillagroove.util.LocationService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -228,12 +232,14 @@ class MainRepository(
     }
 
     suspend fun markTrackListenedTo(trackId: Long) {
+        val location = LocationService.getCurrentLocation()
+
         val markListenedRequest = MarkListenedRequest(
             trackId = trackId,
             timeListenedAt = ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT),
             ianaTimezone = TimeZone.getDefault().id,
-            latitude = null, // TODO gather location
-            longitude = null
+            latitude = location?.latitude,
+            longitude = location?.longitude,
         )
 
         try {

@@ -14,6 +14,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGLog.logVerbose
 import com.gorilla.gorillagroove.service.GGLog.logWarn
 import com.gorilla.gorillagroove.ui.currentPlayBackPosition
 import com.gorilla.gorillagroove.util.KtLiveData
@@ -89,6 +90,7 @@ class MusicServiceConnection(
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
 
+        private var lastState = 0
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             val stateId = state?.state ?: -1
 
@@ -103,7 +105,11 @@ class MusicServiceConnection(
                 else -> "UNKNOWN ($stateId)"
             }
 
-            logDebug("MediaControllerCallback playback state changed to $stateString")
+            // For whatever reason this seems to trigger a lot with the same state. Annoying in the logs
+            if (stateId != lastState) {
+                logDebug("MediaControllerCallback playback state changed to $stateString")
+                lastState = stateId
+            }
 
             playbackState.postValue(state ?: EMPTY_PLAYBACK_STATE)
         }
@@ -115,7 +121,7 @@ class MusicServiceConnection(
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            logDebug("Media metadata was changed")
+            logVerbose("Media metadata was changed")
 
             nowPlaying.postValue(
                 if (metadata?.id == null) {
@@ -126,7 +132,7 @@ class MusicServiceConnection(
             )
         }
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
-            logDebug("Media queue was changed")
+            logVerbose("Media queue was changed")
         }
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
