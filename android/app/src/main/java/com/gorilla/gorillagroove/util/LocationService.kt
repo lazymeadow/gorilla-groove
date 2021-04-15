@@ -32,6 +32,7 @@ import kotlin.coroutines.suspendCoroutine
 object LocationService {
     fun requestLocationPermissionIfNeeded(activity: Activity) {
         if (!GGSettings.locationConfigured) {
+            logInfo("User has not configured whether or not location should be enabled. Prompting with dialog")
             showAlertDialog(
                 activity = activity,
                 title = "Enable Location?",
@@ -39,10 +40,12 @@ object LocationService {
                 yesText = "Yes",
                 noText = "No",
                 yesAction = {
+                    logInfo("User chose to enabled location")
                     GGSettings.locationEnabled = true
                     requestLocationPermissionsIfNeededInternal(activity)
                 },
                 noAction = {
+                    logInfo("User chose to disable location")
                     GGSettings.locationEnabled = false
                 }
             )

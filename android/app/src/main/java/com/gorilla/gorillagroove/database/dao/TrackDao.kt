@@ -25,7 +25,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
             SELECT * 
             FROM track 
             WHERE in_review = ${inReview.toInt()}
-            AND ($isHidden IS NULL OR is_hidden = ${isHidden?.toInt()})
+            AND (${isHidden?.toInt()} IS NULL OR is_hidden = ${isHidden?.toInt()})
             AND (${albumFilter?.let { 1 }} IS NULL OR album = '${albumFilter?.sqlEscaped()}')
             ORDER BY ${sortType.trackPropertyName} ${sortType.collation} ${sortDirection.name}
         """.trimIndent()

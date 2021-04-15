@@ -39,9 +39,16 @@ object GGSettings {
     val locationConfigured get() = sharedPreferences.contains("LOCATION_ENABLED")
     var locationEnabled
         get() = sharedPreferences.getBoolean("LOCATION_ENABLED", true)
-        set(value) = sharedPreferences.edit().putBoolean("LOCATION_ENABLED", value).apply()
+        set(value) {
+            logInfo("'LOCATION_ENABLED' was set to $value")
+            sharedPreferences.edit().putBoolean("LOCATION_ENABLED", value).apply()
+        }
+
 
     var locationMinimumBattery
         get() = sharedPreferences.getInt("LOCATION_MINIMUM_BATTERY", 20)
-        set(value) = sharedPreferences.edit().putInt("LOCATION_MINIMUM_BATTERY", value).apply()
+        set(value) {
+            logInfo("'LOCATION_MINIMUM_BATTERY' was set to $value")
+            sharedPreferences.edit().putInt("LOCATION_MINIMUM_BATTERY", value).apply()
+        }
 }

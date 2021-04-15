@@ -23,9 +23,6 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -232,6 +229,7 @@ class MainRepository(
     }
 
     suspend fun markTrackListenedTo(trackId: Long) {
+        logInfo("Marking track $trackId as listened to")
         val location = LocationService.getCurrentLocation()
 
         val markListenedRequest = MarkListenedRequest(
@@ -244,7 +242,9 @@ class MainRepository(
 
         try {
             networkApi.markTrackListened(markListenedRequest)
+            logInfo("Track $trackId was marked listened to")
         } catch (e: Throwable) {
+            // TODO retry policy for this request
             logNetworkException("Could not mark track as listened to!", e)
         }
     }
