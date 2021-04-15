@@ -25,8 +25,9 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 
 object LocationService {
@@ -35,8 +36,8 @@ object LocationService {
             logInfo("User has not configured whether or not location should be enabled. Prompting with dialog")
             showAlertDialog(
                 activity = activity,
-                title = "Enable Location?",
-                message = "Your location can be saved as part of your listening history",
+                title = "Enable location saving?",
+                message = "Your location can be saved with your listening history",
                 yesText = "Yes",
                 noText = "No",
                 yesAction = {
@@ -68,16 +69,36 @@ object LocationService {
                     if (result.areAllPermissionsGranted()) {
                         logInfo("User accepted location permissions")
                     } else {
+                        if (result.deniedPermissionResponses.size == 1) {
+                            val deniedPermission = result.deniedPermissionResponses.first().requestedPermission
+                            if (deniedPermission.name == Manifest.permission.ACCESS_BACKGROUND_LOCATION) {
+                                showAlertDialog(
+                                    activity = activity,
+                                    title = "Background Permission Recommended",
+                                    message = "Unless permission is granted as 'Always', your location data cannot be included when listening to music with the app in the background.\nWould you like to change it to 'Always'?",
+                                    yesText = "Let's change it",
+                                    noText = "Later",
+                                    yesAction = { openAppSettings(activity) },
+                                    noAction = { GGSettings.backgroundPermissionWarningShown = true }
+                                )
+                            }
+                        }
                         logInfo("User denied location permissions: ${result.deniedPermissionResponses}")
                     }
                 }
 
                 override fun onPermissionRationaleShouldBeShown(p0: MutableList<PermissionRequest>?, p1: PermissionToken?) {
+                    if (GGSettings.backgroundPermissionWarningShown) {
+                        return
+                    }
+
+                    GGSettings.backgroundPermissionWarningShown = true
+
                     logInfo("Showing permission rationale")
                     showAlertDialog(
                         activity = activity,
                         title = "Location Permission Needed",
-                        message = "You have enabled location saving, but have not granted Gorilla Groove location access.\nPlease enable this in the Android app settings",
+                        message = "You have enabled location saving, but have not granted Gorilla Groove enough location access.\nPlease set this to 'Always' in the Android app settings",
                         yesText = "Take me there",
                         noText = "Later",
                         yesAction = { openAppSettings(activity) }
@@ -108,21 +129,27 @@ object LocationService {
             return null
         }
 
-        return suspendCoroutine { coroutine ->
-            logDebug("Requesting user's location")
+        val cancellationToken = CancellationTokenSource()
 
-            LocationServices
-                .getFusedLocationProviderClient(GGApplication.application)
-                .getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        logDebug("Location was found")
-                        coroutine.resume(task.result)
-                    } else {
-                        logError("Unable to get location point")
-                        coroutine.resume(null)
-                    }
+        return try {
+            withTimeout(5000) {
+                logDebug("Requesting user's location")
+
+                val location = LocationServices
+                    .getFusedLocationProviderClient(GGApplication.application)
+                    .getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, cancellationToken.token)
+                    .await()
+
+                if (location != null) {
+                    logDebug("Location was found")
                 }
+
+                location
+            }
+        } catch (e: TimeoutCancellationException) {
+            logError("Could not get location within a reasonable time frame. Giving up")
+            cancellationToken.cancel()
+            null
         }
     }
 }

@@ -19,6 +19,7 @@ import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
@@ -43,7 +44,7 @@ class MainRepository(
     private val dataSourceFactory: DefaultDataSourceFactory,
     private val okClient: OkHttpClient
 ) {
-    lateinit var webSocket: WebSocket
+    var webSocket: WebSocket? = null
 
     private var userToken: String = sharedPreferences.getString(KEY_USER_TOKEN, "") ?: ""
 
@@ -110,8 +111,10 @@ class MainRepository(
         }
 
         val mes = jsonObject.toString()
-        //Log.d(TAG, "sendNowPlayingToServer: $mes")
-        webSocket.send(mes)
+        if (webSocket == null) {
+            initWebSocket()
+        }
+        webSocket?.send(mes)
     }
 
     fun sendStoppedPlayingToServer() {
@@ -122,8 +125,7 @@ class MainRepository(
         }
 
         val mes = jsonObject.toString()
-        //Log.d(TAG, "sendStoppedPlayingToServer: $mes")
-        webSocket.send(mes)
+        webSocket?.send(mes)
     }
 
 
@@ -184,6 +186,7 @@ class MainRepository(
 
     private fun initWebSocket() {
         if (userToken != "") {
+            logDebug("Initializing websocket")
             val request = Request.Builder()
                 .url("wss://gorillagroove.net/api/socket")
                 .build()
@@ -230,7 +233,12 @@ class MainRepository(
 
     suspend fun markTrackListenedTo(trackId: Long) {
         logInfo("Marking track $trackId as listened to")
-        val location = LocationService.getCurrentLocation()
+        val location = try {
+            LocationService.getCurrentLocation()
+        } catch (e: Throwable) {
+            logError("Could not get location", e)
+            null
+        }
 
         val markListenedRequest = MarkListenedRequest(
             trackId = trackId,

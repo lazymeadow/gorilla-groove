@@ -36,11 +36,19 @@ object GGSettings {
         GGApplication.application.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
     }
 
+    var backgroundPermissionWarningShown
+        get() = sharedPreferences.getBoolean("BACKGROUND_WARNING_SHOWN", false)
+        set(value) {
+            logInfo("'BACKGROUND_WARNING_SHOWN' was set to $value")
+            sharedPreferences.edit().putBoolean("BACKGROUND_WARNING_SHOWN", value).apply()
+        }
+
     val locationConfigured get() = sharedPreferences.contains("LOCATION_ENABLED")
     var locationEnabled
         get() = sharedPreferences.getBoolean("LOCATION_ENABLED", true)
         set(value) {
             logInfo("'LOCATION_ENABLED' was set to $value")
+            backgroundPermissionWarningShown = false
             sharedPreferences.edit().putBoolean("LOCATION_ENABLED", value).apply()
         }
 
