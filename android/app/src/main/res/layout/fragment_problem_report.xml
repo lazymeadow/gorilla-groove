@@ -41,22 +41,22 @@
         app:layout_constraintTop_toBottomOf="@id/explanationText"
         tools:text="Your last manual problem report was sent more than a month ago. The last automated problem report was sent more than a month ago." />
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/viewLogsButton"
         style="@style/GGButton"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:text="View Logs"
         app:layout_constraintEnd_toStartOf="@id/sendReportButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/lastLogsSentText" />
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/sendReportButton"
         style="@style/GGButton"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:text="Send Report"
         app:layout_constraintBottom_toBottomOf="@id/viewLogsButton"
         app:layout_constraintEnd_toEndOf="parent"
