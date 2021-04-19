@@ -73,7 +73,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     }
 
     override fun onPause() {
-        hideKeyboard(requireActivity())
+        requireActivity().hideKeyboard()
         super.onPause()
     }
 

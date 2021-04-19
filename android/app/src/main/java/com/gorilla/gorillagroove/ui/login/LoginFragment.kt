@@ -5,9 +5,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings.Secure
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
@@ -22,6 +20,7 @@ import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.CurrentDevice
 import com.gorilla.gorillagroove.util.GGToast
+import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_login.*
 import kotlinx.coroutines.*
@@ -69,7 +68,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
             displayProgressBar(true)
 
-            getSystemService(requireContext(), InputMethodManager::class.java)?.hideSoftInputFromWindow(view.windowToken, InputMethodManager.RESULT_UNCHANGED_SHOWN)
+            requireActivity().hideKeyboard()
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {

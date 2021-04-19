@@ -9,9 +9,12 @@ import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.Constants
+import com.gorilla.gorillagroove.util.showEditTextDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_settings.view.*
 import javax.inject.Inject
+import kotlin.math.max
+import kotlin.math.min
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
@@ -26,6 +29,18 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
         view.locationEnabledSwitch.isChecked = GGSettings.locationEnabled
         view.locationMinimumBatteryPercent.text = "${GGSettings.locationMinimumBattery}%"
+        view.locationMinimumBatteryPercent.setOnClickListener {
+            showEditTextDialog(
+                activity = requireActivity(),
+                title = "Minimum battery for location saving",
+                suffix = "%",
+                yesAction = { newMinimum ->
+                    val validatedPercent = max(0.0, min(100.0, newMinimum.toDouble())).toInt()
+                    view.locationMinimumBatteryPercent.text = "$validatedPercent%"
+                    GGSettings.locationMinimumBattery = validatedPercent
+                }
+            )
+        }
 
         view.locationEnabledSwitch.setOnCheckedChangeListener { _, isChecked -> GGSettings.locationEnabled = isChecked }
     }
