@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="vm"
             type="com.gorilla.gorillagroove.ui.settings.SettingsViewModel" />
@@ -26,13 +27,16 @@
                 android:id="@+id/locationEnabledSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:title="Enabled"
                 app:checked="@{vm.locationEnabled}"
-                />
+                app:onSwitchChanged="@{vm.onLocationChanged}"
+                app:title="Enabled" />
 
             <com.gorilla.gorillagroove.ui.settings.TextSettingItem
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:modalSuffix="%"
+                app:onTextChanged="@{vm.onMinimumBatteryChanged}"
+                app:text="@{vm.minimumRequiredBattery}"
                 app:title="Minimum Required Battery" />
 
         </com.gorilla.gorillagroove.ui.settings.SettingsGroup>

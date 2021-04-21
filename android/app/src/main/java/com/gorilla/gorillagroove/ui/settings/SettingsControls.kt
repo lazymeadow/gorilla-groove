@@ -8,22 +8,20 @@ package com.gorilla.gorillagroove.ui.settings
 
 import android.annotation.SuppressLint
 import android.app.ActionBar
+import android.app.Activity
 import android.content.Context
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import android.widget.LinearLayout
-import android.widget.RadioGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.use
-import androidx.databinding.*
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.util.getPixelsFromDp
+import com.gorilla.gorillagroove.util.showEditTextDialog
+import dagger.hilt.android.internal.managers.FragmentComponentManager.findActivity
 import kotlinx.android.synthetic.main.setting_control_group.view.*
 import kotlinx.android.synthetic.main.setting_control_switch.view.*
 import kotlinx.android.synthetic.main.setting_control_text.view.*
@@ -80,14 +78,39 @@ class SwitchSettingItem(context: Context, attrs: AttributeSet? = null) : Constra
 }
 
 class TextSettingItem(context: Context, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {
-    init {
-        val view = inflate(context, R.layout.setting_control_text, this)
+    val layout = LayoutInflater.from(context).inflate(R.layout.setting_control_text, this, true) as ConstraintLayout
 
-        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SwitchSettingParent)
-        val title = typedArray.getString(R.styleable.SwitchSettingParent_title)
-        view.textControlText.text = title
-        typedArray.recycle()
+    private var modalSuffix: String? = null
+    private lateinit var title: String
+
+    init {
+        context.obtainStyledAttributes(attrs, R.styleable.SwitchSettingParent).use { typedArray ->
+            title = typedArray.getString(R.styleable.SwitchSettingParent_title) ?: ""
+            layout.textControlText.text = title
+        }
+
+        context.obtainStyledAttributes(attrs, R.styleable.SwitchSettingText).use { typedArray ->
+            modalSuffix = typedArray.getString(R.styleable.SwitchSettingText_modalSuffix)
+        }
+
+        layout.controlValue.setOnClickListener {
+            showEditTextDialog(
+                // lol why does "findActivity" not return an ACTIVITY? So stupid
+                activity = findActivity(context) as Activity,
+                title = title,
+                suffix = modalSuffix,
+                yesAction = onTextChanged
+            )
+        }
     }
+
+    var text: String = ""
+        set(value) {
+            field = value
+            layout.controlValue.text = text
+        }
+
+    var onTextChanged: (String) -> Unit = {}
 }
 
 class SettingsDivider(context: Context) : View(context) {
