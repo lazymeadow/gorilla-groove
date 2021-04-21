@@ -60,7 +60,7 @@
     </fragment>
     <fragment
         android:id="@+id/moreMenuFragment"
-        android:name="com.gorilla.gorillagroove.ui.settings.MoreMenuFragment"
+        android:name="com.gorilla.gorillagroove.ui.MoreMenuFragment"
         android:label="SettingsFragment" >
         <action
             android:id="@+id/action_settingsFragment_to_mainFragment"

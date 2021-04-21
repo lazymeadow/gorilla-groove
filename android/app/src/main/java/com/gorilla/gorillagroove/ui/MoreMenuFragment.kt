@@ -1,4 +1,4 @@
-package com.gorilla.gorillagroove.ui.settings
+package com.gorilla.gorillagroove.ui
 
 import android.content.SharedPreferences
 import android.os.Bundle

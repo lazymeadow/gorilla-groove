@@ -3,6 +3,7 @@ package com.gorilla.gorillagroove.util
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Rect
+import android.util.TypedValue
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import com.gorilla.gorillagroove.GGApplication
@@ -11,9 +12,12 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_input_dialog.view.*
 
 
-fun getDpFromPixel(pixels: Float): Int {
-    val scale: Float = GGApplication.application.resources.displayMetrics.density
-    return (pixels * scale + 0.5f).toInt()
+fun getPixelsFromDp(dp: Float): Int {
+    return TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        dp,
+        GGApplication.application.resources.displayMetrics
+    ).toInt()
 }
 
 

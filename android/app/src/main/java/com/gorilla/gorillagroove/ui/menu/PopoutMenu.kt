@@ -14,6 +14,12 @@ import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.util.containsMotionEvent
 import kotlinx.android.synthetic.main.fragment_popout_menu.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 
 
 class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {
@@ -233,4 +239,12 @@ fun getNavigationOptions(view: View, libraryViewType: LibraryViewType): Array<Ch
     return arrayOf(trackOption, artistOption, albumOption)
 }
 
+fun bruh() {
+    CoroutineScope(Dispatchers.IO).launch {
+        simple().collect {  }
+    }
+}
 
+fun simple(): Flow<Int> = flow {
+
+}

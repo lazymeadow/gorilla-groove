@@ -12,6 +12,7 @@
     <color name="navBarUnselected">#99BDD0</color>
     <color name="actionSheetBackground">#EE111111</color>
     <color name="grey1">#333333</color>
+    <color name="settingsDividerGrey">#777777</color>
     <color name="grey6">#F2F2F2</color>
     <color name="debugGrey">#AAAAAA</color>
     <color name="background">#000000</color>

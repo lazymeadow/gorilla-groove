@@ -14,7 +14,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.util.getDpFromPixel
+import com.gorilla.gorillagroove.util.getPixelsFromDp
 import kotlinx.android.synthetic.main.dialog_bottom_notification_action.view.*
 
 class ActionSheet(activity: Activity, items: List<ActionSheetItem>) : BottomSheetDialog(activity) {
@@ -47,7 +47,7 @@ class ActionSheet(activity: Activity, items: List<ActionSheetItem>) : BottomShee
 
             if (index != items.size - 1) {
                 val spacer = View(activity)
-                val height = getDpFromPixel(1f)
+                val height = getPixelsFromDp(1f)
                 spacer.layoutParams = LinearLayout.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, height)
 
                 container.addView(spacer)

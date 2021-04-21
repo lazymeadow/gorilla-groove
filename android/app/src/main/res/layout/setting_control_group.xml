@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:ignore="HardcodedText">
+
+    <TextView
+        android:id="@+id/groupTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:layout_marginBottom="6dp"
+        android:textAlignment="textStart"
+        android:textAllCaps="true"
+        android:textSize="12sp"
+        tools:text="Save location with track history" />
+
+    <!-- Seems like this shouldn't be necessary to have another linear layout. But adding to the parent isn't working for me -->
+    <LinearLayout
+        android:id="@+id/settingsGroupOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/grey1"
+        android:orientation="vertical" />
+
+</LinearLayout>
