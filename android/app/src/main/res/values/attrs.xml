@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <attr name="checked" format="boolean"/>
-    <attr name="onSwitchChanged"/>
 
     <declare-styleable name="SwitchSettingParent">
         <attr name="title" format="string"/>

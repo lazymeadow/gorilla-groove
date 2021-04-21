@@ -21,6 +21,7 @@ import androidx.core.content.res.use
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.util.getPixelsFromDp
 import com.gorilla.gorillagroove.util.showEditTextDialog
+import com.gorilla.gorillagroove.util.showListSelectDialog
 import dagger.hilt.android.internal.managers.FragmentComponentManager.findActivity
 import kotlinx.android.synthetic.main.setting_control_group.view.*
 import kotlinx.android.synthetic.main.setting_control_switch.view.*
@@ -93,7 +94,7 @@ class TextSettingItem(context: Context, attrs: AttributeSet? = null) : Constrain
             modalSuffix = typedArray.getString(R.styleable.SwitchSettingText_modalSuffix)
         }
 
-        layout.controlValue.setOnClickListener {
+        layout.setOnClickListener {
             showEditTextDialog(
                 // lol why does "findActivity" not return an ACTIVITY? So stupid
                 activity = findActivity(context) as Activity,
@@ -111,6 +112,38 @@ class TextSettingItem(context: Context, attrs: AttributeSet? = null) : Constrain
         }
 
     var onTextChanged: (String) -> Unit = {}
+}
+
+class ListSelectSettingItem(context: Context, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {
+    val layout = LayoutInflater.from(context).inflate(R.layout.setting_control_text, this, true) as ConstraintLayout
+
+    private lateinit var title: String
+
+    init {
+        context.obtainStyledAttributes(attrs, R.styleable.SwitchSettingParent).use { typedArray ->
+            title = typedArray.getString(R.styleable.SwitchSettingParent_title) ?: ""
+            layout.textControlText.text = title
+        }
+
+        layout.setOnClickListener {
+            showListSelectDialog(
+                activity = findActivity(context) as Activity,
+                title = title,
+                yesAction = onOptionPicked,
+                options = options,
+            )
+        }
+    }
+
+    var text: String = ""
+        set(value) {
+            field = value
+            layout.controlValue.text = text
+        }
+
+    var onOptionPicked: (String) -> Unit = {}
+
+    var options: LinkedHashMap<String, Boolean> = linkedMapOf()
 }
 
 class SettingsDivider(context: Context) : View(context) {

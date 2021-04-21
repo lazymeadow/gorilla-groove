@@ -4,18 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="vm"
             type="com.gorilla.gorillagroove.ui.settings.SettingsViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background"
-        android:paddingTop="6dp"
-        tools:ignore="HardcodedText, RtlSymmetry">
+        tools:ignore="HardcodedText, RtlSymmetry"
+        android:orientation="vertical">
 
         <com.gorilla.gorillagroove.ui.settings.SettingsGroup
             android:layout_width="match_parent"
@@ -24,7 +23,6 @@
             app:title="Save location with track history">
 
             <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
-                android:id="@+id/locationEnabledSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:checked="@{vm.locationEnabled}"
@@ -41,5 +39,37 @@
 
         </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.gorilla.gorillagroove.ui.settings.SettingsGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="Offline storage">
+
+            <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:checked="@{vm.offlineStorageEnabled}"
+                app:onSwitchChanged="@{vm.onOfflineStorageChanged}"
+                app:title="Enabled" />
+
+            <com.gorilla.gorillagroove.ui.settings.ListSelectSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:onOptionPicked="@{vm.onOfflineDownloadConditionPicked}"
+                app:options="@{vm.offlineDownloadOptions}"
+                app:text="@{vm.offlineDownloadCondition.displayName}"
+                app:title="Download Offline Music" />
+
+            <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:modalSuffix="GB"
+                app:onTextChanged="@{vm.onMaximumOfflineStorageChanged}"
+                app:text="@{vm.maximumOfflineStorage}"
+                app:title="Maximum Offline Storage" />
+
+        </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
+
+    </LinearLayout>
 </layout>

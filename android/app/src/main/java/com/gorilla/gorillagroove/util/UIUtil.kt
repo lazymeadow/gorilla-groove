@@ -117,3 +117,27 @@ fun showEditTextDialog(
 
     view.editText.focusAndShowKeyboard()
 }
+
+fun showListSelectDialog(
+    activity: Activity,
+    title: String? = null,
+    options: LinkedHashMap<String, Boolean>, // Boolean is whether or not it should be checked
+    yesAction: (String) -> Unit = {},
+) {
+    val builder = AlertDialog.Builder(activity)
+    builder.setTitle(title)
+
+    val optionsArray = options.keys.toTypedArray()
+    var checkedItemIndex = optionsArray.indexOfFirst { options.getValue(it) }
+
+    builder.setSingleChoiceItems(optionsArray, checkedItemIndex) { _, selectedIndex ->
+        checkedItemIndex = selectedIndex
+    }
+
+    builder.setNegativeButton("Cancel") { _, _ -> }
+    builder.setPositiveButton("Update") { _, _ ->
+        yesAction(optionsArray[checkedItemIndex])
+    }
+
+    builder.show()
+}

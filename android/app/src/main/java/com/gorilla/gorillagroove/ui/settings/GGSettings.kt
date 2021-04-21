@@ -34,4 +34,45 @@ object GGSettings {
             logInfo("'LOCATION_MINIMUM_BATTERY' was set to $value")
             sharedPreferences.edit().putInt("LOCATION_MINIMUM_BATTERY", value).apply()
         }
+
+    var offlineStorageEnabled
+        get() = sharedPreferences.getBoolean("STORAGE_ENABLED", true)
+        set(value) {
+            logInfo("'STORAGE_ENABLED' was set to $value")
+            sharedPreferences.edit().putBoolean("STORAGE_ENABLED", value).apply()
+        }
+
+    var offlineStorageMode: OfflineStorageMode
+        get() {
+            val code = sharedPreferences.getInt("OFFLINE_STORAGE_MODE", OfflineStorageMode.WIFI.storageCode)
+            return OfflineStorageMode.findByCode(code)
+        }
+        set(value) {
+            logInfo("'OFFLINE_STORAGE_MODE' was set to $value")
+            sharedPreferences.edit().putInt("OFFLINE_STORAGE_MODE", value.storageCode).apply()
+        }
+    var maximumOfflineStorageBytes: Long
+        get() = sharedPreferences.getLong("MAX_OFFLINE_STORAGE_BYTES", 5_000_000_000L)
+        set(value) {
+            logInfo("'MAX_OFFLINE_STORAGE_BYTES' was set to $value")
+            sharedPreferences.edit().putLong("MAX_OFFLINE_STORAGE_BYTES", value).apply()
+        }
+}
+
+enum class OfflineStorageMode(val displayName: String, val storageCode: Int) {
+    ALWAYS("Always", 0),
+    WIFI("On Wi-Fi", 1),
+    NEVER("Never", 2);
+
+    companion object {
+        fun findByCode(code: Int): OfflineStorageMode {
+            return values().find { it.storageCode == code }
+                ?: throw IllegalArgumentException("No OfflineStorageMode found for code $code!")
+        }
+
+        fun findByDisplayName(displayName: String): OfflineStorageMode {
+            return values().find { it.displayName == displayName }
+                ?: throw IllegalArgumentException("No OfflineStorageMode found for displayName $displayName!")
+        }
+    }
 }

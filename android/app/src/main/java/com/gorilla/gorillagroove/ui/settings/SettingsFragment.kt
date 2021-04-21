@@ -1,12 +1,14 @@
 package com.gorilla.gorillagroove.ui.settings
 
 import android.os.Bundle
+import android.text.format.Formatter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.databinding.FragmentSettingsBinding
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -20,7 +22,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private val vm: SettingsViewModel by viewModels()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val binding = FragmentSettingsBinding.inflate(inflater)
         binding.vm = vm
         binding.lifecycleOwner = this
@@ -48,4 +50,36 @@ class SettingsViewModel : ViewModel() {
         minimumRequiredBattery.value = "$validatedPercent%"
         GGSettings.locationMinimumBattery = validatedPercent
     }
+
+    var offlineStorageEnabled = KtLiveData(GGSettings.offlineStorageEnabled)
+    val onOfflineStorageChanged = { isChecked: Boolean ->
+        offlineStorageEnabled.value = isChecked
+        GGSettings.offlineStorageEnabled = isChecked
+    }
+
+    var offlineDownloadCondition = KtLiveData(GGSettings.offlineStorageMode)
+    val offlineDownloadOptions = linkedMapOf(
+        OfflineStorageMode.ALWAYS.displayName to (offlineDownloadCondition.value == OfflineStorageMode.ALWAYS),
+        OfflineStorageMode.WIFI.displayName to (offlineDownloadCondition.value == OfflineStorageMode.WIFI),
+        OfflineStorageMode.NEVER.displayName to (offlineDownloadCondition.value == OfflineStorageMode.NEVER),
+    )
+    val onOfflineDownloadConditionPicked = { newOptionDisplayName: String ->
+        val newOption = OfflineStorageMode.findByDisplayName(newOptionDisplayName)
+        offlineDownloadCondition.value = newOption
+
+        offlineDownloadOptions.forEach { (option, _) -> offlineDownloadOptions[option] = false }
+        offlineDownloadOptions[newOptionDisplayName] = true
+
+        GGSettings.offlineStorageMode = newOption
+    }
+
+    var maximumOfflineStorage = KtLiveData(GGSettings.maximumOfflineStorageBytes.toReadableByteString())
+    val onMaximumOfflineStorageChanged = { newMaximumGb: String ->
+        val bytes = (newMaximumGb.toDouble() * 1_000_000_000L).toLong()
+
+        maximumOfflineStorage.value = bytes.toReadableByteString()
+        GGSettings.maximumOfflineStorageBytes = bytes
+    }
 }
+
+fun Long.toReadableByteString(): String = Formatter.formatShortFileSize(GGApplication.application, this)
