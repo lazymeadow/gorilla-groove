@@ -84,7 +84,35 @@ class TextSettingItem(context: Context, attrs: AttributeSet? = null) : Constrain
     private var modalSuffix: String? = null
     private lateinit var title: String
 
+    var onTextChanged: ((String) -> Unit)? = null
+        set(value) {
+            field = value
+
+            // Not all text controls are editable. Hide the chevron from the UI if they're display-only.
+            // Also remove or add the click handler
+            if (value == null) {
+                layout.controlChevron.visibility = View.GONE
+                layout.setOnClickListener(null)
+                // Have to disable sound effects manually because the click handler is still alive after it's set null I guess. Thanks, Google.
+                layout.isSoundEffectsEnabled = false
+            } else {
+                layout.controlChevron.visibility = View.VISIBLE
+                layout.isSoundEffectsEnabled = true
+                layout.setOnClickListener {
+                    showEditTextDialog(
+                        // lol why does "findActivity" not return an ACTIVITY? So stupid
+                        activity = findActivity(context) as Activity,
+                        title = title,
+                        suffix = modalSuffix,
+                        yesAction = value
+                    )
+                }
+            }
+        }
+
     init {
+        layout.controlChevron.visibility = View.GONE
+
         context.obtainStyledAttributes(attrs, R.styleable.SwitchSettingParent).use { typedArray ->
             title = typedArray.getString(R.styleable.SwitchSettingParent_title) ?: ""
             layout.textControlText.text = title
@@ -93,16 +121,6 @@ class TextSettingItem(context: Context, attrs: AttributeSet? = null) : Constrain
         context.obtainStyledAttributes(attrs, R.styleable.SwitchSettingText).use { typedArray ->
             modalSuffix = typedArray.getString(R.styleable.SwitchSettingText_modalSuffix)
         }
-
-        layout.setOnClickListener {
-            showEditTextDialog(
-                // lol why does "findActivity" not return an ACTIVITY? So stupid
-                activity = findActivity(context) as Activity,
-                title = title,
-                suffix = modalSuffix,
-                yesAction = onTextChanged
-            )
-        }
     }
 
     var text: String = ""
@@ -110,8 +128,6 @@ class TextSettingItem(context: Context, attrs: AttributeSet? = null) : Constrain
             field = value
             layout.controlValue.text = text
         }
-
-    var onTextChanged: (String) -> Unit = {}
 }
 
 class ListSelectSettingItem(context: Context, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {

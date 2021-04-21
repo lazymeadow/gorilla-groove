@@ -69,6 +69,24 @@
                 app:text="@{vm.maximumOfflineStorage}"
                 app:title="Maximum Offline Storage" />
 
+            <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:text="@{vm.offlineStorageUsed}"
+                app:title="Offline Storage Used" />
+
+            <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:text="@{vm.alwaysOfflineTracksCached}"
+                app:title="Always Offline Tracks Cached" />
+
+            <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:text="@{vm.tracksTemporarilyCached.toString()}"
+                app:title="Tracks Temporarily Cached" />
+
         </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
 
     </LinearLayout>

@@ -80,6 +80,11 @@ class SettingsViewModel : ViewModel() {
         maximumOfflineStorage.value = bytes.toReadableByteString()
         GGSettings.maximumOfflineStorageBytes = bytes
     }
+
+    var offlineStorageUsed = KtLiveData(0L.toReadableByteString())
+
+    var alwaysOfflineTracksCached = KtLiveData("0 / 0")
+    var tracksTemporarilyCached = KtLiveData(0)
 }
 
 fun Long.toReadableByteString(): String = Formatter.formatShortFileSize(GGApplication.application, this)

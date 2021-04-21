@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:paddingEnd="8dp"
     tools:ignore="RtlSymmetry,HardcodedText">
 
     <TextView
@@ -37,12 +38,11 @@
         android:id="@+id/controlChevron"
         android:layout_width="18dp"
         android:layout_height="18dp"
-        android:layout_marginEnd="8dp"
         android:contentDescription="Right Arrow"
         android:src="@drawable/ic_arrow_forward_ios_black_24dp"
         app:layout_constraintBottom_toBottomOf="@id/controlValue"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/controlValue"
-        app:tint="@color/debugGrey" />
+        app:tint="@color/settingsDividerGrey" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
