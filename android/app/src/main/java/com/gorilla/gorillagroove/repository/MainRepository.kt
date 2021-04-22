@@ -10,8 +10,10 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.FileDataSource
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.network.OkHttpWebSocket
@@ -22,6 +24,8 @@ import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.ui.CacheType
+import com.gorilla.gorillagroove.ui.TrackCacheService
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
 import kotlinx.coroutines.runBlocking
@@ -42,7 +46,8 @@ class MainRepository(
     private val networkApi: NetworkApi,
     private val sharedPreferences: SharedPreferences,
     private val dataSourceFactory: DefaultDataSourceFactory,
-    private val okClient: OkHttpClient
+    private val okClient: OkHttpClient,
+    private val trackDao: TrackDao,
 ) {
     var webSocket: WebSocket? = null
 
@@ -168,7 +173,7 @@ class MainRepository(
             lastVerifiedTrack = id
             lastFetchedLinks
         } catch (e: Exception) {
-            logNetworkException("Could not fetch track links!", e)
+            e.logNetworkException("Could not fetch track links!")
             TrackLinkResponse(" ", null)
         }
     }
@@ -209,15 +214,35 @@ class MainRepository(
                 }
 
                 oldUri = dataSpec.uri
-                lateinit var fetchedUri: Uri
-                lateinit var fetchedUris: TrackLinkResponse
-                runBlocking {
-                    fetchedUris =
-                        getTrackLinks(Integer.parseInt(dataSpec.uri.toString()).toLong())
+
+                if (track.songCachedAt != null) {
+                    logDebug("Track ${track.id} is available offline")
+                    TrackCacheService.getCacheItem(track.id, CacheType.AUDIO)?.let { cachedAudio ->
+                        val fileUri = Uri.fromFile(cachedAudio)
+                        newUri = fileUri
+                        return dataSpec.buildUpon().setUri(fileUri).build()
+                    } ?: run {
+                        logError("Track ${track.id} was available offline, but no cached file could be found! Marking track as not available offline")
+                        val refreshedTrack = trackDao.findById(track.id) ?: run {
+                            logError("Could not find refreshed track with ID: ${track.id}! This could easily stop music playback")
+                            null
+                        }
+                        refreshedTrack?.let {
+                            it.songCachedAt = null
+                            trackDao.save(it)
+                        }
+                    }
                 }
 
-                fetchedUri = Uri.parse(fetchedUris.trackLink)
+                // If we got here it means our cache didn't exist or had issues
+                val fetchedUri = runBlocking {
+                    logDebug("Fetching track links for track ${track.id}")
+                    val fetchedUris = getTrackLinks(Integer.parseInt(dataSpec.uri.toString()).toLong())
+                    return@runBlocking Uri.parse(fetchedUris.trackLink)
+                }
+
                 newUri = fetchedUri
+                logDebug("Listening to track with uri: '$newUri'")
 
                 return dataSpec.buildUpon().setUri(fetchedUri).build()
             }
@@ -253,7 +278,7 @@ class MainRepository(
             logInfo("Track $trackId was marked listened to")
         } catch (e: Throwable) {
             // TODO retry policy for this request
-            logNetworkException("Could not mark track as listened to!", e)
+            e.logNetworkException("Could not mark track as listened to!")
         }
     }
 
@@ -267,7 +292,7 @@ class MainRepository(
         try {
             networkApi.uploadCrashReport(multipartFile)
         } catch (e: Throwable) {
-            logNetworkException("Could not upload crash report!", e)
+            e.logNetworkException("Could not upload crash report!")
         }
     }
 
@@ -289,17 +314,17 @@ class MainRepository(
             sharedPreferences.edit().putString(lastPostedVersionKey, version).apply()
             logInfo("Posted version $version to the API")
         } catch (e: Throwable) {
-            logNetworkException("Could not update device version!", e)
+            e.logNetworkException("Could not update device version!")
         }
     }
+}
 
-    private fun logNetworkException(message: String, e: Throwable) {
-        if (e is HttpException) {
-            val errorBody = e.response()?.errorBody()?.string() ?: "No http error provided"
-            logError("message \n${errorBody}")
-        } else {
-            logError(message, e)
-        }
+fun Throwable.logNetworkException(message: String) {
+    if (this is HttpException) {
+        val errorBody = response()?.errorBody()?.string() ?: "No http error provided"
+        logError("message \n${errorBody}")
+    } else {
+        logError(message, this)
     }
 }
 

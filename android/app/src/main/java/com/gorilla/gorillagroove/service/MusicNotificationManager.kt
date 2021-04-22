@@ -75,9 +75,6 @@ class MusicNotificationManager(
             return mediaController.metadata.description.subtitle.toString()
         }
 
-
-
-
         override fun getCurrentLargeIcon(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback

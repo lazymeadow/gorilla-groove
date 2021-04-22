@@ -1,12 +1,11 @@
 package com.gorilla.gorillagroove.database
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
-import androidx.room.TypeConverters
+import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.dao.*
 import com.gorilla.gorillagroove.database.entity.*
+import com.gorilla.gorillagroove.database.migrations.MIGRATION_1_2
 import java.time.Instant
 
 @Database(
@@ -32,6 +31,23 @@ abstract class GorillaDatabase: RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME: String = "gorilla_db"
+
+        private var activeDatabase: GorillaDatabase? = null
+
+        fun getDatabase(): GorillaDatabase {
+            activeDatabase?.let { return it }
+
+            val newDatabase = Room.databaseBuilder(
+                GGApplication.application,
+                GorillaDatabase::class.java,
+                DATABASE_NAME
+            ).addMigrations(
+                MIGRATION_1_2
+            ).build()
+
+            activeDatabase = newDatabase
+            return newDatabase
+        }
     }
 }
 

@@ -44,14 +44,24 @@ object GGLog {
         }
     }
 
-    fun Any.logVerbose(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.VERBOSE)
-    fun Any.logDebug(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.DEBUG)
-    fun Any.logInfo(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.INFO)
-    fun Any.logWarn(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.WARNING)
-    fun Any.logError(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.ERROR)
-    fun Any.logError(message: String, e: Throwable) = logMessage(this.javaClass.simpleName, message + "\n${Log.getStackTraceString(e)}", LogLevel.ERROR)
-    fun Any.logCrit(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.CRITICAL)
-    fun Any.logCrit(message: String, e: Throwable) = logMessage(this.javaClass.simpleName, message + "\n${Log.getStackTraceString(e)}", LogLevel.CRITICAL)
+    fun Any.logVerbose(message: String) = logMessage(this.logTag, message, LogLevel.VERBOSE)
+    fun Any.logDebug(message: String) = logMessage(this.logTag, message, LogLevel.DEBUG)
+    fun Any.logInfo(message: String) = logMessage(this.logTag, message, LogLevel.INFO)
+    fun Any.logWarn(message: String) = logMessage(this.logTag, message, LogLevel.WARNING)
+    fun Any.logError(message: String) = logMessage(this.logTag, message, LogLevel.ERROR)
+    fun Any.logError(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${Log.getStackTraceString(e)}", LogLevel.ERROR)
+    fun Any.logCrit(message: String) = logMessage(this.logTag, message, LogLevel.CRITICAL)
+    fun Any.logCrit(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${Log.getStackTraceString(e)}", LogLevel.CRITICAL)
+
+    // I ran into situations where some stuff had no simpleName, but their enclosing classes did.
+    private val Any.logTag: String get() {
+        var currentClass: Class<*> = this.javaClass
+        while (currentClass.simpleName.isEmpty()) {
+            currentClass = currentClass.enclosingClass ?: return "UNKNOWN"
+        }
+
+        return currentClass.simpleName
+    }
 
     private fun logMessage(tag: String, message: String, logLevel: LogLevel) {
         if (logLevel.priority < minimumLogLevel.priority) {

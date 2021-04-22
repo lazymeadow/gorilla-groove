@@ -14,8 +14,11 @@ import retrofit2.http.*
 
 interface NetworkApi {
 
-    @GET("/api/file/link/{id}?artSize=SMALL")
-    suspend fun getTrackLink(@Path("id") songId: Long): TrackLinkResponse
+    @GET("/api/file/link/{id}")
+    suspend fun getTrackLink(
+        @Path("id") trackId: Long,
+        @Query("artSize") size: String = "LARGE",
+    ): TrackLinkResponse
 
     @POST("/api/authentication/login")
     suspend fun login(@Body loginRequest: LoginRequest): LoginResponseNetworkEntity

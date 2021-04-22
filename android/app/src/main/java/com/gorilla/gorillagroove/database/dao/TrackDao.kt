@@ -50,6 +50,14 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
     ): List<String>
 
     @Query("""
+        SELECT *
+        FROM track 
+        WHERE offline_availability = 'AVAILABLE_OFFLINE'
+        AND song_cached_at IS NULL
+ """)
+    abstract fun getTracksNeedingCached(): List<DbTrack>
+
+    @Query("""
         SELECT id, album 
         FROM track 
         WHERE in_review = :inReview

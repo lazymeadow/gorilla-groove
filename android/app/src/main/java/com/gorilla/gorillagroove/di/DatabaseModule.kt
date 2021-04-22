@@ -1,9 +1,7 @@
 package com.gorilla.gorillagroove.di
 
 import android.content.Context
-import androidx.room.Room
 import com.gorilla.gorillagroove.database.GorillaDatabase
-import com.gorilla.gorillagroove.database.migrations.MIGRATION_1_2
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,13 +16,7 @@ object DatabaseModule {
     @Singleton
     @Provides
     fun provideTrackDb(@ApplicationContext context: Context): GorillaDatabase {
-        return Room.databaseBuilder(
-            context,
-            GorillaDatabase::class.java,
-            GorillaDatabase.DATABASE_NAME
-        ).addMigrations(
-            MIGRATION_1_2
-        ).build()
+        return GorillaDatabase.getDatabase()
     }
 
     @Singleton

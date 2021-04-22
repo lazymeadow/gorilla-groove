@@ -84,12 +84,14 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
     @Subscribe(threadMode = ThreadMode.ASYNC)
     fun onTouchDownEvent(event: MotionEvent) = popoutMenu.handleScreenTap(event, this)
 
+    private var searchItem: MenuItem? = null
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.app_bar_menu, menu)
 
-        val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
+        searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem!!.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -118,6 +120,8 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
     private fun setupRecyclerView() = artists_rv.apply {
         artistAdapter = ArtistsAdapter { artist ->
             logInfo("Artist '$artist' was tapped")
+
+            searchItem?.collapseActionView()
 
             val bundle = bundleOf(
                 "ARTIST" to artist,

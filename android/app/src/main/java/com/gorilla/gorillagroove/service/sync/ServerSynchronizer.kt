@@ -6,6 +6,7 @@ import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.ui.OfflineModeService
 import com.gorilla.gorillagroove.util.toMutableMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -103,6 +104,8 @@ class ServerSynchronizer(
         synchronized(this) { syncRunning = false }
 
         logInfo("Sync has finished running")
+
+        OfflineModeService.downloadAlwaysOfflineTracks()
     }
 }
 

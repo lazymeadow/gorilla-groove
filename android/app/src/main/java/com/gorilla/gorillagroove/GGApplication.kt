@@ -20,9 +20,9 @@ class GGApplication : Application() {
     lateinit var serverSynchronizer: ServerSynchronizer
 
     override fun onCreate() {
-        super.onCreate()
-
         application = this
+
+        super.onCreate()
 
         Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }
 

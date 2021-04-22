@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.gorilla.gorillagroove.database.dao.TrackDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,8 +22,9 @@ object RepositoryModule {
         retrofit: NetworkApi,
         sharedPreferences: SharedPreferences,
         dataSourceFactory: DefaultDataSourceFactory,
+        trackDao: TrackDao,
         @NetworkModule.OkHttpClientProvider okClient: OkHttpClient
     ): MainRepository {
-        return MainRepository(retrofit, sharedPreferences, dataSourceFactory, okClient)
+        return MainRepository(retrofit, sharedPreferences, dataSourceFactory, okClient, trackDao)
     }
 }

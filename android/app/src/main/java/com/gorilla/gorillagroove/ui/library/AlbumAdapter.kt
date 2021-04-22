@@ -59,7 +59,7 @@ class AlbumAdapter(
                 itemView.albumArt.setImageBitmap(null)
                 if (!album.albumArtFetched) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        networkApi.getTrackLink(album.trackId).albumArtLink?.let { artLink ->
+                        networkApi.getTrackLink(album.trackId, "SMALL").albumArtLink?.let { artLink ->
                             val artBitmap = Glide.with(GGApplication.application).applyDefaultRequestOptions(glideOptions)
                                 .asBitmap()
                                 .load(artLink)
