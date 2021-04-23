@@ -102,12 +102,14 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
     @Subscribe(threadMode = ThreadMode.ASYNC)
     fun onTouchDownEvent(event: MotionEvent) = popoutMenu.handleScreenTap(event, this)
 
+    private var searchItem: MenuItem? = null
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.app_bar_menu, menu)
 
-        val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
+        searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem!!.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -137,8 +139,11 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
         albumAdapter = AlbumAdapter(networkApi) { album ->
             logInfo("Album '$album' was tapped")
 
+            searchItem?.collapseActionView()
+
             val bundle = bundleOf(
                 "ALBUM" to album.name,
+                "ARTIST" to artistFilter,
                 "SHOW_HIDDEN" to showHidden,
             )
             findNavController().navigate(R.id.libraryTrackFragment, bundle)

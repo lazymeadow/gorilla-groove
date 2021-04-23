@@ -20,13 +20,17 @@ class LibraryTrackFragment : TrackListFragment() {
     lateinit var trackDao: TrackDao
 
     private var albumFilter: String? = null
+    private var artistFilter: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         arguments?.getString("ALBUM")?.let { albumFilter ->
             this.albumFilter = albumFilter
-            requireActivity().title_tv.text = albumFilter
+            requireActivity().title_tv.text = albumFilter.takeIf { it.isNotEmpty() } ?: "(No Album)"
+        }
+        arguments?.getString("ARTIST")?.let { artistFilter ->
+            this.artistFilter = artistFilter
         }
     }
 
@@ -55,6 +59,7 @@ class LibraryTrackFragment : TrackListFragment() {
                 sortType = activeSort.sortType,
                 isHidden = isHidden,
                 albumFilter = albumFilter,
+                artistFilter = artistFilter,
                 sortDirection = activeSort.sortDirection
             )
 

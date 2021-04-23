@@ -18,6 +18,7 @@ import com.gorilla.gorillagroove.service.GGLog.logVerbose
 import com.gorilla.gorillagroove.service.GGLog.logWarn
 import com.gorilla.gorillagroove.ui.currentPlayBackPosition
 import com.gorilla.gorillagroove.util.KtLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MusicServiceConnection(
     context: Context,
@@ -28,8 +29,8 @@ class MusicServiceConnection(
     val networkFailure = KtLiveData(false)
     val playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
     val repeatState = KtLiveData(PlaybackStateCompat.REPEAT_MODE_NONE)
-    val nowPlaying = KtLiveData(NOTHING_PLAYING)
-    val currentSongTimeMillis = KtLiveData(0L)
+    val nowPlaying = MutableStateFlow(NOTHING_PLAYING)
+    val currentSongTimeMillis = MutableStateFlow(0L)
 
     val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
@@ -52,7 +53,7 @@ class MusicServiceConnection(
             val nextSongTime = playbackState.value.currentPlayBackPosition
 
             if (currentSongTimeMillis.value != nextSongTime) {
-                currentSongTimeMillis.postValue(nextSongTime)
+                currentSongTimeMillis.value = nextSongTime
             }
         }
     }
@@ -123,13 +124,11 @@ class MusicServiceConnection(
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             logVerbose("Media metadata was changed")
 
-            nowPlaying.postValue(
-                if (metadata?.id == null) {
-                    NOTHING_PLAYING
-                } else {
-                    metadata
-                }
-            )
+            nowPlaying.value = if (metadata?.id == null) {
+                NOTHING_PLAYING
+            } else {
+                metadata
+            }
         }
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
             logVerbose("Media queue was changed")

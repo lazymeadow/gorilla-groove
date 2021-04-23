@@ -21,7 +21,8 @@ class TrackSynchronizer(
 
     override suspend fun convertToDatabaseEntity(networkEntity: TrackResponse) = networkEntity.asTrack()
 
-    // TODO use this to invalidate cache once we have a cache
+    // TODO use this to invalidate cache once we have a cache if the track or art are changed
+    // Make sure to also purge tracks that are marked "NEVER" on caching
     override fun onEntityUpdate(entity: DbTrack) {
         super.onEntityUpdate(entity)
     }

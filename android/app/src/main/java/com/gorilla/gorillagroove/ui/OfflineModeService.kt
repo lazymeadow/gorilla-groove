@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.work.*
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.di.NetworkModule
 import com.gorilla.gorillagroove.repository.logNetworkException
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.ui.settings.GGSettings
 import com.gorilla.gorillagroove.util.getNullableLong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,28 +21,110 @@ import java.net.URL
 import java.time.Instant
 
 
+// Because for some reason work manager doesn't let you know when stuff finished.
+private val pendingTasks = mutableSetOf<Long>()
+
 object OfflineModeService {
 
     private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
     @Synchronized
-    fun downloadAlwaysOfflineTracks() {
+    suspend fun downloadAlwaysOfflineTracks() = withContext(Dispatchers.IO) {
+        logDebug("Downloading 'AVAILABLE_OFFLINE' tracks if needed")
+
         val workManager = WorkManager.getInstance(GGApplication.application)
 
         val tracksNeedingCache = trackDao.getTracksNeedingCached()
+        val totalRequiredBytes = trackDao.getTotalBytesRequiredForFullCache()
 
-        // TODO verify there's enough space to do the download
+        val allowedStorage = GGSettings.maximumOfflineStorageBytes
 
-        val workRequests = tracksNeedingCache.map { track ->
-            OneTimeWorkRequest.Builder(TrackDownloadWorker::class.java)
-                .setInputData(workDataOf("trackId" to track.id))
-                .build()
+        var byteLimit = Long.MAX_VALUE
+        if (allowedStorage < totalRequiredBytes) {
+            // TODO alert user
+
+            // If we don't have enough room to download everything, figure out how many bytes we've used on ALWAYS_AVAILABLE music and fill in the gaps
+            val existingAlwaysAvailableBytes = trackDao.getCachedTrackSizeBytes(OfflineAvailabilityType.AVAILABLE_OFFLINE)
+            byteLimit = allowedStorage - existingAlwaysAvailableBytes
         }
 
+        val workRequests = tracksNeedingCache
+            // If we don't have enough storage space to download all AVAILABLE_OFFLINE music, only take them until we run out of space
+            .filter { track ->
+                val canDownload = track.bytesNeedingDownload < byteLimit
+                if (canDownload) {
+                    byteLimit -= track.bytesNeedingDownload
+                }
+                canDownload
+            }
+            .map { track ->
+                pendingTasks.add(track.id)
+
+                OneTimeWorkRequest.Builder(TrackDownloadWorker::class.java)
+                    .setInputData(workDataOf("trackId" to track.id))
+                    .build()
+            }
+
         if (workRequests.isNotEmpty()) {
+            logDebug("Enqueueing ${workRequests.size} download requests for 'AVAILABLE_OFFLINE' tracks")
             workManager.enqueue(workRequests)
         }
     }
+
+    fun cleanUpCachedTracks() {
+        logDebug("Checking if tracks need to be purged from cache")
+        val allowedStorage = GGSettings.maximumOfflineStorageBytes
+
+        val usedStorage = trackDao.getCachedTrackSizeBytes()
+
+        // No need to clean anything up if we aren't over our cap
+        if (allowedStorage > usedStorage) {
+            logDebug("No track purge necessary")
+            return
+        }
+
+        var bytesToPurge = usedStorage - allowedStorage
+
+        logInfo("Cache is over-full! Need to purge $bytesToPurge bytes")
+
+        // We are over our cap. First purge tracks that are not marked "AVAILABLE_OFFLINE"
+        // They are ordered by least recency. So we can iterate and purge until we have purged enough.
+        val dynamicCacheTracks = trackDao.getCachedTrackByOfflineTypeSortedByOldestStarted(OfflineAvailabilityType.NORMAL)
+        dynamicCacheTracks.forEach { cachedTrack ->
+            if (bytesToPurge > 0) {
+                if (cachedTrack.songCachedAt != null) {
+                    val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
+                    bytesToPurge -= bytesRemoved
+                }
+            }
+        }
+
+        if (bytesToPurge < 0) {
+            logInfo("Cache has been reigned in")
+            return
+        }
+
+        // We are now in a situation where the user has not given us enough storage to store everything marked "AVAILABLE_OFFLINE".
+        // We cannot honor these tracks and the storage setting, and must purge the tracks.
+        val alwaysOfflineCacheTracks = trackDao.getCachedTrackByOfflineTypeSortedByOldestStarted(OfflineAvailabilityType.AVAILABLE_OFFLINE)
+        alwaysOfflineCacheTracks.forEach { cachedTrack ->
+            if (bytesToPurge > 0) {
+                if (cachedTrack.songCachedAt != null) {
+                    val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
+                    bytesToPurge -= bytesRemoved
+                }
+            }
+        }
+
+        logInfo("Cache has been reigned in")
+    }
+}
+
+val DbTrack.bytesNeedingDownload: Int get() {
+    val audioBytes = if (this.songCachedAt == null) this.filesizeAudio else 0
+    val artBytes = if (this.artCachedAt == null) this.filesizeArt else 0
+
+    return audioBytes + artBytes
 }
 
 object TrackCacheService {
@@ -98,6 +183,26 @@ object TrackCacheService {
         return true
     }
 
+    fun deleteCache(track: DbTrack, cacheTypes: Set<CacheType>): Int {
+        cacheTypes.forEach { cacheType ->
+            deleteCacheOnDisk(track.id, cacheType)
+        }
+
+        var bytesRemoved = 0
+        if (track.songCachedAt != null) {
+            track.songCachedAt = null
+            bytesRemoved += track.filesizeAudio
+        }
+        if (track.artCachedAt != null) {
+            track.artCachedAt = null
+            bytesRemoved += track.filesizeArt
+        }
+
+        trackDao.save(track)
+
+        return bytesRemoved
+    }
+
     fun deleteCacheOnDisk(trackId: Long, cacheType: CacheType) {
         val localPath = allPaths.getValue(cacheType) + "$trackId.${cacheType.extension}"
 
@@ -133,6 +238,10 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
             networkApi.getTrackLink(trackId)
         } catch (e: Throwable) {
             e.logNetworkException("Failed to get track links for offline download!")
+            pendingTasks.remove(trackId)
+            if (pendingTasks.isEmpty()) {
+                OfflineModeService.cleanUpCachedTracks()
+            }
             return@withContext Result.failure()
         }
 
@@ -144,6 +253,10 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
 
         logInfo("Finished download of '${OfflineAvailabilityType.AVAILABLE_OFFLINE}' track with ID: $trackId")
 
+        pendingTasks.remove(trackId)
+        if (pendingTasks.isEmpty()) {
+            OfflineModeService.cleanUpCachedTracks()
+        }
         return@withContext Result.success()
     }
 }

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.room.*
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.gorilla.gorillagroove.database.entity.DbTrack
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.ui.menu.SortDirection
 
 
@@ -13,6 +14,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
     fun findTracksWithSort(
         inReview: Boolean = false,
         isHidden: Boolean? = null,
+        artistFilter: String? = null,
         albumFilter: String? = null,
         sortType: TrackSortType,
         sortDirection: SortDirection
@@ -26,6 +28,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
             FROM track 
             WHERE in_review = ${inReview.toInt()}
             AND (${isHidden?.toInt()} IS NULL OR is_hidden = ${isHidden?.toInt()})
+            AND (${artistFilter?.let { 1 }} IS NULL OR artist = '${artistFilter?.sqlEscaped()}' OR featuring = '${artistFilter?.sqlEscaped()}')
             AND (${albumFilter?.let { 1 }} IS NULL OR album = '${albumFilter?.sqlEscaped()}')
             ORDER BY ${sortType.trackPropertyName} ${sortType.collation} ${sortDirection.name}
         """.trimIndent()
@@ -53,7 +56,10 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         SELECT *
         FROM track 
         WHERE offline_availability = 'AVAILABLE_OFFLINE'
-        AND song_cached_at IS NULL
+        AND (
+          song_cached_at IS NULL
+          OR (art_cached_at IS NULL AND filesize_art_png > 0)
+        )
  """)
     abstract fun getTracksNeedingCached(): List<DbTrack>
 
@@ -71,6 +77,45 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         isHidden: Boolean? = null,
         artistFilter: String? = null,
     ): List<Album>
+
+    // This can be simplified to use IFF() when Android lets us use SQLite 3.32.0
+    // I'm not including thumbnails here because they're too small to be worth the complication
+    @Query("""
+        SELECT sum(
+          CASE song_cached_at IS NULL
+             WHEN 1 THEN 0
+             ELSE filesize_audio_ogg
+          END
+        )
+        +
+        sum(
+          CASE art_cached_at IS NULL
+             WHEN 1 THEN 0
+             ELSE filesize_art_png
+          END
+        )
+        AS bytes
+        FROM track
+        WHERE (:offlineAvailabilityType IS NULL or offline_availability = :offlineAvailabilityType)
+ """)
+    abstract fun getCachedTrackSizeBytes(offlineAvailabilityType: OfflineAvailabilityType? = null): Long
+
+    @Query("""
+        SELECT sum(filesize_art_png) + sum(filesize_audio_ogg) AS bytes
+        FROM track
+        WHERE offline_availability = 'AVAILABLE_OFFLINE'
+; 
+ """)
+    abstract fun getTotalBytesRequiredForFullCache(): Long
+
+    @Query("""
+        SELECT *
+        FROM track
+        WHERE offline_availability = :offlineAvailabilityType
+        AND (song_cached_at IS NOT NULL OR art_cached_at IS NOT NULL)
+        ORDER BY started_on_device ASC
+ """)
+    abstract fun getCachedTrackByOfflineTypeSortedByOldestStarted(offlineAvailabilityType: OfflineAvailabilityType): List<DbTrack>
 }
 
 private const val NO_CASE = "COLLATE NOCASE"
