@@ -11,6 +11,13 @@ object GGSettings {
         GGApplication.application.getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
     }
 
+    var offlineModeEnabled
+        get() = sharedPreferences.getBoolean("OFFLINE_MODE_ENABLED", false)
+        set(value) {
+            logInfo("'OFFLINE_MODE_ENABLED' was set to $value")
+            sharedPreferences.edit().putBoolean("OFFLINE_MODE_ENABLED", value).apply()
+        }
+
     var backgroundPermissionWarningShown
         get() = sharedPreferences.getBoolean("BACKGROUND_WARNING_SHOWN", false)
         set(value) {
@@ -39,6 +46,8 @@ object GGSettings {
         get() = sharedPreferences.getBoolean("STORAGE_ENABLED", true)
         set(value) {
             logInfo("'STORAGE_ENABLED' was set to $value")
+            // TODO if this is disabled, ask the user if they want to purge all offline data
+            // But let's be real, I'll probably never get around to doing this. People can purge the cache in settings if they really want to turn this off and they probably never will want to disable it.
             sharedPreferences.edit().putBoolean("STORAGE_ENABLED", value).apply()
         }
 

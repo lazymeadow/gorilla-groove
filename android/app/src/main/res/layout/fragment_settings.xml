@@ -20,6 +20,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toTopOf="parent"
+            app:title="Offline Mode">
+
+            <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:checked="@{vm.offlineModeEnabled}"
+                app:onSwitchChanged="@{vm.onOfflineModeChanged}"
+                app:title="Enabled" />
+
+        </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
+
+        <com.gorilla.gorillagroove.ui.settings.SettingsGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
             app:title="Save location with track history">
 
             <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem

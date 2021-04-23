@@ -5,15 +5,15 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.EMPTY_PLAYBACK_STATE
 import com.gorilla.gorillagroove.service.MusicServiceConnection
 import com.gorilla.gorillagroove.util.KtLiveData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class PlayerControlsViewModel @ViewModelInject constructor(
     private val repository: MainRepository,
@@ -49,10 +49,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     private fun sendPlayStatusToServer() {
         if (isPlaying && currentMetadata != null) {
             currentMetadata?.description?.let { currTrack ->
-//                //Log.d(TAG, "Sending Now Playing to server: ${currTrack.title}: ")
-                repository.sendNowPlayingToServer(
-                    currTrack
-                )
+                repository.sendNowPlayingToServer(currTrack)
             }
         } else if (!isPlaying && currentMetadata != null) {
             repository.sendStoppedPlayingToServer()
@@ -89,35 +86,37 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         _repeatState.postValue(it)
     }
 
-    private val currentTimeObserver = Observer<Long> { newTime ->
-        if (mediaPosition.value != newTime) {
-            mediaPosition.postValue(newTime)
-        }
-    }
+    private val musicServiceConnection = musicServiceConnection.also { connection ->
+        connection.playbackState.observeForever(playbackStateObserver)
+        connection.repeatState.observeForever(repeatStateObserver)
 
-    private val mediaMetadataObserver = Observer<MediaMetadataCompat> { newMetadataItem ->
-        _currentTrackItem.postValue(newMetadataItem)
+        viewModelScope.launch(Dispatchers.Main) {
+            connection.nowPlaying.collect { newMetadataItem ->
+                _currentTrackItem.postValue(newMetadataItem)
 
-        if (newMetadataItem.description?.mediaId != "") {
-            if (currentMetadata?.description?.mediaId != newMetadataItem.description?.mediaId) {
-                currentMetadata = newMetadataItem
-                sendPlayStatusToServer()
-                newMetadataItem.description.mediaId?.toLongOrNull()?.let { newMediaId ->
-                    val trackInNP = repository.nowPlayingTracks.find { track -> newMediaId == track.id }
-                    val index = repository.nowPlayingTracks.indexOf(trackInNP)
-                    repository.currentIndex = index
+                if (newMetadataItem.description?.mediaId != "") {
+                    if (currentMetadata?.description?.mediaId != newMetadataItem.description?.mediaId) {
+                        currentMetadata = newMetadataItem
+                        sendPlayStatusToServer()
+                        newMetadataItem.description.mediaId?.toLongOrNull()?.let { newMediaId ->
+                            val trackInNP = repository.nowPlayingTracks.find { track -> newMediaId == track.id }
+                            val index = repository.nowPlayingTracks.indexOf(trackInNP)
+                            repository.currentIndex = index
 
 //                    ////Log.d(TAG, "current index: ${repository.currentIndex}")
+                        }
+                    }
                 }
             }
         }
-    }
 
-    private val musicServiceConnection = musicServiceConnection.also {
-        it.playbackState.observeForever(playbackStateObserver)
-        it.nowPlaying.observeForever(mediaMetadataObserver)
-        it.repeatState.observeForever(repeatStateObserver)
-        it.currentSongTimeMillis.observeForever(currentTimeObserver)
+        viewModelScope.launch(Dispatchers.Main) {
+            connection.currentSongTimeMillis.collect { newTime ->
+                if (mediaPosition.value != newTime) {
+                    mediaPosition.postValue(newTime)
+                }
+            }
+        }
     }
 
     fun playMedia(startingIndex: Int, tracks: List<DbTrack>) {
@@ -175,9 +174,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     override fun onCleared() {
         super.onCleared()
         musicServiceConnection.playbackState.removeObserver(playbackStateObserver)
-        musicServiceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
         musicServiceConnection.repeatState.removeObserver(repeatStateObserver)
-        musicServiceConnection.currentSongTimeMillis.observeForever(currentTimeObserver)
         updatePosition = false
     }
 

@@ -38,6 +38,12 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 }
 
 class SettingsViewModel : ViewModel() {
+    var offlineModeEnabled = KtLiveData(GGSettings.offlineModeEnabled)
+    val onOfflineModeChanged = { isChecked: Boolean ->
+        offlineModeEnabled.value = isChecked
+        GGSettings.offlineModeEnabled = isChecked
+    }
+
     var locationEnabled = KtLiveData(GGSettings.locationEnabled)
     val onLocationChanged = { isChecked: Boolean ->
         locationEnabled.value = isChecked

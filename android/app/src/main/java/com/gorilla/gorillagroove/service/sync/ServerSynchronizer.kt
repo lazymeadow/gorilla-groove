@@ -7,6 +7,7 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.OfflineModeService
+import com.gorilla.gorillagroove.ui.settings.GGSettings
 import com.gorilla.gorillagroove.util.toMutableMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -30,6 +31,10 @@ class ServerSynchronizer(
         syncTypes: Set<SyncType> = SyncType.values().toSet(),
         abortIfRecentlySynced: Boolean = false
     ) = withContext(Dispatchers.IO) {
+        if (GGSettings.offlineModeEnabled) {
+            return@withContext
+        }
+
         logInfo("Running sync with API for the types: $syncTypes")
         if (abortIfRecentlySynced && lastSync.plusSeconds(MIN_TIME_BETWEEN_SYNCS_SECONDS).isAfter(Instant.now())) {
             logDebug("Last sync was too recent. Not syncing")

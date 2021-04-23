@@ -16,6 +16,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         isHidden: Boolean? = null,
         artistFilter: String? = null,
         albumFilter: String? = null,
+        availableOffline: Boolean? = null,
         sortType: TrackSortType,
         sortDirection: SortDirection
     ): List<DbTrack> {
@@ -30,6 +31,10 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
             AND (${isHidden?.toInt()} IS NULL OR is_hidden = ${isHidden?.toInt()})
             AND (${artistFilter?.let { 1 }} IS NULL OR artist = '${artistFilter?.sqlEscaped()}' OR featuring = '${artistFilter?.sqlEscaped()}')
             AND (${albumFilter?.let { 1 }} IS NULL OR album = '${albumFilter?.sqlEscaped()}')
+            AND ($availableOffline IS NULL OR (
+                (${availableOffline?.toInt()} = 1 AND song_cached_at IS NOT NULL)
+                OR (${availableOffline?.toInt()} = 0 AND song_cached_at IS NULL)
+            ))
             ORDER BY ${sortType.trackPropertyName} ${sortType.collation} ${sortDirection.name}
         """.trimIndent()
 

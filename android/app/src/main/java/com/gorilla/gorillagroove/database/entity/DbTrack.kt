@@ -5,7 +5,6 @@ import java.io.Serializable
 import java.time.Instant
 
 @Entity(tableName = "track")
-@TypeConverters(OfflineAvailabilityTypeConverter::class)
 data class DbTrack(
     @PrimaryKey(autoGenerate = false)
     @ColumnInfo(name = "id")

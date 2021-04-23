@@ -1,6 +1,7 @@
 package com.gorilla.gorillagroove.ui
 
 import android.content.Context
+import android.net.Uri
 import androidx.work.*
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
@@ -30,6 +31,10 @@ object OfflineModeService {
 
     @Synchronized
     suspend fun downloadAlwaysOfflineTracks() = withContext(Dispatchers.IO) {
+        if (!GGSettings.offlineStorageEnabled) {
+            return@withContext
+        }
+
         logDebug("Downloading 'AVAILABLE_OFFLINE' tracks if needed")
 
         val workManager = WorkManager.getInstance(GGApplication.application)
@@ -131,9 +136,9 @@ object TrackCacheService {
     private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
     private val trackCachePath: String by lazy { "${GGApplication.application.filesDir.absolutePath}/track-cache/" }
-    val audioCachePath = trackCachePath + "audio/"
-    val artCachePath = trackCachePath + "art/"
-    val thumbnailCachePath = trackCachePath + "thumbnail/"
+    private val audioCachePath = trackCachePath + "audio/"
+    private val artCachePath = trackCachePath + "art/"
+    private val thumbnailCachePath = trackCachePath + "thumbnail/"
 
     private val allPaths = mapOf(
         CacheType.AUDIO to audioCachePath,
@@ -151,9 +156,36 @@ object TrackCacheService {
 //        }
 //    }
 
-    fun getCacheItem(trackId: Long, cacheType: CacheType): File? {
+    private fun getCacheItem(trackId: Long, cacheType: CacheType): File? {
         val localFilePath = allPaths.getValue(cacheType) + "${trackId}.${cacheType.extension}"
         return File(localFilePath).takeIf { it.exists() }
+    }
+
+    fun getCacheItemIfAvailable(track: DbTrack, cacheType: CacheType): File? {
+        when (cacheType) {
+            CacheType.AUDIO -> if (track.songCachedAt == null) return null
+            CacheType.ART -> if (track.artCachedAt == null) return null
+            CacheType.THUMBNAIL -> if (track.thumbnailCachedAt == null) return null
+        }
+
+        getCacheItem(track.id, cacheType)?.let { cachedFile ->
+            return cachedFile
+        } ?: run {
+            logError("Track ${track.id} was missing cacheType $cacheType! Marking track as not available offline")
+            val refreshedTrack = trackDao.findById(track.id) ?: run {
+                logError("Could not find refreshed track with ID: ${track.id}!")
+                return null
+            }
+
+            when (cacheType) {
+                CacheType.AUDIO -> track.songCachedAt = null
+                CacheType.ART -> track.artCachedAt = null
+                CacheType.THUMBNAIL -> track.thumbnailCachedAt = null
+            }
+
+            trackDao.save(refreshedTrack)
+            return null
+        }
     }
 
     fun cacheTrack(trackId: Long, serverUrl: String, cacheType: CacheType): Boolean {

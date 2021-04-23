@@ -2,6 +2,7 @@ package com.gorilla.gorillagroove.di
 
 import com.google.gson.*
 import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.ui.settings.GGSettings
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,6 +15,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import kotlin.RuntimeException
 
 
 @Module
@@ -60,6 +62,10 @@ object NetworkModule {
            return OkHttpClient.Builder()
                // Automatically add the authorization header if we have a valid token
                .addInterceptor { chain ->
+                   if (GGSettings.offlineModeEnabled) {
+                       throw OfflineModeEnabledException()
+                   }
+
                    val request = NetworkApi.apiToken?.let { authToken ->
                        chain.request().newBuilder().addHeader("Authorization", authToken).build()
                    } ?: run {
@@ -71,3 +77,5 @@ object NetworkModule {
                .build()
     }
 }
+
+class OfflineModeEnabledException : RuntimeException("Offline mode is enabled")

@@ -10,7 +10,6 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.FileDataSource
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.database.dao.TrackDao
@@ -26,6 +25,7 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.CacheType
 import com.gorilla.gorillagroove.ui.TrackCacheService
+import com.gorilla.gorillagroove.ui.settings.GGSettings
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
 import kotlinx.coroutines.runBlocking
@@ -190,7 +190,7 @@ class MainRepository(
     }
 
     private fun initWebSocket() {
-        if (userToken != "") {
+        if (userToken != "" && !GGSettings.offlineModeEnabled) {
             logDebug("Initializing websocket")
             val request = Request.Builder()
                 .url("wss://gorillagroove.net/api/socket")
@@ -215,23 +215,11 @@ class MainRepository(
 
                 oldUri = dataSpec.uri
 
-                if (track.songCachedAt != null) {
-                    logDebug("Track ${track.id} is available offline")
-                    TrackCacheService.getCacheItem(track.id, CacheType.AUDIO)?.let { cachedAudio ->
-                        val fileUri = Uri.fromFile(cachedAudio)
-                        newUri = fileUri
-                        return dataSpec.buildUpon().setUri(fileUri).build()
-                    } ?: run {
-                        logError("Track ${track.id} was available offline, but no cached file could be found! Marking track as not available offline")
-                        val refreshedTrack = trackDao.findById(track.id) ?: run {
-                            logError("Could not find refreshed track with ID: ${track.id}! This could easily stop music playback")
-                            null
-                        }
-                        refreshedTrack?.let {
-                            it.songCachedAt = null
-                            trackDao.save(it)
-                        }
-                    }
+                TrackCacheService.getCacheItemIfAvailable(track, CacheType.AUDIO)?.let { cachedAudioFile ->
+                    logDebug("Loading cached track data")
+                    val fileUri = Uri.fromFile(cachedAudioFile)
+                    newUri = fileUri
+                    return dataSpec.buildUpon().setUri(fileUri).build()
                 }
 
                 // If we got here it means our cache didn't exist or had issues

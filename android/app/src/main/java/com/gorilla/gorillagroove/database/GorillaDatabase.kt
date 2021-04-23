@@ -19,7 +19,7 @@ import java.time.Instant
         DbReviewSource::class,
     ], version = 2
 )
-@TypeConverters(InstantTypeConverter::class)
+@TypeConverters(InstantTypeConverter::class, OfflineAvailabilityTypeConverter::class)
 abstract class GorillaDatabase: RoomDatabase() {
 
     abstract fun syncStatusDao(): SyncStatusDao

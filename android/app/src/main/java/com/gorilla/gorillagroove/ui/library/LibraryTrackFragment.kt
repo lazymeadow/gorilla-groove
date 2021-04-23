@@ -6,6 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
+import com.gorilla.gorillagroove.ui.settings.GGSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +61,7 @@ class LibraryTrackFragment : TrackListFragment() {
                 isHidden = isHidden,
                 albumFilter = albumFilter,
                 artistFilter = artistFilter,
+                availableOffline = if (GGSettings.offlineModeEnabled) true else null,
                 sortDirection = activeSort.sortDirection
             )
 
