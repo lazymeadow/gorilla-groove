@@ -1,6 +1,7 @@
 package com.gorilla.gorillagroove.database.dao
 
 import android.graphics.Bitmap
+import androidx.annotation.IntRange
 import androidx.room.*
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.gorilla.gorillagroove.database.entity.DbTrack
@@ -101,7 +102,7 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         )
         AS bytes
         FROM track
-        WHERE (:offlineAvailabilityType IS NULL or offline_availability = :offlineAvailabilityType)
+        WHERE (:offlineAvailabilityType IS NULL OR offline_availability = :offlineAvailabilityType)
  """)
     abstract fun getCachedTrackSizeBytes(offlineAvailabilityType: OfflineAvailabilityType? = null): Long
 
@@ -121,6 +122,20 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         ORDER BY started_on_device ASC
  """)
     abstract fun getCachedTrackByOfflineTypeSortedByOldestStarted(offlineAvailabilityType: OfflineAvailabilityType): List<DbTrack>
+
+    @Query("""
+        SELECT count(*)
+        FROM track
+        WHERE (:offlineAvailabilityType IS NULL OR offline_availability = :offlineAvailabilityType)
+        AND (
+            (:isCached IS NULL OR (:isCached = 1 AND song_cached_at IS NOT NULL)) 
+            OR (:isCached IS NULL OR (:isCached = 0 AND song_cached_at IS NULL)) 
+        )
+ """)
+    abstract fun getTrackCount(
+        offlineAvailabilityType: OfflineAvailabilityType? = null,
+        isCached: Boolean? = null
+    ): Int
 }
 
 private const val NO_CASE = "COLLATE NOCASE"

@@ -96,12 +96,16 @@ enum class OfflineAvailabilityType {
 
 class OfflineAvailabilityTypeConverter {
     @TypeConverter
-    fun fromEnum(type: OfflineAvailabilityType): String {
-        return type.name
+    fun fromEnum(type: OfflineAvailabilityType?): String? {
+        return type?.name
     }
 
     @TypeConverter
-    fun fromName(name: String): OfflineAvailabilityType {
+    fun fromName(name: String?): OfflineAvailabilityType? {
+        if (name == null) {
+            return null
+        }
+
         // It is possible the API could add a new type, so we don't want to fail if we don't recognize something
         return OfflineAvailabilityType.values().find { it.name == name } ?: OfflineAvailabilityType.UNKNOWN
     }

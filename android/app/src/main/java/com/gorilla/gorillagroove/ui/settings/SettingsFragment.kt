@@ -8,12 +8,18 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.databinding.FragmentSettingsBinding
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.KtLiveData
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.max
 import kotlin.math.min
 
@@ -21,6 +27,8 @@ import kotlin.math.min
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private val vm: SettingsViewModel by viewModels()
+
+    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val binding = FragmentSettingsBinding.inflate(inflater)
@@ -34,6 +42,25 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Settings view")
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val storageUsed = trackDao.getCachedTrackSizeBytes()
+
+            val alwaysOfflineTracksCachedTotal = trackDao.getTrackCount(offlineAvailabilityType = OfflineAvailabilityType.AVAILABLE_OFFLINE, isCached = null)
+            val alwaysOfflineTracksCachedCurrent = trackDao.getTrackCount(offlineAvailabilityType = OfflineAvailabilityType.AVAILABLE_OFFLINE, isCached = true)
+
+            val tracksTemporarilyCached = trackDao.getTrackCount(offlineAvailabilityType = OfflineAvailabilityType.NORMAL, isCached = true)
+
+            withContext(Dispatchers.Main) {
+                vm.offlineStorageUsed.value = storageUsed.toReadableByteString()
+                vm.alwaysOfflineTracksCached.value = "$alwaysOfflineTracksCachedCurrent / $alwaysOfflineTracksCachedTotal"
+                vm.tracksTemporarilyCached.value = tracksTemporarilyCached
+            }
+        }
     }
 }
 
