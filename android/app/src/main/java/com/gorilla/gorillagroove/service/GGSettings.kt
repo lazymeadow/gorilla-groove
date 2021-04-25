@@ -4,7 +4,12 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.ui.OfflineModeService
 import com.gorilla.gorillagroove.util.Constants
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 object GGSettings {
     private val sharedPreferences: SharedPreferences by lazy {
@@ -60,12 +65,31 @@ object GGSettings {
             logInfo("'OFFLINE_STORAGE_MODE' was set to $value")
             sharedPreferences.edit().putInt("OFFLINE_STORAGE_MODE", value.storageCode).apply()
         }
-    var maximumOfflineStorageBytes: Long
-        get() = sharedPreferences.getLong("MAX_OFFLINE_STORAGE_BYTES", 5_000_000_000L)
+
+    private var lastStorageBytes = sharedPreferences.getLong("MAX_OFFLINE_STORAGE_BYTES", 5_000_000_000L)
+    var maximumOfflineStorageBytes = MutableStateFlow(lastStorageBytes)
+
+    var storageWarningSeen
+        get() = sharedPreferences.getBoolean("STORAGE_WARNING_SEEN", false)
         set(value) {
-            logInfo("'MAX_OFFLINE_STORAGE_BYTES' was set to $value")
-            sharedPreferences.edit().putLong("MAX_OFFLINE_STORAGE_BYTES", value).apply()
+            logInfo("'STORAGE_WARNING_SEEN' was set to $value")
+            sharedPreferences.edit().putBoolean("STORAGE_WARNING_SEEN", value).apply()
         }
+
+    init {
+        GlobalScope.launch {
+            maximumOfflineStorageBytes.collect { newStorageBytes ->
+                if (newStorageBytes == lastStorageBytes) { return@collect }
+
+                logInfo("'MAX_OFFLINE_STORAGE_BYTES' was set to $newStorageBytes")
+                sharedPreferences.edit().putLong("MAX_OFFLINE_STORAGE_BYTES", newStorageBytes).apply()
+
+                storageWarningSeen = false
+
+                OfflineModeService.downloadAlwaysOfflineTracks()
+            }
+        }
+    }
 }
 
 enum class OfflineStorageMode(val displayName: String, val storageCode: Int) {

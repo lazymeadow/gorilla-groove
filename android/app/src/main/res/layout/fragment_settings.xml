@@ -65,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:checked="@{vm.offlineStorageEnabled}"
-                app:onSwitchChanged="@{vm.onOfflineStorageChanged}"
+                app:onSwitchChanged="@{vm.onOfflineStorageEnabledChanged}"
                 app:title="Enabled" />
 
             <com.gorilla.gorillagroove.ui.settings.ListSelectSettingItem

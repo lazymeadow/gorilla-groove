@@ -16,12 +16,17 @@ import androidx.navigation.ui.setupWithNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.util.Constants
+import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
+import com.gorilla.gorillagroove.util.showAlertDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -242,11 +247,37 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        EventBus.getDefault().unregister(this)
+    }
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
             EventBus.getDefault().post(ev)
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    // For showing alert dialogs from a background action that has no concept of the current activity
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onModalOpenRequest(event: ShowAlertDialogRequest) {
+        showAlertDialog(
+            activity = this,
+            title = event.title,
+            message = event.message,
+            yesText = event.yesText,
+            noText = event.noText,
+            yesAction = event.yesAction,
+            noAction = event.noAction,
+        )
     }
 }
 

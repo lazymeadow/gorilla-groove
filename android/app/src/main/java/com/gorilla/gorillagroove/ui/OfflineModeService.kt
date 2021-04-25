@@ -1,7 +1,6 @@
 package com.gorilla.gorillagroove.ui
 
 import android.content.Context
-import android.net.Uri
 import androidx.work.*
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
@@ -13,9 +12,12 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.ui.settings.toReadableByteString
+import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
 import com.gorilla.gorillagroove.util.getNullableLong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
@@ -32,6 +34,7 @@ object OfflineModeService {
     @Synchronized
     suspend fun downloadAlwaysOfflineTracks() = withContext(Dispatchers.IO) {
         if (!GGSettings.offlineStorageEnabled) {
+            cleanUpCachedTracks()
             return@withContext
         }
 
@@ -42,11 +45,11 @@ object OfflineModeService {
         val tracksNeedingCache = trackDao.getTracksNeedingCached()
         val totalRequiredBytes = trackDao.getTotalBytesRequiredForFullCache()
 
-        val allowedStorage = GGSettings.maximumOfflineStorageBytes
+        val allowedStorage = GGSettings.maximumOfflineStorageBytes.value
 
         var byteLimit = Long.MAX_VALUE
         if (allowedStorage < totalRequiredBytes) {
-            // TODO alert user
+            showStorageWarning(allowedStorage, totalRequiredBytes)
 
             // If we don't have enough room to download everything, figure out how many bytes we've used on ALWAYS_AVAILABLE music and fill in the gaps
             val existingAlwaysAvailableBytes = trackDao.getCachedTrackSizeBytes(OfflineAvailabilityType.AVAILABLE_OFFLINE)
@@ -73,12 +76,42 @@ object OfflineModeService {
         if (workRequests.isNotEmpty()) {
             logDebug("Enqueueing ${workRequests.size} download requests for 'AVAILABLE_OFFLINE' tracks")
             workManager.enqueue(workRequests)
+        } else {
+            cleanUpCachedTracks()
         }
+    }
+
+    var alertDialogShownThisSession = false // Just so there is no spam potential if they're tweaking storage. Not saved anywhere outside of memory
+    private fun showStorageWarning(allowedStorage: Long, totalRequiredBytes: Long) {
+        if (GGSettings.storageWarningSeen || alertDialogShownThisSession) {
+            return
+        }
+
+        GGSettings.storageWarningSeen = true
+        alertDialogShownThisSession = true
+
+        // We have no reference to the current activity, so instead, broadcast an event that we want to show a dialog
+        val dialogEvent = ShowAlertDialogRequest(
+            title = "Insufficient Storage Configured",
+            message = "You have ${allowedStorage.toReadableByteString()} storage allocated for offline music, but have ${totalRequiredBytes.toReadableByteString()} of music marked 'Available Offline'. " +
+                    "Not all of your music will be able to be downloaded.\n\nYou can change your storage from Settings, or tap 'Quick fix' to increase your storage limit to {${totalRequiredBytes.toReadableByteString()}}",
+            yesText = "Quick fix",
+            noText = "Do nothing",
+            yesAction = {
+                logInfo("User opted to quick fix their storage problem")
+                GGSettings.maximumOfflineStorageBytes.value = totalRequiredBytes
+            },
+            noAction = {
+                logInfo("User ignored cache limit being exceeded")
+            }
+        )
+
+        EventBus.getDefault().post(dialogEvent)
     }
 
     fun cleanUpCachedTracks() {
         logDebug("Checking if tracks need to be purged from cache")
-        val allowedStorage = GGSettings.maximumOfflineStorageBytes
+        val allowedStorage = GGSettings.maximumOfflineStorageBytes.value
 
         val usedStorage = trackDao.getCachedTrackSizeBytes()
 
@@ -90,7 +123,7 @@ object OfflineModeService {
 
         var bytesToPurge = usedStorage - allowedStorage
 
-        logInfo("Cache is over-full! Need to purge $bytesToPurge bytes")
+        logInfo("Cache is over-full! Need to purge ${bytesToPurge.toReadableByteString()}")
 
         // We are over our cap. First purge tracks that are not marked "AVAILABLE_OFFLINE"
         // They are ordered by least recency. So we can iterate and purge until we have purged enough.
@@ -100,6 +133,9 @@ object OfflineModeService {
                 if (cachedTrack.songCachedAt != null) {
                     val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
                     bytesToPurge -= bytesRemoved
+
+                    val event = TrackCacheEvent(-bytesRemoved, CacheChangeType.DELETED, OfflineAvailabilityType.AVAILABLE_OFFLINE)
+                    EventBus.getDefault().post(event)
                 }
             }
         }
@@ -117,6 +153,9 @@ object OfflineModeService {
                 if (cachedTrack.songCachedAt != null) {
                     val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
                     bytesToPurge -= bytesRemoved
+
+                    val event = TrackCacheEvent(-bytesRemoved, CacheChangeType.DELETED, OfflineAvailabilityType.AVAILABLE_OFFLINE)
+                    EventBus.getDefault().post(event)
                 }
             }
         }
@@ -150,12 +189,6 @@ object TrackCacheService {
         allPaths.values.forEach { path -> File(path).mkdirs() }
     }
 
-//    fun forceDeleteCache(trackId: Long) {
-//        allPaths.forEach { pathBase ->
-//            val path = pathBase
-//        }
-//    }
-
     private fun getCacheItem(trackId: Long, cacheType: CacheType): File? {
         val localFilePath = allPaths.getValue(cacheType) + "${trackId}.${cacheType.extension}"
         return File(localFilePath).takeIf { it.exists() }
@@ -188,7 +221,7 @@ object TrackCacheService {
         }
     }
 
-    fun cacheTrack(trackId: Long, serverUrl: String, cacheType: CacheType): Boolean {
+    fun cacheTrack(trackId: Long, serverUrl: String, cacheType: CacheType): Long {
         try {
             val localPath = allPaths.getValue(cacheType) + "$trackId.${cacheType.extension}"
             URL(serverUrl).openStream().use { input ->
@@ -198,29 +231,38 @@ object TrackCacheService {
             val track = trackDao.findById(trackId) ?: run {
                 logError("Failed to find track with ID $trackId while saving $cacheType cache!")
                 deleteCacheOnDisk(trackId, cacheType)
-                return false
+                return -1
             }
 
-            when (cacheType) {
-                CacheType.AUDIO -> track.songCachedAt = Instant.now()
-                CacheType.ART -> track.artCachedAt = Instant.now()
-                CacheType.THUMBNAIL -> track.thumbnailCachedAt = Instant.now()
+            val bytesChanged = when (cacheType) {
+                CacheType.AUDIO -> {
+                    track.songCachedAt = Instant.now()
+                    track.filesizeAudio
+                }
+                CacheType.ART -> {
+                    track.artCachedAt = Instant.now()
+                    track.filesizeArt
+                }
+                CacheType.THUMBNAIL -> {
+                    track.thumbnailCachedAt = Instant.now()
+                    track.filesizeThumbnail
+                }
             }
 
             trackDao.save(track)
+            return bytesChanged.toLong()
         } catch (e: Throwable) {
             logError("Track $trackId failed to download $cacheType from URL: $serverUrl", e)
-            return false
+            return -1
         }
-        return true
     }
 
-    fun deleteCache(track: DbTrack, cacheTypes: Set<CacheType>): Int {
+    fun deleteCache(track: DbTrack, cacheTypes: Set<CacheType>): Long {
         cacheTypes.forEach { cacheType ->
             deleteCacheOnDisk(track.id, cacheType)
         }
 
-        var bytesRemoved = 0
+        var bytesRemoved = 0L
         if (track.songCachedAt != null) {
             track.songCachedAt = null
             bytesRemoved += track.filesizeAudio
@@ -254,6 +296,8 @@ enum class CacheType(val extension: String) {
 @Suppress("BlockingMethodInNonBlockingContext")
 class TrackDownloadWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
+    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+
     val networkApi = NetworkModule.provideTrackService(
         NetworkModule.provideRetrofit(
             NetworkModule.provideGsonBuilder()
@@ -277,10 +321,16 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
             return@withContext Result.failure()
         }
 
-        TrackCacheService.cacheTrack(trackId, trackLinks.trackLink, CacheType.AUDIO)
+        val track = trackDao.findById(trackId) ?: run {
+            logError("Could not load track with ID $trackId while processing offline download!")
+            return@withContext Result.failure()
+        }
+
+        val changeType = if (track.songCachedAt == null) CacheChangeType.ADDED else CacheChangeType.UPDATED
+        var bytesChanged = TrackCacheService.cacheTrack(trackId, trackLinks.trackLink, CacheType.AUDIO)
 
         trackLinks.albumArtLink?.let { artLink ->
-            TrackCacheService.cacheTrack(trackId, artLink, CacheType.ART)
+            bytesChanged += TrackCacheService.cacheTrack(trackId, artLink, CacheType.ART)
         }
 
         logInfo("Finished download of '${OfflineAvailabilityType.AVAILABLE_OFFLINE}' track with ID: $trackId")
@@ -289,6 +339,10 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
         if (pendingTasks.isEmpty()) {
             OfflineModeService.cleanUpCachedTracks()
         }
+
+        val event = TrackCacheEvent(bytesChanged, changeType, OfflineAvailabilityType.AVAILABLE_OFFLINE)
+        EventBus.getDefault().post(event)
+
         return@withContext Result.success()
     }
 }
@@ -301,4 +355,14 @@ private fun workDataOf(vararg data: Pair<String, Long>): Data {
     }
 
     return builder.build()
+}
+
+data class TrackCacheEvent(
+    val bytesChanged: Long,
+    val cacheChangeType: CacheChangeType,
+    val offlineAvailabilityType: OfflineAvailabilityType
+)
+
+enum class CacheChangeType {
+    DELETED, UPDATED, ADDED
 }

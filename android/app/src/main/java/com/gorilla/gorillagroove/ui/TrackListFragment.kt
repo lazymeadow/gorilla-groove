@@ -10,7 +10,6 @@ import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.repository.MainRepository
@@ -23,15 +22,10 @@ import com.karumi.dexter.DexterBuilder
 import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import javax.inject.Inject
-import kotlin.coroutines.coroutineContext
 
 
 open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {

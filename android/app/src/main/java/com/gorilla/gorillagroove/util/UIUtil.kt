@@ -141,3 +141,12 @@ fun showListSelectDialog(
 
     builder.show()
 }
+
+class ShowAlertDialogRequest(
+    val title: String? = null,
+    val message: String? = null,
+    val yesText: String? = null,
+    val noText: String? = null,
+    val yesAction: () -> Unit = {},
+    val noAction: () -> Unit = {},
+)
