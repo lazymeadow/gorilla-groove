@@ -168,31 +168,15 @@ class DynamicTrackAudioCacheSource(val trackId: Long) : DataSource.Factory {
     }
 }
 
-private fun String.parseTrackId(): Long? {
-    val expectedNetworkBeginning = "https://gorilla-tracks.s3.us-west-2.amazonaws.com/music/"
-
-    return when {
-        this.startsWith(expectedNetworkBeginning) -> {
-            this.substring(expectedNetworkBeginning.length)
-                .substringBefore(".ogg")
-                .toLongOrNull()
-        }
-        this.startsWith("file:///") -> {
-            this.substringAfter("/audio/")
-                .substringBefore(".ogg")
-                .toLongOrNull()
-        }
-        else -> null
-    }
-}
-
 // Probably doesn't REALLY matter because we delete the exoplayer cache every app launch, but because our track URIs are dynamically
 // generated from Amazon, the cache can't be re-used between track link generations without this. It is theoretically possible that somebody
 // listens to a track and it's only partially cached. Then they move to a new track. Stop using the app. Then wait a few hours to start again.
 // They go back and listen to the first track, and a different link will be generated and their prior cache is useless. With this key generation,
 // they can re-use the partial cache they had built up prior. You know, assuming they didn't re-launch the app entirely between listens.
 class CacheKeyProvider : CacheKeyFactory {
+    @Suppress("UNCHECKED_CAST") // Nothing we can do. They require us to do an unchecked cast because it's not generic.
     override fun buildCacheKey(dataSpec: DataSpec): String {
-        return dataSpec.uri.toString().parseTrackId().toString()
+        val customData = dataSpec.customData as Map<String, String>
+        return customData.getValue("trackId")
     }
 }

@@ -29,10 +29,7 @@ import com.gorilla.gorillagroove.service.TrackCacheService
 import com.gorilla.gorillagroove.ui.settings.GGSettings
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -177,7 +174,9 @@ class MainRepository(
             lastVerifiedTrack = id
             lastFetchedLinks
         } catch (e: Exception) {
-            e.logNetworkException("Could not fetch track links!")
+            if (e !is CancellationException) {
+                e.logNetworkException("Could not fetch track links!")
+            }
             TrackLinkResponse(" ", null)
         }
     }
@@ -211,11 +210,14 @@ class MainRepository(
             var newUri: Uri? = null
 
             override fun resolveDataSpec(dataSpec: DataSpec): DataSpec {
+                val customData = mapOf("trackId" to track.id.toString())
                 if ((dataSpec.uri == oldUri || dataSpec.uri == newUri) && newUri?.path?.isNotBlank() == true) {
-                    newUri?.let { return dataSpec.buildUpon().setUri(it).build() }
+                    newUri?.let { return dataSpec.buildUpon().setCustomData(customData).setUri(it).build() }
                 }
 
                 oldUri = dataSpec.uri
+
+                val specBuilder = dataSpec.buildUpon().setCustomData(customData)
 
                 // The reference to the track could be old. Especially with caching, we want to make sure we have an up-to-date reference for deciding where to find our media files
                 val refreshedTrack = trackDao.findById(track.id) ?: run {
@@ -233,7 +235,7 @@ class MainRepository(
 
                     val fileUri = Uri.fromFile(cachedAudioFile)
                     newUri = fileUri
-                    return dataSpec.buildUpon().setUri(fileUri).build()
+                    return specBuilder.setUri(fileUri).build()
                 }
 
                 // If we got here it means our cache didn't exist or had issues
@@ -256,7 +258,7 @@ class MainRepository(
                 newUri = fetchedUri
                 logDebug("Listening to track with uri: '$newUri'")
 
-                return dataSpec.buildUpon().setUri(fetchedUri).build()
+                return specBuilder.setUri(fetchedUri).build()
             }
         })
 
