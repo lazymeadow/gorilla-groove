@@ -3,7 +3,7 @@ package com.gorilla.gorillagroove
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.gorilla.gorillagroove.service.CacheDataSourceFactory
+import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -36,7 +36,7 @@ class GGApplication : Application() {
             // Give the app some breathing room while it's booting
             delay(3_000)
 
-            CacheDataSourceFactory.purgeCache()
+            DynamicTrackAudioCacheSource.purgeCache()
 
             withContext(Dispatchers.Main) {
                 ProcessLifecycleOwner.get().lifecycle.addObserver(GGLifecycleOwner(serverSynchronizer))

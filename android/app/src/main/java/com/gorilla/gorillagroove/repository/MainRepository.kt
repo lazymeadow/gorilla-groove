@@ -18,7 +18,7 @@ import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
-import com.gorilla.gorillagroove.service.CacheDataSourceFactory
+import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
@@ -197,7 +197,7 @@ class MainRepository(
     }
 
     private fun ConcatenatingMediaSource.addCustomMediaSource(track: DbTrack, index: Int? = null) {
-        val cacheDataSource = CacheDataSourceFactory(track.id)
+        val cacheDataSource = DynamicTrackAudioCacheSource(track.id)
 
         val resolvingDataSourceFactory = ResolvingDataSource.Factory(cacheDataSource, object : ResolvingDataSource.Resolver {
             var oldUri: Uri? = null

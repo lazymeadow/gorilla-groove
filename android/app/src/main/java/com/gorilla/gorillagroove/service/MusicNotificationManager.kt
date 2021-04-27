@@ -118,6 +118,8 @@ class MusicNotificationManager(
                     logDebug("Loading cached album art")
                     Uri.fromFile(cachedArtFile)
                 } ?: try {
+                    logDebug("Getting album art link from the live internet")
+                    // TODO cache this? How does iOS work with dynamic art caching?
                     mainRepository.getTrackLinks(trackId).albumArtLink
                 } catch (e: Throwable) {
                     logError("Failed to fetch album art track links!")

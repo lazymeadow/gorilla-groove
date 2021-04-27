@@ -128,13 +128,14 @@ object OfflineModeService {
         val dynamicCacheTracks = trackDao.getCachedTrackByOfflineTypeSortedByOldestStarted(OfflineAvailabilityType.NORMAL)
         dynamicCacheTracks.forEach { cachedTrack ->
             if (bytesToPurge > 0) {
-                if (cachedTrack.songCachedAt != null) {
-                    val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
-                    bytesToPurge -= bytesRemoved
+                val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
+                bytesToPurge -= bytesRemoved
 
-                    val event = TrackCacheEvent(-bytesRemoved, CacheChangeType.DELETED, OfflineAvailabilityType.AVAILABLE_OFFLINE)
-                    EventBus.getDefault().post(event)
-                }
+                // If we had art but not audio, then it was just an update as the track wasn't "truly" offline
+                val cacheChangeType = if (cachedTrack.songCachedAt == null) CacheChangeType.UPDATED else CacheChangeType.DELETED
+
+                val event = TrackCacheEvent(-bytesRemoved, cacheChangeType, OfflineAvailabilityType.AVAILABLE_OFFLINE)
+                EventBus.getDefault().post(event)
             }
         }
 
