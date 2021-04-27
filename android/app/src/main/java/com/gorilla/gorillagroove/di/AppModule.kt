@@ -2,17 +2,13 @@ package com.gorilla.gorillagroove.di
 
 import android.content.ComponentName
 import android.content.Context
-import android.content.SharedPreferences
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.MusicService
 import com.gorilla.gorillagroove.service.MusicServiceConnection
-import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
 import com.gorilla.gorillagroove.database.dao.*
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.repository.MainRepository
@@ -103,17 +99,6 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideDataSourceFactory(
-        @ApplicationContext context: Context
-    ) = DefaultDataSourceFactory(context, Util.getUserAgent(context, "Groover App"))
-
-    @Singleton
-    @Provides
     fun provideSharedPreferences(@ApplicationContext app: Context) =
         app.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-
-    @Singleton
-    @Provides
-    fun provideUserToken(sharedPref: SharedPreferences) =
-        sharedPref.getString(KEY_USER_TOKEN, "")
 }

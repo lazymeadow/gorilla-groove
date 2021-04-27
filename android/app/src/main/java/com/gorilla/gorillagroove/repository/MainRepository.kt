@@ -9,10 +9,8 @@ import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DataSpec
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
-import com.gorilla.gorillagroove.database.dao.TrackDao
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.network.OkHttpWebSocket
@@ -20,11 +18,12 @@ import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
+import com.gorilla.gorillagroove.service.CacheDataSourceFactory
+import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.CacheType
-import com.gorilla.gorillagroove.ui.TrackCacheService
+import com.gorilla.gorillagroove.service.TrackCacheService
 import com.gorilla.gorillagroove.ui.settings.GGSettings
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
@@ -45,9 +44,7 @@ import java.util.*
 class MainRepository(
     private val networkApi: NetworkApi,
     private val sharedPreferences: SharedPreferences,
-    private val dataSourceFactory: DefaultDataSourceFactory,
     private val okClient: OkHttpClient,
-    private val trackDao: TrackDao,
 ) {
     var webSocket: WebSocket? = null
 
@@ -199,12 +196,10 @@ class MainRepository(
         }
     }
 
-    fun cleanUpAndCloseConnections() {
-        okClient.dispatcher.executorService.shutdown()
-    }
-
     private fun ConcatenatingMediaSource.addCustomMediaSource(track: DbTrack, index: Int? = null) {
-        val resolvingDataSourceFactory = ResolvingDataSource.Factory(dataSourceFactory, object : ResolvingDataSource.Resolver {
+        val cacheDataSource = CacheDataSourceFactory(track.id)
+
+        val resolvingDataSourceFactory = ResolvingDataSource.Factory(cacheDataSource, object : ResolvingDataSource.Resolver {
             var oldUri: Uri? = null
             var newUri: Uri? = null
 
@@ -215,8 +210,14 @@ class MainRepository(
 
                 oldUri = dataSpec.uri
 
-                TrackCacheService.getCacheItemIfAvailable(track, CacheType.AUDIO)?.let { cachedAudioFile ->
+                TrackCacheService.getCacheItemIfAvailable(track.id, CacheType.AUDIO)?.let { cachedAudioFile ->
                     logDebug("Loading cached track data")
+                    if (cachedAudioFile.length() != track.filesizeAudio.toLong()) {
+                        logError("The cached audio file had a length of ${cachedAudioFile.length()} but the expected audio size was ${track.filesizeAudio}! Assuming this file has been corrupted and deleting it.")
+                        TrackCacheService.deleteCache(track, setOf(CacheType.AUDIO))
+                        return@let
+                    }
+
                     val fileUri = Uri.fromFile(cachedAudioFile)
                     newUri = fileUri
                     return dataSpec.buildUpon().setUri(fileUri).build()

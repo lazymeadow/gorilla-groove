@@ -3,6 +3,7 @@ package com.gorilla.gorillagroove
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.gorilla.gorillagroove.service.CacheDataSourceFactory
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -11,6 +12,7 @@ import com.gorilla.gorillagroove.ui.GGLifecycleOwner
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -30,8 +32,18 @@ class GGApplication : Application() {
 
         logInfo("Device is running version ${BuildConfig.VERSION_NAME}")
 
-        ProcessLifecycleOwner.get().lifecycle.addObserver(GGLifecycleOwner(serverSynchronizer))
+        GlobalScope.launch(Dispatchers.IO) {
+            // Give the app some breathing room while it's booting
+            delay(3_000)
+
+            CacheDataSourceFactory.purgeCache()
+
+            withContext(Dispatchers.Main) {
+                ProcessLifecycleOwner.get().lifecycle.addObserver(GGLifecycleOwner(serverSynchronizer))
+            }
+        }
     }
+
 
     private fun handleUncaughtException(e: Throwable) {
         logCrit("Unhandled fatal exception encountered!", e)

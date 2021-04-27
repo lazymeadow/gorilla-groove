@@ -21,10 +21,8 @@ object RepositoryModule {
     fun provideMainRepository(
         retrofit: NetworkApi,
         sharedPreferences: SharedPreferences,
-        dataSourceFactory: DefaultDataSourceFactory,
-        trackDao: TrackDao,
         @NetworkModule.OkHttpClientProvider okClient: OkHttpClient
     ): MainRepository {
-        return MainRepository(retrofit, sharedPreferences, dataSourceFactory, okClient, trackDao)
+        return MainRepository(retrofit, sharedPreferences, okClient)
     }
 }

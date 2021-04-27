@@ -19,8 +19,6 @@ import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
-import com.gorilla.gorillagroove.ui.CacheType
-import com.gorilla.gorillagroove.ui.TrackCacheService
 import kotlinx.coroutines.*
 
 class MusicNotificationManager(
@@ -116,7 +114,7 @@ class MusicNotificationManager(
                     return@withContext null
                 }
 
-                val artLink = TrackCacheService.getCacheItemIfAvailable(track, CacheType.ART)?.let { cachedArtFile ->
+                val artLink = TrackCacheService.getCacheItemIfAvailable(track.id, CacheType.ART)?.let { cachedArtFile ->
                     logDebug("Loading cached album art")
                     Uri.fromFile(cachedArtFile)
                 } ?: try {
