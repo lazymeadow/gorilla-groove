@@ -4,6 +4,8 @@ import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.service.GGLog.logError
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
@@ -69,8 +71,9 @@ object TrackCacheService {
         }
     }
 
-    fun cacheTrack(trackId: Long, serverUrl: String, cacheType: CacheType): Long {
-        try {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun cacheTrack(trackId: Long, serverUrl: String, cacheType: CacheType): Long = withContext(Dispatchers.IO) {
+        return@withContext try {
             val localPath = allPaths.getValue(cacheType) + "$trackId.${cacheType.extension}"
             URL(serverUrl).openStream().use { input ->
                 FileOutputStream(File(localPath)).use { output -> input.copyTo(output) }
@@ -79,7 +82,7 @@ object TrackCacheService {
             val track = trackDao.findById(trackId) ?: run {
                 logError("Failed to find track with ID $trackId while saving $cacheType cache!")
                 deleteCacheOnDisk(trackId, cacheType)
-                return -1
+                return@withContext -1
             }
 
             val bytesChanged = when (cacheType) {
@@ -98,10 +101,10 @@ object TrackCacheService {
             }
 
             trackDao.save(track)
-            return bytesChanged.toLong()
+            bytesChanged.toLong()
         } catch (e: Throwable) {
             logError("Track $trackId failed to download $cacheType from URL: $serverUrl", e)
-            return -1
+            -1
         }
     }
 

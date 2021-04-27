@@ -11,7 +11,9 @@ import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.network.OkHttpWebSocket
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
@@ -27,6 +29,9 @@ import com.gorilla.gorillagroove.service.TrackCacheService
 import com.gorilla.gorillagroove.ui.settings.GGSettings
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -46,7 +51,9 @@ class MainRepository(
     private val sharedPreferences: SharedPreferences,
     private val okClient: OkHttpClient,
 ) {
-    var webSocket: WebSocket? = null
+    private var webSocket: WebSocket? = null
+
+    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
     private var userToken: String = sharedPreferences.getString(KEY_USER_TOKEN, "") ?: ""
 
@@ -210,11 +217,17 @@ class MainRepository(
 
                 oldUri = dataSpec.uri
 
-                TrackCacheService.getCacheItemIfAvailable(track.id, CacheType.AUDIO)?.let { cachedAudioFile ->
+                // The reference to the track could be old. Especially with caching, we want to make sure we have an up-to-date reference for deciding where to find our media files
+                val refreshedTrack = trackDao.findById(track.id) ?: run {
+                    logError("Track ${track.id} no longer existed when refreshing it for media source playback!")
+                    return dataSpec
+                }
+
+                TrackCacheService.getCacheItemIfAvailable(refreshedTrack.id, CacheType.AUDIO)?.let { cachedAudioFile ->
                     logDebug("Loading cached track data")
-                    if (cachedAudioFile.length() != track.filesizeAudio.toLong()) {
-                        logError("The cached audio file had a length of ${cachedAudioFile.length()} but the expected audio size was ${track.filesizeAudio}! Assuming this file has been corrupted and deleting it.")
-                        TrackCacheService.deleteCache(track, setOf(CacheType.AUDIO))
+                    if (cachedAudioFile.length() != refreshedTrack.filesizeAudio.toLong()) {
+                        logError("The cached audio file had a length of ${cachedAudioFile.length()} but the expected audio size was ${refreshedTrack.filesizeAudio}! Assuming this file has been corrupted and deleting it.")
+                        TrackCacheService.deleteCache(refreshedTrack, setOf(CacheType.AUDIO))
                         return@let
                     }
 
@@ -227,6 +240,16 @@ class MainRepository(
                 val fetchedUri = runBlocking {
                     logDebug("Fetching track links for track ${track.id}")
                     val fetchedUris = getTrackLinks(Integer.parseInt(dataSpec.uri.toString()).toLong())
+
+                    if (refreshedTrack.offlineAvailability != OfflineAvailabilityType.ONLINE_ONLY && refreshedTrack.artCachedAt == null && fetchedUris.albumArtLink != null) {
+                        logDebug("Art was not cached for track ${track.id} but could be. Saving it for later")
+                        GlobalScope.launch(Dispatchers.IO) {
+                            TrackCacheService.cacheTrack(track.id, fetchedUris.albumArtLink, CacheType.ART)
+
+                            logDebug("Art was cached for track ${track.id}")
+                        }
+                    }
+
                     return@runBlocking Uri.parse(fetchedUris.trackLink)
                 }
 

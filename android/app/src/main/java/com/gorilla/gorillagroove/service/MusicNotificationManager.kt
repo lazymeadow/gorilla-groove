@@ -17,6 +17,7 @@ import com.gorilla.gorillagroove.util.Constants.NOTIFICATION_ID
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import kotlinx.coroutines.*
@@ -100,39 +101,45 @@ class MusicNotificationManager(
             }
         }
 
-        private suspend fun resolveUriAsBitmap(iconUri: Uri?): Bitmap? {
-            return withContext(Dispatchers.IO) {
-                val trackId = iconUri.toString().toLong()
+        private suspend fun resolveUriAsBitmap(iconUri: Uri?): Bitmap? = withContext(Dispatchers.IO) {
+            val trackId = iconUri.toString().toLong()
 
-                val track = trackDao.findById(trackId) ?: run {
-                    logError("Could not find track by ID $trackId when finding album art!")
-                    return@withContext null
-                }
+            val track = trackDao.findById(trackId) ?: run {
+                logError("Could not find track by ID $trackId when finding album art!")
+                return@withContext null
+            }
 
-                // If this is 0, then it means there isn't any art contained on the server
-                if (track.filesizeArt == 0) {
-                    return@withContext null
-                }
+            // If this is 0, then it means there isn't any art contained on the server
+            if (track.filesizeArt == 0) {
+                return@withContext null
+            }
 
-                val artLink = TrackCacheService.getCacheItemIfAvailable(track.id, CacheType.ART)?.let { cachedArtFile ->
-                    logDebug("Loading cached album art")
-                    Uri.fromFile(cachedArtFile)
-                } ?: try {
-                    logDebug("Getting album art link from the live internet")
-                    // TODO cache this? How does iOS work with dynamic art caching?
-                    mainRepository.getTrackLinks(trackId).albumArtLink
-                } catch (e: Throwable) {
-                    logError("Failed to fetch album art track links!")
-                }
+            // This is rather jank, but we fetch track links both here and in the MainRepository.resolveDataSpec() thing.
+            // It's dumb to make two calls to get track links when we only need to do one. resolveDataSpec() is called preemptively by exoplayer
+            // when a new track is upcoming, so most of the time, this call isn't needed.
+            // This small wait gives a chance for the art to get cached first when we play our first track.
+            // Offline-only music will continue to make two calls anyway. But idk that anybody will ever pick this option anyway except for 1 off hour long mixes or something like that.
+            if (track.artCachedAt == null && track.offlineAvailability != OfflineAvailabilityType.ONLINE_ONLY) {
+                delay(1000)
+            }
 
-                // Block on downloading artwork.
-                artLink?.let {
-                    Glide.with(context).applyDefaultRequestOptions(glideOptions)
-                        .asBitmap()
-                        .load(it)
-                        .submit(NOTIFICATION_LARGE_ICON_SIZE, NOTIFICATION_LARGE_ICON_SIZE)
-                        .get()
-                }
+            val artLink = TrackCacheService.getCacheItemIfAvailable(track.id, CacheType.ART)?.let { cachedArtFile ->
+                logDebug("Loading cached album art")
+                Uri.fromFile(cachedArtFile)
+            } ?: try {
+                logDebug("Getting album art link from the live internet")
+                mainRepository.getTrackLinks(trackId).albumArtLink
+            } catch (e: Throwable) {
+                logError("Failed to fetch album art track links!")
+            }
+
+            // Block on downloading artwork.
+            artLink?.let {
+                Glide.with(context).applyDefaultRequestOptions(glideOptions)
+                    .asBitmap()
+                    .load(it)
+                    .submit(NOTIFICATION_LARGE_ICON_SIZE, NOTIFICATION_LARGE_ICON_SIZE)
+                    .get()
             }
         }
     }
