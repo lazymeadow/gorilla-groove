@@ -108,4 +108,9 @@
         android:name="com.gorilla.gorillagroove.ui.settings.SettingsFragment"
         android:label="SettingsFragment" >
     </fragment>
+    <fragment
+        android:id="@+id/reviewQueueFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.ReviewQueueFragment"
+        android:label="ReviewQueueFragment" >
+    </fragment>
 </navigation>

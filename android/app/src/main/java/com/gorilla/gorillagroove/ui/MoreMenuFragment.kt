@@ -9,7 +9,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.PlayerControlsViewModel
 import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_more_menu.*
@@ -26,6 +25,10 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading More Menu view")
+
+        usersText.setOnClickListener {
+            findNavController().navigate(R.id.usersFragment)
+        }
 
         settingsText.setOnClickListener {
             findNavController().navigate(R.id.settingsFragment)

@@ -38,26 +38,26 @@ object TrackCacheService {
         return getFileLocation(trackId, cacheType).takeIf { it.exists() }
     }
 
-    fun getCacheItemIfAvailable(trackId: Long, cacheType: CacheType): File? {
+    suspend fun getCacheItemIfAvailable(trackId: Long, cacheType: CacheType): File? = withContext(Dispatchers.IO) {
         // Always want to look up the track ourselves to make sure the data we're getting isn't stale
         val track = trackDao.findById(trackId) ?: run {
             logError("No track with ID $trackId found when checking cache availability!")
-            return null
+            return@withContext null
         }
 
         when (cacheType) {
-            CacheType.AUDIO -> if (track.songCachedAt == null) return null
-            CacheType.ART -> if (track.artCachedAt == null) return null
-            CacheType.THUMBNAIL -> if (track.thumbnailCachedAt == null) return null
+            CacheType.AUDIO -> if (track.songCachedAt == null) return@withContext null
+            CacheType.ART -> if (track.artCachedAt == null) return@withContext null
+            CacheType.THUMBNAIL -> if (track.thumbnailCachedAt == null) return@withContext null
         }
 
         getCacheItem(track.id, cacheType)?.let { cachedFile ->
-            return cachedFile
+            return@withContext cachedFile
         } ?: run {
             logError("Track ${track.id} was missing cacheType $cacheType! Marking track as not available offline")
             val refreshedTrack = trackDao.findById(track.id) ?: run {
                 logError("Could not find refreshed track with ID: ${track.id}!")
-                return null
+                return@withContext null
             }
 
             when (cacheType) {
@@ -67,7 +67,7 @@ object TrackCacheService {
             }
 
             trackDao.save(refreshedTrack)
-            return null
+            return@withContext null
         }
     }
 

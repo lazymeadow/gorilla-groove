@@ -225,17 +225,23 @@ class MainRepository(
                     return dataSpec
                 }
 
-                TrackCacheService.getCacheItemIfAvailable(refreshedTrack.id, CacheType.AUDIO)?.let { cachedAudioFile ->
-                    logDebug("Loading cached track data")
-                    if (cachedAudioFile.length() != refreshedTrack.filesizeAudio.toLong()) {
-                        logError("The cached audio file had a length of ${cachedAudioFile.length()} but the expected audio size was ${refreshedTrack.filesizeAudio}! Assuming this file has been corrupted and deleting it.")
-                        TrackCacheService.deleteCache(refreshedTrack, setOf(CacheType.AUDIO))
-                        return@let
-                    }
+                val newSpec = runBlocking {
+                    TrackCacheService.getCacheItemIfAvailable(refreshedTrack.id, CacheType.AUDIO)?.let { cachedAudioFile ->
+                        logDebug("Loading cached track data")
+                        if (cachedAudioFile.length() != refreshedTrack.filesizeAudio.toLong()) {
+                            logError("The cached audio file had a length of ${cachedAudioFile.length()} but the expected audio size was ${refreshedTrack.filesizeAudio}! Assuming this file has been corrupted and deleting it.")
+                            TrackCacheService.deleteCache(refreshedTrack, setOf(CacheType.AUDIO))
+                            return@runBlocking null
+                        }
 
-                    val fileUri = Uri.fromFile(cachedAudioFile)
-                    newUri = fileUri
-                    return specBuilder.setUri(fileUri).build()
+                        val fileUri = Uri.fromFile(cachedAudioFile)
+                        newUri = fileUri
+                        return@runBlocking specBuilder.setUri(fileUri).build()
+                    }
+                }
+
+                if (newSpec != null) {
+                    return newSpec
                 }
 
                 // If we got here it means our cache didn't exist or had issues

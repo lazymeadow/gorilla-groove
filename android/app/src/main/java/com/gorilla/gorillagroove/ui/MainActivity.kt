@@ -20,7 +20,6 @@ import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
 import com.gorilla.gorillagroove.util.showAlertDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -129,6 +128,11 @@ class MainActivity : AppCompatActivity() {
                         bottomNavigationView.visibility = View.VISIBLE
                         playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Settings"
+                    }
+                    R.id.reviewQueueFragment -> {
+                        bottomNavigationView.visibility = View.VISIBLE
+                        playerControlView.visibility = View.VISIBLE
+                        title_tv.text = "Review Queue"
                     }
                     else -> {
                         bottomNavigationView.visibility = View.VISIBLE

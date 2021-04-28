@@ -6,7 +6,7 @@ import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
-import com.gorilla.gorillagroove.di.NetworkModule
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.repository.logNetworkException
 import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.GGLog.logDebug
@@ -175,9 +175,9 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
 
     private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
-    val networkApi = NetworkModule.provideTrackService(
-        NetworkModule.provideRetrofit(
-            NetworkModule.provideGsonBuilder()
+    val networkApi = Network.provideNetworkApi(
+        Network.provideRetrofit(
+            Network.provideGsonBuilder()
         )
     )
 

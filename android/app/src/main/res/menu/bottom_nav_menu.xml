@@ -14,9 +14,9 @@
         android:title="Now Playing" />
 
     <item
-        android:id="@+id/usersFragment"
-        android:icon="@drawable/ic_users_24"
-        android:title="Users" />
+        android:id="@+id/reviewQueueFragment"
+        android:icon="@drawable/ic_headset_black_24dp"
+        android:title="Review Queue" />
 
     <item
         android:id="@+id/playlistsFragment"

@@ -20,4 +20,7 @@
 
     <color name="dangerRed">#F44336</color>
     <color name="warningYellow">#FFC107</color>
+
+    <color name="acceptColor">#5BB47E</color>
+    <color name="rejectColor">#CC6666</color>
 </resources>

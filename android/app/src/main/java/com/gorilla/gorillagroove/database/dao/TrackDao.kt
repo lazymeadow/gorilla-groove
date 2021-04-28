@@ -17,8 +17,8 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         artistFilter: String? = null,
         albumFilter: String? = null,
         availableOffline: Boolean? = null,
-        sortType: TrackSortType,
-        sortDirection: SortDirection
+        sortType: TrackSortType = TrackSortType.NAME,
+        sortDirection: SortDirection = SortDirection.ASC
     ): List<DbTrack> {
         if (sortDirection == SortDirection.NONE) {
             throw IllegalArgumentException("Cannot sort by direction: NONE")
@@ -135,6 +135,16 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         offlineAvailabilityType: OfflineAvailabilityType? = null,
         isCached: Boolean? = null
     ): Int
+
+    @Query("""
+        SELECT *
+        FROM track
+        WHERE review_source_id = :reviewSourceId
+        AND in_review = 1
+ """)
+    abstract fun getTracksNeedingReviewOnSource(
+        reviewSourceId: Long,
+    ): List<DbTrack>
 }
 
 private const val NO_CASE = "COLLATE NOCASE"

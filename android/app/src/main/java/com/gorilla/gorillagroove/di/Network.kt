@@ -20,7 +20,7 @@ import kotlin.RuntimeException
 
 @Module
 @InstallIn(ApplicationComponent::class)
-object NetworkModule {
+object Network {
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)
@@ -49,7 +49,7 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideTrackService(retrofit: Retrofit.Builder): NetworkApi {
+    fun provideNetworkApi(retrofit: Retrofit.Builder): NetworkApi {
         return retrofit
             .build()
             .create(NetworkApi::class.java)
@@ -76,6 +76,8 @@ object NetworkModule {
                }
                .build()
     }
+
+    val api = provideNetworkApi(provideRetrofit(provideGsonBuilder()))
 }
 
 class OfflineModeEnabledException : RuntimeException("Offline mode is enabled")
