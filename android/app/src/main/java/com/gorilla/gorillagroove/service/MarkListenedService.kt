@@ -43,7 +43,9 @@ class MarkListenedService(
 
                 handleMarkListened(newTrackPosition)
             }
+        }
 
+        CoroutineScope(Dispatchers.Default).launch {
             musicServiceConnection.nowPlaying.collect { newMetadataItem ->
                 synchronized(this) {
                     // Not sure why, but this metadata item seems to get updated without any user interaction or the song switching.

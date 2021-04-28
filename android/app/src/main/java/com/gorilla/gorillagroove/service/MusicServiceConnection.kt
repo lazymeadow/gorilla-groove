@@ -130,6 +130,7 @@ class MusicServiceConnection(
                 metadata
             }
         }
+
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
             logVerbose("Media queue was changed")
         }

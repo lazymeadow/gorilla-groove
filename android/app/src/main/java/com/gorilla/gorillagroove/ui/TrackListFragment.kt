@@ -1,6 +1,5 @@
 package com.gorilla.gorillagroove.ui
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.*
 import android.view.MenuItem
@@ -18,8 +17,6 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.menu.*
 import com.gorilla.gorillagroove.util.LocationService
 import com.gorilla.gorillagroove.util.getNullableBoolean
-import com.karumi.dexter.DexterBuilder
-import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import org.greenrobot.eventbus.EventBus
@@ -32,9 +29,6 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     protected val playerControlsViewModel: PlayerControlsViewModel by viewModels()
     lateinit var trackCellAdapter: TrackCellAdapter
     var actionMode: ActionMode? = null
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
 
     @Inject
     lateinit var mainRepository: MainRepository
@@ -249,11 +243,4 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
             actionMode = null
         }
     }
-}
-
-object Test : DexterBuilder.SinglePermissionListener {
-    override fun withListener(p0: PermissionListener?): DexterBuilder {
-        TODO("Not yet implemented")
-    }
-
 }
