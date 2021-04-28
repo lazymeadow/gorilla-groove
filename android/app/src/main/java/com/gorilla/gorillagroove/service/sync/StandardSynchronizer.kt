@@ -37,6 +37,8 @@ abstract class StandardSynchronizer<DbType : DbEntity, ResponseType: EntityRespo
 
     protected open fun onEntityUpdate(entity: DbType) {}
 
+    protected open fun onEntitiesModified(entities: List<DbType>) {}
+
     private suspend fun savePageOfChanges(syncStatus: DbSyncStatus, maximum: Instant, page: Int): Pair<Int, Boolean> {
         logDebug("Syncing $syncStatus page $page")
         val response = try {
@@ -51,13 +53,15 @@ abstract class StandardSynchronizer<DbType : DbEntity, ResponseType: EntityRespo
         val content = response.content
 
         val newDbEntities = content.new.map { convertToDatabaseEntity(it) }
-        val updatedDbEntities = content.new.map {
+        val updatedDbEntities = content.modified.map {
             val entity = convertToDatabaseEntity(it)
 
             onEntityUpdate(entity)
 
             entity
         }
+
+        onEntitiesModified(updatedDbEntities)
 
         val entitiesToSave = newDbEntities + updatedDbEntities
 

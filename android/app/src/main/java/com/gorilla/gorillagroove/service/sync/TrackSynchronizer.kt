@@ -5,11 +5,12 @@ import com.gorilla.gorillagroove.database.entity.DbSyncStatus
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.service.GGLog.logCrit
 import java.time.Instant
 
 class TrackSynchronizer(
     private val networkApi: NetworkApi,
-    trackDao: TrackDao,
+    private val trackDao: TrackDao,
 ) : StandardSynchronizer<DbTrack, TrackResponse>(trackDao) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<TrackResponse> {
         return networkApi.getTrackSyncEntities(
@@ -25,6 +26,20 @@ class TrackSynchronizer(
     // Make sure to also purge tracks that are marked "NEVER" on caching
     override fun onEntityUpdate(entity: DbTrack) {
         super.onEntityUpdate(entity)
+    }
+
+    // Need to preserve some of our local state on these entities. Efficiently copy it to the new ones by loading all db copies of the modified entities at once
+    override fun onEntitiesModified(entities: List<DbTrack>) {
+        val existingEntities = trackDao.findById(entities.map { it.id }).associateBy { it.id }
+
+        entities.forEach { serverEntity ->
+            val dbEntity = existingEntities[serverEntity.id] ?: run {
+                logCrit("No db entity found when doing an update from the server!")
+                return
+            }
+
+            serverEntity.updateApiEntity(dbEntity)
+        }
     }
 }
 

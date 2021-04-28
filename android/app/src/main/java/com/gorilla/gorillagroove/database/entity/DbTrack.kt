@@ -84,7 +84,18 @@ data class DbTrack(
 
     @ColumnInfo(name = "last_reviewed")
     var lastReviewed: Instant?,
-) : DbEntity, Serializable
+) : DbEntity, Serializable {
+
+    // When we sync from the API, we don't want to stomp out ALL our data, but we do want to stomp out most of it.
+    // This preserves fields we want to make sure survive the update. If I end up doing this in more places, it could
+    // be cool to maybe make a custom annotation like @NotApiMapped to do this automatically
+    fun updateApiEntity(dbEntity: DbTrack) {
+        songCachedAt = dbEntity.songCachedAt
+        artCachedAt = dbEntity.artCachedAt
+        thumbnailCachedAt = dbEntity.thumbnailCachedAt
+        startedOnDevice = dbEntity.startedOnDevice
+    }
+}
 
 enum class OfflineAvailabilityType {
     NORMAL,
