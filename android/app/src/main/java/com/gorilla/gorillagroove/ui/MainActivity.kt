@@ -10,6 +10,7 @@ import android.widget.SeekBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
@@ -282,6 +283,25 @@ class MainActivity : AppCompatActivity() {
             yesAction = event.yesAction,
             noAction = event.noAction,
         )
+    }
+
+    override fun onBackPressed() {
+        // If any fragment contained within this activity consumed the back press, don't do anything with it
+        val handled = supportFragmentManager.fragments.handleBackPress()
+
+        if (!handled) {
+            super.onBackPressed()
+        }
+    }
+}
+
+fun List<Fragment>.handleBackPress(): Boolean {
+    return this.any { fragment ->
+        when (fragment) {
+            is NavHostFragment -> fragment.childFragmentManager.fragments.handleBackPress()
+            is GGFragment -> fragment.onBackPressed()
+            else -> false
+        }
     }
 }
 

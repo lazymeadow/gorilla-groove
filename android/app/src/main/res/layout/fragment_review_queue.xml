@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/reviewQueueRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
@@ -40,5 +41,15 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/reviewQueueSourceSelect"
         tools:listitem="@layout/review_queue_carousel_item" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/reviewQueueSelectionList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:translationZ="10dp"
+        android:background="@color/background"
+        android:visibility="gone"
+        tools:listitem="@layout/review_queue_source_select_item" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

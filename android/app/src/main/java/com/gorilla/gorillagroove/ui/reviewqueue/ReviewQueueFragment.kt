@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
@@ -23,25 +22,31 @@ import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackCacheService
+import com.gorilla.gorillagroove.ui.GGFragment
+import com.gorilla.gorillagroove.ui.createDivider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_review_queue.*
 import kotlinx.android.synthetic.main.review_queue_carousel_item.view.*
+import kotlinx.android.synthetic.main.review_queue_source_select_item.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.max
 
 
 @AndroidEntryPoint
-class ReviewQueueFragment : Fragment(R.layout.fragment_review_queue) {
+class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
     private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
     private val reviewSourceDao get() = GorillaDatabase.getDatabase().reviewSourceDao()
 
     private lateinit var trackAdapter: ReviewQueueTrackListAdapter
+    private lateinit var sourceSelectAdapter: ReviewQueueSourceSelectionAdapter
 
-    private var allReviewSources = listOf<DbReviewSource>()
+    private var allReviewSources = mapOf<Long, DbReviewSource>()
     private var sourcesNeedingReview = mutableListOf<DbReviewSource>()
+    private var reviewSourceToTrackCount = mutableMapOf<Long, Int>()
 
     private var activeSource: DbReviewSource? = null
 
@@ -50,42 +55,77 @@ class ReviewQueueFragment : Fragment(R.layout.fragment_review_queue) {
 
         logInfo("Loading Review Queue view")
 
-        setupRecyclerView()
+        setupTrackRecyclerView()
+        setupSourceSelectRecyclerView()
     }
 
     override fun onStart() {
         super.onStart()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            allReviewSources = reviewSourceDao.findAll()
+            allReviewSources = reviewSourceDao.findAll().map { it.id to it }.toMap()
 
-            val reviewCounts = reviewSourceDao.getNeedingReviewTrackCountByQueue().map { it.reviewSourceId to it.count }.toMap()
-            sourcesNeedingReview = allReviewSources.filter { (reviewCounts[it.id] ?: 0) > 0 }.toMutableList()
+            reviewSourceToTrackCount = reviewSourceDao.getNeedingReviewTrackCountByQueue().map { it.reviewSourceId to it.count }.toMap().toMutableMap()
+            sourcesNeedingReview = allReviewSources.values.filter { (reviewSourceToTrackCount[it.id] ?: 0) > 0 }.toMutableList()
 
-            withContext(Dispatchers.Main) {
-                if (sourcesNeedingReview.isNotEmpty()) {
-                    activeSource = sourcesNeedingReview.first().also {
-                        reviewQueueSourceSelect.text = it.displayName
-                    }
+            activeSource = sourcesNeedingReview.firstOrNull()?.also { setActiveSource(it.id) }
+        }
 
-                    withContext(Dispatchers.IO) {
-                        val tracks = trackDao.getTracksNeedingReviewOnSource(activeSource!!.id)
+        reviewQueueSourceSelect.setOnClickListener {
+            sourceSelectAdapter.setSources(
+                sourcesNeedingReview.map { source -> allReviewSources.getValue(source.id) to (reviewSourceToTrackCount[source.id] ?: 0) },
+                activeSource?.id ?: -1
+            )
 
-                        withContext(Dispatchers.Main) {
-                            trackAdapter.setTracks(tracks)
-                        }
-                    }
-                }
-            }
+            reviewQueueSelectionList.visibility = View.VISIBLE
         }
     }
 
-    private fun setupRecyclerView() = reviewQueueTrackList.apply {
+    override fun onBackPressed(): Boolean {
+        if (reviewQueueSelectionList.visibility == View.VISIBLE) {
+            reviewQueueSelectionList.visibility = View.GONE
+            return true
+        }
+        return super.onBackPressed()
+    }
+
+    private fun setupTrackRecyclerView() = reviewQueueTrackList.apply {
         trackAdapter = ReviewQueueTrackListAdapter()
         adapter = trackAdapter
         layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
         PagerSnapHelper().attachToRecyclerView(this)
+    }
+
+    private fun setupSourceSelectRecyclerView() = reviewQueueSelectionList.apply {
+        sourceSelectAdapter = ReviewQueueSourceSelectionAdapter { newSourceId ->
+            lifecycleScope.launch(Dispatchers.Main) {
+                setActiveSource(newSourceId)
+
+                reviewQueueSelectionList.visibility = View.GONE
+            }
+        }
+
+        adapter = sourceSelectAdapter
+        addItemDecoration(createDivider(context))
+        layoutManager = LinearLayoutManager(requireContext())
+    }
+
+    private suspend fun setActiveSource(newSourceId: Long) = withContext(Dispatchers.IO) {
+        if (activeSource?.id == newSourceId) {
+            return@withContext
+        }
+
+        val newActiveSource = allReviewSources.getValue(newSourceId)
+        activeSource = newActiveSource
+
+        val tracks = trackDao.getTracksNeedingReviewOnSource(newActiveSource.id)
+        reviewSourceToTrackCount[newSourceId] = tracks.size // Just make sure it's up to date since we know the real size anyway
+
+        withContext(Dispatchers.Main) {
+            trackAdapter.setTracks(tracks)
+            reviewQueueSourceSelect.text = newActiveSource.displayName
+        }
     }
 }
 
@@ -136,6 +176,7 @@ class ReviewQueueTrackListAdapter : RecyclerView.Adapter<ReviewQueueTrackListAda
             setAlbumArt(track)
         }
 
+        @Suppress("BlockingMethodInNonBlockingContext")
         private fun setAlbumArt(track: DbTrack) {
             // This track has no album art
             if (track.filesizeArt == 0) {
@@ -182,6 +223,45 @@ class ReviewQueueTrackListAdapter : RecyclerView.Adapter<ReviewQueueTrackListAda
                     }
                 }
             }
+        }
+    }
+}
+
+class ReviewQueueSourceSelectionAdapter(
+    private val onSourceSelected: (Long) -> Unit
+) : RecyclerView.Adapter<ReviewQueueSourceSelectionAdapter.ReviewQueueSourceSelectViewHolder>() {
+
+    private var sourcesWithCount = listOf<Pair<DbReviewSource, Int>>()
+    private var selectedSourceId = -1L
+
+    fun setSources(sourcesWithCount: List<Pair<DbReviewSource, Int>>, selectedSourceId: Long) {
+        this.sourcesWithCount = sourcesWithCount
+        this.selectedSourceId = selectedSourceId
+        notifyDataSetChanged()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewQueueSourceSelectViewHolder {
+        val itemView = LayoutInflater.from(parent.context).inflate(
+            R.layout.review_queue_source_select_item, parent, false
+        )
+        return ReviewQueueSourceSelectViewHolder(itemView)
+    }
+
+    override fun getItemCount() = sourcesWithCount.size
+
+    override fun onBindViewHolder(holder: ReviewQueueSourceSelectViewHolder, position: Int) {
+        val source = sourcesWithCount[position]
+
+        holder.itemView.setOnClickListener { onSourceSelected(source.first.id) }
+        holder.setData(source.first, source.second)
+    }
+
+    inner class ReviewQueueSourceSelectViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun setData(source: DbReviewSource, count: Int) {
+            itemView.sourceSelectName.text = source.displayName
+            itemView.itemsInQueueText.text = max(count, 99).toString()
+
+            itemView.sourceSelectCheck.visibility = if (source.id == selectedSourceId) View.VISIBLE else View.INVISIBLE
         }
     }
 }
