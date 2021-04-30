@@ -125,6 +125,14 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
     }
 
     private suspend fun setNextActiveSource() {
+        mainRepository.currentTrack?.takeIf { it.inReview }?.let { currentlyPlayingReviewTrack ->
+            val reviewSourceId = currentlyPlayingReviewTrack.reviewSourceId!!
+            if (reviewSourceToTrackCount[reviewSourceId] ?: 0 > 0) {
+                setActiveSource(reviewSourceId)
+                return
+            }
+        }
+
         val sourcesByType = sourcesNeedingReview.groupBy { it.sourceType }
         // This is the priority in which we automatically show queues: user -> artist -> youtube
         val sourceToUse = listOf(ReviewSourceType.USER_RECOMMEND, ReviewSourceType.ARTIST, ReviewSourceType.YOUTUBE_CHANNEL).map { sourceType ->
@@ -149,9 +157,24 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         visibleTracks = trackDao.getTracksNeedingReviewOnSource(newActiveSource.id).toMutableList()
         reviewSourceToTrackCount[newSourceId] = visibleTracks.size // Just make sure it's up to date since we know the real size anyway
 
+        // Though it shouldn't really happen, it's possible that our local state is out of sync because of background things changing tracks.
+        // If there ended up not being tracks to review for this source, try the next one
+        if (visibleTracks.isEmpty()) {
+            setNextActiveSource()
+            return@withContext
+        }
+
+        // If the queue we're going to already has a track playing, then we should scroll it into view
+        val currentlyPlayingTrackIndex = visibleTracks.indexOfFirst { it.id == mainRepository.currentTrack?.id }.takeIf { it > -1 }
+
         withContext(Dispatchers.Main) {
             reviewQueueSourceSelect.text = newActiveSource.displayName
             trackAdapter.notifyDataSetChanged()
+            reviewQueueTrackList.post {
+                // Fall back to 0, so that when changing the active source, we start at the far left. Otherwise, your scroll position carries over between changing sources
+                val indexToStartAt = currentlyPlayingTrackIndex ?: 0
+                reviewQueueTrackList.scrollToPosition(indexToStartAt)
+            }
         }
     }
 
