@@ -8,16 +8,29 @@
     tools:ignore="HardcodedText, RtlSymmetry">
 
     <ImageView
-        android:id="@+id/albumArt"
+        android:id="@+id/albumArtPlaceholder"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="30dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="30dp"
         android:contentDescription="Album Art"
+        android:padding="70dp"
+        android:src="@drawable/ic_music"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/ic_music" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:contentDescription="Album Art"
+        app:layout_constraintBottom_toBottomOf="@id/albumArtPlaceholder"
+        app:layout_constraintEnd_toEndOf="@id/albumArtPlaceholder"
+        app:layout_constraintStart_toStartOf="@id/albumArtPlaceholder"
+        app:layout_constraintTop_toTopOf="@id/albumArtPlaceholder" />
 
     <ImageView
         android:id="@+id/playOverlay"
@@ -25,16 +38,15 @@
         android:layout_height="0dp"
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
-        android:padding="70dp"
-        android:contentDescription="Play button"
         android:background="@color/reviewPlayButtonBackground"
-        app:layout_constraintTop_toTopOf="@id/albumArt"
-        app:layout_constraintStart_toStartOf="@id/albumArt"
-        app:layout_constraintEnd_toEndOf="@id/albumArt"
-        app:layout_constraintBottom_toBottomOf="@id/albumArt"
+        android:contentDescription="Play button"
+        android:padding="70dp"
         android:src="@drawable/ic_play_arrow_24"
-        app:tint="@color/foreground"
-         />
+        app:layout_constraintBottom_toBottomOf="@id/albumArtPlaceholder"
+        app:layout_constraintEnd_toEndOf="@id/albumArtPlaceholder"
+        app:layout_constraintStart_toStartOf="@id/albumArtPlaceholder"
+        app:layout_constraintTop_toTopOf="@id/albumArtPlaceholder"
+        app:tint="@color/foreground" />
 
     <TextView
         android:id="@+id/trackText"
@@ -47,7 +59,7 @@
         android:textAlignment="center"
         android:textColor="@color/foreground"
         android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@id/albumArt"
+        app:layout_constraintTop_toBottomOf="@id/albumArtPlaceholder"
         tools:text="Dawn ft. London Thor - Slippy" />
 
     <ImageView

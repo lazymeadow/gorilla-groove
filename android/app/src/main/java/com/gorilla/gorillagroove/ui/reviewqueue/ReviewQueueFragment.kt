@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -252,19 +251,19 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
             @Suppress("BlockingMethodInNonBlockingContext")
             private fun setAlbumArt(track: DbTrack) {
+                // Short-term in-memory cache. Just for users swiping around the list left and right
+                albumArtCache[track.id]?.let { bitmap ->
+                    itemView.albumArt.setImageBitmap(bitmap)
+                    itemView.albumArt.visibility = View.VISIBLE
+                    return
+                }
+
                 // This track has no album art
                 if (track.filesizeArt == 0) {
                     return
                 }
 
-                // Short-term in-memory cache. Just for users swiping around the list left and right
-                albumArtCache[track.id]?.let { bitmap ->
-                    itemView.albumArt.setImageBitmap(bitmap)
-                    return
-                }
-
-                val musicNoteDrawable = ResourcesCompat.getDrawable(GGApplication.application.resources, R.drawable.ic_music, null)
-                itemView.albumArt.setImageDrawable(musicNoteDrawable)
+                itemView.albumArt.visibility = View.GONE
 
                 CoroutineScope(Dispatchers.IO).launch {
                     // Check disk cache. As things are now, I don't think this will ever be populated as review queue isn't available offline in this current iteration. But that could change.
@@ -275,6 +274,7 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
                         withContext(Dispatchers.Main) {
                             itemView.albumArt.setImageBitmap(bitmap)
+                            itemView.albumArt.visibility = View.VISIBLE
                         }
 
                         return@launch
@@ -293,6 +293,7 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
                             withContext(Dispatchers.Main) {
                                 albumArtCache[track.id] = artBitmap
                                 itemView.albumArt.setImageBitmap(artBitmap)
+                                itemView.albumArt.visibility = View.VISIBLE
                             }
                         }
                     }
