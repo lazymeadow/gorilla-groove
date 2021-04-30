@@ -7,7 +7,6 @@ import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.di.Network
-import com.gorilla.gorillagroove.repository.logNetworkException
 import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
@@ -190,7 +189,7 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
         val trackLinks = try {
             networkApi.getTrackLink(trackId)
         } catch (e: Throwable) {
-            e.logNetworkException("Failed to get track links for offline download!")
+            logError("Failed to get track links for offline download!", e)
             pendingTasks.remove(trackId)
             if (pendingTasks.isEmpty()) {
                 OfflineModeService.cleanUpCachedTracks()

@@ -29,7 +29,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         get() = _currentTrackItem
 
     private val _playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
-    val playbackState: LiveData<PlaybackStateCompat>
+    val playbackState: KtLiveData<PlaybackStateCompat>
         get() = _playbackState
 
     private val _repeatState: MutableLiveData<Int> = MutableLiveData()

@@ -5,6 +5,7 @@ package com.gorilla.gorillagroove.service
 import android.util.Log
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.GGApplication
+import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
@@ -49,9 +50,9 @@ object GGLog {
     fun Any.logInfo(message: String) = logMessage(this.logTag, message, LogLevel.INFO)
     fun Any.logWarn(message: String) = logMessage(this.logTag, message, LogLevel.WARNING)
     fun Any.logError(message: String) = logMessage(this.logTag, message, LogLevel.ERROR)
-    fun Any.logError(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${Log.getStackTraceString(e)}", LogLevel.ERROR)
+    fun Any.logError(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${e.logString}", LogLevel.ERROR)
     fun Any.logCrit(message: String) = logMessage(this.logTag, message, LogLevel.CRITICAL)
-    fun Any.logCrit(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${Log.getStackTraceString(e)}", LogLevel.CRITICAL)
+    fun Any.logCrit(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${e.logString}", LogLevel.CRITICAL)
 
     // I ran into situations where some stuff had no simpleName, but their enclosing classes did.
     private val Any.logTag: String get() {
@@ -190,4 +191,14 @@ enum class LogLevel(val priority: Int, val logName: String) {
     WARNING(3, "warn"),
     ERROR(5, "error"),
     CRITICAL(6, "crit")
+}
+
+private val Throwable.logString: String get() {
+    // Retrofit throws worthless exceptions if you try to just log them like any other exception. So special case those so we get ACTUAL useful information out of it
+    return if (this is HttpException) {
+        val errorBody = response()?.errorBody()?.string() ?: "No http error provided"
+        "HttpMessage: $errorBody"
+    } else {
+        Log.getStackTraceString(this)
+    }
 }

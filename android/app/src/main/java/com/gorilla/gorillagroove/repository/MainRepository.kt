@@ -64,6 +64,9 @@ class MainRepository(
     var dataSetChanged = false
     var currentIndex = 0
 
+    val currentTrack: DbTrack?
+        get() = nowPlayingTracks.getOrNull(currentIndex)
+
     val nowPlayingTracks = mutableListOf<DbTrack>()
     val nowPlayingConcatenatingMediaSource = ConcatenatingMediaSource(false, true, ShuffleOrder.DefaultShuffleOrder(0))
     val nowPlayingMetadataList = mutableListOf<MediaMetadataCompat>()
@@ -175,7 +178,7 @@ class MainRepository(
             lastFetchedLinks
         } catch (e: Exception) {
             if (e !is CancellationException) {
-                e.logNetworkException("Could not fetch track links!")
+                logError("Could not fetch track links!", e)
             }
             TrackLinkResponse(" ", null)
         }
@@ -298,7 +301,7 @@ class MainRepository(
             logInfo("Track $trackId was marked listened to")
         } catch (e: Throwable) {
             // TODO retry policy for this request
-            e.logNetworkException("Could not mark track as listened to!")
+            logError("Could not mark track as listened to!", e)
         }
     }
 
@@ -312,7 +315,7 @@ class MainRepository(
         try {
             networkApi.uploadCrashReport(multipartFile)
         } catch (e: Throwable) {
-            e.logNetworkException("Could not upload crash report!")
+            logError("Could not upload crash report!", e)
         }
     }
 
@@ -334,17 +337,8 @@ class MainRepository(
             sharedPreferences.edit().putString(lastPostedVersionKey, version).apply()
             logInfo("Posted version $version to the API")
         } catch (e: Throwable) {
-            e.logNetworkException("Could not update device version!")
+            logError("Could not update device version!", e)
         }
-    }
-}
-
-fun Throwable.logNetworkException(message: String) {
-    if (this is HttpException) {
-        val errorBody = response()?.errorBody()?.string() ?: "No http error provided"
-        logError("message \n${errorBody}")
-    } else {
-        logError(message, this)
     }
 }
 
