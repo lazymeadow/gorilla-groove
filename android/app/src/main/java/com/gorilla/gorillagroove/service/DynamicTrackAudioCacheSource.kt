@@ -9,6 +9,7 @@ import com.google.android.exoplayer2.util.Util
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
@@ -64,6 +65,11 @@ class DynamicTrackAudioCacheSource(val trackId: Long) : DataSource.Factory {
                 // We use the CachingDataSource here for all plays, even ones that are already cached. So it happens often that we come in here with a cached song already.
                 // No reason to assume our cache is bad and replace it (there are checks when we start playing the track). Just abort.
                 if (track.songCachedAt != null) {
+                    return
+                }
+
+                // Some more conditions where we don't want to cache things
+                if (track.inReview || track.offlineAvailability == OfflineAvailabilityType.ONLINE_ONLY) {
                     return
                 }
 

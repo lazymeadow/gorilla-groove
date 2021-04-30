@@ -95,6 +95,13 @@ data class DbTrack(
         thumbnailCachedAt = dbEntity.thumbnailCachedAt
         startedOnDevice = dbEntity.startedOnDevice
     }
+
+    val artistString: String
+    get() {
+        val featuringString = if (featuring.isNotBlank()) "ft. $featuring" else ""
+
+        return "$artist $featuringString".trim()
+    }
 }
 
 enum class OfflineAvailabilityType {

@@ -49,7 +49,7 @@ class TrackCellAdapter(
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
         val currentTrack = filteredList[position]
-        holder.tvArtist.text = currentTrack.artist
+        holder.tvArtist.text = currentTrack.artistString
         holder.tvName.text = currentTrack.name
         holder.tvAlbum.text = currentTrack.album
         holder.tvLength.text = currentTrack.length.getSongTimeFromSeconds()
@@ -128,6 +128,7 @@ class TrackCellAdapter(
                         trackList.filter {
                             it.name.toLowerCase(Locale.ROOT).contains(filterPattern) ||
                                     it.artist.toLowerCase(Locale.ROOT).contains(filterPattern) ||
+                                    it.featuring.toLowerCase(Locale.ROOT).contains(filterPattern) ||
                                     it.album.toLowerCase(Locale.ROOT).contains(filterPattern)
                         }
                     }

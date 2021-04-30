@@ -36,7 +36,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.WebSocket
 import org.json.JSONObject
-import retrofit2.HttpException
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -252,7 +251,12 @@ class MainRepository(
                     logDebug("Fetching track links for track ${track.id}")
                     val fetchedUris = getTrackLinks(Integer.parseInt(dataSpec.uri.toString()).toLong())
 
-                    if (refreshedTrack.offlineAvailability != OfflineAvailabilityType.ONLINE_ONLY && refreshedTrack.artCachedAt == null && fetchedUris.albumArtLink != null) {
+                    if (
+                        refreshedTrack.offlineAvailability != OfflineAvailabilityType.ONLINE_ONLY
+                        && !refreshedTrack.inReview
+                        && refreshedTrack.artCachedAt == null
+                        && fetchedUris.albumArtLink != null
+                    ) {
                         logDebug("Art was not cached for track ${track.id} but could be. Saving it for later")
                         GlobalScope.launch(Dispatchers.IO) {
                             TrackCacheService.cacheTrack(track.id, fetchedUris.albumArtLink, CacheType.ART)
@@ -345,14 +349,14 @@ class MainRepository(
 fun DbTrack.toMediaMetadataItem(): MediaMetadataCompat = MediaMetadataCompat.Builder()
         .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id.toString())
         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, name)
-        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artistString)
         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, id.toString())
         .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI, id.toString())
         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, id.toString())
         .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, length.toLong())
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, name)
-        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artist)
+        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, artistString)
         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, album)
         .build()
 

@@ -39,6 +39,9 @@ interface NetworkApi {
     @DELETE("api/review-queue/track/{id}")
     suspend fun rejectReviewTrack(@Path("id") trackId: Long)
 
+    @POST("api/review-queue/track/{id}/approve")
+    suspend fun approveReviewTrack(@Path("id") trackId: Long)
+
     // I absolutely hate that I have a different request for each of these. But either Retrofit or GSON isn't smart enough to figure out a generic type.
     // When I use one, it converts everything into just a GSON tree and then tries to cast it to the class and fails. I've seen other people complain about
     // this on the internet but haven't seen a good solution that allows for using generics, and I don't want to keep messing with it right now.

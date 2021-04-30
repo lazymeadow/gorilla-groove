@@ -37,6 +37,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.math.min
 
@@ -178,6 +179,50 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         }
     }
 
+    private suspend fun approveTrack(track: DbTrack) = withContext(Dispatchers.IO) {
+        val wasPlaying = playerControlsViewModel.playbackState.value.isPlaying
+
+        val reviewSourceId = track.reviewSourceId!!
+
+        try {
+            Network.api.approveReviewTrack(track.id)
+        } catch (e: Throwable) {
+            logError("Failed to approve review track ${track.id}!", e)
+
+            GGToast.show("Failed to approve track")
+            return@withContext
+        }
+
+        val refreshedTrack = trackDao.findById(track.id) ?: run {
+            logError("Failed to find refreshed track with ID ${track.id}!")
+            return@withContext
+        }
+
+        // This stuff will get synced later with API values. But may as well update it ahead of time since we know roughly what it'll be
+        refreshedTrack.inReview = false
+        refreshedTrack.addedToLibrary = Instant.now()
+        trackDao.save(refreshedTrack)
+
+        playNextAfterReview(reviewSourceId, refreshedTrack, wasPlaying)
+    }
+
+    private suspend fun playNextAfterReview(reviewSourceId: Long, track: DbTrack, wasPlaying: Boolean) = withContext(Dispatchers.Main) {
+        reviewSourceToTrackCount[reviewSourceId] = reviewSourceToTrackCount.getValue(reviewSourceId) - 1
+        if (activeSource!!.id == reviewSourceId) {
+            visibleTracks.removeIf { it.id == track.id }
+
+            if (visibleTracks.isEmpty()) {
+                setNextActiveSource()
+            } else {
+                trackAdapter.notifyDataSetChanged()
+            }
+        }
+
+        if (wasPlaying && mainRepository.currentIndex < visibleTracks.size) {
+            playerControlsViewModel.playMedia(mainRepository.currentIndex, visibleTracks)
+        }
+    }
+
     private suspend fun rejectTrack(track: DbTrack) = withContext(Dispatchers.IO) {
         val wasPlaying = playerControlsViewModel.playbackState.value.isPlaying
         if (mainRepository.currentTrack?.id == track.id) {
@@ -197,22 +242,7 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
         trackDao.delete(track.id)
 
-        reviewSourceToTrackCount[reviewSourceId] = reviewSourceToTrackCount.getValue(reviewSourceId) - 1
-        if (activeSource!!.id == reviewSourceId) {
-            visibleTracks.removeIf { it.id == track.id }
-
-            withContext(Dispatchers.Main) {
-                if (visibleTracks.isEmpty()) {
-                    setNextActiveSource()
-                } else {
-                    trackAdapter.notifyDataSetChanged()
-                }
-            }
-        }
-
-        if (wasPlaying && mainRepository.currentIndex < visibleTracks.size) {
-            playerControlsViewModel.playMedia(mainRepository.currentIndex, visibleTracks)
-        }
+        playNextAfterReview(reviewSourceId, track, wasPlaying)
     }
 
     inner class ReviewQueueTrackListAdapter : RecyclerView.Adapter<ReviewQueueTrackListAdapter.ReviewQueueItemViewHolder>() {
@@ -246,18 +276,12 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
             fun setTrack(track: DbTrack, index: Int) {
                 currentTrack = track
 
-                var artist = track.artist
-                if (track.featuring.isNotEmpty()) {
-                    artist += " ft. ${track.featuring}"
-                }
-
-                val trackText = listOf(track.name, artist)
+                val trackText = listOf(track.name, track.artistString)
                     .filter { it.isNotBlank() }
                     .joinToString(" - ")
 
                 itemView.trackText.text = trackText
 
-                itemView.playOverlay.visibility = if (currentTrack.id == mainRepository.currentTrack?.id) View.GONE else View.VISIBLE
                 itemView.playOverlay.setOnClickListener {
                     playerControlsViewModel.playMedia(index, visibleTracks)
                     itemView.playOverlay.visibility = View.GONE
@@ -265,7 +289,12 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
                 itemView.thumbsDown.setOnClickListener {
                     lifecycleScope.launch {
-                        rejectTrack(currentTrack)
+                        rejectTrack(track)
+                    }
+                }
+                itemView.thumbsUp.setOnClickListener {
+                    lifecycleScope.launch {
+                        approveTrack(track)
                     }
                 }
 
