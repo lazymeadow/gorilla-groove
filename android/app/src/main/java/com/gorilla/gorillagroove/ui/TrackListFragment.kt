@@ -8,6 +8,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
@@ -19,6 +20,9 @@ import com.gorilla.gorillagroove.util.LocationService
 import com.gorilla.gorillagroove.util.getNullableBoolean
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -125,10 +129,13 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
                 trackCellAdapter.notifyDataSetChanged()
             }
         })
-        playerControlsViewModel.playbackState.observe(requireActivity(), {
-            trackCellAdapter.isPlaying = it.isPlaying
-            trackCellAdapter.notifyDataSetChanged()
-        })
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            playerControlsViewModel.playbackState.collect {
+                trackCellAdapter.isPlaying = it.isPlaying
+                trackCellAdapter.notifyDataSetChanged()
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.ASYNC)

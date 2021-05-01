@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
@@ -24,6 +25,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -196,13 +198,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun subscribeObservers() {
-        playerControlsViewModel.playbackState.observe(this, {
-            if (it.isPlaying) {
-                playpause_button.setImageResource(R.drawable.ic_pause_24)
-            } else {
-                playpause_button.setImageResource(R.drawable.ic_play_arrow_24)
+        lifecycleScope.launch(Dispatchers.Main) {
+            playerControlsViewModel.playbackState.collect {
+                if (it.isPlaying) {
+                    playpause_button.setImageResource(R.drawable.ic_pause_24)
+                } else {
+                    playpause_button.setImageResource(R.drawable.ic_play_arrow_24)
+                }
             }
-        })
+        }
 
         playerControlsViewModel.repeatState.observe(this, {
             when (it) {

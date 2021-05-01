@@ -71,6 +71,12 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
         setupTrackRecyclerView()
         setupSourceSelectRecyclerView()
+
+        // This might seem pointless, but apparently you can't initialize a ViewModel on a background thread, or there is something about this particular ViewModel that breaks
+        // when you try to do so. Idk why. But in the accept / reject handlers we check the playback state on an IO thread, and if the ViewModel hasn't been started by something
+        // else prior, we get a "java.lang.IllegalStateException: Method addObserver must be called on the main thread", even though addObserver is not anywhere in this file,
+        // or in the PlaybackControlsViewModel file. Idk I don't get it at all. And I don't want to change the IO thread to be a Main thread because that's even stupider.
+        playerControlsViewModel
     }
 
     override fun onStart() {
@@ -138,7 +144,7 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         // This is the priority in which we automatically show queues: user -> artist -> youtube
         val sourceToUse = listOf(ReviewSourceType.USER_RECOMMEND, ReviewSourceType.ARTIST, ReviewSourceType.YOUTUBE_CHANNEL).map { sourceType ->
             return@map sourcesByType[sourceType]?.firstOrNull()
-        }.firstOrNull()
+        }.filterNotNull().firstOrNull()
 
         if (sourceToUse == null) {
             // TODO show empty state
@@ -180,6 +186,8 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
     }
 
     private suspend fun approveTrack(track: DbTrack) = withContext(Dispatchers.IO) {
+        logInfo("User is approving track: ${track.id}")
+
         val wasPlaying = playerControlsViewModel.playbackState.value.isPlaying
 
         val reviewSourceId = track.reviewSourceId!!
@@ -207,7 +215,13 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
     }
 
     private suspend fun playNextAfterReview(reviewSourceId: Long, track: DbTrack, wasPlaying: Boolean) = withContext(Dispatchers.Main) {
-        reviewSourceToTrackCount[reviewSourceId] = reviewSourceToTrackCount.getValue(reviewSourceId) - 1
+        val newTrackCount = reviewSourceToTrackCount.getValue(reviewSourceId) - 1
+        reviewSourceToTrackCount[reviewSourceId] = newTrackCount
+
+        if (newTrackCount == 0) {
+            sourcesNeedingReview.removeIf { it.id == reviewSourceId }
+        }
+
         if (activeSource!!.id == reviewSourceId) {
             visibleTracks.removeIf { it.id == track.id }
 
@@ -224,9 +238,13 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
     }
 
     private suspend fun rejectTrack(track: DbTrack) = withContext(Dispatchers.IO) {
+        logInfo("User is rejecting track: ${track.id}")
+
         val wasPlaying = playerControlsViewModel.playbackState.value.isPlaying
+
+        // If someone rejects the song it probably means they really don't want it to keep playing
         if (mainRepository.currentTrack?.id == track.id) {
-            // TODO pause
+            playerControlsViewModel.pause()
         }
 
         val reviewSourceId = track.reviewSourceId!!

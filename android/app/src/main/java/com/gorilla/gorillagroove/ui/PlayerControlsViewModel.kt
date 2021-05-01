@@ -12,6 +12,7 @@ import com.gorilla.gorillagroove.service.EMPTY_PLAYBACK_STATE
 import com.gorilla.gorillagroove.service.MusicServiceConnection
 import com.gorilla.gorillagroove.util.KtLiveData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -28,9 +29,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     val currentTrackItem: LiveData<MediaMetadataCompat>
         get() = _currentTrackItem
 
-    private val _playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
-    val playbackState: KtLiveData<PlaybackStateCompat>
-        get() = _playbackState
+    val playbackState = MutableStateFlow(EMPTY_PLAYBACK_STATE)
 
     private val _repeatState: MutableLiveData<Int> = MutableLiveData()
     val repeatState: LiveData<Int>
@@ -59,38 +58,28 @@ class PlayerControlsViewModel @ViewModelInject constructor(
 
     }
 
-    private val playbackStateObserver = Observer<PlaybackStateCompat> {
-        _playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
-
-//        when(it.state) {
-//            PlaybackStateCompat.STATE_PLAYING -> ////Log.d(TAG, "STATE: PLAYING")
-//            PlaybackStateCompat.STATE_PAUSED -> ////Log.d(TAG, "STATE: PAUSED")
-//            PlaybackStateCompat.STATE_STOPPED -> ////Log.d(TAG, "STATE: STOPPED")
-//            PlaybackStateCompat.STATE_BUFFERING -> ////Log.d(TAG, "STATE: BUFFERING")
-//        }
-
-        when {
-            it.isPlaying -> {
-                isPlaying = true
-                sendPlayStatusToServer()
-            }
-
-            it.isPaused -> {
-                isPlaying = false
-                sendPlayStatusToServer()
-            }
-        }
-    }
-
-    private val repeatStateObserver = Observer<Int> {
-        _repeatState.postValue(it)
-    }
-
     private val musicServiceConnection = musicServiceConnection.also { connection ->
-        connection.playbackState.observeForever(playbackStateObserver)
-        connection.repeatState.observeForever(repeatStateObserver)
-
         viewModelScope.launch(Dispatchers.Main) {
+            launch {
+                connection.playbackState.collect {
+                    playbackState.value = it ?: EMPTY_PLAYBACK_STATE
+                    when {
+                        it.isPlaying -> {
+                            isPlaying = true
+                            sendPlayStatusToServer()
+                        }
+                        it.isPaused -> {
+                            isPlaying = false
+                            sendPlayStatusToServer()
+                        }
+                    }
+                }
+            }
+
+            launch {
+                connection.repeatState.collect { _repeatState.postValue(it) }
+            }
+
             connection.nowPlaying.collect { newMetadataItem ->
                 _currentTrackItem.postValue(newMetadataItem)
 
@@ -134,13 +123,17 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     }
 
     fun playPause(): Boolean {
-        return if (_playbackState.value.isPaused) {
+        return if (playbackState.value.isPaused) {
             transportControls.play()
             true
         } else {
             transportControls.pause()
             false
         }
+    }
+
+    fun pause() {
+        transportControls.pause()
     }
 
     fun seekTo(position: Long) {
@@ -170,11 +163,8 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         }
     }
 
-
     override fun onCleared() {
         super.onCleared()
-        musicServiceConnection.playbackState.removeObserver(playbackStateObserver)
-        musicServiceConnection.repeatState.removeObserver(repeatStateObserver)
         updatePosition = false
     }
 

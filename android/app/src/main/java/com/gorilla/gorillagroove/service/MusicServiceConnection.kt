@@ -26,9 +26,8 @@ class MusicServiceConnection(
 ) {
 
     val isConnected = KtLiveData(false)
-    val networkFailure = KtLiveData(false)
-    val playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
-    val repeatState = KtLiveData(PlaybackStateCompat.REPEAT_MODE_NONE)
+    val playbackState = MutableStateFlow(EMPTY_PLAYBACK_STATE)
+    val repeatState = MutableStateFlow(PlaybackStateCompat.REPEAT_MODE_NONE)
     val nowPlaying = MutableStateFlow(NOTHING_PLAYING)
     val currentSongTimeMillis = MutableStateFlow(0L)
 
@@ -112,13 +111,13 @@ class MusicServiceConnection(
                 lastState = stateId
             }
 
-            playbackState.postValue(state ?: EMPTY_PLAYBACK_STATE)
+            playbackState.value = state ?: EMPTY_PLAYBACK_STATE
         }
 
         override fun onRepeatModeChanged(repeatMode: Int) {
             logInfo("Repeat mode was changed to $repeatMode")
 
-            repeatState.postValue(repeatMode)
+            repeatState.value = repeatMode
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
@@ -140,7 +139,6 @@ class MusicServiceConnection(
             when (event) {
                 NETWORK_FAILURE -> {
                     logWarn("Network failure session event encountered")
-                    networkFailure.postValue(true)
                 }
             }
         }
