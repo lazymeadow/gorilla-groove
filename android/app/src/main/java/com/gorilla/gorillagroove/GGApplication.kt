@@ -7,19 +7,14 @@ import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.GGLifecycleOwner
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.*
-import javax.inject.Inject
 
 @HiltAndroidApp
 class GGApplication : Application() {
-
-    @Inject
-    lateinit var serverSynchronizer: ServerSynchronizer
 
     override fun onCreate() {
         application = this
@@ -39,7 +34,7 @@ class GGApplication : Application() {
             DynamicTrackAudioCacheSource.purgeCache()
 
             withContext(Dispatchers.Main) {
-                ProcessLifecycleOwner.get().lifecycle.addObserver(GGLifecycleOwner(serverSynchronizer))
+                ProcessLifecycleOwner.get().lifecycle.addObserver(GGLifecycleOwner())
             }
         }
     }

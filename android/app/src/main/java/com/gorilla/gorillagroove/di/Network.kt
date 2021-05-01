@@ -2,6 +2,7 @@ package com.gorilla.gorillagroove.di
 
 import com.google.gson.*
 import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.ui.settings.GGSettings
 import dagger.Module
 import dagger.Provides
@@ -26,9 +27,7 @@ object Network {
     @Retention(AnnotationRetention.BINARY)
     annotation class OkHttpClientProvider
 
-    @Singleton
-    @Provides
-    fun provideGsonBuilder(): Gson {
+    private fun provideGsonBuilder(): Gson {
         return GsonBuilder()
             .registerTypeAdapter(Instant::class.java, object : JsonDeserializer<Instant> {
                 override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Instant {
@@ -38,18 +37,14 @@ object Network {
             .create()
     }
 
-    @Singleton
-    @Provides
-    fun provideRetrofit(gson: Gson): Retrofit.Builder {
+    private fun provideRetrofit(gson: Gson): Retrofit.Builder {
         return Retrofit.Builder()
             .baseUrl("https://gorillagroove.net/")
             .client(provideOkHttpClient())
             .addConverterFactory(GsonConverterFactory.create(gson))
     }
 
-    @Singleton
-    @Provides
-    fun provideNetworkApi(retrofit: Retrofit.Builder): NetworkApi {
+    private fun provideNetworkApi(retrofit: Retrofit.Builder): NetworkApi {
         return retrofit
             .build()
             .create(NetworkApi::class.java)
@@ -62,6 +57,10 @@ object Network {
            return OkHttpClient.Builder()
                // Automatically add the authorization header if we have a valid token
                .addInterceptor { chain ->
+                   val req = chain.request()
+                   val body = req.body ?: ""
+                   logDebug("${req.method} ${req.url} $body")
+
                    if (GGSettings.offlineModeEnabled) {
                        throw OfflineModeEnabledException()
                    }

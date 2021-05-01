@@ -3,7 +3,7 @@ package com.gorilla.gorillagroove.ui.library
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
-import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.ui.settings.GGSettings
@@ -12,13 +12,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class LibraryTrackFragment : TrackListFragment() {
-
-    @Inject
-    lateinit var trackDao: TrackDao
 
     private var albumFilter: String? = null
     private var artistFilter: String? = null
@@ -56,7 +52,7 @@ class LibraryTrackFragment : TrackListFragment() {
     private fun loadTracks() {
         lifecycleScope.launch(Dispatchers.Default) {
             val isHidden = if (showHidden) null else false
-            val tracks = trackDao.findTracksWithSort(
+            val tracks = GorillaDatabase.trackDao.findTracksWithSort(
                 sortType = activeSort.sortType,
                 isHidden = isHidden,
                 albumFilter = albumFilter,

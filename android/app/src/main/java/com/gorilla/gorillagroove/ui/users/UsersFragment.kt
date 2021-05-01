@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.dao.UserDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
@@ -21,9 +22,6 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
 
     lateinit var userAdapter: UserAdapter
 
-    @Inject
-    lateinit var userDao: UserDao
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -36,7 +34,7 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
         super.onStart()
 
         lifecycleScope.launch(Dispatchers.Default) {
-            val users = userDao.findAll()
+            val users = GorillaDatabase.userDao.findAll()
 
             withContext(Dispatchers.Main) {
                 userAdapter.submitList(users)

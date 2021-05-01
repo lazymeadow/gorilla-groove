@@ -1,19 +1,16 @@
 package com.gorilla.gorillagroove.service.sync
 
-import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbSyncStatus
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import java.time.Instant
 
-class TrackSynchronizer(
-    private val networkApi: NetworkApi,
-    private val trackDao: TrackDao,
-) : StandardSynchronizer<DbTrack, TrackResponse>(trackDao) {
+object TrackSynchronizer : StandardSynchronizer<DbTrack, TrackResponse>(GorillaDatabase.trackDao) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<TrackResponse> {
-        return networkApi.getTrackSyncEntities(
+        return Network.api.getTrackSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,
             maximum = maximum.toEpochMilli(),
             page = page
@@ -30,7 +27,7 @@ class TrackSynchronizer(
 
     // Need to preserve some of our local state on these entities. Efficiently copy it to the new ones by loading all db copies of the modified entities at once
     override fun onEntitiesModified(entities: List<DbTrack>) {
-        val existingEntities = trackDao.findById(entities.map { it.id }).associateBy { it.id }
+        val existingEntities = GorillaDatabase.trackDao.findById(entities.map { it.id }).associateBy { it.id }
 
         entities.forEach { serverEntity ->
             val dbEntity = existingEntities[serverEntity.id] ?: run {

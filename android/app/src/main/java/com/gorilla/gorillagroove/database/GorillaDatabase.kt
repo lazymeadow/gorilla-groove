@@ -48,6 +48,13 @@ abstract class GorillaDatabase: RoomDatabase() {
             activeDatabase = newDatabase
             return newDatabase
         }
+
+        val syncStatusDao get() = getDatabase().syncStatusDao()
+        val trackDao get() = getDatabase().trackDao()
+        val userDao get() = getDatabase().userDao()
+        val playlistDao get() = getDatabase().playlistDao()
+        val playlistTrackDao get() = getDatabase().playlistTrackDao()
+        val reviewSourceDao get() = getDatabase().reviewSourceDao()
     }
 }
 

@@ -7,7 +7,7 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.repository.MainRepository
@@ -29,9 +29,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
 
     @Inject
     lateinit var mainRepository: MainRepository
-
-    @Inject
-    lateinit var trackDao: TrackDao
 
     var newName: String? = null
     var newArtist: String? = null
@@ -125,7 +122,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
                 }
 
                 logInfo("Finished updating metadata of track: ${track.id}")
-                trackDao.save(updatedTrack)
+                GorillaDatabase.trackDao.save(updatedTrack)
 
                 withContext(Dispatchers.Main) { activity?.onBackPressed() }
             }

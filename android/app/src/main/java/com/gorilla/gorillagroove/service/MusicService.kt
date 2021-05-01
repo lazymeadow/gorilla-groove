@@ -11,9 +11,11 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
@@ -27,14 +29,23 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import javax.inject.Inject
 
-
 private const val TAG = "AppDebug: Music Service"
 
 @AndroidEntryPoint
 class MusicService : MediaBrowserServiceCompat() {
 
-    @Inject
-    lateinit var exoPlayer: SimpleExoPlayer
+    private val exoPlayer = SimpleExoPlayer.Builder(GGApplication.application)
+        .setLoadControl(DefaultLoadControl())
+        .build().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(C.CONTENT_TYPE_MUSIC)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build(),
+                true
+            )
+            setHandleAudioBecomingNoisy(true)
+        }
 
     @Inject
     lateinit var repo: MainRepository

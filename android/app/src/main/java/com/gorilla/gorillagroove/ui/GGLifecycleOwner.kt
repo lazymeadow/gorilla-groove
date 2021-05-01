@@ -10,9 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class GGLifecycleOwner(
-    private val serverSynchronizer: ServerSynchronizer
-) : LifecycleObserver {
+class GGLifecycleOwner : LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onEnterForeground() {
@@ -20,7 +18,7 @@ class GGLifecycleOwner(
 
         if (GGApplication.isUserSignedIn) {
             GlobalScope.launch(Dispatchers.IO) {
-                serverSynchronizer.syncWithServer(abortIfRecentlySynced = true)
+                ServerSynchronizer.syncWithServer(abortIfRecentlySynced = true)
             }
         }
     }

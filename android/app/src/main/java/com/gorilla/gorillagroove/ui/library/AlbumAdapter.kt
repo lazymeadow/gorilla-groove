@@ -11,13 +11,12 @@ import com.bumptech.glide.request.RequestOptions
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.Album
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import kotlinx.android.synthetic.main.album_info_item.view.*
 import kotlinx.coroutines.*
 import java.util.*
 
 class AlbumAdapter(
-    private val networkApi: NetworkApi,
     private val onAlbumTap: (album: Album) -> Unit
 ) : RecyclerView.Adapter<AlbumAdapter.AlbumViewHolder>(), Filterable {
 
@@ -59,7 +58,7 @@ class AlbumAdapter(
                 itemView.albumArt.setImageBitmap(null)
                 if (!album.albumArtFetched) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        networkApi.getTrackLink(album.trackId, "SMALL").albumArtLink?.let { artLink ->
+                        Network.api.getTrackLink(album.trackId, "SMALL").albumArtLink?.let { artLink ->
                             val artBitmap = Glide.with(GGApplication.application).applyDefaultRequestOptions(glideOptions)
                                 .asBitmap()
                                 .load(artLink)

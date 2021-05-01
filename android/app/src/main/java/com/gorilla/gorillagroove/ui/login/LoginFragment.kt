@@ -12,7 +12,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -33,12 +33,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
     @Inject
     lateinit var sharedPref: SharedPreferences
-
-    @Inject
-    lateinit var serverSynchronizer: ServerSynchronizer
-
-    @Inject
-    lateinit var networkApi: NetworkApi
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -72,13 +66,13 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    val response = networkApi.login(loginRequest)
+                    val response = Network.api.login(loginRequest)
 
                     sharedPref.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
 
                     val toast = GGToast.show("Syncing first time data ...", Toast.LENGTH_LONG)
                     // TODO This is currently blocking. Shouldn't be
-                    serverSynchronizer.syncWithServer()
+                    ServerSynchronizer.syncWithServer()
 
                     withContext(Dispatchers.Main) {
                         toast.cancel()

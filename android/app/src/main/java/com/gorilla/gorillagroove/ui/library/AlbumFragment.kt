@@ -10,7 +10,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
@@ -34,12 +36,6 @@ import javax.inject.Inject
 class AlbumFragment : Fragment(R.layout.fragment_album) {
 
     lateinit var albumAdapter: AlbumAdapter
-
-    @Inject
-    lateinit var trackDao: TrackDao
-
-    @Inject
-    lateinit var networkApi: NetworkApi
 
     private var showHidden = false
 
@@ -91,7 +87,7 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
     private fun loadAlbums() {
         lifecycleScope.launch(Dispatchers.Default) {
             val includeHidden = if (showHidden) null else false
-            val albums = trackDao.getDistinctAlbums(artistFilter = artistFilter, isHidden = includeHidden, inReview = false)
+            val albums = GorillaDatabase.trackDao.getDistinctAlbums(artistFilter = artistFilter, isHidden = includeHidden, inReview = false)
 
             withContext(Dispatchers.Main) {
                 albumAdapter.submitList(albums)
@@ -136,7 +132,7 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
     }
 
     private fun setupRecyclerView() = album_rv.apply {
-        albumAdapter = AlbumAdapter(networkApi) { album ->
+        albumAdapter = AlbumAdapter { album ->
             logInfo("Album '$album' was tapped")
 
             searchItem?.collapseActionView()

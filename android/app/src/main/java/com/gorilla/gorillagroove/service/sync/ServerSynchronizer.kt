@@ -1,8 +1,8 @@
 package com.gorilla.gorillagroove.service.sync
 
-import com.gorilla.gorillagroove.database.dao.SyncStatusDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbSyncStatus
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -15,17 +15,11 @@ import java.time.Instant
 
 private const val MIN_TIME_BETWEEN_SYNCS_SECONDS = 600L // 10 minutes
 
-class ServerSynchronizer(
-    private val syncStatusDao: SyncStatusDao,
-    private val networkApi: NetworkApi,
-    private val trackSynchronizer: TrackSynchronizer,
-    private val userSynchronizer: UserSynchronizer,
-    private val playlistSynchronizer: PlaylistSynchronizer,
-    private val playlistTrackSynchronizer: PlaylistTrackSynchronizer,
-    private val reviewSourceSynchronizer: ReviewSourceSynchronizer,
-) {
+object ServerSynchronizer {
     private var syncRunning = false
     private var lastSync = Instant.MIN
+
+    private val syncStatusDao get() = GorillaDatabase.syncStatusDao
 
     suspend fun syncWithServer(
         syncTypes: Set<SyncType> = SyncType.values().toSet(),
@@ -64,7 +58,7 @@ class ServerSynchronizer(
         }
 
         val lastModifiedTimestamps = try {
-            networkApi.getLastModifiedTimestamps().lastModifiedTimestamps
+            Network.api.getLastModifiedTimestamps().lastModifiedTimestamps
         } catch (e: Throwable) {
             logError("Failed to get last modified timestamps!", e)
             synchronized(this) {
@@ -85,11 +79,11 @@ class ServerSynchronizer(
                 logInfo("About to sync type: $syncType")
 
                 val success = when (syncType) {
-                    SyncType.TRACK -> trackSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.PLAYLIST_TRACK -> playlistTrackSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.PLAYLIST -> playlistSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.USER -> userSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.REVIEW_SOURCE -> reviewSourceSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.TRACK -> TrackSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.PLAYLIST_TRACK -> PlaylistTrackSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.PLAYLIST -> PlaylistSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.USER -> UserSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.REVIEW_SOURCE -> ReviewSourceSynchronizer.sync(syncStatus, syncTime)
                 }
 
                 if (success) {

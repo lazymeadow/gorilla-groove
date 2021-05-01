@@ -174,12 +174,6 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
 
     private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
-    val networkApi = Network.provideNetworkApi(
-        Network.provideRetrofit(
-            Network.provideGsonBuilder()
-        )
-    )
-
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val trackId = inputData.getNullableLong("trackId")
             ?: throw IllegalArgumentException("No trackId found when starting TrackDownloadWorker! InputData was: $inputData")
@@ -187,7 +181,7 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
         logInfo("Starting download of '${OfflineAvailabilityType.AVAILABLE_OFFLINE}' track with ID: $trackId")
 
         val trackLinks = try {
-            networkApi.getTrackLink(trackId)
+            Network.api.getTrackLink(trackId)
         } catch (e: Throwable) {
             logError("Failed to get track links for offline download!", e)
             pendingTasks.remove(trackId)

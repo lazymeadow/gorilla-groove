@@ -1,17 +1,14 @@
 package com.gorilla.gorillagroove.service.sync
 
-import com.gorilla.gorillagroove.database.dao.UserDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbSyncStatus
 import com.gorilla.gorillagroove.database.entity.DbUser
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import java.time.Instant
 
-class UserSynchronizer(
-    private val networkApi: NetworkApi,
-    userDao: UserDao,
-) : StandardSynchronizer<DbUser, UserResponse>(userDao) {
+object UserSynchronizer : StandardSynchronizer<DbUser, UserResponse>(GorillaDatabase.userDao) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<UserResponse> {
-        return networkApi.getUserSyncEntities(
+        return Network.api.getUserSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,
             maximum = maximum.toEpochMilli(),
             page = page

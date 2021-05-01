@@ -14,7 +14,7 @@ import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.OkHttpWebSocket
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.MarkListenedRequest
@@ -43,13 +43,10 @@ import java.util.*
 
 
 class MainRepository(
-    private val networkApi: NetworkApi,
     private val sharedPreferences: SharedPreferences,
     private val okClient: OkHttpClient,
 ) {
     private var webSocket: WebSocket? = null
-
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
 
     private var userToken: String = sharedPreferences.getString(KEY_USER_TOKEN, "") ?: ""
 
@@ -172,7 +169,7 @@ class MainRepository(
         }
 
         return try {
-            lastFetchedLinks = networkApi.getTrackLink(id)
+            lastFetchedLinks = Network.api.getTrackLink(id)
             lastVerifiedTrack = id
             lastFetchedLinks
         } catch (e: Exception) {
@@ -185,7 +182,7 @@ class MainRepository(
 
     suspend fun updateTrack(trackUpdate: TrackUpdate): DbTrack? {
         return try {
-            val updatedTrack = networkApi.updateTrack(trackUpdate).items.first()
+            val updatedTrack = Network.api.updateTrack(trackUpdate).items.first()
 
             updatedTrack.asTrack()
         } catch (e: Exception) {
@@ -222,7 +219,7 @@ class MainRepository(
                 val specBuilder = dataSpec.buildUpon().setCustomData(customData)
 
                 // The reference to the track could be old. Especially with caching, we want to make sure we have an up-to-date reference for deciding where to find our media files
-                val refreshedTrack = trackDao.findById(track.id) ?: run {
+                val refreshedTrack = GorillaDatabase.trackDao.findById(track.id) ?: run {
                     logError("Track ${track.id} no longer existed when refreshing it for media source playback!")
                     return dataSpec
                 }
@@ -301,7 +298,7 @@ class MainRepository(
         )
 
         try {
-            networkApi.markTrackListened(markListenedRequest)
+            Network.api.markTrackListened(markListenedRequest)
             logInfo("Track $trackId was marked listened to")
         } catch (e: Throwable) {
             // TODO retry policy for this request
@@ -317,7 +314,7 @@ class MainRepository(
         )
 
         try {
-            networkApi.uploadCrashReport(multipartFile)
+            Network.api.uploadCrashReport(multipartFile)
         } catch (e: Throwable) {
             logError("Could not upload crash report!", e)
         }
@@ -336,7 +333,7 @@ class MainRepository(
         logInfo("The API hasn't been told that we are running version $version. Our last posted value was $lastPostedVersion. Updating API")
 
         try {
-            networkApi.updateDeviceVersion(UpdateDeviceVersionRequest(version))
+            Network.api.updateDeviceVersion(UpdateDeviceVersionRequest(version))
 
             sharedPreferences.edit().putString(lastPostedVersionKey, version).apply()
             logInfo("Posted version $version to the API")

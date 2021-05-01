@@ -1,17 +1,14 @@
 package com.gorilla.gorillagroove.service.sync
 
-import com.gorilla.gorillagroove.database.dao.PlaylistTrackDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbPlaylistTrack
 import com.gorilla.gorillagroove.database.entity.DbSyncStatus
-import com.gorilla.gorillagroove.network.NetworkApi
+import com.gorilla.gorillagroove.di.Network
 import java.time.Instant
 
-class PlaylistTrackSynchronizer(
-    private val networkApi: NetworkApi,
-    playlistTrackDao: PlaylistTrackDao
-) : StandardSynchronizer<DbPlaylistTrack, PlaylistTrackResponse>(playlistTrackDao) {
+object PlaylistTrackSynchronizer : StandardSynchronizer<DbPlaylistTrack, PlaylistTrackResponse>(GorillaDatabase.playlistTrackDao) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<PlaylistTrackResponse> {
-        return networkApi.getPlaylistTrackSyncEntities(
+        return Network.api.getPlaylistTrackSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,
             maximum = maximum.toEpochMilli(),
             page = page

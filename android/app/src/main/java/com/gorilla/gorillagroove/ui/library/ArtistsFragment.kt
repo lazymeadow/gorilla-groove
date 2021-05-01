@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.database.dao.TrackDao
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
@@ -26,15 +26,11 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ArtistsFragment : Fragment(R.layout.fragment_artists) {
 
     lateinit var artistAdapter: ArtistsAdapter
-
-    @Inject
-    lateinit var trackDao: TrackDao
 
     protected var showHidden = false
 
@@ -73,7 +69,7 @@ class ArtistsFragment : Fragment(R.layout.fragment_artists) {
     private fun loadArtists() {
         lifecycleScope.launch(Dispatchers.Default) {
             val includeHidden = if (showHidden) null else false
-            val artists = trackDao.getDistinctArtists(isHidden = includeHidden, inReview = false)
+            val artists = GorillaDatabase.trackDao.getDistinctArtists(isHidden = includeHidden, inReview = false)
 
             withContext(Dispatchers.Main) {
                 artistAdapter.submitList(artists)

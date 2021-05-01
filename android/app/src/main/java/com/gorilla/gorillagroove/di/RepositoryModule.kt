@@ -17,10 +17,9 @@ object RepositoryModule {
     @Singleton
     @Provides
     fun provideMainRepository(
-        retrofit: NetworkApi,
         sharedPreferences: SharedPreferences,
         @Network.OkHttpClientProvider okClient: OkHttpClient
     ): MainRepository {
-        return MainRepository(retrofit, sharedPreferences, okClient)
+        return MainRepository(sharedPreferences, okClient)
     }
 }

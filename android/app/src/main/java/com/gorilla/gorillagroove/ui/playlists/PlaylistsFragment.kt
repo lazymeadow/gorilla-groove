@@ -9,6 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.dao.PlaylistDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
@@ -25,9 +26,6 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistAdapter
     private lateinit var playlistAdapter: PlaylistAdapter
     private var savedInstanceStateBundle: Bundle? = null
 
-    @Inject
-    lateinit var playlistDao: PlaylistDao
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -42,7 +40,7 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistAdapter
         super.onStart()
 
         lifecycleScope.launch(Dispatchers.Default) {
-            val playlists = playlistDao.findAll()
+            val playlists = GorillaDatabase.playlistDao.findAll()
 
             withContext(Dispatchers.Main) {
                 playlistAdapter.setPlaylists(playlists)
