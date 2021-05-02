@@ -14,6 +14,14 @@ abstract class ReviewSourceDao : BaseRoomDao<DbReviewSource>("review_source") {
         GROUP BY rs.id
     """)
     abstract fun getNeedingReviewTrackCountByQueue(): List<ReviewSourceWithCount>
+
+    @Query("""
+        SELECT *
+        FROM review_source rs
+        WHERE rs.source_type <> 'USER_RECOMMEND'
+        ORDER BY rs.display_name COLLATE NOCASE ASC
+    """)
+    abstract fun getEditableSources(): List<DbReviewSource>
 }
 
 data class ReviewSourceWithCount(

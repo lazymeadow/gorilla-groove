@@ -64,6 +64,8 @@ class MainActivity : AppCompatActivity() {
         navHostFragment.findNavController()
             .addOnDestinationChangedListener { _, destination, _ ->
                 multiselectIcon.visibility = View.GONE
+                bottomNavigationView.visibility = View.VISIBLE
+                playerControlView.visibility = View.VISIBLE
                 when (destination.id) {
                     R.id.loginFragment -> {
                         bottomNavigationView.visibility = View.GONE
@@ -72,44 +74,28 @@ class MainActivity : AppCompatActivity() {
                     }
                     R.id.libraryTrackFragment -> {
                         bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        multiselectIcon.visibility = View.VISIBLE
                         title_tv.text = "My Library"
                     }
                     R.id.artistsFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "My Library"
                     }
                     R.id.albumFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "My Library"
                     }
                     R.id.playingFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         multiselectIcon.visibility = View.VISIBLE
                         title_tv.text = "Now Playing"
                     }
                     R.id.usersFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Users"
                     }
                     R.id.playlistsFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Playlists"
                     }
                     R.id.playlistTrackFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         multiselectIcon.visibility = View.VISIBLE
                     }
                     R.id.moreMenuFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "More"
                     }
                     R.id.trackPropertiesFragment -> {
@@ -118,8 +104,6 @@ class MainActivity : AppCompatActivity() {
                         title_tv.text = "Properties"
                     }
                     R.id.problemReportFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Problem Report"
                     }
                     R.id.logViewFragment -> {
@@ -128,18 +112,15 @@ class MainActivity : AppCompatActivity() {
                         title_tv.text = "View Logs"
                     }
                     R.id.settingsFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Settings"
                     }
                     R.id.reviewQueueFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "Review Queue"
                     }
+                    R.id.editReviewSourcesFragment -> {
+                        title_tv.text = "Manage Queues"
+                    }
                     else -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
                         title_tv.text = "var ar jag?"
                         supportActionBar?.displayOptions
                     }

@@ -7,7 +7,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.GorillaDatabase
-import com.gorilla.gorillagroove.database.dao.UserDao
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
 import dagger.hilt.android.AndroidEntryPoint
@@ -15,7 +14,6 @@ import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListener {

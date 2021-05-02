@@ -3,11 +3,10 @@ package com.gorilla.gorillagroove.ui.reviewqueue
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +30,7 @@ import com.gorilla.gorillagroove.ui.isPlaying
 import com.gorilla.gorillagroove.util.GGToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_review_queue.*
+import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.android.synthetic.main.review_queue_carousel_item.view.*
 import kotlinx.android.synthetic.main.review_queue_source_select_item.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -77,19 +77,8 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         // else prior, we get a "java.lang.IllegalStateException: Method addObserver must be called on the main thread", even though addObserver is not anywhere in this file,
         // or in the PlaybackControlsViewModel file. Idk I don't get it at all. And I don't want to change the IO thread to be a Main thread because that's even stupider.
         playerControlsViewModel
-    }
 
-    override fun onStart() {
-        super.onStart()
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            allReviewSources = reviewSourceDao.findAll().map { it.id to it }.toMap()
-
-            reviewSourceToTrackCount = reviewSourceDao.getNeedingReviewTrackCountByQueue().map { it.reviewSourceId to it.count }.toMap().toMutableMap()
-            sourcesNeedingReview = allReviewSources.values.filter { (reviewSourceToTrackCount[it.id] ?: 0) > 0 }.toMutableList()
-
-            setNextActiveSource()
-        }
+        setHasOptionsMenu(true)
 
         reviewQueueSourceSelect.setOnClickListener {
             sourceSelectAdapter.setSources(
@@ -98,6 +87,28 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
             )
 
             reviewQueueSelectionList.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // activeSource doesn't seem to get cleared out when navigating BACK from the edit review sources fragment. But some of the UI doesn't remember its state (other parts do?)
+        // So just re-init the UI with this same source if we still have it. Why not, right.
+        activeSource?.let { source ->
+            lifecycleScope.launch {
+                setActiveSource(source.id)
+            }
+            return
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            allReviewSources = reviewSourceDao.findAll().map { it.id to it }.toMap()
+
+            reviewSourceToTrackCount = reviewSourceDao.getNeedingReviewTrackCountByQueue().map { it.reviewSourceId to it.count }.toMap().toMutableMap()
+            sourcesNeedingReview = allReviewSources.values.filter { (reviewSourceToTrackCount[it.id] ?: 0) > 0 }.toMutableList()
+
+            setNextActiveSource()
         }
     }
 
@@ -131,6 +142,22 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         layoutManager = LinearLayoutManager(requireContext())
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.edit_bar_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        super.onOptionsItemSelected(item)
+        return when (item.itemId) {
+            R.id.action_edit_menu -> {
+                findNavController().navigate(R.id.editReviewSourcesFragment)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private suspend fun setNextActiveSource() {
         mainRepository.currentTrack?.takeIf { it.inReview }?.let { currentlyPlayingReviewTrack ->
             val reviewSourceId = currentlyPlayingReviewTrack.reviewSourceId!!
@@ -154,10 +181,6 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
     }
 
     private suspend fun setActiveSource(newSourceId: Long) = withContext(Dispatchers.IO) {
-        if (activeSource?.id == newSourceId) {
-            return@withContext
-        }
-
         val newActiveSource = allReviewSources.getValue(newSourceId)
         activeSource = newActiveSource
 
