@@ -3,13 +3,17 @@ package com.gorilla.gorillagroove.util
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Rect
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.*
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.ui.MainActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_input_dialog.view.*
+import kotlinx.coroutines.*
 
 
 fun getPixelsFromDp(dp: Float): Int {
@@ -35,6 +39,31 @@ fun View.containsMotionEvent(parentView: View, activity: MainActivity, event: Mo
     val effectiveHeight = event.y.toInt() + activityOffsetHeight - viewOffsetHeight
 
     return (bounds.contains(effectiveWidth, effectiveHeight))
+}
+
+fun EditText.addDebounceTextListener(
+    scope: CoroutineScope,
+    onDebounceStart: () -> Unit,
+    onDebounceEnd: (String) -> Unit
+) {
+    var searchJob: Job? = null
+
+    this.addTextChangedListener(object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        override fun afterTextChanged(s: Editable?) {}
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            searchJob?.cancel()
+            onDebounceStart()
+
+            searchJob = scope.launch(Dispatchers.IO) {
+                val newValue = s?.toString() ?: ""
+
+                delay(500)
+                onDebounceEnd(newValue)
+            }
+        }
+    })
 }
 
 fun showAlertDialog(

@@ -59,7 +59,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -72,6 +71,13 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     override fun onPause() {
         requireActivity().hideKeyboard()
         super.onPause()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // TODO need to try to fix the keyboard situation with (adjustResize)
+        // getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
     }
 
     private fun populateFragmentText() {

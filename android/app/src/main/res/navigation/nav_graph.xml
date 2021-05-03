@@ -118,4 +118,9 @@
         android:name="com.gorilla.gorillagroove.ui.reviewqueue.EditReviewSourcesFragment"
         android:label="EditReviewSourcesFragment" >
     </fragment>
+    <fragment
+        android:id="@+id/addReviewSourceFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.AddReviewSourceFragment"
+        android:label="AddReviewSourceFragment" >
+    </fragment>
 </navigation>

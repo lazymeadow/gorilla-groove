@@ -16,9 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.Launcher">
 
+<!--        android:windowSoftInputMode="adjustResize|stateHidden"-->
         <activity
             android:name="com.gorilla.gorillagroove.ui.MainActivity"
-            android:windowSoftInputMode="adjustResize|stateHidden">
+            android:windowSoftInputMode="adjustNothing"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

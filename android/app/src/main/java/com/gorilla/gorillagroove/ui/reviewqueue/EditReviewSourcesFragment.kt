@@ -2,7 +2,9 @@ package com.gorilla.gorillagroove.ui.reviewqueue
 
 import android.os.Bundle
 import android.view.*
+import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
@@ -11,6 +13,8 @@ import com.gorilla.gorillagroove.database.entity.DbReviewSource
 import com.gorilla.gorillagroove.database.entity.ReviewSourceType
 import com.gorilla.gorillagroove.database.entity.ReviewSourceType.*
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.ui.ActionSheet
+import com.gorilla.gorillagroove.ui.ActionSheetItem
 import com.gorilla.gorillagroove.ui.GGFragment
 import com.gorilla.gorillagroove.ui.createDivider
 import kotlinx.android.synthetic.main.fragment_edit_review_sources.*
@@ -78,11 +82,31 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
         super.onOptionsItemSelected(item)
         return when (item.itemId) {
             R.id.action_add_menu -> {
-                logInfo("Add tapped")
+                showAddActionSheet()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun showAddActionSheet() {
+        ActionSheet(
+            requireActivity(),
+            listOf(
+                ActionSheetItem("Artist") {
+                    findNavController().navigate(
+                        R.id.addReviewSourceFragment,
+                        bundleOf("MODE" to AddSourceMode.SPOTIFY_ARTIST),
+                    )
+                },
+                ActionSheetItem("YouTube Channel") {
+                    findNavController().navigate(
+                        R.id.addReviewSourceFragment,
+                        bundleOf("MODE" to AddSourceMode.YOUTUBE_CHANNEL),
+                    )
+                }
+            )
+        )
     }
 
     inner class SourceListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
