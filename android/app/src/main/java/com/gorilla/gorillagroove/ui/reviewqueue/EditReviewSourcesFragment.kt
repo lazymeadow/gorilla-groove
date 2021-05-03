@@ -12,15 +12,16 @@ import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbReviewSource
 import com.gorilla.gorillagroove.database.entity.ReviewSourceType
 import com.gorilla.gorillagroove.database.entity.ReviewSourceType.*
+import com.gorilla.gorillagroove.di.Network
+import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.ActionSheet
-import com.gorilla.gorillagroove.ui.ActionSheetItem
-import com.gorilla.gorillagroove.ui.GGFragment
-import com.gorilla.gorillagroove.ui.createDivider
+import com.gorilla.gorillagroove.ui.*
+import com.gorilla.gorillagroove.util.GGToast
 import kotlinx.android.synthetic.main.fragment_edit_review_sources.*
 import kotlinx.android.synthetic.main.simple_text_info_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val TYPE_HEADER = 0
 private const val TYPE_ITEM = 1
@@ -32,7 +33,7 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
     private lateinit var sourceListAdapter: SourceListAdapter
 
     private var sources = listOf<DbReviewSource>()
-    private var sourceTypeCount = mapOf<ReviewSourceType, Int>()
+    private var sourceTypeCount = mutableMapOf<ReviewSourceType, Int>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -60,7 +61,7 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
             }
 
             sources = typesToShow.fold(emptyList()) { acc, type -> acc + groups.getOrDefault(type, emptyList()) }
-            sourceTypeCount = groups.mapValues { it.value.size }
+            sourceTypeCount = groups.mapValues { it.value.size }.toMutableMap()
             sourceListAdapter.notifyDataSetChanged()
         }
     }
@@ -109,6 +110,37 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
         )
     }
 
+    private fun showEditActionSheet(reviewSource: DbReviewSource) {
+        ActionSheet(
+            requireActivity(),
+            listOf(
+                ActionSheetItem("Delete", type = ActionSheetType.DESTRUCTIVE) {
+                    logInfo("User is attempting to delete review source ${reviewSource.id}")
+
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        try {
+                            Network.api.deleteReviewSource(reviewSource.id)
+
+                            GorillaDatabase.reviewSourceDao.delete(reviewSource.id)
+                            GorillaDatabase.trackDao.deleteTracksOnReviewSource(reviewSource.id)
+
+                            sources = sources.filterNot { it.id == reviewSource.id }
+                            sourceTypeCount[reviewSource.sourceType] = sourceTypeCount.getValue(reviewSource.sourceType) - 1
+
+                            withContext(Dispatchers.Main) {
+                                sourceListAdapter.notifyDataSetChanged()
+                            }
+                        } catch (e: Throwable) {
+                            logError("Could not delete review source!", e)
+
+                            GGToast.show("Failed to delete ${reviewSource.displayName}")
+                        }
+                    }
+                },
+            )
+        )
+    }
+
     inner class SourceListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -153,8 +185,18 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
                     if (youtubeHeaderPosition > -1 && (position + offset) > youtubeHeaderPosition) offset++
 
                     val source = sources[position - offset]
+
+                    holder.itemView.setOnLongClickListener {
+                        showEditActionSheet(source)
+                        true
+                    }
+
                     source.displayName
                 }
+            }
+
+            if (holder !is ReviewQueueItemViewHolder) {
+                holder.itemView.setOnClickListener(null)
             }
 
             holder.itemView.textItem.text = text

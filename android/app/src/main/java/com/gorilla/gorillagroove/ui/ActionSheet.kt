@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -37,6 +38,11 @@ class ActionSheet(activity: Activity, items: List<ActionSheetItem>) : BottomShee
         items.forEachIndexed { index, item ->
             val textView = TextView(ContextThemeWrapper(activity, R.style.ActionSheetItem))
             textView.text = item.text
+
+            if (item.type == ActionSheetType.DESTRUCTIVE) {
+                textView.setTextColor(activity.getColor(R.color.dangerRed))
+            }
+
             textView.setOnClickListener {
                 logInfo("Action sheet item selected: '${item.text}'")
                 this.dismiss()
@@ -47,6 +53,7 @@ class ActionSheet(activity: Activity, items: List<ActionSheetItem>) : BottomShee
 
             if (index != items.size - 1) {
                 val spacer = View(activity)
+                spacer.setBackgroundColor(ContextCompat.getColor(context, R.color.grey1))
                 val height = getPixelsFromDp(1f)
                 spacer.layoutParams = LinearLayout.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, height)
 

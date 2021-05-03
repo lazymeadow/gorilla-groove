@@ -145,6 +145,15 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
     abstract fun getTracksNeedingReviewOnSource(
         reviewSourceId: Long,
     ): List<DbTrack>
+
+    @Query("""
+        DELETE
+        FROM track
+        WHERE review_source_id = :reviewSourceId
+ """)
+    abstract fun deleteTracksOnReviewSource(
+        reviewSourceId: Long,
+    ): Int
 }
 
 private const val NO_CASE = "COLLATE NOCASE"
