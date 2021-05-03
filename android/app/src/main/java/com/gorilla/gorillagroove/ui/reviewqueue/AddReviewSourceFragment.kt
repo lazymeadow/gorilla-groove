@@ -3,6 +3,7 @@ package com.gorilla.gorillagroove.ui.reviewqueue
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.di.Network
+import com.gorilla.gorillagroove.service.BackgroundTaskService
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.GGFragment
@@ -23,6 +25,8 @@ import kotlinx.android.synthetic.main.fragment_add_review_source.*
 import kotlinx.android.synthetic.main.fragment_input_dialog.*
 import kotlinx.android.synthetic.main.simple_text_info_item.view.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.min
@@ -32,17 +36,19 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
     private lateinit var sourceListAdapter: SuggestionsListAdapter
 
+    private val loading = MutableStateFlow(false)
+
     private var autocompleteSuggestions: List<String> = emptyList()
-    set(value) {
-        field = value
+        set(value) {
+            field = value
 
-        lifecycleScope.launch(Dispatchers.Main) {
-            recyclerViewBorder.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
-            sourceListAdapter.notifyDataSetChanged()
+            lifecycleScope.launch(Dispatchers.Main) {
+                recyclerViewBorder.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
+                sourceListAdapter.notifyDataSetChanged()
 
-            autocompleteLoading.visibility = View.GONE
+                autocompleteLoading.visibility = View.GONE
+            }
         }
-    }
 
     private val mode: AddSourceMode by lazy {
         requireArguments().getSerializable("MODE") as AddSourceMode
@@ -51,7 +57,12 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        requireActivity().title_tv.text = if (mode == AddSourceMode.SPOTIFY_ARTIST) "Add Artist Queue" else "Add YouTube Queue"
+        requireActivity().title_tv.text = when (mode) {
+            AddSourceMode.ADD_SPOTIFY_ARTIST -> "Add Artist Queue"
+            AddSourceMode.ADD_YOUTUBE_CHANNEL -> "Add YouTube Queue"
+            AddSourceMode.SEARCH_SPOTIFY_ARTIST -> "Search Spotify"
+            AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> "Download from YouTube"
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -59,12 +70,17 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
         logInfo("Loading Edit Review Sources view")
 
-        if (mode == AddSourceMode.SPOTIFY_ARTIST) {
-            fieldInput.hint = "Spotify Artist"
-            fieldSubtext.hint = "Uploads to Spotify will be added to your review queue"
-        } else {
-            fieldInput.hint = "Channel Name or URL"
-            fieldSubtext.hint = "Videos over 10 minutes will not be added to your queue"
+        fieldInput.hint = when (mode) {
+            AddSourceMode.ADD_SPOTIFY_ARTIST, AddSourceMode.SEARCH_SPOTIFY_ARTIST -> "Spotify Artist"
+            AddSourceMode.ADD_YOUTUBE_CHANNEL -> "Channel Name or URL"
+            AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> "YouTube Video URL"
+        }
+
+        fieldSubtext.text = when (mode) {
+            AddSourceMode.ADD_SPOTIFY_ARTIST -> "Uploads to Spotify will be added to your review queue"
+            AddSourceMode.SEARCH_SPOTIFY_ARTIST -> ""
+            AddSourceMode.ADD_YOUTUBE_CHANNEL -> "Videos over 10 minutes will not be added to your queue"
+            AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> "Playlist downloads can take up to a minute to start"
         }
 
         fieldInput.addDebounceTextListener(
@@ -74,7 +90,7 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
             },
             onDebounceEnd = { newValue ->
                 // In case somebody searches before the autocomplete finishes, we don't want it popping up
-                if (addSourceIndicator.visibility == View.VISIBLE) {
+                if (loading.value) {
                     return@addDebounceTextListener
                 }
 
@@ -90,10 +106,14 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     autocompleteSuggestions = try {
-                        if (mode == AddSourceMode.SPOTIFY_ARTIST) {
-                            Network.api.getSpotifyAutocompleteResult(newValue).suggestions
-                        } else {
-                            Network.api.getYouTubeAutocompleteResult(newValue).suggestions
+                        when (mode) {
+                            AddSourceMode.ADD_SPOTIFY_ARTIST, AddSourceMode.SEARCH_SPOTIFY_ARTIST -> {
+                                Network.api.getSpotifyAutocompleteResult(newValue).suggestions
+                            }
+                            AddSourceMode.ADD_YOUTUBE_CHANNEL -> {
+                                Network.api.getYouTubeAutocompleteResult(newValue).suggestions
+                            }
+                            AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> emptyList()
                         }
                     } catch (e: Throwable) {
                         logError("Failed to get autocomplete results!", e)
@@ -108,7 +128,7 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
                 view.hideKeyboard()
                 autocompleteSuggestions = emptyList()
 
-                lifecycleScope.launch { addSource() }
+                lifecycleScope.launch { submit() }
                 true
             } else {
                 false
@@ -117,7 +137,13 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
         submitButton.setOnClickListener {
             view.hideKeyboard()
-            lifecycleScope.launch { addSource() }
+            lifecycleScope.launch { submit() }
+        }
+
+        submitButton.text = when(mode) {
+            AddSourceMode.ADD_SPOTIFY_ARTIST, AddSourceMode.ADD_YOUTUBE_CHANNEL -> "Queue it up"
+            AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> "Download"
+            AddSourceMode.SEARCH_SPOTIFY_ARTIST -> "Search Artist"
         }
 
         setHasOptionsMenu(true)
@@ -125,6 +151,33 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
         setupRecyclerView()
 
         fieldInput.focusAndShowKeyboard()
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            loading.collect { newValue ->
+                submitButton.isEnabled = !newValue
+                addSourceIndicator.visibility = if (newValue) View.VISIBLE else View.GONE
+            }
+        }
+
+        if (mode == AddSourceMode.SEARCH_SPOTIFY_ARTIST || mode == AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO) {
+            lifecycleScope.launch(Dispatchers.Main) {
+                BackgroundTaskService.totalDownloads.collect { setDownloadProgressText() }
+                launch {
+                    BackgroundTaskService.currentDownload.collect { setDownloadProgressText() }
+                }
+            }
+        }
+    }
+
+    private fun setDownloadProgressText() {
+        if (BackgroundTaskService.totalDownloads.value == 0) {
+            downloadProgressText.visibility = View.GONE
+        } else {
+            downloadProgressText.visibility = View.VISIBLE
+
+            downloadProgressText.text = "Currently downloading ${BackgroundTaskService.currentDownload.value + 1} of ${BackgroundTaskService.totalDownloads.value} songs." +
+                    "\n\nYou may add more, or leave this screen. The downloading will continue"
+        }
     }
 
     private fun setupRecyclerView() = suggestionsList.apply {
@@ -138,20 +191,25 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
         layoutManager = LinearLayoutManager(requireContext())
     }
 
-    private suspend fun addSource() = withContext(Dispatchers.IO) {
-        val sourceName = fieldInput.text?.toString() ?: ""
+    private suspend fun submit() {
+        val text = fieldInput.text?.toString() ?: ""
 
-        if (sourceName.isEmpty()) {
-            return@withContext
+        if (text.isEmpty()) {
+            return
         }
 
-        withContext(Dispatchers.Main) {
-            submitButton.isEnabled = false
-            addSourceIndicator.visibility = View.VISIBLE
+        when (mode) {
+            AddSourceMode.ADD_SPOTIFY_ARTIST, AddSourceMode.ADD_YOUTUBE_CHANNEL -> addSource(text)
+            AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> downloadFromYoutube(text)
+            AddSourceMode.SEARCH_SPOTIFY_ARTIST -> searchSpotify(text)
         }
+    }
+
+    private suspend fun addSource(sourceName: String) = withContext(Dispatchers.IO) {
+        loading.value = true
 
         val response = try {
-            if (mode == AddSourceMode.SPOTIFY_ARTIST) {
+            if (mode == AddSourceMode.ADD_SPOTIFY_ARTIST) {
                 val request = AddArtistSourceRequest(sourceName)
                 Network.api.subscribeToSpotifyArtist(request)
             } else {
@@ -167,10 +225,7 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
             GGToast.show("Failed to add queue")
 
-            withContext(Dispatchers.Main) {
-                submitButton.isEnabled = true
-                addSourceIndicator.visibility = View.GONE
-            }
+            loading.value = false
 
             return@withContext
         }
@@ -181,11 +236,41 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
         GGToast.show("$sourceName queue added")
 
+        loading.value = false
+
         withContext(Dispatchers.Main) {
-            submitButton.isEnabled = true
-            addSourceIndicator.visibility = View.GONE
             requireActivity().onBackPressed()
         }
+    }
+
+    private suspend fun downloadFromYoutube(url: String) = withContext(Dispatchers.IO) {
+        if (!url.startsWith("https://")) {
+            GGToast.show("URLs should begin with 'https://'")
+            return@withContext
+        }
+
+        loading.value = true
+
+        val taskResponse = try {
+            Network.api.queueYoutubeBackgroundTask(DownloadYTVideoRequest(url))
+        } catch (e: Throwable) {
+            logError("Failed to enqueue YouTube download of $url!", e)
+            return@withContext
+        }
+
+        BackgroundTaskService.addBackgroundTasks(taskResponse.items)
+
+        GGToast.show("Your download has been started", Toast.LENGTH_LONG)
+
+        loading.value = false
+
+        withContext(Dispatchers.Main) {
+            fieldInput.setText("")
+        }
+    }
+
+    private suspend fun searchSpotify(artist: String) = withContext(Dispatchers.IO) {
+
     }
 
     inner class SuggestionsListAdapter : RecyclerView.Adapter<SuggestionsListAdapter.SuggestionsItemViewHolder>() {
@@ -221,10 +306,11 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 }
 
 enum class AddSourceMode {
-    SPOTIFY_ARTIST, YOUTUBE_CHANNEL
+    ADD_SPOTIFY_ARTIST, ADD_YOUTUBE_CHANNEL, SEARCH_SPOTIFY_ARTIST, DOWNLOAD_YOUTUBE_VIDEO
 }
 
 data class AutocompleteResult(val suggestions: List<String>)
 
 data class AddArtistSourceRequest(val artistName: String)
+data class DownloadYTVideoRequest(val url: String)
 data class AddYoutubeChannelRequest(val channelUrl: String?, val channelTitle: String?)

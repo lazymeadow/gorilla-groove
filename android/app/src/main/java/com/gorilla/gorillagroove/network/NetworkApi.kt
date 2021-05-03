@@ -6,10 +6,12 @@ import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.network.login.LoginResponseNetworkEntity
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.*
+import com.gorilla.gorillagroove.service.BackgroundTaskResponse
 import com.gorilla.gorillagroove.service.sync.*
 import com.gorilla.gorillagroove.ui.reviewqueue.AddArtistSourceRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.AddYoutubeChannelRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.AutocompleteResult
+import com.gorilla.gorillagroove.ui.reviewqueue.DownloadYTVideoRequest
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import okhttp3.MultipartBody
@@ -59,6 +61,12 @@ interface NetworkApi {
 
     @DELETE("api/review-queue/{id}")
     suspend fun deleteReviewSource(@Path("id") reviewSourceId: Long)
+
+    @POST("api/background-task/youtube-dl")
+    suspend fun queueYoutubeBackgroundTask(@Body body: DownloadYTVideoRequest): BackgroundTaskResponse
+
+    @GET("api/background-task")
+    suspend fun getActiveBackgroundTasks(@Query("ids") ids: String): BackgroundTaskResponse
 
     // I absolutely hate that I have a different request for each of these. But either Retrofit or GSON isn't smart enough to figure out a generic type.
     // When I use one, it converts everything into just a GSON tree and then tries to cast it to the class and fails. I've seen other people complain about

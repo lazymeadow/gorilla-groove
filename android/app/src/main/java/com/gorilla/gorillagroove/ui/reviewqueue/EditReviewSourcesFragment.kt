@@ -97,13 +97,13 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
                 ActionSheetItem("Artist") {
                     findNavController().navigate(
                         R.id.addReviewSourceFragment,
-                        bundleOf("MODE" to AddSourceMode.SPOTIFY_ARTIST),
+                        bundleOf("MODE" to AddSourceMode.ADD_SPOTIFY_ARTIST),
                     )
                 },
                 ActionSheetItem("YouTube Channel") {
                     findNavController().navigate(
                         R.id.addReviewSourceFragment,
-                        bundleOf("MODE" to AddSourceMode.YOUTUBE_CHANNEL),
+                        bundleOf("MODE" to AddSourceMode.ADD_YOUTUBE_CHANNEL),
                     )
                 }
             )
