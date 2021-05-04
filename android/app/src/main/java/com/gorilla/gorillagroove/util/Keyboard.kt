@@ -18,7 +18,7 @@ fun Activity.hideKeyboard() {
 
 fun View.hideKeyboard() {
     val inputMethodManager = GGApplication.application.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-    inputMethodManager.hideSoftInputFromWindow(this.windowToken, 0);
+    inputMethodManager.hideSoftInputFromWindow(this.windowToken, 0)
 }
 
 // No matter what I did, there were edge cases where showing the keyboard didn't work. It boggles my mind how shitty Android is in this regard.

@@ -17,13 +17,12 @@ import com.gorilla.gorillagroove.service.BackgroundTaskService
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.GGFragment
+import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.ui.createDivider
-import com.gorilla.gorillagroove.util.GGToast
-import com.gorilla.gorillagroove.util.addDebounceTextListener
-import com.gorilla.gorillagroove.util.focusAndShowKeyboard
-import com.gorilla.gorillagroove.util.hideKeyboard
+import com.gorilla.gorillagroove.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_add_review_source.*
+import kotlinx.android.synthetic.main.fragment_artists.*
 import kotlinx.android.synthetic.main.fragment_input_dialog.*
 import kotlinx.android.synthetic.main.simple_text_info_item.view.*
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +30,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import kotlin.math.min
 
 
@@ -56,8 +58,10 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
         requireArguments().getSerializable("MODE") as AddSourceMode
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        logInfo("Loading Edit Review Sources view")
 
         requireActivity().title_tv.text = when (mode) {
             AddSourceMode.ADD_SPOTIFY_ARTIST -> "Add Artist Queue"
@@ -65,12 +69,6 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
             AddSourceMode.SEARCH_SPOTIFY_ARTIST -> "Search Spotify"
             AddSourceMode.DOWNLOAD_YOUTUBE_VIDEO -> "Download from YouTube"
         }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        logInfo("Loading Edit Review Sources view")
 
         fieldInput.hint = when (mode) {
             AddSourceMode.ADD_SPOTIFY_ARTIST, AddSourceMode.SEARCH_SPOTIFY_ARTIST -> "Spotify Artist"
@@ -157,8 +155,6 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
 
         setupRecyclerView()
 
-        fieldInput.focusAndShowKeyboard()
-
         lifecycleScope.launch(Dispatchers.Main) {
             loading.collect { newValue ->
                 submitButton.isEnabled = !newValue
@@ -176,7 +172,42 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        if (fieldInput.text.isEmpty()) {
+            fieldInput.focusAndShowKeyboard()
+        }
+
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        EventBus.getDefault().unregister(this)
+    }
+
+    // Close the suggestions list if we tap outside of it
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onTouchDownEvent(event: MotionEvent) {
+        if (autocompleteSuggestions.isEmpty()) {
+            return
+        }
+
+        if (suggestionsList.containsMotionEvent(requireView(), requireActivity() as MainActivity, event)) {
+            return
+        }
+
+        autocompleteSuggestions = emptyList()
+    }
+
     private fun setDownloadProgressText() {
+        // Idk why the lifecycleScope that owns this collect() callback doesn't get cleaned up. So instead I am hackishly checking null here when I feel like I shouldn't need to
+        if (downloadProgressText == null) {
+            return
+        }
+
         if (BackgroundTaskService.totalDownloads.value == 0) {
             downloadProgressText.visibility = View.GONE
         } else {
@@ -291,10 +322,15 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
             return@withContext
         }
 
+        loading.value = false
+
         withContext(Dispatchers.Main) {
             findNavController().navigate(
                 R.id.spotifySearchResultsFragment,
-                bundleOf("RESULTS" to result),
+                bundleOf(
+                    "RESULTS" to result,
+                    "ARTIST" to artist,
+                ),
             )
         }
     }
@@ -317,6 +353,7 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
             init {
                 itemView.setOnClickListener {
                     fieldInput.clearFocus()
+                    view?.hideKeyboard()
                     fieldInput.setText(text)
 
                     autocompleteSuggestions = emptyList()

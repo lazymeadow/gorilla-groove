@@ -65,6 +65,9 @@ interface NetworkApi {
     @POST("api/background-task/youtube-dl")
     suspend fun queueYoutubeBackgroundTask(@Body body: DownloadYTVideoRequest): BackgroundTaskResponse
 
+    @POST("api/background-task/metadata-dl")
+    suspend fun queueMetadataDownloadTask(@Body body: MetadataImportRequest): BackgroundTaskResponse
+
     @GET("api/background-task")
     suspend fun getActiveBackgroundTasks(@Query("ids") ids: String): BackgroundTaskResponse
 

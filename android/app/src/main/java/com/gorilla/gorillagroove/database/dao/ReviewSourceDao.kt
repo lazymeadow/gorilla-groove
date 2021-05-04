@@ -11,6 +11,7 @@ abstract class ReviewSourceDao : BaseRoomDao<DbReviewSource>("review_source") {
         LEFT JOIN track t
         ON t.review_source_id = rs.id
         WHERE t.in_review = 1
+        AND rs.active = 1
         GROUP BY rs.id
     """)
     abstract fun getNeedingReviewTrackCountByQueue(): List<ReviewSourceWithCount>
@@ -19,6 +20,7 @@ abstract class ReviewSourceDao : BaseRoomDao<DbReviewSource>("review_source") {
         SELECT *
         FROM review_source rs
         WHERE rs.source_type <> 'USER_RECOMMEND'
+        AND rs.active = 1
         ORDER BY rs.display_name COLLATE NOCASE ASC
     """)
     abstract fun getEditableSources(): List<DbReviewSource>

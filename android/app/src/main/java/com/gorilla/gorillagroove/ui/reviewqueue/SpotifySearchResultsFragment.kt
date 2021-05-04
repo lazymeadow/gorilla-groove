@@ -2,16 +2,21 @@ package com.gorilla.gorillagroove.ui.reviewqueue
 
 import android.os.Bundle
 import android.view.*
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
-import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.di.Network
+import com.gorilla.gorillagroove.service.BackgroundTaskService
+import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.*
+import com.gorilla.gorillagroove.util.GGToast
 import kotlinx.android.synthetic.main.fragment_search_spotify_results.*
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.Serializable
 
 class SpotifySearchResultsFragment : GGFragment(R.layout.fragment_search_spotify_results) {
@@ -22,6 +27,12 @@ class SpotifySearchResultsFragment : GGFragment(R.layout.fragment_search_spotify
 
     // Order of this changes the order that they are shown in
     private var years = emptyList<Int>()
+
+    // We want to use the original artist they searched for when importing to an artist queue, as spotify metadata can have multiple artists on it.
+    // Makes it ambiguous as to where the track should be imported.
+    private val searchedArtist: String by lazy {
+        requireArguments().getString("ARTIST", null)!!
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,18 +58,36 @@ class SpotifySearchResultsFragment : GGFragment(R.layout.fragment_search_spotify
         layoutManager = LinearLayoutManager(requireContext())
     }
 
-    private fun showAddActionSheet(metadata: MetadataResponseDTO) {
+    private fun showActionSheet(metadata: MetadataResponseDTO) {
         ActionSheet(
             requireActivity(),
             listOf(
                 ActionSheetItem("Import to Library") {
-
+                    importTrack(metadata.toImportRequest(null))
                 },
                 ActionSheetItem("Import to Review Queue") {
-
+                    importTrack(metadata.toImportRequest(searchedArtist))
                 }
             )
         )
+    }
+
+    private fun importTrack(importRequest: MetadataImportRequest) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val response = try {
+                Network.api.queueMetadataDownloadTask(importRequest)
+            } catch (e: Throwable) {
+                logError("Failed to import track!", e)
+
+                GGToast.show("Failed to start import")
+
+                return@launch
+            }
+
+            BackgroundTaskService.addBackgroundTasks(response.items)
+
+            GGToast.show("Import started")
+        }
     }
 
     inner class ResultAdapter : HeaderTableAdapter<ResultAdapter.ResultItemViewHolder>() {
@@ -81,9 +110,8 @@ class SpotifySearchResultsFragment : GGFragment(R.layout.fragment_search_spotify
             val year = years[sectionIndex]
             val metadata = sources.getValue(year)[positionInSection]
 
-            holder.itemView.setOnLongClickListener {
-//                showEditActionSheet(source)
-                true
+            holder.itemView.setOnClickListener {
+                showActionSheet(metadata)
             }
 
             holder.itemView.checkbox.isVisible = false
@@ -108,4 +136,28 @@ data class MetadataResponseDTO(
     val albumArtLink: String?,
     val length: Int,
     val previewUrl: String? // Not all tracks have this. Quite a few don't, actually
+) {
+    fun toImportRequest(artistQueueName: String?) = MetadataImportRequest(
+        name = name,
+        artist = artist,
+        album = album,
+        releaseYear = releaseYear,
+        trackNumber = trackNumber,
+        albumArtLink = albumArtLink,
+        length = length,
+        addToReview = artistQueueName != null,
+        artistQueueName = artistQueueName
+    )
+}
+
+data class MetadataImportRequest(
+    var name: String,
+    val artist: String,
+    var album: String,
+    val releaseYear: Int,
+    val trackNumber: Int,
+    val albumArtLink: String?,
+    var length: Int,
+    val addToReview: Boolean,
+    val artistQueueName: String?,
 )
