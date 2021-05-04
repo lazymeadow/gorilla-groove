@@ -25,6 +25,9 @@ interface NetworkApi {
     @POST("/api/authentication/login")
     suspend fun login(@Body loginRequest: LoginRequest): LoginResponseNetworkEntity
 
+    @GET("/api/user/self")
+    suspend fun getSelf(): UserResponse
+
     @PUT("api/track/simple-update")
     suspend fun updateTrack(@Body updateTrackJson: TrackUpdate): MultiTrackResponse
 
