@@ -37,6 +37,12 @@ class UserController(
 		}
 	}
 
+	// Only currently used by the Android 2.0 migration. 1.x saved a token but did not save the user ID, and we need that in 2.0
+	@GetMapping("/self")
+	fun whoAmI(): User {
+		return loadLoggedInUser()
+	}
+
 	@GetMapping("/permissions")
 	fun getOwnPermissions(): List<UserPermission> {
 		return userService.getUserPermissions(loadLoggedInUser())
