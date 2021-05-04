@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.*
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -174,10 +175,16 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         }.filterNotNull().firstOrNull()
 
         if (sourceToUse == null) {
-            // TODO show empty state
+            setEmptyState(true)
         } else {
+            setEmptyState(false)
             setActiveSource(sourceToUse.id)
         }
+    }
+
+    private fun setEmptyState(enabled: Boolean) {
+        emptyStateBackground.isVisible = enabled
+        emptyStateText.isVisible = enabled
     }
 
     private suspend fun setActiveSource(newSourceId: Long) = withContext(Dispatchers.IO) {

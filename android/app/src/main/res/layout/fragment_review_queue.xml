@@ -12,24 +12,24 @@
         android:id="@+id/reviewQueueSourceSelect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="Monstercat: Uncaged"
         android:background="@color/grey1"
-        android:textAlignment="textStart"
         android:paddingStart="14dp"
-        android:textSize="18sp"
+        android:textAlignment="textStart"
         android:textAllCaps="false"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Monstercat: Uncaged" />
 
     <ImageView
         android:id="@+id/controlChevron"
         android:layout_width="18dp"
         android:layout_height="18dp"
+        android:layout_marginEnd="8dp"
         android:contentDescription="Right Arrow"
         android:src="@drawable/ic_arrow_forward_ios_black_24dp"
         android:translationZ="5dp"
-        android:layout_marginEnd="8dp"
         app:layout_constraintBottom_toBottomOf="@id/reviewQueueSourceSelect"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/reviewQueueSourceSelect"
@@ -46,10 +46,34 @@
         android:id="@+id/reviewQueueSelectionList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:translationZ="10dp"
         android:background="@color/background"
+        android:translationZ="10dp"
         android:visibility="gone"
         tools:listitem="@layout/review_queue_source_select_item" />
 
+    <View
+        android:id="@+id/emptyStateBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background"
+        android:elevation="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/emptyStateText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="200dp"
+        android:elevation="15dp"
+        android:textSize="18sp"
+        android:text="No more tracks to review"
+        android:textAlignment="center"
+        android:textColor="@color/foreground"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
