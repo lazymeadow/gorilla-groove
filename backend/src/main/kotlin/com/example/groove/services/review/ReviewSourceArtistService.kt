@@ -211,6 +211,8 @@ class ReviewSourceArtistService(
 		return source to emptyList()
 	}
 
+	// addingAsSubscription means the user wants to be notified of new stuff.
+	// This is not the case when they add a track to a review queue via a spotify artist search. Then it is temporary.
 	fun addUserToSource(source: ReviewSourceArtist, user: User, addingAsSubscription: Boolean): ReviewSourceUser {
 		if (addingAsSubscription && source.isUserSubscribed(user)) {
 			throw IllegalArgumentException("User is already subscribed to artist ${source.artistName}!")
@@ -225,6 +227,7 @@ class ReviewSourceArtistService(
 		}
 
 		association.deleted = false
+		association.updatedAt = now()
 		if (addingAsSubscription) {
 			association.active = true
 		}
