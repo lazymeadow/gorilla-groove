@@ -5,7 +5,9 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
@@ -97,6 +99,11 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
                 // When we programmatically call setText(), we need a way to not have this callback happen.
                 // We don't want the autocomplete search to happen unless it was user-supplied input
                 if (!fieldInput.hasFocus()) {
+                    return@addDebounceTextListener
+                }
+
+                // No real point in searching a single character is there?
+                if (newValue.length < 2) {
                     return@addDebounceTextListener
                 }
 
@@ -270,7 +277,26 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
     }
 
     private suspend fun searchSpotify(artist: String) = withContext(Dispatchers.IO) {
+        loading.value = true
 
+        val result = try {
+            Network.api.searchSpotifyByArtist(artist)
+        } catch (e: Throwable) {
+            logError("Failed to search spotify with artist '$artist'!", e)
+
+            GGToast.show("Failed to search spotify")
+
+            loading.value = false
+
+            return@withContext
+        }
+
+        withContext(Dispatchers.Main) {
+            findNavController().navigate(
+                R.id.spotifySearchResultsFragment,
+                bundleOf("RESULTS" to result),
+            )
+        }
     }
 
     inner class SuggestionsListAdapter : RecyclerView.Adapter<SuggestionsListAdapter.SuggestionsItemViewHolder>() {

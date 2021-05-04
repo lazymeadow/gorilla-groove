@@ -78,12 +78,6 @@ class TrackCellAdapter(
         }
     }
 
-    private fun Int.getSongTimeFromSeconds(): String {
-        val minutes = this / 60
-        val seconds = this % 60
-        return "$minutes:${String.format("%02d", seconds)}"
-    }
-
     inner class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
         val tvArtist: TextView = itemView.tv_artist
         val tvName: TextView = itemView.tv_title
@@ -160,6 +154,10 @@ class TrackCellAdapter(
 //        fun onRecommendSelection(position: Int)
 //        fun onAddToPlaylistSelection(position: Int)
 //    }
+}
 
-
+fun Int.getSongTimeFromSeconds(): String {
+    val minutes = this / 60
+    val seconds = this % 60
+    return "$minutes:${String.format("%02d", seconds)}"
 }

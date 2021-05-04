@@ -8,10 +8,7 @@ import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.*
 import com.gorilla.gorillagroove.service.BackgroundTaskResponse
 import com.gorilla.gorillagroove.service.sync.*
-import com.gorilla.gorillagroove.ui.reviewqueue.AddArtistSourceRequest
-import com.gorilla.gorillagroove.ui.reviewqueue.AddYoutubeChannelRequest
-import com.gorilla.gorillagroove.ui.reviewqueue.AutocompleteResult
-import com.gorilla.gorillagroove.ui.reviewqueue.DownloadYTVideoRequest
+import com.gorilla.gorillagroove.ui.reviewqueue.*
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import okhttp3.MultipartBody
@@ -55,6 +52,9 @@ interface NetworkApi {
 
     @POST("api/review-queue/subscribe/artist")
     suspend fun subscribeToSpotifyArtist(@Body body: AddArtistSourceRequest): ReviewSourceResponse
+
+    @GET("api/search/spotify/artist/{artist}")
+    suspend fun searchSpotifyByArtist(@Path("artist") artist: String): MetadataSearchResponse
 
     @POST("api/review-queue/subscribe/youtube-channel")
     suspend fun subscribeToYoutubeChannel(@Body body: AddYoutubeChannelRequest): ReviewSourceResponse

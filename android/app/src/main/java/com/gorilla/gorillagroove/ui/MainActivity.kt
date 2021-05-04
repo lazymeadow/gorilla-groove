@@ -120,6 +120,9 @@ class MainActivity : AppCompatActivity() {
                     R.id.editReviewSourcesFragment -> {
                         title_tv.text = "Manage Queues"
                     }
+                    R.id.spotifySearchResultsFragment -> {
+                        title_tv.text = "Spotify Search Results"
+                    }
                     else -> {
                         title_tv.text = "var ar jag?"
                         supportActionBar?.displayOptions

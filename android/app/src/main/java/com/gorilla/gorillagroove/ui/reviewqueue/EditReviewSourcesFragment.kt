@@ -154,9 +154,8 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
             val type = sourceTypesToShow[sectionIndex]
             val source = sources.getValue(type)[positionInSection]
 
-            holder.itemView.setOnLongClickListener {
+            holder.itemView.setOnClickListener {
                 showEditActionSheet(source)
-                true
             }
 
             holder.itemView.textItem.text = source.displayName

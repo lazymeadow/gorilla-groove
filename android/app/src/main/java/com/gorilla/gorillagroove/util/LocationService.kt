@@ -123,6 +123,8 @@ object LocationService {
             return null
         }
 
+        // TODO use minimum battery setting!
+
         val locationPermission = ActivityCompat.checkSelfPermission(GGApplication.application, Manifest.permission.ACCESS_FINE_LOCATION)
         if (locationPermission != PackageManager.PERMISSION_GRANTED) {
             logWarn("Location is enabled, but permission was not granted.")

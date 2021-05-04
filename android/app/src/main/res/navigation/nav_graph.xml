@@ -123,4 +123,9 @@
         android:name="com.gorilla.gorillagroove.ui.reviewqueue.AddReviewSourceFragment"
         android:label="AddReviewSourceFragment" >
     </fragment>
+    <fragment
+        android:id="@+id/spotifySearchResultsFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.SpotifySearchResultsFragment"
+        android:label="SpotifySearchResultsFragment" >
+    </fragment>
 </navigation>
