@@ -23,17 +23,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val TYPE_HEADER = 0
-private const val TYPE_ITEM = 1
-
 class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sources) {
 
     private val reviewSourceDao get() = GorillaDatabase.getDatabase().reviewSourceDao()
 
     private lateinit var sourceListAdapter: SourceListAdapter
 
-    private var sources = listOf<DbReviewSource>()
-    private var sourceTypeCount = mutableMapOf<ReviewSourceType, Int>()
+    private var sources = mutableMapOf<ReviewSourceType, List<DbReviewSource>>()
+
+    // Order of this changes the order that they are shown in
+    private val sourceTypesToShow = listOf(ARTIST, YOUTUBE_CHANNEL)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -49,19 +48,14 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
         super.onStart()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val groups = reviewSourceDao.getEditableSources().groupBy { it.sourceType }.toMutableMap()
+            sources = reviewSourceDao.getEditableSources().groupBy { it.sourceType }.toMutableMap()
 
-            // Order of this changes the order that they are shown in
-            val typesToShow = listOf(ARTIST, YOUTUBE_CHANNEL)
-
-            typesToShow.forEach { type ->
-                if (groups[type] == null) {
-                    groups[type] = emptyList()
+            sourceTypesToShow.forEach { type ->
+                if (sources[type] == null) {
+                    sources[type] = emptyList()
                 }
             }
 
-            sources = typesToShow.fold(emptyList()) { acc, type -> acc + groups.getOrDefault(type, emptyList()) }
-            sourceTypeCount = groups.mapValues { it.value.size }.toMutableMap()
             sourceListAdapter.notifyDataSetChanged()
         }
     }
@@ -124,8 +118,7 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
                             GorillaDatabase.reviewSourceDao.delete(reviewSource.id)
                             GorillaDatabase.trackDao.deleteTracksOnReviewSource(reviewSource.id)
 
-                            sources = sources.filterNot { it.id == reviewSource.id }
-                            sourceTypeCount[reviewSource.sourceType] = sourceTypeCount.getValue(reviewSource.sourceType) - 1
+                            sources[reviewSource.sourceType] = sources.getValue(reviewSource.sourceType).filterNot { it.id == reviewSource.id }
 
                             withContext(Dispatchers.Main) {
                                 sourceListAdapter.notifyDataSetChanged()
@@ -141,78 +134,40 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
         )
     }
 
-    inner class SourceListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            val inflater = LayoutInflater.from(parent.context)
-            return if (viewType == TYPE_ITEM) {
-                val itemView = inflater.inflate(R.layout.simple_text_info_item, parent, false)
-                ReviewQueueItemViewHolder(itemView)
-            } else {
-                val itemView = inflater.inflate(R.layout.simple_text_header_item, parent, false)
-                ReviewQueueHeaderViewHolder(itemView)
-            }
-        }
-
-        override fun getItemCount(): Int {
-            val (artistHeaderPosition, youtubeHeaderPosition) = getSectionHeaderPositions()
-            var visibleHeaderCount = 0
-            if (artistHeaderPosition > -1) visibleHeaderCount++
-            if (youtubeHeaderPosition > -1) visibleHeaderCount++
-
-            return sources.size + visibleHeaderCount
-        }
-
-        private fun getSectionHeaderPositions(): Pair<Int, Int> {
-            val artistHeaderPosition = if (sourceTypeCount.getValue(ARTIST) > 0) 0 else -1
-            val youtubeHeaderPosition = if (sourceTypeCount.getValue(YOUTUBE_CHANNEL) > 0) {
-                artistHeaderPosition + sourceTypeCount.getValue(ARTIST) + 1
-            } else {
-                -1
-            }
-
-            return artistHeaderPosition to youtubeHeaderPosition
-        }
-
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            val (artistHeaderPosition, youtubeHeaderPosition) = getSectionHeaderPositions()
-            val text = when (position) {
-                artistHeaderPosition -> "Artists"
-                youtubeHeaderPosition -> "YouTube Channels"
-                else -> {
-                    var offset = 0
-                    if (artistHeaderPosition > -1) offset++
-                    if (youtubeHeaderPosition > -1 && (position + offset) > youtubeHeaderPosition) offset++
-
-                    val source = sources[position - offset]
-
-                    holder.itemView.setOnLongClickListener {
-                        showEditActionSheet(source)
-                        true
-                    }
-
-                    source.displayName
-                }
-            }
-
-            if (holder !is ReviewQueueItemViewHolder) {
-                holder.itemView.setOnClickListener(null)
-            }
-
-            holder.itemView.textItem.text = text
-        }
-
-        override fun getItemViewType(position: Int): Int {
-            val (artistHeaderPosition, youtubeHeaderPosition) = getSectionHeaderPositions()
-
-            return when (position) {
-                artistHeaderPosition, youtubeHeaderPosition -> TYPE_HEADER
-                else -> TYPE_ITEM
-            }
-        }
+    inner class SourceListAdapter : HeaderTableAdapter<SourceListAdapter.ReviewQueueItemViewHolder>() {
 
         inner class ReviewQueueItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
-        inner class ReviewQueueHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+        override fun onCreateBodyViewHolder(parent: ViewGroup): ReviewQueueItemViewHolder {
+            val itemView = LayoutInflater.from(parent.context).inflate(R.layout.simple_text_info_item, parent, false)
+            return ReviewQueueItemViewHolder(itemView)
+        }
+
+        override fun getSectionCount() = sources.keys.size
+
+        override fun getCountForSection(sectionIndex: Int): Int {
+            val type = sourceTypesToShow[sectionIndex]
+            return sources.getValue(type).size
+        }
+
+        override fun onBindBodyViewHolder(holder: ReviewQueueItemViewHolder, sectionIndex: Int, positionInSection: Int) {
+            val type = sourceTypesToShow[sectionIndex]
+            val source = sources.getValue(type)[positionInSection]
+
+            holder.itemView.setOnLongClickListener {
+                showEditActionSheet(source)
+                true
+            }
+
+            holder.itemView.textItem.text = source.displayName
+        }
+
+        override fun getTitleForHeader(sectionIndex: Int): String {
+            return when (sourceTypesToShow[sectionIndex]) {
+                ARTIST -> "Artists"
+                YOUTUBE_CHANNEL -> "YouTube Channels"
+                else -> throw IllegalStateException("Unknown source type encountered when getting table header text")
+            }
+        }
     }
 }
