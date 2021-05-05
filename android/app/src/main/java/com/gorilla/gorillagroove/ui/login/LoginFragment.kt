@@ -1,12 +1,10 @@
 package com.gorilla.gorillagroove.ui.login
 
 import android.annotation.SuppressLint
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings.Secure
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
@@ -18,24 +16,14 @@ import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.MainActivity
-import com.gorilla.gorillagroove.util.Constants
-import com.gorilla.gorillagroove.util.CurrentDevice
-import com.gorilla.gorillagroove.util.GGToast
-import com.gorilla.gorillagroove.util.hideKeyboard
-import dagger.hilt.android.AndroidEntryPoint
+import com.gorilla.gorillagroove.util.*
 import kotlinx.android.synthetic.main.fragment_login.*
 import kotlinx.coroutines.*
 import java.util.*
-import javax.inject.Inject
 
 
-@AndroidEntryPoint
 class LoginFragment : Fragment(R.layout.fragment_login) {
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -48,8 +36,6 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
             return
         }
-
-        (requireActivity() as MainActivity).setToolbarVisible(false)
 
         loginEmail.requestFocus()
 
@@ -89,14 +75,9 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             try {
                 val response = Network.api.login(loginRequest)
 
-                sharedPref.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
-
-                val toast = GGToast.show("Syncing first time data ...", Toast.LENGTH_LONG)
-                // TODO This is currently blocking. Shouldn't be
-                ServerSynchronizer.syncWithServer()
+                sharedPreferences.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
 
                 withContext(Dispatchers.Main) {
-                    toast.cancel()
                     navigateToMainApp()
                 }
             } catch (e: Throwable) {
@@ -126,14 +107,14 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     }
 
     private fun navigateToMainApp() {
-        (requireActivity() as MainActivity).setToolbarVisible(true)
+        val fragmentId = (requireActivity() as MainActivity).getStartingFragmentId()
 
         val navOptions = NavOptions.Builder()
-            .setPopUpTo(R.id.libraryTrackFragment, true)
+            .setPopUpTo(fragmentId, true)
             .build()
 
         findNavController().navigate(
-            R.id.libraryTrackFragment,
+            fragmentId,
             null,
             navOptions
         )

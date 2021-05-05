@@ -48,7 +48,7 @@ class GGApplication : Application() {
     // getting hammered to the point that it can barely do anything. So give it a very limited thread pool.
     private fun initWorkManager() {
         val configuration = Configuration.Builder()
-            .setExecutor(Executors.newFixedThreadPool(2))
+            .setExecutor(Executors.newFixedThreadPool(1))
             .build()
 
         WorkManager.initialize(this, configuration)

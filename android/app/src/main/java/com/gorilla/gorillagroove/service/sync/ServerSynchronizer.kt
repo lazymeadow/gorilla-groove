@@ -23,7 +23,8 @@ object ServerSynchronizer {
 
     suspend fun syncWithServer(
         syncTypes: Set<SyncType> = SyncType.values().toSet(),
-        abortIfRecentlySynced: Boolean = false
+        abortIfRecentlySynced: Boolean = false,
+        onPageSyncedHandler: SyncHandler? = null,
     ) = withContext(Dispatchers.IO) {
         if (GGSettings.offlineModeEnabled) {
             return@withContext
@@ -79,11 +80,11 @@ object ServerSynchronizer {
                 logInfo("About to sync type: $syncType")
 
                 val success = when (syncType) {
-                    SyncType.TRACK -> TrackSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.PLAYLIST_TRACK -> PlaylistTrackSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.PLAYLIST -> PlaylistSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.USER -> UserSynchronizer.sync(syncStatus, syncTime)
-                    SyncType.REVIEW_SOURCE -> ReviewSourceSynchronizer.sync(syncStatus, syncTime)
+                    SyncType.TRACK -> TrackSynchronizer.sync(syncStatus, syncTime, onPageSyncedHandler)
+                    SyncType.PLAYLIST_TRACK -> PlaylistTrackSynchronizer.sync(syncStatus, syncTime, onPageSyncedHandler)
+                    SyncType.PLAYLIST -> PlaylistSynchronizer.sync(syncStatus, syncTime, onPageSyncedHandler)
+                    SyncType.USER -> UserSynchronizer.sync(syncStatus, syncTime, onPageSyncedHandler)
+                    SyncType.REVIEW_SOURCE -> ReviewSourceSynchronizer.sync(syncStatus, syncTime, onPageSyncedHandler)
                 }
 
                 if (success) {

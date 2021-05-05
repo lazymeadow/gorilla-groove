@@ -17,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
 import com.gorilla.gorillagroove.util.showAlertDialog
@@ -26,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -47,15 +49,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+
+        setInitialFragment(navHostFragment)
+
         setSupportActionBar(findViewById(R.id.toolbar))
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        // setupActionBarWithNavController(navController)
         bottomNavigationView.setupWithNavController(navController)
 
         navHostFragment.findNavController()
@@ -63,14 +66,16 @@ class MainActivity : AppCompatActivity() {
                 multiselectIcon.visibility = View.GONE
                 bottomNavigationView.visibility = View.VISIBLE
                 playerControlView.visibility = View.VISIBLE
+                toolbar.isVisible = true
+
                 when (destination.id) {
                     R.id.loginFragment -> {
                         bottomNavigationView.visibility = View.GONE
                         playerControlView.visibility = View.GONE
+                        toolbar.isVisible = false
                         title_tv.text = ""
                     }
                     R.id.libraryTrackFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
                         title_tv.text = "My Library"
                     }
                     R.id.artistsFragment -> {
@@ -119,6 +124,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     R.id.spotifySearchResultsFragment -> {
                         title_tv.text = "Spotify Search Results"
+                    }
+                    R.id.firstTimeSyncFragment -> {
+                        title_tv.text = "First Time Sync"
+                        bottomNavigationView.visibility = View.GONE
+                        playerControlView.visibility = View.GONE
+                        toolbar.isVisible = false
                     }
                     else -> {
                         title_tv.text = "var ar jag?"
@@ -169,6 +180,30 @@ class MainActivity : AppCompatActivity() {
         if (GGApplication.isUserSignedIn) {
             CoroutineScope(Dispatchers.IO).launch {
                 mainRepository.postDeviceVersion()
+            }
+        }
+    }
+
+    private fun setInitialFragment(navHostFragment: NavHostFragment) {
+        val graph = navHostFragment.navController.navInflater.inflate(R.navigation.nav_graph)
+
+        graph.startDestination = getStartingFragmentId()
+
+        navHostFragment.navController.graph = graph
+    }
+
+    fun getStartingFragmentId(): Int {
+        return if (!GGApplication.isUserSignedIn) {
+            R.id.loginFragment
+        } else {
+            val syncStatuses = runBlocking(Dispatchers.IO) {
+                GorillaDatabase.syncStatusDao.findAll()
+            }
+
+            if (syncStatuses.isEmpty()) {
+                R.id.firstTimeSyncFragment
+            } else {
+                R.id.libraryTrackFragment
             }
         }
     }
@@ -277,10 +312,6 @@ class MainActivity : AppCompatActivity() {
         if (!handled) {
             super.onBackPressed()
         }
-    }
-
-    fun setToolbarVisible(isVisible: Boolean) {
-        toolbar.isVisible = isVisible
     }
 }
 
