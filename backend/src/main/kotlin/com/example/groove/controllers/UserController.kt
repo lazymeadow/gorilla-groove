@@ -2,11 +2,14 @@ package com.example.groove.controllers
 
 import com.example.groove.db.model.User
 import com.example.groove.db.model.UserPermission
+import com.example.groove.services.SyncableEntityService
 import com.example.groove.services.UserService
 import com.example.groove.util.loadLoggedInUser
+import com.fasterxml.jackson.annotation.JsonIgnore
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.sql.Timestamp
 import javax.validation.Valid
 import javax.validation.constraints.Email
 import javax.validation.constraints.Size
@@ -39,8 +42,16 @@ class UserController(
 
 	// Only currently used by the Android 2.0 migration. 1.x saved a token but did not save the user ID, and we need that in 2.0
 	@GetMapping("/self")
-	fun whoAmI(): User {
-		return loadLoggedInUser()
+	fun whoAmI(): SyncableEntityService.SyncableUser {
+		val loggedInUser = loadLoggedInUser()
+		return SyncableEntityService.SyncableUser(
+			id = loggedInUser.id,
+            name = loggedInUser.name,
+			lastLogin = loggedInUser.lastLogin,
+			createdAt = loggedInUser.createdAt,
+			updatedAt = loggedInUser.updatedAt,
+            deleted = loggedInUser.deleted
+		)
 	}
 
 	@GetMapping("/permissions")
