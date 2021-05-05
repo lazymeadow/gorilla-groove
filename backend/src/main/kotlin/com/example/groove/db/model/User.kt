@@ -44,6 +44,7 @@ class User(
 		// Not a column. Kind of a hack to associate the user with their token when they are authenticated
 		// so that we can retrieve it at a later time
 		@Transient
+        @JsonIgnore
 		var currentAuthToken: UserToken? = null
 
 ) : UserDetails {
