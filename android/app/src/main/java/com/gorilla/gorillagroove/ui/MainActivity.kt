@@ -1,6 +1,5 @@
 package com.gorilla.gorillagroove.ui
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
@@ -10,6 +9,7 @@ import android.widget.SeekBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
@@ -277,6 +277,10 @@ class MainActivity : AppCompatActivity() {
         if (!handled) {
             super.onBackPressed()
         }
+    }
+
+    fun setToolbarVisible(isVisible: Boolean) {
+        toolbar.isVisible = isVisible
     }
 }
 

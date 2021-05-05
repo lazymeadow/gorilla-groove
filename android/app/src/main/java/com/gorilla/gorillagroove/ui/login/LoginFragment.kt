@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings.Secure
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +19,7 @@ import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
+import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.CurrentDevice
 import com.gorilla.gorillagroove.util.GGToast
@@ -47,44 +49,61 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
             return
         }
 
-        edit_text_email.requestFocus()
+        (requireActivity() as MainActivity).setToolbarVisible(false)
 
-        button_login.setOnClickListener {
-            val deviceId = fetchDeviceUUID()
+        loginEmail.requestFocus()
 
-            val loginRequest = LoginRequest(
-                email = edit_text_email.text.toString(),
-                password = edit_text_password.text.toString(),
-                deviceId = deviceId.toString(),
-                preferredDeviceName = CurrentDevice.getDeviceName(context),
-                version = BuildConfig.VERSION_NAME,
-                deviceType = "ANDROID"
-            )
+        loginPassword.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                login()
+                true
+            } else {
+                false
+            }
+        }
 
-            displayProgressBar(true)
+        loginButton.setOnClickListener { login() }
 
-            requireActivity().hideKeyboard()
+        appVersion.text = BuildConfig.VERSION_NAME
+    }
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val response = Network.api.login(loginRequest)
+    private fun login() {
+        view?.hideKeyboard()
 
-                    sharedPref.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
+        val deviceId = fetchDeviceUUID()
 
-                    val toast = GGToast.show("Syncing first time data ...", Toast.LENGTH_LONG)
-                    // TODO This is currently blocking. Shouldn't be
-                    ServerSynchronizer.syncWithServer()
+        val loginRequest = LoginRequest(
+            email = loginEmail.text.toString(),
+            password = loginPassword.text.toString(),
+            deviceId = deviceId.toString(),
+            preferredDeviceName = CurrentDevice.getDeviceName(context),
+            version = BuildConfig.VERSION_NAME,
+            deviceType = "ANDROID"
+        )
 
-                    withContext(Dispatchers.Main) {
-                        toast.cancel()
-                        navigateToMainApp()
-                    }
-                } catch (e: Throwable) {
-                    logError("Failed to log in!", e)
-                    withContext(Dispatchers.Main) {
-                        displayProgressBar(false)
-                        GGToast.show("Failed to sign in")
-                    }
+        displayProgressBar(true)
+
+        requireActivity().hideKeyboard()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val response = Network.api.login(loginRequest)
+
+                sharedPref.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
+
+                val toast = GGToast.show("Syncing first time data ...", Toast.LENGTH_LONG)
+                // TODO This is currently blocking. Shouldn't be
+                ServerSynchronizer.syncWithServer()
+
+                withContext(Dispatchers.Main) {
+                    toast.cancel()
+                    navigateToMainApp()
+                }
+            } catch (e: Throwable) {
+                logError("Failed to log in!", e)
+                withContext(Dispatchers.Main) {
+                    displayProgressBar(false)
+                    GGToast.show("Failed to sign in")
                 }
             }
         }
@@ -107,6 +126,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     }
 
     private fun navigateToMainApp() {
+        (requireActivity() as MainActivity).setToolbarVisible(true)
+
         val navOptions = NavOptions.Builder()
             .setPopUpTo(R.id.libraryTrackFragment, true)
             .build()
