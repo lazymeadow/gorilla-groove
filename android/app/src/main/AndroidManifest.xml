@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.gorilla.gorillagroove">
 
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -32,6 +33,12 @@
                 <action android:name="android.media.browse.MediaBroserService"/>
             </intent-filter>
         </service>
+
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            tools:node="remove"
+            android:exported="false" />
 
     </application>
 

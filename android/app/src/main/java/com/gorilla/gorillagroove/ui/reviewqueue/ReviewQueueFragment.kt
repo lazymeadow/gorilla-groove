@@ -46,8 +46,8 @@ import kotlin.math.min
 @AndroidEntryPoint
 class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
-    private val reviewSourceDao get() = GorillaDatabase.getDatabase().reviewSourceDao()
+    private val trackDao get() = GorillaDatabase.trackDao
+    private val reviewSourceDao get() = GorillaDatabase.reviewSourceDao
 
     @Inject
     lateinit var mainRepository: MainRepository

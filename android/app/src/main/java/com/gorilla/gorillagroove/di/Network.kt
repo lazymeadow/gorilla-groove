@@ -1,9 +1,12 @@
 package com.gorilla.gorillagroove.di
 
+import android.content.Context
 import com.google.gson.*
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.util.Constants
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,7 +68,7 @@ object Network {
                        throw OfflineModeEnabledException()
                    }
 
-                   val request = NetworkApi.apiToken?.let { authToken ->
+                   val request = apiToken?.let { authToken ->
                        chain.request().newBuilder().addHeader("Authorization", authToken).build()
                    } ?: run {
                        chain.request().newBuilder().build()
@@ -77,6 +80,13 @@ object Network {
     }
 
     val api = provideNetworkApi(provideRetrofit(provideGsonBuilder()))
+
+    private val apiToken: String? get() {
+        return GGApplication
+            .application
+            .getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .getString(Constants.KEY_USER_TOKEN, null)
+    }
 }
 
 class OfflineModeEnabledException : RuntimeException("Offline mode is enabled")

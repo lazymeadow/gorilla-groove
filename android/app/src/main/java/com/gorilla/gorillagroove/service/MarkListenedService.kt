@@ -20,7 +20,7 @@ class MarkListenedService(
     musicServiceConnection: MusicServiceConnection
 ) {
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     private var currentTrackMarkedListenedTo = false
     private var currentTrackMarkedStarted = false

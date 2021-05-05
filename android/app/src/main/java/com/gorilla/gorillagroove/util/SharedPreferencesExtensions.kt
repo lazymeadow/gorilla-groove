@@ -1,9 +1,11 @@
 package com.gorilla.gorillagroove.util
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.work.Data
 import androidx.work.hasKeyWithValueOfType
+import com.gorilla.gorillagroove.GGApplication
 
 fun SharedPreferences.getNullableLong(key: String): Long? {
     return if (this.contains(key)) {
@@ -23,6 +25,8 @@ fun Data.getNullableLong(key: String): Long? {
     }
 }
 
+fun SharedPreferences.getRequiredLong(key: String) = getNullableLong(key)!!
+
 // Why do Bundles not have a way to get a freakin nullable boolean?? Do you expect me to pass everything in as a string if it can be null? Ugh.
 fun Bundle.getNullableBoolean(key: String): Boolean? {
     val keySet = this.keySet()
@@ -32,3 +36,6 @@ fun Bundle.getNullableBoolean(key: String): Boolean? {
         null
     }
 }
+
+val sharedPreferences get(): SharedPreferences = GGApplication.application
+    .getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)

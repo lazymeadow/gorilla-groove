@@ -8,7 +8,7 @@ import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import java.time.Instant
 
-object TrackSynchronizer : StandardSynchronizer<DbTrack, TrackResponse>(GorillaDatabase.trackDao) {
+object TrackSynchronizer : StandardSynchronizer<DbTrack, TrackResponse>({ GorillaDatabase.trackDao }) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<TrackResponse> {
         return Network.api.getTrackSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,

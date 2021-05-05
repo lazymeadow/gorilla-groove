@@ -1,17 +1,19 @@
 package com.gorilla.gorillagroove
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.GGLifecycleOwner
-import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
+import com.gorilla.gorillagroove.util.sharedPreferences
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.*
+import java.util.concurrent.Executors
 
 @HiltAndroidApp
 class GGApplication : Application() {
@@ -22,6 +24,8 @@ class GGApplication : Application() {
         super.onCreate()
 
         Thread.setDefaultUncaughtExceptionHandler { _, e -> handleUncaughtException(e) }
+
+        initWorkManager()
 
         logInfo("\n\nAPP WAS BOOTED\n")
 
@@ -39,6 +43,16 @@ class GGApplication : Application() {
         }
     }
 
+    // WorkManager is insane and will try to run a ridiculous amount of things in parallel.
+    // Even if all of these things are on the background, what happens is the entire device ends up
+    // getting hammered to the point that it can barely do anything. So give it a very limited thread pool.
+    private fun initWorkManager() {
+        val configuration = Configuration.Builder()
+            .setExecutor(Executors.newFixedThreadPool(2))
+            .build()
+
+        WorkManager.initialize(this, configuration)
+    }
 
     private fun handleUncaughtException(e: Throwable) {
         logCrit("Unhandled fatal exception encountered!", e)
@@ -56,9 +70,7 @@ class GGApplication : Application() {
         // This "bad practice" wouldn't exist if Android wasn't bad, and it is way less bad than passing contexts around pointlessly.
         lateinit var application: GGApplication
 
-        val isUserSignedIn get() = application
-            .getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_USER_TOKEN, null)
+        val isUserSignedIn get() = sharedPreferences.getString(KEY_USER_TOKEN, null)
             .takeIf { !it.isNullOrBlank() } != null
     }
 }

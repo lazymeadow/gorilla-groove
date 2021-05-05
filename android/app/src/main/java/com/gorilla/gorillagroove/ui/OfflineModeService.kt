@@ -26,7 +26,7 @@ private val pendingTasks = mutableSetOf<Long>()
 
 object OfflineModeService {
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     @Synchronized
     suspend fun downloadAlwaysOfflineTracks() = withContext(Dispatchers.IO) {
@@ -172,7 +172,7 @@ private val DbTrack.bytesNeedingDownload: Int get() {
 @Suppress("BlockingMethodInNonBlockingContext")
 class TrackDownloadWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val trackId = inputData.getNullableLong("trackId")

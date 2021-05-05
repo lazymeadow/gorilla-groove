@@ -8,7 +8,7 @@ import com.gorilla.gorillagroove.database.entity.ReviewSourceType
 import com.gorilla.gorillagroove.di.Network
 import java.time.Instant
 
-object ReviewSourceSynchronizer : StandardSynchronizer<DbReviewSource, ReviewSourceResponse>(GorillaDatabase.reviewSourceDao) {
+object ReviewSourceSynchronizer : StandardSynchronizer<DbReviewSource, ReviewSourceResponse>({ GorillaDatabase.reviewSourceDao }) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<ReviewSourceResponse> {
         return Network.api.getReviewSourceSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,

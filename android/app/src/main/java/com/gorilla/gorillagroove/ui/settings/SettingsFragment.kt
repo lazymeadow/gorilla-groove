@@ -37,7 +37,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private val vm: SettingsViewModel by viewModels()
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val binding = FragmentSettingsBinding.inflate(inflater)

@@ -9,9 +9,12 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.repository.LAST_POSTED_VERSION_KEY
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.reviewqueue.AddSourceMode
 import com.gorilla.gorillagroove.util.Constants
+import com.gorilla.gorillagroove.util.sharedPreferences
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_more_menu.*
 import javax.inject.Inject
@@ -19,9 +22,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -43,9 +43,7 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
         logoutButton.setOnClickListener {
             logInfo("User tapped log out")
 
-            sharedPref.edit().remove(Constants.KEY_USER_TOKEN).apply()
-
-            controlsViewModel.logout()
+            logout()
 
             val navOptions = NavOptions.Builder()
                 .setPopUpTo(R.id.loginFragment, true)
@@ -77,5 +75,18 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
                 }
             )
         )
+    }
+
+    private fun logout() {
+        // There are a lot of prefs that aren't actually cleared out, here. Like all our settings.
+        sharedPreferences.edit()
+            .remove(Constants.KEY_USER_TOKEN)
+            .remove(Constants.KEY_USER_ID)
+            .remove(LAST_POSTED_VERSION_KEY)
+            .apply()
+
+        controlsViewModel.logout()
+
+        GorillaDatabase.close()
     }
 }

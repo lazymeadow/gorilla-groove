@@ -15,9 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.repository.MainRepository
-import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
 import com.gorilla.gorillagroove.util.showAlertDialog
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,9 +34,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
 
     @Inject
     lateinit var mainRepository: MainRepository
@@ -169,7 +166,7 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
+        if (GGApplication.isUserSignedIn) {
             CoroutineScope(Dispatchers.IO).launch {
                 mainRepository.postDeviceVersion()
             }

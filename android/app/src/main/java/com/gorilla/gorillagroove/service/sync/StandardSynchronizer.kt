@@ -8,7 +8,9 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import java.time.Instant
 
 abstract class StandardSynchronizer<DbType : DbEntity, ResponseType: EntityResponse>(
-    private val dao: BaseRoomDao<DbType>,
+    // We don't want this to hold a reference to the DAO, because otherwise this can break when logging out / back in as it holds a stale ref.
+    // So that is why this takes a function that returns a DAO instead, so it always get a good reference.
+    private val getDaoFunc: () -> BaseRoomDao<DbType>,
 ) {
 
     suspend fun sync(
@@ -41,6 +43,8 @@ abstract class StandardSynchronizer<DbType : DbEntity, ResponseType: EntityRespo
 
     private suspend fun savePageOfChanges(syncStatus: DbSyncStatus, maximum: Instant, page: Int): Pair<Int, Boolean> {
         logDebug("Syncing $syncStatus page $page")
+        val dao = getDaoFunc()
+
         val response = try {
             fetchEntities(syncStatus, maximum, page)
         } catch (e: Throwable) {

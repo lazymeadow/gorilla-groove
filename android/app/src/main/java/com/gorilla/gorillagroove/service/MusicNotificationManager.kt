@@ -29,7 +29,7 @@ class MusicNotificationManager(
     mainRepository: MainRepository
 ) {
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     private val notificationManager: PlayerNotificationManager
     private val serviceJob = SupervisorJob()

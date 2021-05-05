@@ -11,6 +11,7 @@ import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.ResolvingDataSource
 import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
@@ -27,7 +28,6 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackCacheService
 import com.gorilla.gorillagroove.ui.settings.GGSettings
-import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
 import com.gorilla.gorillagroove.util.LocationService
 import kotlinx.coroutines.*
 import okhttp3.MultipartBody
@@ -41,14 +41,13 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+const val LAST_POSTED_VERSION_KEY = "LAST_POSTED_VERSION"
 
 class MainRepository(
     private val sharedPreferences: SharedPreferences,
     private val okClient: OkHttpClient,
 ) {
     private var webSocket: WebSocket? = null
-
-    private var userToken: String = sharedPreferences.getString(KEY_USER_TOKEN, "") ?: ""
 
     private var lastVerifiedTrack: Long? = null
     private lateinit var lastFetchedLinks: TrackLinkResponse
@@ -192,7 +191,7 @@ class MainRepository(
     }
 
     private fun initWebSocket() {
-        if (userToken != "" && !GGSettings.offlineModeEnabled) {
+        if (GGApplication.isUserSignedIn && !GGSettings.offlineModeEnabled) {
             logDebug("Initializing websocket")
             val request = Request.Builder()
                 .url("wss://gorillagroove.net/api/socket")
@@ -321,10 +320,8 @@ class MainRepository(
     }
 
     suspend fun postDeviceVersion() {
-        val lastPostedVersionKey = "LAST_POSTED_VERSION"
-
         val version = BuildConfig.VERSION_NAME
-        val lastPostedVersion = sharedPreferences.getString(lastPostedVersionKey, null)
+        val lastPostedVersion = sharedPreferences.getString(LAST_POSTED_VERSION_KEY, null)
 
         if (version == lastPostedVersion) {
             return
@@ -335,7 +332,7 @@ class MainRepository(
         try {
             Network.api.updateDeviceVersion(UpdateDeviceVersionRequest(version))
 
-            sharedPreferences.edit().putString(lastPostedVersionKey, version).apply()
+            sharedPreferences.edit().putString(LAST_POSTED_VERSION_KEY, version).apply()
             logInfo("Posted version $version to the API")
         } catch (e: Throwable) {
             logError("Could not update device version!", e)

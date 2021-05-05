@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
 
 class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sources) {
 
-    private val reviewSourceDao get() = GorillaDatabase.getDatabase().reviewSourceDao()
+    private val reviewSourceDao get() = GorillaDatabase.reviewSourceDao
 
     private lateinit var sourceListAdapter: SourceListAdapter
 

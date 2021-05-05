@@ -6,7 +6,7 @@ import com.gorilla.gorillagroove.database.entity.DbUser
 import com.gorilla.gorillagroove.di.Network
 import java.time.Instant
 
-object UserSynchronizer : StandardSynchronizer<DbUser, UserResponse>(GorillaDatabase.userDao) {
+object UserSynchronizer : StandardSynchronizer<DbUser, UserResponse>({ GorillaDatabase.userDao }) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<UserResponse> {
         return Network.api.getUserSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,

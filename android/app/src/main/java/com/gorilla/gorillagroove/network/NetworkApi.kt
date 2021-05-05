@@ -1,7 +1,5 @@
 package com.gorilla.gorillagroove.network
 
-import android.content.Context
-import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.network.login.LoginRequest
 import com.gorilla.gorillagroove.network.login.LoginResponseNetworkEntity
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
@@ -9,8 +7,6 @@ import com.gorilla.gorillagroove.network.track.*
 import com.gorilla.gorillagroove.service.BackgroundTaskResponse
 import com.gorilla.gorillagroove.service.sync.*
 import com.gorilla.gorillagroove.ui.reviewqueue.*
-import com.gorilla.gorillagroove.util.Constants
-import com.gorilla.gorillagroove.util.Constants.SHARED_PREFERENCES_NAME
 import okhttp3.MultipartBody
 import retrofit2.http.*
 
@@ -119,13 +115,4 @@ interface NetworkApi {
 
     @GET("api/sync/last-modified")
     suspend fun getLastModifiedTimestamps(): LastModifiedTimesResponse
-
-    companion object {
-        val apiToken: String? get() {
-            return GGApplication
-                .application
-                .getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
-                .getString(Constants.KEY_USER_TOKEN, null)
-        }
-    }
 }

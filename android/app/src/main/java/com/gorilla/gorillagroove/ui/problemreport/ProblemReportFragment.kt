@@ -82,8 +82,6 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
 
         sendReportButton.isEnabled = false
 
-        val context = GGApplication.application
-
         val cacheDir = File(cacheDirPath)
         cacheDir.mkdirs()
 
@@ -95,7 +93,7 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
             logContent.forEach { writer.append(it + "\n") }
         }
 
-        val database = context.getDatabasePath(GorillaDatabase.DATABASE_NAME)
+        val database = GorillaDatabase.getDatabaseFile()
 
         val tmpDatabase = File("$cacheDirPath/db.sqlite")
         database.copyTo(tmpDatabase, overwrite = true)

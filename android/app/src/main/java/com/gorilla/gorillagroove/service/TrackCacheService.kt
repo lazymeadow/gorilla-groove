@@ -12,7 +12,7 @@ import java.net.URL
 import java.time.Instant
 
 object TrackCacheService {
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     private val trackCachePath: String by lazy { "${GGApplication.application.filesDir.absolutePath}/track-cache/" }
     private val audioCachePath = trackCachePath + "audio/"

@@ -33,7 +33,7 @@ import java.time.Instant
  */
 class DynamicTrackAudioCacheSource(val trackId: Long) : DataSource.Factory {
 
-    private val trackDao get() = GorillaDatabase.getDatabase().trackDao()
+    private val trackDao get() = GorillaDatabase.trackDao
 
     override fun createDataSource(): DataSource {
         val fileDataSource = FileDataSource()

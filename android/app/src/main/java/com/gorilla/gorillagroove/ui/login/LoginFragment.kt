@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.login.LoginRequest
@@ -40,7 +41,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         logInfo("Loading Login view")
 
         // If we have an auth token then they launched the app while logged in. Redirect to the main screen.
-        if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
+        if (GGApplication.isUserSignedIn) {
             navigateToMainApp()
 
             return

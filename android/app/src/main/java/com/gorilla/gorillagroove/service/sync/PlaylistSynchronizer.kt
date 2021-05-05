@@ -6,7 +6,7 @@ import com.gorilla.gorillagroove.database.entity.DbSyncStatus
 import com.gorilla.gorillagroove.di.Network
 import java.time.Instant
 
-object PlaylistSynchronizer : StandardSynchronizer<DbPlaylist, PlaylistResponse>(GorillaDatabase.playlistDao) {
+object PlaylistSynchronizer : StandardSynchronizer<DbPlaylist, PlaylistResponse>({ GorillaDatabase.playlistDao }) {
     override suspend fun fetchEntities(syncStatus: DbSyncStatus, maximum: Instant, page: Int): EntityChangeResponse<PlaylistResponse> {
         return Network.api.getPlaylistSyncEntities(
             minimum = syncStatus.lastSynced?.toEpochMilli() ?: 0,
