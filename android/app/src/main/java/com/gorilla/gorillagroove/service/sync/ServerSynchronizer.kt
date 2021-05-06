@@ -7,7 +7,7 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.OfflineModeService
-import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.util.toMutableMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

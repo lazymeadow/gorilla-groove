@@ -12,7 +12,7 @@ import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.Album
 import com.gorilla.gorillagroove.di.Network
-import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.service.GGSettings
 import kotlinx.android.synthetic.main.album_info_item.view.*
 import kotlinx.coroutines.*
 import java.util.*

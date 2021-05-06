@@ -27,7 +27,7 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackCacheService
-import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.util.LocationService
 import kotlinx.coroutines.*
 import okhttp3.MultipartBody
@@ -302,20 +302,6 @@ class MainRepository(
         } catch (e: Throwable) {
             // TODO retry policy for this request
             logError("Could not mark track as listened to!", e)
-        }
-    }
-
-    suspend fun uploadCrashReport(zip: File) {
-        val multipartFile = MultipartBody.Part.createFormData(
-            "file",
-            "crash-report.zip",
-            zip.asRequestBody()
-        )
-
-        try {
-            Network.api.uploadCrashReport(multipartFile)
-        } catch (e: Throwable) {
-            logError("Could not upload crash report!", e)
         }
     }
 

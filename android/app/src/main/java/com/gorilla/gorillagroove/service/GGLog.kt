@@ -5,12 +5,20 @@ package com.gorilla.gorillagroove.service
 import android.util.Log
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.GGApplication
+import com.gorilla.gorillagroove.ui.problemreport.ProblemReportSender
+import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
 import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
+import java.time.Instant
+import java.time.Instant.now
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.concurrent.timer
 
@@ -84,11 +92,64 @@ object GGLog {
             }
         }
 
+        if (logLevel == LogLevel.CRITICAL) {
+            handleCrit(message)
+        }
+
         val fileMessage = "${LocalDateTime.now().format(formatter)} [$tag] [${logLevel.logName}]: $message"
 
         synchronized(formatter) {
             logBuffer.add(fileMessage)
         }
+    }
+
+    private fun handleCrit(error: String) {
+        showCriticalPopup(error)
+
+        if (!GGSettings.automaticErrorReportingEnabled) {
+            logInfo("User encountered a critical error but has disabled automatic problem reporting. Not sending this problem report")
+            return
+        }
+
+        val lastAutomaticLogSent = Instant.ofEpochMilli(ProblemReportSender.lastSentAutomatedReport ?: 0)
+        if (ChronoUnit.HOURS.between(lastAutomaticLogSent, now()) < 9) {
+            logInfo("User encountered a critical error but the last report was sent too recently. Not automatically sending this problem report")
+            return
+        }
+
+        GlobalScope.launch {
+            ProblemReportSender.sendProblemReport(false)
+        }
+    }
+
+    private var lastPopUpShown = Instant.MIN
+
+    private fun showCriticalPopup(error: String) {
+        if (!GGSettings.showCriticalErrorsEnabled) {
+            logInfo("User encountered a critical error but will not be shown it")
+            return
+        }
+
+        if (ChronoUnit.HOURS.between(lastPopUpShown, now()) < 2) {
+            logInfo("User encountered a critical error, but the last popup was shown too recently. Not displaying this popup")
+            return
+        }
+
+        val notifiedMsg = if (GGSettings.automaticErrorReportingEnabled) " Gorilla Groove staff have been notified." else ""
+        val firstDialogEvent = ShowAlertDialogRequest(
+            title = "Critical Error Encountered",
+            message = "A critical error occurred.$notifiedMsg Show error message?",
+            yesText = "Show",
+            noText = "No thanks",
+            yesAction = {
+                val detailedDialogEvent = ShowAlertDialogRequest(
+                    message = error,
+                    noText = "Oof",
+                )
+                EventBus.getDefault().post(detailedDialogEvent)
+            },
+        )
+        EventBus.getDefault().post(firstDialogEvent)
     }
 
     @Synchronized

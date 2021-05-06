@@ -19,7 +19,7 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.GGLog.logWarn
-import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.service.GGSettings
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken

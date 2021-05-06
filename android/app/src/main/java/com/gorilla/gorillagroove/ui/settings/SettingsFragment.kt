@@ -16,6 +16,8 @@ import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.databinding.FragmentSettingsBinding
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGSettings
+import com.gorilla.gorillagroove.service.OfflineStorageMode
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.CacheChangeType
 import com.gorilla.gorillagroove.ui.OfflineModeService
@@ -181,6 +183,18 @@ class SettingsViewModel : ViewModel() {
 
     var alwaysOfflineTracksCached = KtLiveData("$alwaysOfflineTracksCachedTotal / $alwaysOfflineTracksCachedCurrent")
     var tracksTemporarilyCached = KtLiveData(0)
+
+    var automaticErrorReporting = KtLiveData(GGSettings.automaticErrorReportingEnabled)
+    val onAutomaticErrorReportingChanged = { isChecked: Boolean ->
+        automaticErrorReporting.value = isChecked
+        GGSettings.automaticErrorReportingEnabled = isChecked
+    }
+
+    var showCriticalErrors = KtLiveData(GGSettings.showCriticalErrorsEnabled)
+    val onShowCriticalErrorsChanged = { isChecked: Boolean ->
+        showCriticalErrors.value = isChecked
+        GGSettings.showCriticalErrorsEnabled = isChecked
+    }
 
     init {
         viewModelScope.launch {

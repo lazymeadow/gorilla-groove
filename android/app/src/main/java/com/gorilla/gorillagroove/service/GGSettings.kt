@@ -1,4 +1,4 @@
-package com.gorilla.gorillagroove.ui.settings
+package com.gorilla.gorillagroove.service
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -74,6 +74,21 @@ object GGSettings {
         set(value) {
             logInfo("'STORAGE_WARNING_SEEN' was set to $value")
             sharedPreferences.edit().putBoolean("STORAGE_WARNING_SEEN", value).apply()
+        }
+
+
+    var automaticErrorReportingEnabled
+        get() = sharedPreferences.getBoolean("AUTO_ERROR_ENABLED", true)
+        set(value) {
+            logInfo("'AUTO_ERROR_ENABLED' was set to $value")
+            sharedPreferences.edit().putBoolean("AUTO_ERROR_ENABLED", value).apply()
+        }
+
+    var showCriticalErrorsEnabled
+        get() = sharedPreferences.getBoolean("SHOW_CRITICAL_ERRORS", false)
+        set(value) {
+            logInfo("'SHOW_CRITICAL_ERRORS' was set to $value")
+            sharedPreferences.edit().putBoolean("SHOW_CRITICAL_ERRORS", value).apply()
         }
 
     init {

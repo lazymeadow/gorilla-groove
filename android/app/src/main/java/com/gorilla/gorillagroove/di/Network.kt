@@ -5,7 +5,7 @@ import com.google.gson.*
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.service.GGLog.logDebug
-import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.util.Constants
 import dagger.Module
 import dagger.Provides

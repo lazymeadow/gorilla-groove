@@ -12,7 +12,7 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackCacheService
-import com.gorilla.gorillagroove.ui.settings.GGSettings
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.ui.settings.toReadableByteString
 import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
 import com.gorilla.gorillagroove.util.getNullableLong
