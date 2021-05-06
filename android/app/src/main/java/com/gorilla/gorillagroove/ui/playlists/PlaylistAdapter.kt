@@ -7,7 +7,7 @@ import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.entity.DbPlaylist
-import kotlinx.android.synthetic.main.playlists_info_item.view.*
+import kotlinx.android.synthetic.main.simple_text_info_item.view.*
 import java.util.*
 
 
@@ -25,7 +25,7 @@ class PlaylistAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(
-            R.layout.playlists_info_item, parent, false
+            R.layout.simple_text_info_item, parent, false
         )
         return PlaylistViewHolder(itemView)
     }
@@ -33,12 +33,10 @@ class PlaylistAdapter(
     override fun getItemCount() = playlists.size
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
-        holder.playlistName.text = playlists[position].name
+        holder.itemView.textItem.text = playlists[position].name
     }
 
     inner class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
-        val playlistName: TextView = itemView.playlist_name
-
         init {
             itemView.setOnClickListener(this)
             itemView.setOnLongClickListener(this)

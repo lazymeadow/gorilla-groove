@@ -11,6 +11,7 @@
     <color name="ggSecondary">#91F9E2</color>
     <color name="navBarUnselected">#99BDD0</color>
     <color name="actionSheetBackground">#EE111111</color>
+    <color name="darkHighlight">#222222</color>
     <color name="grey1">#333333</color>
     <color name="settingsDividerGrey">#777777</color>
     <color name="grey6">#F2F2F2</color>

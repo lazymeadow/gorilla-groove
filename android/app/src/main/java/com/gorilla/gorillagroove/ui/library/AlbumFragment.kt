@@ -11,9 +11,6 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.GorillaDatabase
-import com.gorilla.gorillagroove.database.dao.TrackDao
-import com.gorilla.gorillagroove.di.Network
-import com.gorilla.gorillagroove.network.NetworkApi
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
@@ -21,7 +18,6 @@ import com.gorilla.gorillagroove.ui.menu.LibraryViewType
 import com.gorilla.gorillagroove.ui.menu.MenuDivider
 import com.gorilla.gorillagroove.ui.menu.getNavigationOptions
 import com.gorilla.gorillagroove.util.getNullableBoolean
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_album.*
 import kotlinx.coroutines.Dispatchers
@@ -30,9 +26,7 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class AlbumFragment : Fragment(R.layout.fragment_album) {
 
     lateinit var albumAdapter: AlbumAdapter

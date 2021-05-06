@@ -9,13 +9,11 @@ import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@AndroidEntryPoint
 class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListener {
 
     lateinit var userAdapter: UserAdapter

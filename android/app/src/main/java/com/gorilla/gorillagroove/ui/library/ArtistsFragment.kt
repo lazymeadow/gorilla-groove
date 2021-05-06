@@ -17,7 +17,6 @@ import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
 import com.gorilla.gorillagroove.ui.menu.LibraryViewType
 import com.gorilla.gorillagroove.ui.menu.MenuDivider
 import com.gorilla.gorillagroove.ui.menu.getNavigationOptions
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_artists.*
 import kotlinx.android.synthetic.main.fragment_artists.popoutMenu
 import kotlinx.coroutines.Dispatchers
@@ -27,12 +26,11 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
-@AndroidEntryPoint
 class ArtistsFragment : Fragment(R.layout.fragment_artists) {
 
     lateinit var artistAdapter: ArtistsAdapter
 
-    protected var showHidden = false
+    private var showHidden = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

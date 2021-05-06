@@ -8,6 +8,6 @@
         android:id="@+id/playlists_key_rv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/playlists_info_item" />
+        tools:listitem="@layout/simple_text_info_item" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

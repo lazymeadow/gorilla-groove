@@ -12,6 +12,7 @@ import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.Album
 import com.gorilla.gorillagroove.di.Network
+import com.gorilla.gorillagroove.ui.settings.GGSettings
 import kotlinx.android.synthetic.main.album_info_item.view.*
 import kotlinx.coroutines.*
 import java.util.*
@@ -56,7 +57,7 @@ class AlbumAdapter(
                 itemView.albumArt.setImageBitmap(image)
             } ?: run {
                 itemView.albumArt.setImageBitmap(null)
-                if (!album.albumArtFetched) {
+                if (!album.albumArtFetched && !GGSettings.offlineModeEnabled) {
                     CoroutineScope(Dispatchers.IO).launch {
                         Network.api.getTrackLink(album.trackId, "SMALL").albumArtLink?.let { artLink ->
                             val artBitmap = Glide.with(GGApplication.application).applyDefaultRequestOptions(glideOptions)

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.GorillaDatabase
-import com.gorilla.gorillagroove.database.dao.PlaylistTrackDao
 import com.gorilla.gorillagroove.database.entity.DbPlaylist
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
@@ -13,7 +12,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class PlaylistTrackFragment : TrackListFragment() {

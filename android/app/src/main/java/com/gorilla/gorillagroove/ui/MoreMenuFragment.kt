@@ -1,6 +1,5 @@
 package com.gorilla.gorillagroove.ui
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import androidx.core.os.bundleOf
@@ -15,11 +14,8 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.reviewqueue.AddSourceMode
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.sharedPreferences
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_more_menu.*
-import javax.inject.Inject
 
-@AndroidEntryPoint
 class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
 

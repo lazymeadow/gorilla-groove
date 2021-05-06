@@ -21,7 +21,6 @@ import com.gorilla.gorillagroove.ui.CacheChangeType
 import com.gorilla.gorillagroove.ui.OfflineModeService
 import com.gorilla.gorillagroove.ui.TrackCacheEvent
 import com.gorilla.gorillagroove.util.KtLiveData
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
@@ -33,7 +32,6 @@ import org.greenrobot.eventbus.ThreadMode
 import kotlin.math.max
 import kotlin.math.min
 
-@AndroidEntryPoint
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private val vm: SettingsViewModel by viewModels()
