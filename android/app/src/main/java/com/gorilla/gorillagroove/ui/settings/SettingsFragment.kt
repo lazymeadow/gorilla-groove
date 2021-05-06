@@ -16,6 +16,7 @@ import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.databinding.FragmentSettingsBinding
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.CacheChangeType
 import com.gorilla.gorillagroove.ui.OfflineModeService
 import com.gorilla.gorillagroove.ui.TrackCacheEvent
@@ -114,6 +115,12 @@ class SettingsViewModel : ViewModel() {
     val onOfflineModeChanged = { isChecked: Boolean ->
         offlineModeEnabled.value = isChecked
         GGSettings.offlineModeEnabled = isChecked
+
+        if (!isChecked) {
+            GlobalScope.launch {
+                ServerSynchronizer.syncWithServer(abortIfRecentlySynced = false)
+            }
+        }
     }
 
     var locationEnabled = KtLiveData(GGSettings.locationEnabled)

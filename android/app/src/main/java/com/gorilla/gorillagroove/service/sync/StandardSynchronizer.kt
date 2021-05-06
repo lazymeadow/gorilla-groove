@@ -44,7 +44,7 @@ abstract class StandardSynchronizer<DbType : DbEntity, ResponseType: EntityRespo
 
     abstract suspend fun convertToDatabaseEntity(networkEntity: ResponseType): DbType
 
-    protected open fun onEntityUpdate(entity: DbType) {}
+    protected open fun onEntityUpdate(newEntity: ResponseType) {}
 
     protected open fun onEntitiesModified(entities: List<DbType>) {}
 
@@ -67,7 +67,7 @@ abstract class StandardSynchronizer<DbType : DbEntity, ResponseType: EntityRespo
         val updatedDbEntities = content.modified.map {
             val entity = convertToDatabaseEntity(it)
 
-            onEntityUpdate(entity)
+            onEntityUpdate(it)
 
             entity
         }

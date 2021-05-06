@@ -5,7 +5,11 @@ import com.gorilla.gorillagroove.database.entity.DbSyncStatus
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.di.Network
+import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.GGLog.logCrit
+import com.gorilla.gorillagroove.service.GGLog.logError
+import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.TrackCacheService
 import java.time.Instant
 
 object TrackSynchronizer : StandardSynchronizer<DbTrack, TrackResponse>({ GorillaDatabase.trackDao }) {
@@ -19,10 +23,32 @@ object TrackSynchronizer : StandardSynchronizer<DbTrack, TrackResponse>({ Gorill
 
     override suspend fun convertToDatabaseEntity(networkEntity: TrackResponse) = networkEntity.asTrack()
 
-    // TODO use this to invalidate cache once we have a cache if the track or art are changed
-    // Make sure to also purge tracks that are marked "NEVER" on caching
-    override fun onEntityUpdate(entity: DbTrack) {
-        super.onEntityUpdate(entity)
+    override fun onEntityUpdate(newEntity: TrackResponse) {
+        val existingEntity = GorillaDatabase.trackDao.findById(newEntity.id) ?: run {
+            logError("Could not find existing track using ID: ${newEntity.id} when doing a track update!")
+            return
+        }
+
+        val artIsOlder = newEntity.artUpdatedAt > existingEntity.artCachedAt ?: Instant.MIN
+        val audioIsOlder = newEntity.songUpdatedAt > existingEntity.songCachedAt ?: Instant.MIN
+        val onlineOnly = newEntity.offlineAvailability == OfflineAvailabilityType.ONLINE_ONLY
+
+        val cacheTypesToDelete = mutableSetOf<CacheType>()
+
+        if ((artIsOlder || onlineOnly) && existingEntity.artCachedAt != null) {
+            cacheTypesToDelete.add(CacheType.ART)
+        }
+        if ((artIsOlder || onlineOnly) && existingEntity.thumbnailCachedAt != null) {
+            cacheTypesToDelete.add(CacheType.THUMBNAIL)
+        }
+        if ((audioIsOlder || onlineOnly) && existingEntity.songCachedAt != null) {
+            cacheTypesToDelete.add(CacheType.AUDIO)
+        }
+
+        if (cacheTypesToDelete.isNotEmpty()) {
+            logInfo("Deleting the $cacheTypesToDelete cache(s) for track ${existingEntity.id} in response to API changes")
+            TrackCacheService.deleteCache(existingEntity, cacheTypesToDelete)
+        }
     }
 
     // Need to preserve some of our local state on these entities. Efficiently copy it to the new ones by loading all db copies of the modified entities at once
@@ -57,8 +83,8 @@ data class TrackResponse(
     val lastPlayed: Instant?,
     val addedToLibrary: Instant?,
     val note: String?,
-    val songUpdatedAt: Instant?,
-    val artUpdatedAt: Instant?,
+    val songUpdatedAt: Instant,
+    val artUpdatedAt: Instant,
     val offlineAvailability: OfflineAvailabilityType,
     val filesizeSongOgg: Int,
     val filesizeSongMp3: Int,

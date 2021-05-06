@@ -323,7 +323,7 @@ class MainRepository(
         val version = BuildConfig.VERSION_NAME
         val lastPostedVersion = sharedPreferences.getString(LAST_POSTED_VERSION_KEY, null)
 
-        if (version == lastPostedVersion) {
+        if (version == lastPostedVersion || GGSettings.offlineModeEnabled) {
             return
         }
 
