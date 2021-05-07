@@ -128,6 +128,12 @@ object TrackCacheService {
         return bytesRemoved
     }
 
+    fun deleteAllCacheOnDisk(trackId: Long) {
+        CacheType.values().forEach { cacheType ->
+            deleteCacheOnDisk(trackId, cacheType)
+        }
+    }
+
     fun deleteCacheOnDisk(trackId: Long, cacheType: CacheType) {
         val localPath = allPaths.getValue(cacheType) + "$trackId.${cacheType.extension}"
 

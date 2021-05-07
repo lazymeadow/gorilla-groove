@@ -13,6 +13,8 @@ import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGLog.logWarn
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.getNullableLong
 import com.gorilla.gorillagroove.util.sharedPreferences
@@ -128,6 +130,11 @@ object ProblemReportSender {
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun sendProblemReport(isManual: Boolean): Boolean = withContext(Dispatchers.IO) {
         logInfo("Uploading problem report")
+
+        if (GGSettings.offlineModeEnabled) {
+            logWarn("Not uploading crash report due to offline mode being enabled")
+            return@withContext false
+        }
 
         val cacheDir = File(cacheDirPath)
         cacheDir.mkdirs()

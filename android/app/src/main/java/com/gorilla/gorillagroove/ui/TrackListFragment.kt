@@ -15,6 +15,7 @@ import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.TrackChangeEvent
 import com.gorilla.gorillagroove.ui.menu.*
 import com.gorilla.gorillagroove.util.LocationService
 import com.gorilla.gorillagroove.util.getNullableBoolean
@@ -69,15 +70,23 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         (requireActivity() as MainActivity).multiselectIcon.setOnClickListener {
             if (actionMode == null) {
                 logInfo("User started multiselect")
-                trackCellAdapter.showingCheckBox = true
-                trackCellAdapter.notifyDataSetChanged()
-                actionMode = activity?.startActionMode(actionModeCallback)!!
+                toggleMultiselect(true)
             } else {
                 logInfo("User ended multiselect")
-                trackCellAdapter.showingCheckBox = false
-                trackCellAdapter.notifyDataSetChanged()
-                actionMode?.finish()
+                toggleMultiselect(false)
             }
+        }
+    }
+
+    private fun toggleMultiselect(enabled: Boolean) {
+        if (enabled) {
+            trackCellAdapter.showingCheckBox = true
+            trackCellAdapter.notifyDataSetChanged()
+            actionMode = activity?.startActionMode(actionModeCallback)!!
+        } else {
+            trackCellAdapter.showingCheckBox = false
+            trackCellAdapter.notifyDataSetChanged()
+            actionMode?.finish()
         }
     }
 
@@ -194,6 +203,18 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
             }
             else -> {
             }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun handleTrackChange(event: TrackChangeEvent) {
+        if (event.changeType == ChangeType.DELETED) {
+            val ids = event.tracks.map { it.id }.toSet()
+            logInfo("Removing ${ids.size} track(s) from current track view")
+
+            val newTracks = trackCellAdapter.trackList.filterNot { track -> ids.contains(track.id) }
+
+            trackCellAdapter.submitList(newTracks)
         }
     }
 

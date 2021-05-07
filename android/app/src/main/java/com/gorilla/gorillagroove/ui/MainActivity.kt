@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     R.id.libraryTrackFragment -> {
                         title_tv.text = "My Library"
+                        multiselectIcon.visibility = View.VISIBLE
                     }
                     R.id.artistsFragment -> {
                         title_tv.text = "My Library"

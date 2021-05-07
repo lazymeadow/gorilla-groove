@@ -19,7 +19,7 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.service.OfflineStorageMode
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
-import com.gorilla.gorillagroove.ui.CacheChangeType
+import com.gorilla.gorillagroove.ui.ChangeType
 import com.gorilla.gorillagroove.ui.OfflineModeService
 import com.gorilla.gorillagroove.ui.TrackCacheEvent
 import com.gorilla.gorillagroove.util.KtLiveData
@@ -85,8 +85,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
     @Synchronized
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onTrackCacheEvent(event: TrackCacheEvent) {
-        when (event.cacheChangeType) {
-            CacheChangeType.ADDED -> {
+        when (event.changeType) {
+            ChangeType.ADDED -> {
                 if (event.offlineAvailabilityType == OfflineAvailabilityType.NORMAL) {
                     vm.tracksTemporarilyCached.value = vm.tracksTemporarilyCached.value + 1
                 } else if (event.offlineAvailabilityType == OfflineAvailabilityType.AVAILABLE_OFFLINE) {
@@ -94,8 +94,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                     vm.alwaysOfflineTracksCached.value = "${vm.alwaysOfflineTracksCachedCurrent} / ${vm.alwaysOfflineTracksCachedTotal}"
                 }
             }
-            CacheChangeType.UPDATED -> { /* Nothing specific to do here */ }
-            CacheChangeType.DELETED -> {
+            ChangeType.UPDATED -> { /* Nothing specific to do here */ }
+            ChangeType.DELETED -> {
                 if (event.offlineAvailabilityType == OfflineAvailabilityType.NORMAL) {
                     vm.tracksTemporarilyCached.value = vm.tracksTemporarilyCached.value - 1
                 } else if (event.offlineAvailabilityType == OfflineAvailabilityType.AVAILABLE_OFFLINE) {

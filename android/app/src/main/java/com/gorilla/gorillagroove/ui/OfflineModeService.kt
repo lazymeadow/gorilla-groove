@@ -131,7 +131,7 @@ object OfflineModeService {
                 bytesToPurge -= bytesRemoved
 
                 // If we had art but not audio, then it was just an update as the track wasn't "truly" offline
-                val cacheChangeType = if (cachedTrack.songCachedAt == null) CacheChangeType.UPDATED else CacheChangeType.DELETED
+                val cacheChangeType = if (cachedTrack.songCachedAt == null) ChangeType.UPDATED else ChangeType.DELETED
 
                 val event = TrackCacheEvent(-bytesRemoved, cacheChangeType, OfflineAvailabilityType.AVAILABLE_OFFLINE)
                 EventBus.getDefault().post(event)
@@ -152,7 +152,7 @@ object OfflineModeService {
                     val bytesRemoved = TrackCacheService.deleteCache(cachedTrack, setOf(CacheType.AUDIO, CacheType.ART))
                     bytesToPurge -= bytesRemoved
 
-                    val event = TrackCacheEvent(-bytesRemoved, CacheChangeType.DELETED, OfflineAvailabilityType.AVAILABLE_OFFLINE)
+                    val event = TrackCacheEvent(-bytesRemoved, ChangeType.DELETED, OfflineAvailabilityType.AVAILABLE_OFFLINE)
                     EventBus.getDefault().post(event)
                 }
             }
@@ -196,7 +196,7 @@ class TrackDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
             return@withContext Result.failure()
         }
 
-        val changeType = if (track.songCachedAt == null) CacheChangeType.ADDED else CacheChangeType.UPDATED
+        val changeType = if (track.songCachedAt == null) ChangeType.ADDED else ChangeType.UPDATED
         var bytesChanged = TrackCacheService.cacheTrack(trackId, trackLinks.trackLink, CacheType.AUDIO)
 
         trackLinks.albumArtLink?.let { artLink ->
@@ -229,10 +229,10 @@ private fun workDataOf(vararg data: Pair<String, Long>): Data {
 
 data class TrackCacheEvent(
     val bytesChanged: Long,
-    val cacheChangeType: CacheChangeType,
+    val changeType: ChangeType,
     val offlineAvailabilityType: OfflineAvailabilityType
 )
 
-enum class CacheChangeType {
+enum class ChangeType {
     DELETED, UPDATED, ADDED
 }

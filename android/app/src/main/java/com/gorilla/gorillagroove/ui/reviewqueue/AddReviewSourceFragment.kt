@@ -16,6 +16,7 @@ import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.BackgroundTaskService
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.ui.GGFragment
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.ui.createDivider
@@ -233,6 +234,11 @@ class AddReviewSourceFragment : GGFragment(R.layout.fragment_add_review_source) 
         val text = fieldInput.text?.toString() ?: ""
 
         if (text.isEmpty()) {
+            return
+        }
+
+        if (GGSettings.offlineModeEnabled) {
+            GGToast.show("Offline mode is enabled")
             return
         }
 

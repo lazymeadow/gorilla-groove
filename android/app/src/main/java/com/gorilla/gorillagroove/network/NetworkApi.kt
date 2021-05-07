@@ -27,6 +27,9 @@ interface NetworkApi {
     @PUT("api/track/simple-update")
     suspend fun updateTrack(@Body updateTrackJson: TrackUpdate): MultiTrackResponse
 
+    @DELETE("api/track")
+    suspend fun deleteTracks(@Query("trackIds") trackIds: List<Long>)
+
     @POST("api/track/mark-listened")
     suspend fun markTrackListened(@Body body: MarkListenedRequest)
 
