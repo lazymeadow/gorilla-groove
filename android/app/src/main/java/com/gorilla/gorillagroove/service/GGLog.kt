@@ -103,7 +103,12 @@ object GGLog {
         }
     }
 
+    @Synchronized
     private fun handleCrit(error: String) {
+        if (BuildConfig.DEBUG) {
+            return
+        }
+
         showCriticalPopup(error)
 
         if (!GGSettings.automaticErrorReportingEnabled) {

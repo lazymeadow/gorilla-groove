@@ -1,6 +1,5 @@
 package com.gorilla.gorillagroove.repository
 
-import android.content.SharedPreferences
 import android.net.Uri
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -18,33 +17,26 @@ import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.OkHttpWebSocket
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
-import com.gorilla.gorillagroove.network.track.MarkListenedRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
 import com.gorilla.gorillagroove.network.track.TrackUpdate
-import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.CacheType
+import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.service.TrackCacheService
 import com.gorilla.gorillagroove.service.GGSettings
-import com.gorilla.gorillagroove.util.LocationService
+import com.gorilla.gorillagroove.service.TrackCacheService
+import com.gorilla.gorillagroove.util.sharedPreferences
 import kotlinx.coroutines.*
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.WebSocket
 import org.json.JSONObject
-import java.io.File
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 const val LAST_POSTED_VERSION_KEY = "LAST_POSTED_VERSION"
 
 class MainRepository(
-    private val sharedPreferences: SharedPreferences,
     private val okClient: OkHttpClient,
 ) {
     private var webSocket: WebSocket? = null
@@ -276,32 +268,6 @@ class MainRepository(
             this.addMediaSource(index, progressiveMediaSource.createMediaSource(track.toMediaItem()))
         } else {
             this.addMediaSource(progressiveMediaSource.createMediaSource(track.toMediaItem()))
-        }
-    }
-
-    suspend fun markTrackListenedTo(trackId: Long) {
-        logInfo("Marking track $trackId as listened to")
-        val location = try {
-            LocationService.getCurrentLocation()
-        } catch (e: Throwable) {
-            logError("Could not get location", e)
-            null
-        }
-
-        val markListenedRequest = MarkListenedRequest(
-            trackId = trackId,
-            timeListenedAt = ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT),
-            ianaTimezone = TimeZone.getDefault().id,
-            latitude = location?.latitude,
-            longitude = location?.longitude,
-        )
-
-        try {
-            Network.api.markTrackListened(markListenedRequest)
-            logInfo("Track $trackId was marked listened to")
-        } catch (e: Throwable) {
-            // TODO retry policy for this request
-            logError("Could not mark track as listened to!", e)
         }
     }
 

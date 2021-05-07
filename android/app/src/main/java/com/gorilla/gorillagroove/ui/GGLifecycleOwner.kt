@@ -6,6 +6,7 @@ import androidx.lifecycle.OnLifecycleEvent
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.service.BackgroundTaskService
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.MarkListenedService
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -22,6 +23,8 @@ class GGLifecycleOwner : LifecycleObserver {
                 ServerSynchronizer.syncWithServer(abortIfRecentlySynced = true)
 
                 BackgroundTaskService.pollIfNeeded()
+
+                MarkListenedService.sendAndClearFailedListens()
             }
         }
     }

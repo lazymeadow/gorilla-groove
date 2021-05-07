@@ -17,6 +17,7 @@ import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.databinding.FragmentSettingsBinding
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.GGSettings
+import com.gorilla.gorillagroove.service.MarkListenedService
 import com.gorilla.gorillagroove.service.OfflineStorageMode
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.ui.ChangeType
@@ -119,6 +120,8 @@ class SettingsViewModel : ViewModel() {
         if (!isChecked) {
             GlobalScope.launch {
                 ServerSynchronizer.syncWithServer(abortIfRecentlySynced = false)
+
+                MarkListenedService.sendAndClearFailedListens()
             }
         }
     }

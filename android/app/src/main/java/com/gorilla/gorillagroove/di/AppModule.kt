@@ -36,10 +36,8 @@ object AppModule {
     @Singleton
     @Provides
     fun provideMarkListenedService(
-        mainRepository: MainRepository,
         musicServiceConnection: MusicServiceConnection
     ) = MarkListenedService.getInstance(
-        mainRepository,
         musicServiceConnection
     )
 

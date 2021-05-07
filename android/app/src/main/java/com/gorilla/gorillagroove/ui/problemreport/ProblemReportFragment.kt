@@ -128,6 +128,7 @@ object ProblemReportSender {
     val lastSentAutomatedReport get() = sharedPreferences.getNullableLong(LAST_AUTOMATED_REPORT_KEY)
 
     @Suppress("BlockingMethodInNonBlockingContext")
+    @Synchronized
     suspend fun sendProblemReport(isManual: Boolean): Boolean = withContext(Dispatchers.IO) {
         logInfo("Uploading problem report")
 
