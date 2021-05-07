@@ -19,6 +19,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.use
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.util.KeyboardMode
 import com.gorilla.gorillagroove.util.getPixelsFromDp
 import com.gorilla.gorillagroove.util.showEditTextDialog
 import com.gorilla.gorillagroove.util.showListSelectDialog
@@ -104,7 +105,8 @@ class TextSettingItem(context: Context, attrs: AttributeSet? = null) : Constrain
                         activity = findActivity(context) as Activity,
                         title = title,
                         suffix = modalSuffix,
-                        yesAction = value
+                        yesAction = value,
+                        keyboardMode = KeyboardMode.NUMBER_DECIMAL
                     )
                 }
             }

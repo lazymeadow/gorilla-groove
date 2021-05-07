@@ -18,8 +18,9 @@ class PlaylistAdapter(
     val playlists = mutableListOf<DbPlaylist>()
 
     fun setPlaylists(playlists: List<DbPlaylist>) {
+        val sortedPlaylists = playlists.sortedBy { it.name.toLowerCase(Locale.getDefault()) }
         this.playlists.clear()
-        this.playlists.addAll(playlists)
+        this.playlists.addAll(sortedPlaylists)
         notifyDataSetChanged()
     }
 

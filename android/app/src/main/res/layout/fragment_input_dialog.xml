@@ -13,7 +13,6 @@
         android:importantForAutofill="no"
         android:inputType="numberDecimal"
         android:imeOptions="actionDone"
-        android:maxWidth="100dp"
         android:textAlignment="textEnd"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

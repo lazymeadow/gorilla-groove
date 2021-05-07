@@ -6,6 +6,7 @@ import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.*
 import com.gorilla.gorillagroove.service.BackgroundTaskResponse
 import com.gorilla.gorillagroove.service.sync.*
+import com.gorilla.gorillagroove.ui.playlists.UpdatePlaylistRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.*
 import okhttp3.MultipartBody
 import retrofit2.http.*
@@ -72,6 +73,18 @@ interface NetworkApi {
 
     @GET("api/background-task")
     suspend fun getActiveBackgroundTasks(@Query("ids") ids: String): BackgroundTaskResponse
+
+    @PUT("api/playlist/{id}")
+    suspend fun updatePlaylist(
+        @Path("id") playlistId: Long,
+        @Body body: UpdatePlaylistRequest
+    )
+
+    @POST("api/playlist")
+    suspend fun createPlaylist(@Body body: UpdatePlaylistRequest): PlaylistResponse
+
+    @DELETE("api/playlist/{id}")
+    suspend fun deletePlaylist(@Path("id") playlistId: Long)
 
     // I absolutely hate that I have a different request for each of these. But either Retrofit or GSON isn't smart enough to figure out a generic type.
     // When I use one, it converts everything into just a GSON tree and then tries to cast it to the class and fails. I've seen other people complain about

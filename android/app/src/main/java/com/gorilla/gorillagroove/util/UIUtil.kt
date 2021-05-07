@@ -1,14 +1,18 @@
 package com.gorilla.gorillagroove.util
 
+import android.R.id.edit
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Rect
 import android.text.Editable
+import android.text.InputType
+import android.text.InputType.*
 import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.ui.MainActivity
 import kotlinx.android.synthetic.main.activity_main.*
@@ -101,6 +105,7 @@ fun showEditTextDialog(
     suffix: String? = null,
     yesText: String = "Update",
     noText: String? = "Cancel",
+    keyboardMode: KeyboardMode = KeyboardMode.TEXT,
     yesAction: (String) -> Unit = {},
     noAction: () -> Unit = {},
 ) {
@@ -111,6 +116,9 @@ fun showEditTextDialog(
     if (suffix != null) {
         view.suffixText.text = suffix
     }
+
+    view.editText.inputType = keyboardMode.xmlType
+    (view.editText.layoutParams as ConstraintLayout.LayoutParams).matchConstraintMinWidth = getPixelsFromDp(keyboardMode.maxWidth.toFloat())
 
     builder.setView(view)
 
@@ -145,6 +153,12 @@ fun showEditTextDialog(
     view.editText.requestFocus()
 
     view.editText.focusAndShowKeyboard()
+}
+
+// It's lazy to couple the maxWidth to the type of keyboard. But lazy is what you're working with, codebase.
+enum class KeyboardMode(val xmlType: Int, val maxWidth: Int) {
+    NUMBER_DECIMAL(TYPE_CLASS_NUMBER or TYPE_NUMBER_FLAG_DECIMAL, 80),
+    TEXT(TYPE_CLASS_TEXT, 200),
 }
 
 fun showListSelectDialog(
