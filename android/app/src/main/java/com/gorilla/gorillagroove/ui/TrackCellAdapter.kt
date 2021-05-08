@@ -10,7 +10,6 @@ import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
-import kotlin.collections.LinkedHashMap
 
 class TrackCellAdapter(
     private val listener: OnTrackListener
@@ -21,7 +20,7 @@ class TrackCellAdapter(
     var playingTrackId: String? = null
     var isPlaying = false
 
-    val checkedTracks = LinkedHashMap<Long, Boolean>()
+    val checkedTrackIds = mutableSetOf<Long>()
 
     var showingCheckBox = false
 
@@ -33,8 +32,6 @@ class TrackCellAdapter(
     }
 
     fun getSelectedTracks(): List<DbTrack> {
-        val checkedTrackIds = checkedTracks.keys
-
         return trackList.filter { checkedTrackIds.contains(it.id) }
     }
 
@@ -69,11 +66,15 @@ class TrackCellAdapter(
         }
 
         holder.checkbox.isVisible = showingCheckBox
-        holder.checkbox.isChecked = checkedTracks[filteredList[position].id] ?: false
+        holder.checkbox.isChecked = checkedTrackIds.contains(currentTrack.id)
         holder.checkbox.setOnCheckedChangeListener { buttonView, isChecked ->
             if (buttonView.isShown) {
                 buttonView.isChecked = isChecked
-                checkedTracks[filteredList[position].id] = isChecked
+                if (isChecked) {
+                    checkedTrackIds.add(currentTrack.id)
+                } else {
+                    checkedTrackIds.remove(currentTrack.id)
+                }
             }
         }
     }
@@ -145,15 +146,6 @@ class TrackCellAdapter(
         fun onTrackClick(position: Int)
         fun onTrackLongClick(position: Int)
     }
-
-//    interface OnOptionsMenuListener {
-//        fun onPlayNextSelection(position: Int)
-//        fun onPlayLastSelection(position: Int)
-//        fun onGetLinkSelection(position: Int)
-//        fun onDownloadSelection(position: Int)
-//        fun onRecommendSelection(position: Int)
-//        fun onAddToPlaylistSelection(position: Int)
-//    }
 }
 
 fun Int.getSongTimeFromSeconds(): String {

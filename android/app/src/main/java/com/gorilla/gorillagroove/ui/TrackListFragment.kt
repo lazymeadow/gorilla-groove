@@ -5,20 +5,25 @@ import android.view.*
 import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.SearchView
-import androidx.core.view.get
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackChangeEvent
+import com.gorilla.gorillagroove.service.TrackService
 import com.gorilla.gorillagroove.ui.menu.*
+import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.LocationService
 import com.gorilla.gorillagroove.util.getNullableBoolean
+import com.gorilla.gorillagroove.util.showAlertDialog
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.coroutines.Dispatchers
@@ -31,9 +36,8 @@ import javax.inject.Inject
 
 
 open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
-    protected val playerControlsViewModel: PlayerControlsViewModel by viewModels()
+    private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
     lateinit var trackCellAdapter: TrackCellAdapter
-    var actionMode: ActionMode? = null
 
     @Inject
     lateinit var mainRepository: MainRepository
@@ -43,6 +47,13 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     protected var showHidden = false
 
     protected var showFilterMenu = true
+
+    private lateinit var multiselectOptionsMenu: MenuItem
+    private lateinit var filterMenu: MenuItem
+    private lateinit var searchMenu: MenuItem
+    private lateinit var playMenu: MenuItem
+
+    private val multiselectEnabled get() = trackCellAdapter.showingCheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +70,16 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         if (showFilterMenu) {
             setupFilterMenu()
         }
+
+        (requireActivity() as MainActivity).multiselectIcon.setOnClickListener {
+            if (!multiselectEnabled) {
+                logInfo("User started multiselect")
+                setMultiselect(true)
+            } else {
+                logInfo("User ended multiselect")
+                setMultiselect(false)
+            }
+        }
     }
 
     open fun onFiltersChanged() {}
@@ -66,27 +87,24 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
-
-        (requireActivity() as MainActivity).multiselectIcon.setOnClickListener {
-            if (actionMode == null) {
-                logInfo("User started multiselect")
-                toggleMultiselect(true)
-            } else {
-                logInfo("User ended multiselect")
-                toggleMultiselect(false)
-            }
-        }
     }
 
-    private fun toggleMultiselect(enabled: Boolean) {
+    private fun setMultiselect(enabled: Boolean) {
+        if (multiselectEnabled == enabled) {
+            return
+        }
+
+        multiselectOptionsMenu.isVisible = enabled
+        playMenu.isVisible = enabled
+        trackCellAdapter.showingCheckBox = enabled
+        searchMenu.isVisible = !enabled
+
+        trackCellAdapter.notifyDataSetChanged()
+
         if (enabled) {
-            trackCellAdapter.showingCheckBox = true
-            trackCellAdapter.notifyDataSetChanged()
-            actionMode = activity?.startActionMode(actionModeCallback)!!
-        } else {
-            trackCellAdapter.showingCheckBox = false
-            trackCellAdapter.notifyDataSetChanged()
-            actionMode?.finish()
+            filterMenu.isVisible = false
+        } else if (showFilterMenu) {
+            filterMenu.isVisible = true
         }
     }
 
@@ -154,12 +172,16 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.app_bar_menu, menu)
 
+        multiselectOptionsMenu = menu.findItem(R.id.action_multiselect_menu)
+        filterMenu = menu.findItem(R.id.action_filter_menu)
+        searchMenu = menu.findItem(R.id.action_search)
+        playMenu = menu.findItem(R.id.action_play_now)
+
         if (!showFilterMenu) {
-            menu.findItem(R.id.action_filter_menu).isVisible = false
+            filterMenu.isVisible = false
         }
 
-        val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
+        val searchView = searchMenu.actionView as SearchView
         searchView.imeOptions = EditorInfo.IME_ACTION_DONE
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -172,6 +194,16 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
                 return false
             }
         })
+
+        multiselectOptionsMenu.setOnMenuItemClickListener {
+            showLibraryActionSheet(trackCellAdapter.getSelectedTracks())
+            true
+        }
+
+        playMenu.setOnMenuItemClickListener {
+            playNow(trackCellAdapter.getSelectedTracks())
+            true
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -196,13 +228,9 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     }
 
     override fun onTrackLongClick(position: Int) {
-        when (actionMode) {
-            null -> {
-                val track = trackCellAdapter.filteredList[position]
-                showLibraryActionSheet(track)
-            }
-            else -> {
-            }
+        if (!multiselectEnabled) {
+            val track = trackCellAdapter.filteredList[position]
+            showLibraryActionSheet(track)
         }
     }
 
@@ -218,57 +246,61 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         }
     }
 
-    private val actionModeCallback = object : ActionMode.Callback {
-        override fun onCreateActionMode(mode: ActionMode?, menu: Menu): Boolean {
-            val inflater: MenuInflater = mode?.menuInflater ?: return false
+    private fun playNow(tracks: List<DbTrack>) {
+        mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_NOW)
+        playerControlsViewModel.playNow(tracks.first())
+        
+        setMultiselect(false)
+    }
 
-            mode.title = "Selecting tracks..."
-            inflater.inflate(R.menu.context_action_menu, menu)
+    private fun showLibraryActionSheet(track: DbTrack) = showLibraryActionSheet(listOf(track))
 
-            //required because the XML is overridden
-            menu[0].setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu[1].setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-            menu[2].setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-            menu[3].setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+    private fun showLibraryActionSheet(tracks: List<DbTrack>) {
+        ActionSheet(
+            requireActivity(),
+            listOfNotNull(
+                ActionSheetItem("Play Now") {
+                    playNow(tracks)
+                }.takeIf { tracks.size > 1 }, // No reason to show this for individual tracks... you'd just left tap it instead
+                ActionSheetItem("Play Next") {
+                    mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_NEXT)
+                    setMultiselect(false)
+                },
+                ActionSheetItem("Play Last") {
+                    mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_LAST)
+                    setMultiselect(false)
+                },
 
-            return true
-        }
+                // Edit properties is only (currently) available with one track selected. It's a pain to make it work with more. Ticket is in the Trello
+                ActionSheetItem("Edit Properties") {
+                    findNavController().navigate(
+                        R.id.trackPropertiesFragment,
+                        bundleOf("KEY_TRACK" to tracks.first()),
+                    )
+                }.takeIf { tracks.size == 1 },
 
-        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu): Boolean {
-            return false
-        }
+                ActionSheetItem("Delete", ActionSheetType.DESTRUCTIVE) {
+                    showAlertDialog(
+                        requireActivity(),
+                        message = "Delete " + (if (tracks.size == 1) tracks.first().name else "the selected ${tracks.size} tracks") + "?",
+                        yesText = "Delete",
+                        noText = "Cancel",
+                        yesAction = {
+                            lifecycleScope.launch {
+                                val success = TrackService.deleteTracks(tracks)
+                                if (success) {
+                                    // Deletion events are fired that delete the tracks from active views. No need to handle any of that here
+                                    GGToast.show("Tracks deleted")
+                                } else {
+                                    GGToast.show("Failed to delete tracks")
+                                }
 
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
-            return when (item.itemId) {
-                R.id.action_play_now_button, R.id.action_play_now -> {
-                    val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    mainRepository.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NOW)
-                    playerControlsViewModel.playNow(selectedTracks[0])
-                    mode?.finish()
-                    true
-                }
-                R.id.action_play_next -> {
-                    val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    mainRepository.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_NEXT)
-                    mode?.finish()
-                    true
-                }
-                R.id.action_play_last -> {
-                    val selectedTracks = trackCellAdapter.getSelectedTracks()
-                    mainRepository.setSelectedTracks(selectedTracks, SelectionOperation.PLAY_LAST)
-                    mode?.finish()
-                    true
-                }
-
-                else -> false
-            }
-        }
-
-        override fun onDestroyActionMode(mode: ActionMode?) {
-            trackCellAdapter.showingCheckBox = false
-            trackCellAdapter.checkedTracks.clear()
-            trackCellAdapter.notifyDataSetChanged()
-            actionMode = null
-        }
+                                setMultiselect(false)
+                            }
+                        }
+                    )
+                },
+            )
+        )
     }
 }

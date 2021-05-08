@@ -2,7 +2,6 @@ package com.gorilla.gorillagroove.ui.playing
 
 import android.os.Bundle
 import android.view.View
-import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import dagger.hilt.android.AndroidEntryPoint
