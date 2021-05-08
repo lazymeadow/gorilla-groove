@@ -105,17 +105,16 @@ class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayo
     }
 
     fun handleScreenTap(motionEvent: MotionEvent, containingFragment: Fragment) {
+        handleScreenTap(motionEvent, containingFragment.requireView(), containingFragment.requireActivity() as MainActivity)
+    }
+
+    fun handleScreenTap(motionEvent: MotionEvent, containingView: View, activity: MainActivity) {
         if (this.visibility == View.GONE) {
             return
         }
 
         // If someone touched the menu, don't manage the event as the menu knows how to manage its own visibility
-        if (this.containsMotionEvent(
-                containingFragment.requireView(),
-                containingFragment.requireActivity() as MainActivity,
-                motionEvent
-            )
-        ) {
+        if (this.containsMotionEvent(containingView, activity, motionEvent)) {
             return
         }
 

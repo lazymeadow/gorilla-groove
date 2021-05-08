@@ -6,8 +6,9 @@ import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.*
 import com.gorilla.gorillagroove.service.BackgroundTaskResponse
 import com.gorilla.gorillagroove.service.sync.*
-import com.gorilla.gorillagroove.ui.AddToPlaylistRequest
-import com.gorilla.gorillagroove.ui.AddToPlaylistResponse
+import com.gorilla.gorillagroove.ui.multiselectlist.AddToPlaylistRequest
+import com.gorilla.gorillagroove.ui.multiselectlist.AddToPlaylistResponse
+import com.gorilla.gorillagroove.ui.multiselectlist.RecommendTrackRequest
 import com.gorilla.gorillagroove.ui.playlists.UpdatePlaylistRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.*
 import okhttp3.MultipartBody
@@ -90,6 +91,9 @@ interface NetworkApi {
 
     @POST("api/playlist/track")
     suspend fun addTracksToPlaylists(@Body body: AddToPlaylistRequest): AddToPlaylistResponse
+
+    @POST("api/review-queue/recommend")
+    suspend fun recommendTracks(@Body body: RecommendTrackRequest)
 
     // I absolutely hate that I have a different request for each of these. But either Retrofit or GSON isn't smart enough to figure out a generic type.
     // When I use one, it converts everything into just a GSON tree and then tries to cast it to the class and fails. I've seen other people complain about

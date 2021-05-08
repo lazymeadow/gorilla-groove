@@ -9,7 +9,9 @@ import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logCrit
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.GGLifecycleOwner
+import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.Constants.KEY_USER_TOKEN
+import com.gorilla.gorillagroove.util.getNullableLong
 import com.gorilla.gorillagroove.util.sharedPreferences
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.*
@@ -72,5 +74,7 @@ class GGApplication : Application() {
 
         val isUserSignedIn get() = sharedPreferences.getString(KEY_USER_TOKEN, null)
             .takeIf { !it.isNullOrBlank() } != null
+
+        val loggedInUserId get() = sharedPreferences.getNullableLong(Constants.KEY_USER_ID)
     }
 }

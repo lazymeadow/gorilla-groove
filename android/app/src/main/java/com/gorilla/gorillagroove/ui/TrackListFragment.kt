@@ -6,6 +6,7 @@ import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.SearchView
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -89,8 +90,11 @@ open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCe
     }
 
     override fun onBackPressed(): Boolean {
-        if (addToPlaylistView.visibility == View.VISIBLE) {
+        if (addToPlaylistView.isVisible) {
             addToPlaylistView.close()
+            return true
+        } else if (recommendTracksView.isVisible) {
+            recommendTracksView.close()
             return true
         }
         return super.onBackPressed()
@@ -293,6 +297,9 @@ open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCe
                 }.takeIf { tracks.size == 1 },
 
                 ActionSheetItem("Recommend") {
+                    lifecycleScope.launch {
+                        recommendTracksView.initialize(requireActivity() as MainActivity, tracks)
+                    }
                     setMultiselect(false)
                 },
                 ActionSheetItem("Add to Playlist") {

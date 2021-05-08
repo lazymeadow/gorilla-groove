@@ -33,6 +33,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="@id/selectionTitle"
         app:layout_constraintEnd_toEndOf="@id/selectionTitle"
         app:layout_constraintTop_toTopOf="@id/selectionTitle"
@@ -40,9 +41,9 @@
 
         <ImageView
             android:id="@+id/filterOption"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginEnd="20dp"
             android:contentDescription="Filter"
             android:src="@drawable/ic_tune_black_24dp"
             android:visibility="gone"
@@ -66,10 +67,18 @@
             android:id="@+id/rightLoadingIndicator"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_gravity="center"
             android:layout_marginEnd="10dp"
             android:indeterminateTint="@color/ggPrimary"
             android:visibility="gone" />
 
     </LinearLayout>
+
+    <com.gorilla.gorillagroove.ui.menu.PopoutMenu
+        android:id="@+id/popoutMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/multiselectList" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
