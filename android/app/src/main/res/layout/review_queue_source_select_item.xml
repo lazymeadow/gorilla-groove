@@ -14,7 +14,7 @@
         android:layout_height="32dp"
         android:contentDescription="Album Art"
         android:layout_marginStart="3dp"
-        android:src="@drawable/exo_ic_check"
+        android:src="@drawable/ic_check_black_24dp"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

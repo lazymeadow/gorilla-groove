@@ -6,7 +6,6 @@ import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.SearchView
 import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -35,7 +34,7 @@ import org.greenrobot.eventbus.ThreadMode
 import javax.inject.Inject
 
 
-open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
+open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
     lateinit var trackCellAdapter: TrackCellAdapter
 
@@ -87,6 +86,14 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
+    }
+
+    override fun onBackPressed(): Boolean {
+        if (addToPlaylistView.visibility == View.VISIBLE) {
+            addToPlaylistView.close()
+            return true
+        }
+        return super.onBackPressed()
     }
 
     private fun setMultiselect(enabled: Boolean) {
@@ -196,7 +203,13 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
         })
 
         multiselectOptionsMenu.setOnMenuItemClickListener {
-            showLibraryActionSheet(trackCellAdapter.getSelectedTracks())
+            val tracks = trackCellAdapter.getSelectedTracks()
+            if (tracks.isEmpty()) {
+                lifecycleScope.launch { GGToast.show("Select some tracks first") }
+            } else {
+                showLibraryActionSheet(tracks)
+            }
+
             true
         }
 
@@ -249,7 +262,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
     private fun playNow(tracks: List<DbTrack>) {
         mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_NOW)
         playerControlsViewModel.playNow(tracks.first())
-        
+
         setMultiselect(false)
     }
 
@@ -261,7 +274,7 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
             listOfNotNull(
                 ActionSheetItem("Play Now") {
                     playNow(tracks)
-                }.takeIf { tracks.size > 1 }, // No reason to show this for individual tracks... you'd just left tap it instead
+                },
                 ActionSheetItem("Play Next") {
                     mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_NEXT)
                     setMultiselect(false)
@@ -278,6 +291,16 @@ open class TrackListFragment : Fragment(R.layout.fragment_track_list), TrackCell
                         bundleOf("KEY_TRACK" to tracks.first()),
                     )
                 }.takeIf { tracks.size == 1 },
+
+                ActionSheetItem("Recommend") {
+                    setMultiselect(false)
+                },
+                ActionSheetItem("Add to Playlist") {
+                    lifecycleScope.launch {
+                        addToPlaylistView.initialize(requireActivity() as MainActivity, tracks)
+                    }
+                    setMultiselect(false)
+                },
 
                 ActionSheetItem("Delete", ActionSheetType.DESTRUCTIVE) {
                     showAlertDialog(

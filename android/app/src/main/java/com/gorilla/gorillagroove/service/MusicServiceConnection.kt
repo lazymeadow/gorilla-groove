@@ -44,6 +44,7 @@ class MusicServiceConnection(
     }
 
     // The exoplayer somehow doesn't have the ability to add a periodic time observer. So this is legitimately the "recommended" way to do it. Stupid.
+    // FIXME convert this to use an actual timer
     private val handler = Handler()
     private val runnable: Runnable by lazy {
         Runnable {

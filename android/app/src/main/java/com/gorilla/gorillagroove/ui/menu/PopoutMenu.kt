@@ -130,7 +130,7 @@ class CheckedMenuOption(
     var onClick: (CheckedMenuOption) -> Unit = {},
 ) : MenuOption(
     title = title,
-    iconResId = if (isChecked) R.drawable.exo_ic_check else null,
+    iconResId = if (isChecked) R.drawable.ic_check_black_24dp else null,
 ) {
     var isChecked = isChecked
         set(value) {
@@ -138,7 +138,7 @@ class CheckedMenuOption(
             if (field == value) { return }
 
             field = value
-            iconResId = if (isChecked) R.drawable.exo_ic_check else null
+            iconResId = if (isChecked) R.drawable.ic_check_black_24dp else null
             view.updateView(this)
         }
 

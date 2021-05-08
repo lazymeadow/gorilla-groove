@@ -62,7 +62,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         viewModelScope.launch(Dispatchers.Main) {
             launch {
                 connection.playbackState.collect {
-                    playbackState.value = it ?: EMPTY_PLAYBACK_STATE
+                    playbackState.value = it
                     when {
                         it.isPlaying -> {
                             isPlaying = true
