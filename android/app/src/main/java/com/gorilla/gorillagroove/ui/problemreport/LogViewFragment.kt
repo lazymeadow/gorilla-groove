@@ -14,6 +14,7 @@ import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.LogLevel
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_log_view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,12 @@ class LogViewFragment : Fragment(R.layout.fragment_log_view) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Log view")
+
+        requireActivity().apply {
+            bottomNavigationView.visibility = View.GONE
+            playerControlView.visibility = View.GONE
+            title_tv.text = "View Logs"
+        }
     }
 
     override fun onStart() {

@@ -15,6 +15,7 @@ import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.android.synthetic.main.fragment_users.*
 import kotlinx.android.synthetic.main.multiselect_list.view.*
@@ -49,6 +50,8 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
                 },
             )
         )
+
+        requireActivity().title_tv.text = "Users"
     }
 
     override fun onStart() {

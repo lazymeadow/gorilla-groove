@@ -18,6 +18,7 @@ import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.getNullableLong
 import com.gorilla.gorillagroove.util.sharedPreferences
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_problem_report.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,6 +39,8 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Problem Report view")
+
+        requireActivity().title_tv.text = "Problem Report"
 
         sendReportButton.setOnClickListener { sendProblemReport() }
         viewLogsButton.setOnClickListener { findNavController().navigate(R.id.logViewFragment) }

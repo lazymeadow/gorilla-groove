@@ -14,8 +14,11 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.reviewqueue.AddSourceMode
 import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.sharedPreferences
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_more_menu.*
 
+@AndroidEntryPoint
 class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
     private val controlsViewModel: PlayerControlsViewModel by viewModels()
 
@@ -23,6 +26,8 @@ class MoreMenuFragment : Fragment(R.layout.fragment_more_menu) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading More Menu view")
+
+        requireActivity().title_tv.text = "More"
 
         addText.setOnClickListener {
             showAddSongActionSheet()

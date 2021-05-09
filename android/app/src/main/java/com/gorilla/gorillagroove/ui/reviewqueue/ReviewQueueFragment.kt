@@ -30,6 +30,7 @@ import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.ui.isPlaying
 import com.gorilla.gorillagroove.util.GGToast
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_review_queue.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.android.synthetic.main.review_queue_carousel_item.view.*
@@ -69,6 +70,8 @@ class ReviewQueueFragment : GGFragment(R.layout.fragment_review_queue) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Review Queue view")
+
+        requireActivity().title_tv.text = "Review Queue"
 
         setupTrackRecyclerView()
         setupSourceSelectRecyclerView()

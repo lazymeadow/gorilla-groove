@@ -23,7 +23,6 @@ import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
 import com.gorilla.gorillagroove.util.showAlertDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
@@ -62,81 +61,12 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView.setupWithNavController(navController)
 
         navHostFragment.findNavController()
-            .addOnDestinationChangedListener { _, destination, _ ->
+            // Apply sensible defaults when we navigate to a fragment. As fragments need to customize themselves further, they do when they are loaded
+            .addOnDestinationChangedListener { _, _, _ ->
                 multiselectIcon.visibility = View.GONE
                 bottomNavigationView.visibility = View.VISIBLE
                 playerControlView.visibility = View.VISIBLE
                 toolbar.isVisible = true
-
-                when (destination.id) {
-                    R.id.loginFragment -> {
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        toolbar.isVisible = false
-                        title_tv.text = ""
-                    }
-                    R.id.libraryTrackFragment -> {
-                        title_tv.text = "My Library"
-                        multiselectIcon.visibility = View.VISIBLE
-                    }
-                    R.id.dbArtistsFragment -> {
-                        title_tv.text = "My Library"
-                    }
-                    R.id.albumFragment -> {
-                        title_tv.text = "My Library"
-                    }
-                    R.id.playingFragment -> {
-                        multiselectIcon.visibility = View.VISIBLE
-                        title_tv.text = "Now Playing"
-                    }
-                    R.id.usersFragment -> {
-                        title_tv.text = "Users"
-                    }
-                    R.id.playlistsFragment -> {
-                        title_tv.text = "Playlists"
-                    }
-                    R.id.playlistTrackFragment -> {
-                        multiselectIcon.visibility = View.VISIBLE
-                    }
-                    R.id.moreMenuFragment -> {
-                        title_tv.text = "More"
-                    }
-                    R.id.trackPropertiesFragment -> {
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        title_tv.text = "Properties"
-                    }
-                    R.id.problemReportFragment -> {
-                        title_tv.text = "Problem Report"
-                    }
-                    R.id.logViewFragment -> {
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        title_tv.text = "View Logs"
-                    }
-                    R.id.settingsFragment -> {
-                        title_tv.text = "Settings"
-                    }
-                    R.id.reviewQueueFragment -> {
-                        title_tv.text = "Review Queue"
-                    }
-                    R.id.editReviewSourcesFragment -> {
-                        title_tv.text = "Manage Queues"
-                    }
-                    R.id.spotifySearchResultsFragment -> {
-                        title_tv.text = "Spotify Search Results"
-                    }
-                    R.id.firstTimeSyncFragment -> {
-                        title_tv.text = "First Time Sync"
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        toolbar.isVisible = false
-                    }
-                    else -> {
-                        title_tv.text = "var ar jag?"
-                        supportActionBar?.displayOptions
-                    }
-                }
             }
 
         subscribeObservers()
@@ -179,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         if (GGApplication.isUserSignedIn) {
-            CoroutineScope(Dispatchers.IO).launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 mainRepository.postDeviceVersion()
             }
         }
@@ -316,7 +246,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-fun List<Fragment>.handleBackPress(): Boolean {
+private fun List<Fragment>.handleBackPress(): Boolean {
     return this.any { fragment ->
         when (fragment) {
             is NavHostFragment -> fragment.childFragmentManager.fragments.handleBackPress()

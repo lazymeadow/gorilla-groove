@@ -15,6 +15,7 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_properties.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -50,11 +51,7 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
         return super.onCreateView(inflater, container, savedInstanceState)
     }
@@ -63,6 +60,12 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading TrackProperties view with track ID: ${track.id}")
+
+        requireActivity().apply {
+            bottomNavigationView.visibility = View.GONE
+            playerControlView.visibility = View.GONE
+            title_tv.text = "Properties"
+        }
 
         populateFragmentText()
         listenForChanges()

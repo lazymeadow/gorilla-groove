@@ -2,7 +2,6 @@ package com.gorilla.gorillagroove.ui.library
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -10,8 +9,6 @@ import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.service.GGSettings
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class LibraryTrackFragment : TrackListFragment() {
@@ -35,6 +32,8 @@ class LibraryTrackFragment : TrackListFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading My Library view")
+
+        requireActivity().title_tv.text = "My Library"
     }
 
     override suspend fun loadTracks(): List<DbTrack> {

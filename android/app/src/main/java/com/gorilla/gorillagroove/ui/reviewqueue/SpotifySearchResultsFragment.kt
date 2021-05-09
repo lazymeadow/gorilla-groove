@@ -13,6 +13,7 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.*
 import com.gorilla.gorillagroove.util.GGToast
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_search_spotify_results.*
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +39,8 @@ class SpotifySearchResultsFragment : GGFragment(R.layout.fragment_search_spotify
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Spotify Search Results view")
+
+        requireActivity().title_tv.text = "Spotify Search Results"
 
         setupTrackRecyclerView()
 

@@ -2,6 +2,7 @@ package com.gorilla.gorillagroove.ui.login
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
@@ -11,6 +12,7 @@ import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.sync.ServerSynchronizer
 import com.gorilla.gorillagroove.service.sync.SyncType
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_first_time_sync.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -25,6 +27,13 @@ class FirstTimeSyncFragment : Fragment(R.layout.fragment_first_time_sync) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading first time sync view")
+
+        requireActivity().apply {
+            title_tv.text = "First Time Sync"
+            bottomNavigationView.visibility = View.GONE
+            playerControlView.visibility = View.GONE
+            toolbar.isVisible = false
+        }
 
         lifecycleScope.launch(Dispatchers.IO) {
             doTheSync()

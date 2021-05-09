@@ -85,6 +85,8 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
                 setMultiselect(false)
             }
         }
+
+        requireActivity().multiselectIcon.visibility = View.VISIBLE
     }
 
     override fun onStart() {

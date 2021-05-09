@@ -17,6 +17,7 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.*
 import com.gorilla.gorillagroove.util.GGToast
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_edit_review_sources.*
 import kotlinx.android.synthetic.main.simple_text_info_item.view.*
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +39,8 @@ class EditReviewSourcesFragment : GGFragment(R.layout.fragment_edit_review_sourc
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Edit Review Sources view")
+
+        requireActivity().title_tv.text = "Manage Queues"
 
         setupTrackRecyclerView()
 

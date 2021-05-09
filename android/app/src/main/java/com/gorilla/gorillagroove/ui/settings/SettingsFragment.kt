@@ -24,6 +24,7 @@ import com.gorilla.gorillagroove.ui.ChangeType
 import com.gorilla.gorillagroove.ui.OfflineModeService
 import com.gorilla.gorillagroove.ui.TrackCacheEvent
 import com.gorilla.gorillagroove.util.KtLiveData
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
@@ -53,6 +54,8 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Settings view")
+
+        requireActivity().title_tv.text = "Settings"
     }
 
     override fun onStart() {

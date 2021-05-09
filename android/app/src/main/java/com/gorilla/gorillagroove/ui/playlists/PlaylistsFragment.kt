@@ -24,6 +24,7 @@ import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.showAlertDialog
 import com.gorilla.gorillagroove.util.showEditTextDialog
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_playlists.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,6 +40,8 @@ class PlaylistsFragment : Fragment(R.layout.fragment_playlists), PlaylistAdapter
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Playlists view")
+
+        requireActivity().title_tv.text = "Playlists"
 
         setHasOptionsMenu(true)
         savedInstanceStateBundle = savedInstanceState
