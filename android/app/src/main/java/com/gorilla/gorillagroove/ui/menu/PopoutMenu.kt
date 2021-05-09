@@ -7,19 +7,15 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
+import com.gorilla.gorillagroove.database.entity.DbUser
 import com.gorilla.gorillagroove.ui.MainActivity
 import com.gorilla.gorillagroove.util.containsMotionEvent
 import kotlinx.android.synthetic.main.fragment_popout_menu.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 
 
 class PopoutMenu(context: Context, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {
@@ -199,7 +195,7 @@ class MenuDivider : MenuItem
 interface MenuItem
 
 enum class LibraryViewType { TRACK, ARTIST, ALBUM }
-fun getNavigationOptions(view: View, libraryViewType: LibraryViewType): Array<CheckedMenuOption> {
+fun getNavigationOptions(view: View, libraryViewType: LibraryViewType, user: DbUser? = null): Array<CheckedMenuOption> {
     val trackOption = CheckedMenuOption(title = "View by Track", libraryViewType == LibraryViewType.TRACK)
     val artistOption = CheckedMenuOption(title = "View by Artist", libraryViewType == LibraryViewType.ARTIST)
     val albumOption = CheckedMenuOption(title = "View by Album", libraryViewType == LibraryViewType.ALBUM)
@@ -209,7 +205,8 @@ fun getNavigationOptions(view: View, libraryViewType: LibraryViewType): Array<Ch
         albumOption.isChecked = false
         val destination = view.findNavController().currentDestination
         if (destination!!.id != R.id.libraryTrackFragment) {
-            view.findNavController().navigate(R.id.libraryTrackFragment)
+            val targetId = if (user == null) R.id.libraryTrackFragment else R.id.userTrackFragment
+            view.findNavController().navigate(targetId, bundleOf("USER" to user))
         } else {
             trackOption.isChecked = true
         }
@@ -218,8 +215,9 @@ fun getNavigationOptions(view: View, libraryViewType: LibraryViewType): Array<Ch
         trackOption.isChecked = false
         albumOption.isChecked = false
         val destination = view.findNavController().currentDestination
-        if (destination!!.id != R.id.artistsFragment) {
-            view.findNavController().navigate(R.id.artistsFragment)
+        if (destination!!.id != R.id.dbArtistsFragment) {
+            val targetId = if (user == null) R.id.dbArtistsFragment else R.id.userArtistsFragment
+            view.findNavController().navigate(targetId, bundleOf("USER" to user))
         } else {
             artistOption.isChecked = true
         }
@@ -229,21 +227,12 @@ fun getNavigationOptions(view: View, libraryViewType: LibraryViewType): Array<Ch
         artistOption.isChecked = false
         val destination = view.findNavController().currentDestination
         if (destination!!.id != R.id.albumFragment) {
-            view.findNavController().navigate(R.id.albumFragment)
+            val targetId = if (user == null) R.id.dbAlbumFragment else R.id.userAlbumFragment
+            view.findNavController().navigate(targetId, bundleOf("USER" to user))
         } else {
             albumOption.isChecked = true
         }
     }
 
     return arrayOf(trackOption, artistOption, albumOption)
-}
-
-fun bruh() {
-    CoroutineScope(Dispatchers.IO).launch {
-        simple().collect {  }
-    }
-}
-
-fun simple(): Flow<Int> = flow {
-
 }

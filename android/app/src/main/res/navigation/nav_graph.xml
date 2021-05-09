@@ -37,9 +37,24 @@
             app:destination="@id/trackPropertiesFragment" />
     </fragment>
     <fragment
-        android:id="@+id/artistsFragment"
-        android:name="com.gorilla.gorillagroove.ui.library.ArtistsFragment"
-        android:label="ArtistsFragment" >
+        android:id="@+id/dbArtistsFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.DbArtistsFragment"
+        android:label="DbArtistsFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/dbAlbumFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.DbAlbumFragment"
+        android:label="DbAlbumFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/userAlbumFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UserAlbumFragment"
+        android:label="UserAlbumFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/userArtistsFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UserArtistsFragment"
+        android:label="UserArtistsFragment" >
     </fragment>
     <fragment
         android:id="@+id/albumFragment"

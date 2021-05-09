@@ -18,10 +18,11 @@ class UserTrackFragment : TrackListFragment() {
 
     private var albumFilter: String? = null
     private var artistFilter: String? = null
-    private val user: DbUser by lazy { requireArguments().getSerializable("USER") as DbUser }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        user = requireArguments().getSerializable("USER") as DbUser
 
         requireArguments().getString("ALBUM")?.let { albumFilter ->
             this.albumFilter = albumFilter
@@ -30,7 +31,7 @@ class UserTrackFragment : TrackListFragment() {
             this.artistFilter = artistFilter
         }
 
-        requireActivity().title_tv.text = "${user.name}'s Library"
+        requireActivity().title_tv.text = "${user!!.name}'s Library"
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -53,11 +54,19 @@ class UserTrackFragment : TrackListFragment() {
     }
 
     override suspend fun loadTracks(): List<DbTrack> {
+        val artistFilter = artistFilter
+        val albumFilter = albumFilter
+
         return Network.api.getTracks(
-            userId = user.id,
+            userId = user!!.id,
             showHidden = showHidden,
             sortString = getApiSort()
-        ).content.map { it.asTrack() }
+        ).content
+            // Artists often have multiple people on the same track, so we do a .contains there so that filtering for deadmau5 will find all tracks he collaborated on and not just tracks he was on by himself
+            .filter { artistFilter == null || it.artist.contains(artistFilter) || it.featuring.contains(artistFilter) }
+            // However, albums we have no reason to do a contains. So here it is an exact match
+            .filter { albumFilter == null || it.album == albumFilter }
+            .map { it.asTrack() }
     }
 }
 

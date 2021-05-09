@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.*
 import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
+import androidx.annotation.MainThread
 import androidx.appcompat.widget.SearchView
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.database.entity.DbTrack
+import com.gorilla.gorillagroove.database.entity.DbUser
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logInfo
@@ -48,6 +50,8 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
     protected var showHidden = false
 
     protected var showFilterMenu = true
+
+    protected var user: DbUser? = null
 
     private lateinit var multiselectOptionsMenu: MenuItem
     private lateinit var filterMenu: MenuItem
@@ -90,10 +94,14 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
         reset()
     }
 
+    @MainThread
     private fun reset() {
+        loadingIndicator.isVisible = true
+
         lifecycleScope.launch(Dispatchers.IO) {
             val tracks = loadTracks()
             withContext(Dispatchers.Main) {
+                loadingIndicator?.isVisible = false
                 trackCellAdapter.submitList(tracks)
             }
         }
@@ -144,7 +152,7 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
     private fun setupFilterMenu() {
         popoutMenu.setMenuList(
             listOf(
-                *getNavigationOptions(requireView(), LibraryViewType.TRACK),
+                *getNavigationOptions(requireView(), LibraryViewType.TRACK, user),
                 MenuDivider(),
                 SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC),
                 SortMenuOption("Sort by Play Count", TrackSortType.PLAY_COUNT, initialSortOnTap = SortDirection.DESC),

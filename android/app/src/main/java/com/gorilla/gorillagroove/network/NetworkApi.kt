@@ -39,7 +39,7 @@ interface NetworkApi {
     suspend fun getTracks(
         @Query("userId") userId: Long,
         @Query("showHidden") showHidden: Boolean,
-        @Query("sort") sortString: List<String>, // looks like "sort=artist,ASC&sort=album,ASC&sort=trackNumber,ASC" over the wire
+        @Query("sort") sortString: List<String> = listOf("name,ASC"), // looks like "sort=artist,ASC&sort=album,ASC&sort=trackNumber,ASC" over the wire
         @Query("page") page: Int = 0,
         @Query("size") pageSize: Int = 500_000,
     ): LiveTrackResponse

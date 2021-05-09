@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                         title_tv.text = "My Library"
                         multiselectIcon.visibility = View.VISIBLE
                     }
-                    R.id.artistsFragment -> {
+                    R.id.dbArtistsFragment -> {
                         title_tv.text = "My Library"
                     }
                     R.id.albumFragment -> {

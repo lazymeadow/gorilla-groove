@@ -3,14 +3,17 @@ package com.gorilla.gorillagroove.ui.library
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.EditorInfo
+import androidx.annotation.MainThread
 import androidx.appcompat.widget.SearchView
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.dao.Album
+import com.gorilla.gorillagroove.database.entity.DbUser
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.createDivider
 import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
@@ -27,13 +30,15 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 
-class AlbumFragment : Fragment(R.layout.fragment_album) {
+abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
 
-    lateinit var albumAdapter: AlbumAdapter
+    private lateinit var albumAdapter: AlbumAdapter
 
-    private var showHidden = false
+    protected var showHidden = false
 
-    private var artistFilter: String? = null
+    protected var artistFilter: String? = null
+
+    protected var user: DbUser? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +61,7 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
 
         popoutMenu.setMenuList(
             listOf(
-                *getNavigationOptions(requireView(), LibraryViewType.ALBUM),
+                *getNavigationOptions(requireView(), LibraryViewType.ALBUM, user),
                 MenuDivider(),
                 CheckedMenuOption(title = "Show Hidden Tracks", showHidden) {
                     showHidden = it.isChecked
@@ -78,12 +83,16 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
         EventBus.getDefault().unregister(this)
     }
 
+    abstract suspend fun getAlbums(): List<Album>
+
+    @MainThread
     private fun loadAlbums() {
+        loadingIndicator.isVisible = true
         lifecycleScope.launch(Dispatchers.Default) {
-            val includeHidden = if (showHidden) null else false
-            val albums = GorillaDatabase.trackDao.getDistinctAlbums(artistFilter = artistFilter, isHidden = includeHidden, inReview = false)
+            val albums = getAlbums()
 
             withContext(Dispatchers.Main) {
+                loadingIndicator?.isVisible = false
                 albumAdapter.submitList(albums)
             }
         }
@@ -135,8 +144,11 @@ class AlbumFragment : Fragment(R.layout.fragment_album) {
                 "ALBUM" to album.name,
                 "ARTIST" to artistFilter,
                 "SHOW_HIDDEN" to showHidden,
+                "USER" to user,
             )
-            findNavController().navigate(R.id.libraryTrackFragment, bundle)
+
+            val id = if (user == null) R.id.libraryTrackFragment else R.id.userTrackFragment
+            findNavController().navigate(id, bundle)
         }
         addItemDecoration(createDivider(context))
         adapter = albumAdapter
