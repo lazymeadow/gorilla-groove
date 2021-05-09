@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.view.isVisible
-import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.DbUser
@@ -33,9 +32,7 @@ class UserRecommendList(context: Context, attrs: AttributeSet? = null) : Multise
     private var showAllUsers = false
 
     override fun loadData(): List<DbUser> {
-        return GorillaDatabase.userDao.findAll()
-            // Hide ourselves from the list
-            .filterNot { it.id == GGApplication.loggedInUserId }
+        return GorillaDatabase.userDao.getOtherUsers()
             // Do not show users that haven't logged in for the last ~3 months unless we really want to see them
             .filter { user ->
                 if (showAllUsers) {
@@ -45,7 +42,6 @@ class UserRecommendList(context: Context, attrs: AttributeSet? = null) : Multise
                 val lastLogin = user.lastLogin ?: Instant.MIN
                 return@filter ChronoUnit.DAYS.between(lastLogin, now()) < 90
             }
-            .sortedBy { it.name.toLowerCase(Locale.getDefault()) }
     }
 
     override fun createMyViewHolder(itemView: View, checkedIds: MutableSet<Long>): MultiselectItemViewHolder<DbUser> {
@@ -71,7 +67,7 @@ class UserRecommendList(context: Context, attrs: AttributeSet? = null) : Multise
 
         popoutMenu.setMenuList(
             listOf(
-                CheckedMenuOption(title = "Show Inactive", false) {
+                CheckedMenuOption(title = "Show Inactive", showAllUsers) {
                     showAllUsers = it.isChecked
                     reload()
                 },

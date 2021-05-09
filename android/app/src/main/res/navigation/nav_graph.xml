@@ -134,4 +134,9 @@
         android:name="com.gorilla.gorillagroove.ui.login.FirstTimeSyncFragment"
         android:label="FirstTimeSyncFragment" >
     </fragment>
+    <fragment
+        android:id="@+id/userTrackFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UserTrackFragment"
+        android:label="UserTrackFragment" >
+    </fragment>
 </navigation>

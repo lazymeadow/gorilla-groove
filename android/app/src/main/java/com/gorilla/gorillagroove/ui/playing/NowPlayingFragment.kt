@@ -2,6 +2,7 @@ package com.gorilla.gorillagroove.ui.playing
 
 import android.os.Bundle
 import android.view.View
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,9 +20,7 @@ class NowPlayingFragment : TrackListFragment() {
         logInfo("Loading Now Playing view")
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        trackCellAdapter.submitList(mainRepository.nowPlayingTracks)
+    override suspend fun loadTracks(): List<DbTrack> {
+        return mainRepository.nowPlayingTracks
     }
 }

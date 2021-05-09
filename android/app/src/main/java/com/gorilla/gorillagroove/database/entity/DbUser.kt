@@ -3,6 +3,7 @@ package com.gorilla.gorillagroove.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.time.Instant
 
 @Entity(tableName = "user")
@@ -19,4 +20,4 @@ data class DbUser(
 
     @ColumnInfo(name = "created_at")
     var createdAt: Instant,
-) : DbEntity
+) : DbEntity, Serializable

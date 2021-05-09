@@ -124,19 +124,19 @@ data class LastModifiedTimesResponse(
 
 data class EntityChangeResponse<T>(
     val content: EntityChangeContent<T>,
-    val pageable: EntitySyncPagination,
+    val pageable: EntityPagination,
 ) {
     data class EntityChangeContent<T>(
         val new: List<T>,
         val modified: List<T>,
         val removed: List<Long>,
     )
-
-    data class EntitySyncPagination(
-        val offset: Int,
-        val pageSize: Int,
-        val pageNumber: Int,
-        val totalPages: Int,
-        val totalElements: Int,
-    )
 }
+
+data class EntityPagination(
+    val offset: Int,
+    val pageSize: Int,
+    val pageNumber: Int,
+    val totalPages: Int,
+    val totalElements: Int,
+)

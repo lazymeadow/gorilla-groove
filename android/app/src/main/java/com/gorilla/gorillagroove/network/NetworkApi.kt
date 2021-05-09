@@ -11,6 +11,7 @@ import com.gorilla.gorillagroove.ui.multiselectlist.AddToPlaylistResponse
 import com.gorilla.gorillagroove.ui.multiselectlist.RecommendTrackRequest
 import com.gorilla.gorillagroove.ui.playlists.UpdatePlaylistRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.*
+import com.gorilla.gorillagroove.ui.users.LiveTrackResponse
 import okhttp3.MultipartBody
 import retrofit2.http.*
 
@@ -33,6 +34,15 @@ interface NetworkApi {
 
     @DELETE("api/track")
     suspend fun deleteTracks(@Query("trackIds") trackIds: List<Long>)
+
+    @GET("api/track")
+    suspend fun getTracks(
+        @Query("userId") userId: Long,
+        @Query("showHidden") showHidden: Boolean,
+        @Query("sort") sortString: List<String>, // looks like "sort=artist,ASC&sort=album,ASC&sort=trackNumber,ASC" over the wire
+        @Query("page") page: Int = 0,
+        @Query("size") pageSize: Int = 500_000,
+    ): LiveTrackResponse
 
     @POST("api/track/mark-listened")
     suspend fun markTrackListened(@Body body: MarkListenedRequest)

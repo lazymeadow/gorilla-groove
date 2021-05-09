@@ -157,12 +157,12 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
 }
 
 private const val NO_CASE = "COLLATE NOCASE"
-enum class TrackSortType(val trackPropertyName: String, val collation: String = "") {
-    NAME("name", NO_CASE),
-    PLAY_COUNT("play_count"),
-    DATE_ADDED("added_to_library"),
-    ALBUM("album", NO_CASE),
-    YEAR("release_year");
+enum class TrackSortType(val trackPropertyName: String, val apiPropertyName: String, val collation: String = "") {
+    NAME("name", "name", NO_CASE),
+    PLAY_COUNT("play_count", "playCount"),
+    DATE_ADDED("added_to_library", "addedToLibrary"),
+    ALBUM("album", "album", NO_CASE),
+    YEAR("release_year", "releaseYear");
 }
 
 fun Boolean.toInt() = if (this) 1 else 0

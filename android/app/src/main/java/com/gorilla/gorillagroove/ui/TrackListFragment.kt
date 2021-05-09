@@ -29,13 +29,14 @@ import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import javax.inject.Inject
 
 
-open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
+abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
     lateinit var trackCellAdapter: TrackCellAdapter
 
@@ -82,11 +83,20 @@ open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCe
         }
     }
 
-    open fun onFiltersChanged() {}
-
     override fun onStart() {
         super.onStart()
         EventBus.getDefault().register(this)
+
+        reset()
+    }
+
+    private fun reset() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val tracks = loadTracks()
+            withContext(Dispatchers.Main) {
+                trackCellAdapter.submitList(tracks)
+            }
+        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -99,6 +109,8 @@ open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCe
         }
         return super.onBackPressed()
     }
+
+    abstract suspend fun loadTracks(): List<DbTrack>
 
     private fun setMultiselect(enabled: Boolean) {
         if (multiselectEnabled == enabled) {
@@ -148,7 +160,7 @@ open class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCe
             if (menuItem is SortMenuOption) {
                 activeSort = menuItem
             }
-            onFiltersChanged()
+            reset()
         }
     }
 

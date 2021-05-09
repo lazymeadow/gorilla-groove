@@ -5,6 +5,7 @@ import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbPlaylist
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -35,19 +36,9 @@ class PlaylistTrackFragment : TrackListFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading PlaylistTracks view with playlist ID: ${playlist.id}")
-
-//        viewModel.setPlaylistsEvent(PlaylistsEvent.GetPlaylist(playlist.id))
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        lifecycleScope.launch(Dispatchers.Default) {
-            val tracks = GorillaDatabase.playlistTrackDao.findTracksOnPlaylist(playlist.id)
-
-            withContext(Dispatchers.Main) {
-                trackCellAdapter.submitList(tracks)
-            }
-        }
+    override suspend fun loadTracks(): List<DbTrack> {
+        return GorillaDatabase.playlistTrackDao.findTracksOnPlaylist(playlist.id)
     }
 }

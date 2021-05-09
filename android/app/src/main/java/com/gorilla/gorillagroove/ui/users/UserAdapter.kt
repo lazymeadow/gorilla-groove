@@ -36,12 +36,11 @@ class UserAdapter(
         holder.tvUsername.text = currentUser.name
     }
 
-    inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
+    inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
         val tvUsername: TextView = itemView.textItem
 
         init {
             itemView.setOnClickListener(this)
-            itemView.setOnLongClickListener(this)
         }
 
         override fun onClick(v: View?) {
@@ -51,14 +50,6 @@ class UserAdapter(
             if (position != RecyclerView.NO_POSITION) {
                 listener.onUserClick(position)
             }
-        }
-
-        override fun onLongClick(v: View?): Boolean {
-            val position = adapterPosition
-            if (position != RecyclerView.NO_POSITION) {
-                listener.onUserLongClick(position)
-            }
-            return true
         }
     }
 
@@ -88,6 +79,5 @@ class UserAdapter(
 
     interface OnUserListener {
         fun onUserClick(position: Int)
-        fun onUserLongClick(position: Int): Boolean
     }
 }
