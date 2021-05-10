@@ -12,13 +12,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.room.ColumnInfo
-import androidx.room.PrimaryKey
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.DbUser
-import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logDebug
@@ -40,13 +37,12 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.time.Instant
 import javax.inject.Inject
 
 
-abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
+abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragment_track_list), TrackCellAdapter.OnTrackListener {
     private val playerControlsViewModel: PlayerControlsViewModel by viewModels()
-    lateinit var trackCellAdapter: TrackCellAdapter
+    lateinit var trackCellAdapter: TrackCellAdapter<T>
 
     @Inject
     lateinit var mainRepository: MainRepository
@@ -128,7 +124,7 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
         return super.onBackPressed()
     }
 
-    abstract suspend fun loadTracks(): List<DbTrack>
+    abstract suspend fun loadTracks(): List<T>
 
     private fun setMultiselect(enabled: Boolean) {
         if (multiselectEnabled == enabled) {
@@ -243,14 +239,14 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
             if (tracks.isEmpty()) {
                 lifecycleScope.launch { GGToast.show("Select some tracks first") }
             } else {
-                showLibraryActionSheet(tracks)
+                showLibraryActionSheet(tracks.map { it.asTrack() })
             }
 
             true
         }
 
         playMenu.setOnMenuItemClickListener {
-            playNow(trackCellAdapter.getSelectedTracks())
+            playNow(trackCellAdapter.getSelectedTracks().map { it.asTrack() })
             true
         }
     }
@@ -267,7 +263,7 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
     }
 
     override fun onTrackClick(position: Int) {
-        val clickedTrack = trackCellAdapter.filteredList[position]
+        val clickedTrack = trackCellAdapter.filteredList[position].asTrack()
 
         logInfo("User tapped track with ID: ${clickedTrack.id}")
 
@@ -279,7 +275,7 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
 
         LocationService.requestLocationPermissionIfNeeded(requireActivity())
 
-        playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList)
+        playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList.map { it.asTrack() })
     }
 
     override fun onTrackLongClick(position: Int) {
@@ -288,7 +284,7 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
         }
 
         if (!multiselectEnabled) {
-            val track = trackCellAdapter.filteredList[position]
+            val track = trackCellAdapter.filteredList[position].asTrack()
             showLibraryActionSheet(track)
         }
     }
@@ -299,7 +295,7 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
             val ids = event.tracks.map { it.id }.toSet()
             logInfo("Removing ${ids.size} track(s) from current track view")
 
-            val newTracks = trackCellAdapter.trackList.filterNot { track -> ids.contains(track.id) }
+            val newTracks = trackCellAdapter.trackList.filterNot { track -> ids.contains(track.asTrack().id) }
 
             trackCellAdapter.submitList(newTracks)
         }
@@ -377,20 +373,6 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
     }
 }
 
-interface TrackRepresentable {
-    val id: Long
-    var name: String
-    var artist: String
-    var featuring: String
-    var album: String
-    var trackNumber: Int?
-    var length: Int
-    var releaseYear: Int?
-    var genre: String?
-    var playCount: Int
-    var thePrivate: Boolean
-    var hidden: Boolean
-    var addedToLibrary: Instant?
-    var lastPlayed: Instant?
-    var note: String?
+interface TrackReturnable {
+    fun asTrack(): DbTrack
 }

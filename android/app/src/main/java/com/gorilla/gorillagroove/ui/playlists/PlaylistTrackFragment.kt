@@ -6,17 +6,22 @@ import android.view.MenuInflater
 import android.view.View
 import androidx.core.view.isVisible
 import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.dao.PlaylistTrackWithTrack
 import com.gorilla.gorillagroove.database.entity.DbPlaylist
-import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.di.Network
+import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
+import com.gorilla.gorillagroove.util.GGToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class PlaylistTrackFragment : TrackListFragment() {
+class PlaylistTrackFragment : TrackListFragment<PlaylistTrackWithTrack>() {
 
     private lateinit var playlist: DbPlaylist
 
@@ -39,7 +44,7 @@ class PlaylistTrackFragment : TrackListFragment() {
         logInfo("Loading PlaylistTracks view with playlist ID: ${playlist.id}")
     }
 
-    override suspend fun loadTracks(): List<DbTrack> {
+    override suspend fun loadTracks(): List<PlaylistTrackWithTrack> {
         return GorillaDatabase.playlistTrackDao.findTracksOnPlaylist(playlist.id)
     }
 
@@ -57,6 +62,8 @@ class PlaylistTrackFragment : TrackListFragment() {
         }
 
         doneMenu.setOnMenuItemClickListener {
+            savePlaylistOrder()
+
             // Passing in "null" when it's not enabled makes the drag functionality not happen via long press / allows us to disable the drag
             trackCellAdapter.itemTouchHelper.attachToRecyclerView(null)
 
@@ -78,15 +85,42 @@ class PlaylistTrackFragment : TrackListFragment() {
     }
 
     private fun savePlaylistOrder() {
+        val playlistTracks = trackCellAdapter.trackList.map { it.playlistTrack }
+
         val request = ReorderPlaylistRequest(
             playlistId = playlist.id,
-            playlistTrackIds =
+            playlistTrackIds = playlistTracks.map { it.id }
         )
-        Network.api.reorderPlaylist()
+
+        // Intentionally global. This is something we don't want to cancel if the fragment goes away
+        GlobalScope.launch(Dispatchers.IO) {
+            logInfo("Saving new playlist order: $request")
+
+            try {
+                Network.api.reorderPlaylist(request)
+            } catch (e: Throwable) {
+                logError("Failed to save new playlist order!, e")
+
+                GGToast.show("Failed to save playlist order")
+                return@launch
+            }
+
+            // I'm not concerned about getting an up-to-date reference before editing and saving these.
+            // There really isn't much that could be changed by another thread.
+            // Not very forward thinking and I could have probably addressed this in less time than writing this comment
+            playlistTracks.forEachIndexed { index, playlistTrack ->
+                playlistTrack.sortOrder = index
+            }
+
+            GorillaDatabase.playlistTrackDao.save(playlistTracks)
+
+            // If things were successful, there doesn't really need to be an alert shown to the user. It doesn't feel like that kind of action
+            logInfo("Playlist order saved")
+        }
     }
 }
 
 data class ReorderPlaylistRequest(
     val playlistId: Long,
-    val playlistTrackIds: List<Int>,
+    val playlistTrackIds: List<Long>,
 )

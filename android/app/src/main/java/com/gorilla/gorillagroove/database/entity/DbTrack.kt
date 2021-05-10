@@ -1,6 +1,7 @@
 package com.gorilla.gorillagroove.database.entity
 
 import androidx.room.*
+import com.gorilla.gorillagroove.ui.TrackReturnable
 import java.io.Serializable
 import java.time.Instant
 
@@ -84,7 +85,7 @@ data class DbTrack(
 
     @ColumnInfo(name = "last_reviewed")
     var lastReviewed: Instant?,
-) : DbEntity, Serializable {
+) : DbEntity, Serializable, TrackReturnable {
 
     // When we sync from the API, we don't want to stomp out ALL our data, but we do want to stomp out most of it.
     // This preserves fields we want to make sure survive the update. If I end up doing this in more places, it could
@@ -102,6 +103,8 @@ data class DbTrack(
 
         return "$artist $featuringString".trim()
     }
+
+    override fun asTrack() = this
 }
 
 enum class OfflineAvailabilityType {

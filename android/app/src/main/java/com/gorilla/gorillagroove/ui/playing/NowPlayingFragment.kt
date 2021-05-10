@@ -9,7 +9,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 
 @AndroidEntryPoint
-class NowPlayingFragment : TrackListFragment() {
+class NowPlayingFragment : TrackListFragment<DbTrack>() {
 
     init {
         showFilterMenu = false

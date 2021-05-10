@@ -17,12 +17,12 @@ import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
 
 
-class TrackCellAdapter(
+class TrackCellAdapter<T: TrackReturnable>(
     private val listener: OnTrackListener
-) : RecyclerView.Adapter<TrackCellAdapter.PlaylistViewHolder>(), Filterable {
+) : RecyclerView.Adapter<TrackCellAdapter<T>.PlaylistViewHolder>(), Filterable {
 
-    var trackList = mutableListOf<DbTrack>()
-    val filteredList: MutableList<DbTrack> = trackList.toMutableList()
+    var trackList = mutableListOf<T>()
+    val filteredList: MutableList<T> = trackList.toMutableList()
     var playingTrackId: String? = null
     var isPlaying = false
 
@@ -65,15 +65,15 @@ class TrackCellAdapter(
         ItemTouchHelper(simpleItemTouchCallback)
     }
 
-    fun submitList(tracks: List<DbTrack>) {
+    fun submitList(tracks: List<T>) {
         trackList = tracks.toMutableList()
         filteredList.clear()
         filteredList.addAll(trackList)
         notifyDataSetChanged()
     }
 
-    fun getSelectedTracks(): List<DbTrack> {
-        return trackList.filter { checkedTrackIds.contains(it.id) }
+    fun getSelectedTracks(): List<T> {
+        return trackList.filter { checkedTrackIds.contains(it.asTrack().id) }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistViewHolder {
@@ -87,7 +87,7 @@ class TrackCellAdapter(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
-        val currentTrack = filteredList[position]
+        val currentTrack = filteredList[position].asTrack()
         holder.tvArtist.text = currentTrack.artistString
         holder.tvName.text = currentTrack.name
         holder.tvAlbum.text = currentTrack.album
@@ -167,16 +167,18 @@ class TrackCellAdapter(
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val resultsList: List<DbTrack> =
+                val resultsList: List<T> =
                     if (constraint.isNullOrEmpty()) {
                         trackList
                     } else {
                         val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
                         trackList.filter {
-                            it.name.toLowerCase(Locale.ROOT).contains(filterPattern) ||
-                                    it.artist.toLowerCase(Locale.ROOT).contains(filterPattern) ||
-                                    it.featuring.toLowerCase(Locale.ROOT).contains(filterPattern) ||
-                                    it.album.toLowerCase(Locale.ROOT).contains(filterPattern)
+                            val track = it.asTrack()
+
+                            track.name.toLowerCase(Locale.ROOT).contains(filterPattern) ||
+                                    track.artist.toLowerCase(Locale.ROOT).contains(filterPattern) ||
+                                    track.featuring.toLowerCase(Locale.ROOT).contains(filterPattern) ||
+                                    track.album.toLowerCase(Locale.ROOT).contains(filterPattern)
                         }
                     }
 
@@ -188,7 +190,7 @@ class TrackCellAdapter(
             @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
                 filteredList.clear()
-                filteredList.addAll(results?.values as List<DbTrack>)
+                filteredList.addAll(results?.values as List<T>)
                 notifyDataSetChanged()
             }
         }

@@ -14,7 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 
 @AndroidEntryPoint
-class UserTrackFragment : TrackListFragment() {
+class UserTrackFragment : TrackListFragment<DbTrack>() {
 
     private var albumFilter: String? = null
     private var artistFilter: String? = null
