@@ -12,6 +12,8 @@ import com.gorilla.gorillagroove.ui.multiselectlist.RecommendTrackRequest
 import com.gorilla.gorillagroove.ui.playlists.ReorderPlaylistRequest
 import com.gorilla.gorillagroove.ui.playlists.UpdatePlaylistRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.*
+import com.gorilla.gorillagroove.ui.users.ImportTrackRequest
+import com.gorilla.gorillagroove.ui.users.ImportTrackResponse
 import com.gorilla.gorillagroove.ui.users.LiveTrackResponse
 import okhttp3.MultipartBody
 import retrofit2.http.*
@@ -84,6 +86,9 @@ interface NetworkApi {
 
     @POST("api/background-task/metadata-dl")
     suspend fun queueMetadataDownloadTask(@Body body: MetadataImportRequest): BackgroundTaskResponse
+
+    @POST("api/track/import")
+    suspend fun importUserTrack(@Body body: ImportTrackRequest): ImportTrackResponse
 
     @GET("api/background-task")
     suspend fun getActiveBackgroundTasks(@Query("ids") ids: String): BackgroundTaskResponse

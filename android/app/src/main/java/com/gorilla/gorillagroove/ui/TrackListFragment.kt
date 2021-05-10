@@ -124,6 +124,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
     abstract suspend fun loadTracks(): List<T>
 
+    @MainThread
     protected fun setMultiselect(enabled: Boolean) {
         if (multiselectEnabled == enabled) {
             return
