@@ -9,7 +9,7 @@
     android:orientation="horizontal"
     android:paddingTop="8dp"
     android:paddingBottom="8dp"
-    tools:ignore="RtlSymmetry,SmallSp">
+    tools:ignore="RtlSymmetry,SmallSp,HardcodedText">
 
     <CheckBox
         android:id="@+id/checkbox"
@@ -83,5 +83,18 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="12:51" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/dragHandle"
+        android:layout_width="30dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_vertical"
+        android:visibility="invisible"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_drag_handle_black_24dp"
+        app:tint="@color/debugGrey"
+        tools:visibility="visible"
+        android:contentDescription="Drag handle" />
 
 </LinearLayout>

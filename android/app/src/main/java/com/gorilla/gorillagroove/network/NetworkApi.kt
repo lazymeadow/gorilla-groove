@@ -9,6 +9,7 @@ import com.gorilla.gorillagroove.service.sync.*
 import com.gorilla.gorillagroove.ui.multiselectlist.AddToPlaylistRequest
 import com.gorilla.gorillagroove.ui.multiselectlist.AddToPlaylistResponse
 import com.gorilla.gorillagroove.ui.multiselectlist.RecommendTrackRequest
+import com.gorilla.gorillagroove.ui.playlists.ReorderPlaylistRequest
 import com.gorilla.gorillagroove.ui.playlists.UpdatePlaylistRequest
 import com.gorilla.gorillagroove.ui.reviewqueue.*
 import com.gorilla.gorillagroove.ui.users.LiveTrackResponse
@@ -101,6 +102,9 @@ interface NetworkApi {
 
     @POST("api/playlist/track")
     suspend fun addTracksToPlaylists(@Body body: AddToPlaylistRequest): AddToPlaylistResponse
+
+    @PUT("api/playlist/track/sort-order")
+    suspend fun reorderPlaylist(@Body body: ReorderPlaylistRequest)
 
     @POST("api/review-queue/recommend")
     suspend fun recommendTracks(@Body body: RecommendTrackRequest)

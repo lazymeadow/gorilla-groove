@@ -12,12 +12,16 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.room.ColumnInfo
+import androidx.room.PrimaryKey
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.dao.TrackSortType
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.database.entity.DbUser
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.repository.SelectionOperation
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackChangeEvent
 import com.gorilla.gorillagroove.service.TrackService
@@ -28,6 +32,7 @@ import com.gorilla.gorillagroove.util.getNullableBoolean
 import com.gorilla.gorillagroove.util.showAlertDialog
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
+import kotlinx.android.synthetic.main.track_expandable_item.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
@@ -35,6 +40,7 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.time.Instant
 import javax.inject.Inject
 
 
@@ -53,10 +59,12 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
 
     protected var user: DbUser? = null
 
-    private lateinit var multiselectOptionsMenu: MenuItem
+    protected lateinit var multiselectOptionsMenu: MenuItem
     private lateinit var filterMenu: MenuItem
-    private lateinit var searchMenu: MenuItem
+    protected lateinit var searchMenu: MenuItem
     private lateinit var playMenu: MenuItem
+    protected lateinit var editMenu: MenuItem
+    protected lateinit var doneMenu: MenuItem
 
     private val multiselectEnabled get() = trackCellAdapter.showingCheckBox
 
@@ -208,6 +216,8 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
         multiselectOptionsMenu = menu.findItem(R.id.action_multiselect_menu)
         filterMenu = menu.findItem(R.id.action_filter_menu)
         searchMenu = menu.findItem(R.id.action_search)
+        editMenu = menu.findItem(R.id.action_edit_menu)
+        doneMenu = menu.findItem(R.id.action_done_menu)
         playMenu = menu.findItem(R.id.action_play_now)
 
         if (!showFilterMenu) {
@@ -261,12 +271,22 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
 
         logInfo("User tapped track with ID: ${clickedTrack.id}")
 
+        // Accidental plays when you're trying to reorder are annoying
+        if (trackCellAdapter.reorderEnabled) {
+            logDebug("User tapped a track but reorder was enabled. Not doing anything.")
+            return
+        }
+
         LocationService.requestLocationPermissionIfNeeded(requireActivity())
 
         playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList)
     }
 
     override fun onTrackLongClick(position: Int) {
+        if (trackCellAdapter.reorderEnabled) {
+            return
+        }
+
         if (!multiselectEnabled) {
             val track = trackCellAdapter.filteredList[position]
             showLibraryActionSheet(track)
@@ -355,4 +375,22 @@ abstract class TrackListFragment : GGFragment(R.layout.fragment_track_list), Tra
             )
         )
     }
+}
+
+interface TrackRepresentable {
+    val id: Long
+    var name: String
+    var artist: String
+    var featuring: String
+    var album: String
+    var trackNumber: Int?
+    var length: Int
+    var releaseYear: Int?
+    var genre: String?
+    var playCount: Int
+    var thePrivate: Boolean
+    var hidden: Boolean
+    var addedToLibrary: Instant?
+    var lastPlayed: Instant?
+    var note: String?
 }

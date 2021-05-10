@@ -14,6 +14,16 @@
         android:visible="false"
         app:showAsAction="always"/>
 
+    <item android:id="@+id/action_edit_menu"
+        android:icon="@drawable/ic_edit_black_24dp"
+        android:visible="false"
+        app:showAsAction="always"/>
+
+    <item android:id="@+id/action_done_menu"
+        android:title="Save"
+        android:visible="false"
+        app:showAsAction="always"/>
+
     <item
         android:id="@+id/action_search"
         android:icon="@drawable/ic_search_black_24dp"

@@ -1,31 +1,72 @@
 package com.gorilla.gorillagroove.ui
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.entity.DbTrack
+import com.gorilla.gorillagroove.service.GGLog.logDebug
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
+
 
 class TrackCellAdapter(
     private val listener: OnTrackListener
 ) : RecyclerView.Adapter<TrackCellAdapter.PlaylistViewHolder>(), Filterable {
 
-    var trackList = listOf<DbTrack>()
+    var trackList = mutableListOf<DbTrack>()
     val filteredList: MutableList<DbTrack> = trackList.toMutableList()
     var playingTrackId: String? = null
     var isPlaying = false
 
-    val checkedTrackIds = mutableSetOf<Long>()
+    private val checkedTrackIds = mutableSetOf<Long>()
 
     var showingCheckBox = false
 
+    var reorderEnabled = false
+    set(value) {
+        field = value
+        notifyDataSetChanged()
+    }
+
+    val itemTouchHelper by lazy {
+        val simpleItemTouchCallback = object : ItemTouchHelper.SimpleCallback(UP or DOWN, 0) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                val from = viewHolder.adapterPosition
+                val to = target.adapterPosition
+
+                logDebug("Went from $from to $to")
+
+                val movedItem = trackList.removeAt(from)
+                trackList.add(to, movedItem)
+
+                filteredList.removeAt(from)
+                filteredList.add(to, movedItem)
+
+                notifyItemMoved(from, to)
+
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+        }
+
+        ItemTouchHelper(simpleItemTouchCallback)
+    }
+
     fun submitList(tracks: List<DbTrack>) {
-        trackList = tracks
+        trackList = tracks.toMutableList()
         filteredList.clear()
         filteredList.addAll(trackList)
         notifyDataSetChanged()
@@ -44,12 +85,15 @@ class TrackCellAdapter(
 
     override fun getItemCount() = filteredList.size
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
         val currentTrack = filteredList[position]
         holder.tvArtist.text = currentTrack.artistString
         holder.tvName.text = currentTrack.name
         holder.tvAlbum.text = currentTrack.album
         holder.tvLength.text = currentTrack.length.getSongTimeFromSeconds()
+
+        holder.itemView.dragHandle.isVisible = reorderEnabled
 
         val context = holder.itemView.context
 
@@ -76,6 +120,14 @@ class TrackCellAdapter(
                     checkedTrackIds.remove(currentTrack.id)
                 }
             }
+        }
+
+        holder.itemView.dragHandle.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                itemTouchHelper.startDrag(holder)
+                return@setOnTouchListener true
+            }
+            false
         }
     }
 
