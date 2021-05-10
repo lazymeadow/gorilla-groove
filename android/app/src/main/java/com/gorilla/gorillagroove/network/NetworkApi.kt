@@ -103,6 +103,9 @@ interface NetworkApi {
     @POST("api/playlist/track")
     suspend fun addTracksToPlaylists(@Body body: AddToPlaylistRequest): AddToPlaylistResponse
 
+    @DELETE("api/playlist/track")
+    suspend fun deletePlaylistTracks(@Query("playlistTrackIds") playlistTrackIds: List<Long>)
+
     @PUT("api/playlist/track/sort-order")
     suspend fun reorderPlaylist(@Body body: ReorderPlaylistRequest)
 

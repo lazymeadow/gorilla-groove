@@ -26,4 +26,15 @@ class NowPlayingFragment : TrackListFragment<DbTrack>() {
     override suspend fun loadTracks(): List<DbTrack> {
         return mainRepository.nowPlayingTracks
     }
+
+    override fun getExtraActionSheetItems(tracks: List<DbTrack>) = listOfNotNull(
+        editPropertiesActionSheetItem(tracks),
+        recommendActionSheetItem(tracks),
+        addToPlaylistActionSheetItem(tracks),
+
+//        ActionSheetItem("Remove") {
+//            // It's in the Trello.
+//            // The fact that your currently playing stuff is fragmented across both the MainRepository and PlayerControlsViewModel makes this kind of annoying to do and it's not exactly a super important feature
+//        }
+    )
 }

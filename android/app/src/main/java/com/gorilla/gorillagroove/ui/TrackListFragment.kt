@@ -21,12 +21,10 @@ import com.gorilla.gorillagroove.repository.SelectionOperation
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackChangeEvent
-import com.gorilla.gorillagroove.service.TrackService
 import com.gorilla.gorillagroove.ui.menu.*
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.LocationService
 import com.gorilla.gorillagroove.util.getNullableBoolean
-import com.gorilla.gorillagroove.util.showAlertDialog
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.android.synthetic.main.track_expandable_item.*
@@ -55,7 +53,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
     protected var user: DbUser? = null
 
-    protected lateinit var multiselectOptionsMenu: MenuItem
+    private lateinit var multiselectOptionsMenu: MenuItem
     private lateinit var filterMenu: MenuItem
     protected lateinit var searchMenu: MenuItem
     private lateinit var playMenu: MenuItem
@@ -126,7 +124,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
     abstract suspend fun loadTracks(): List<T>
 
-    private fun setMultiselect(enabled: Boolean) {
+    protected fun setMultiselect(enabled: Boolean) {
         if (multiselectEnabled == enabled) {
             return
         }
@@ -239,14 +237,14 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
             if (tracks.isEmpty()) {
                 lifecycleScope.launch { GGToast.show("Select some tracks first") }
             } else {
-                showLibraryActionSheet(tracks.map { it.asTrack() })
+                showLibraryActionSheet(tracks)
             }
 
             true
         }
 
         playMenu.setOnMenuItemClickListener {
-            playNow(trackCellAdapter.getSelectedTracks().map { it.asTrack() })
+            playNow(trackCellAdapter.getSelectedTracks().asTracks())
             true
         }
     }
@@ -275,7 +273,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
         LocationService.requestLocationPermissionIfNeeded(requireActivity())
 
-        playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList.map { it.asTrack() })
+        playerControlsViewModel.playMedia(position, trackCellAdapter.filteredList.asTracks())
     }
 
     override fun onTrackLongClick(position: Int) {
@@ -284,7 +282,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         }
 
         if (!multiselectEnabled) {
-            val track = trackCellAdapter.filteredList[position].asTrack()
+            val track = trackCellAdapter.filteredList[position]
             showLibraryActionSheet(track)
         }
     }
@@ -308,69 +306,62 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         setMultiselect(false)
     }
 
-    private fun showLibraryActionSheet(track: DbTrack) = showLibraryActionSheet(listOf(track))
+    abstract fun getExtraActionSheetItems(tracks: List<T>): List<ActionSheetItem>
 
-    private fun showLibraryActionSheet(tracks: List<DbTrack>) {
+    private fun showLibraryActionSheet(track: T) = showLibraryActionSheet(listOf(track))
+
+    private fun showLibraryActionSheet(tracks: List<T>) {
         ActionSheet(
             requireActivity(),
             listOfNotNull(
                 ActionSheetItem("Play Now") {
-                    playNow(tracks)
+                    playNow(tracks.asTracks())
                 },
                 ActionSheetItem("Play Next") {
-                    mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_NEXT)
+                    mainRepository.setSelectedTracks(tracks.asTracks(), SelectionOperation.PLAY_NEXT)
                     setMultiselect(false)
                 },
                 ActionSheetItem("Play Last") {
-                    mainRepository.setSelectedTracks(tracks, SelectionOperation.PLAY_LAST)
+                    mainRepository.setSelectedTracks(tracks.asTracks(), SelectionOperation.PLAY_LAST)
                     setMultiselect(false)
                 },
 
-                // Edit properties is only (currently) available with one track selected. It's a pain to make it work with more. Ticket is in the Trello
-                ActionSheetItem("Edit Properties") {
-                    findNavController().navigate(
-                        R.id.trackPropertiesFragment,
-                        bundleOf("KEY_TRACK" to tracks.first()),
-                    )
-                }.takeIf { tracks.size == 1 },
+                *getExtraActionSheetItems(tracks).toTypedArray()
 
-                ActionSheetItem("Recommend") {
-                    lifecycleScope.launch {
-                        recommendTracksView.initialize(requireActivity() as MainActivity, tracks)
-                    }
-                    setMultiselect(false)
-                },
-                ActionSheetItem("Add to Playlist") {
-                    lifecycleScope.launch {
-                        addToPlaylistView.initialize(requireActivity() as MainActivity, tracks)
-                    }
-                    setMultiselect(false)
-                },
 
-                ActionSheetItem("Delete", ActionSheetType.DESTRUCTIVE) {
-                    showAlertDialog(
-                        requireActivity(),
-                        message = "Delete " + (if (tracks.size == 1) tracks.first().name else "the selected ${tracks.size} tracks") + "?",
-                        yesText = "Delete",
-                        noText = "Cancel",
-                        yesAction = {
-                            lifecycleScope.launch {
-                                val success = TrackService.deleteTracks(tracks)
-                                if (success) {
-                                    // Deletion events are fired that delete the tracks from active views. No need to handle any of that here
-                                    GGToast.show("Tracks deleted")
-                                } else {
-                                    GGToast.show("Failed to delete tracks")
-                                }
-
-                                setMultiselect(false)
-                            }
-                        }
-                    )
-                },
             )
         )
     }
+
+    protected fun editPropertiesActionSheetItem(tracks: List<DbTrack>): ActionSheetItem? {
+        // Edit properties is only (currently) available with one track selected. It's a pain to make it work with more. Ticket is in the Trello
+        if (tracks.size == 1) {
+            return null
+        }
+
+        return ActionSheetItem("Edit Properties") {
+            findNavController().navigate(
+                R.id.trackPropertiesFragment,
+                bundleOf("KEY_TRACK" to tracks.first()),
+            )
+        }
+    }
+
+    protected fun addToPlaylistActionSheetItem(tracks: List<DbTrack>) = ActionSheetItem("Add to Playlist") {
+        lifecycleScope.launch {
+            addToPlaylistView.initialize(requireActivity() as MainActivity, tracks)
+        }
+        setMultiselect(false)
+    }
+
+    protected fun recommendActionSheetItem(tracks: List<DbTrack>) = ActionSheetItem("Recommend") {
+        lifecycleScope.launch {
+            recommendTracksView.initialize(requireActivity() as MainActivity, tracks)
+        }
+        setMultiselect(false)
+    }
+
+    protected fun List<T>.asTracks() = this.map { it.asTrack() }
 }
 
 interface TrackReturnable {

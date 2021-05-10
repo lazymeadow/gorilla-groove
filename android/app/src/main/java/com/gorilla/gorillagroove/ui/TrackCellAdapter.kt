@@ -11,8 +11,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.database.entity.DbTrack
-import com.gorilla.gorillagroove.service.GGLog.logDebug
 import kotlinx.android.synthetic.main.track_expandable_item.view.*
 import java.util.*
 
@@ -45,8 +43,6 @@ class TrackCellAdapter<T: TrackReturnable>(
             ): Boolean {
                 val from = viewHolder.adapterPosition
                 val to = target.adapterPosition
-
-                logDebug("Went from $from to $to")
 
                 val movedItem = trackList.removeAt(from)
                 trackList.add(to, movedItem)

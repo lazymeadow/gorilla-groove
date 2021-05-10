@@ -86,18 +86,14 @@ class MainRepository(
     }
 
     private fun addToEndNowPlayingTrack(track: DbTrack) {
-        if (nowPlayingTracks.size > 0) {
-            nowPlayingTracks.add(track)
-            nowPlayingConcatenatingMediaSource.addCustomMediaSource(track)
-            nowPlayingMetadataList.add(track.toMediaMetadataItem())
-        } else {
+        if (nowPlayingTracks.isEmpty()) {
             dataSetChanged = true
-            nowPlayingTracks.add(track)
-            nowPlayingConcatenatingMediaSource.addCustomMediaSource(track)
-            nowPlayingMetadataList.add(track.toMediaMetadataItem())
         }
-    }
 
+        nowPlayingTracks.add(track)
+        nowPlayingConcatenatingMediaSource.addCustomMediaSource(track)
+        nowPlayingMetadataList.add(track.toMediaMetadataItem())
+    }
 
     fun sendNowPlayingToServer(track: MediaDescriptionCompat) {
         val jsonObject = JSONObject().apply {
@@ -123,7 +119,6 @@ class MainRepository(
         val mes = jsonObject.toString()
         webSocket?.send(mes)
     }
-
 
     fun setSelectedTracks(tracks: List<DbTrack>, selectionOperation: SelectionOperation) {
         when (selectionOperation) {

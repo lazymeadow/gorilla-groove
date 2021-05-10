@@ -10,6 +10,7 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.service.sync.EntityPagination
 import com.gorilla.gorillagroove.service.sync.TrackResponse
+import com.gorilla.gorillagroove.ui.ActionSheetItem
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -68,6 +69,12 @@ class UserTrackFragment : TrackListFragment<DbTrack>() {
             .filter { albumFilter == null || it.album == albumFilter }
             .map { it.asTrack() }
     }
+
+    override fun getExtraActionSheetItems(tracks: List<DbTrack>) = listOfNotNull(
+        ActionSheetItem("Import") {
+            TODO()
+        }
+    )
 }
 
 data class LiveTrackResponse(

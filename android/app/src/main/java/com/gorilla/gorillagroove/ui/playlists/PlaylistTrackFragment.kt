@@ -5,20 +5,25 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.dao.PlaylistTrackWithTrack
 import com.gorilla.gorillagroove.database.entity.DbPlaylist
 import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.ui.ActionSheetItem
+import com.gorilla.gorillagroove.ui.ActionSheetType
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.util.GGToast
+import com.gorilla.gorillagroove.util.showAlertDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class PlaylistTrackFragment : TrackListFragment<PlaylistTrackWithTrack>() {
@@ -118,6 +123,46 @@ class PlaylistTrackFragment : TrackListFragment<PlaylistTrackWithTrack>() {
             logInfo("Playlist order saved")
         }
     }
+
+    override fun getExtraActionSheetItems(tracks: List<PlaylistTrackWithTrack>) = listOfNotNull(
+        editPropertiesActionSheetItem(tracks.asTracks()),
+        recommendActionSheetItem(tracks.asTracks()),
+        ActionSheetItem("Remove from Playlist", ActionSheetType.DESTRUCTIVE) {
+            showAlertDialog(
+                requireActivity(),
+                message = "Remove " + (if (tracks.size == 1) "'${tracks.first().asTrack().name}'" else "the selected ${tracks.size} tracks") + "?",
+                yesText = "Remove",
+                noText = "Cancel",
+                yesAction = {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        val playlistTrackIds = tracks.map { it.playlistTrack.id }
+
+                        logInfo("Deleting playlist tracks: $playlistTrackIds")
+
+                        try {
+                            Network.api.deletePlaylistTracks(playlistTrackIds)
+                        } catch (e: Throwable) {
+                            logError("Failed to remove playlist tracks!", e)
+                            GGToast.show("Failed to remove from playlist")
+
+                            return@launch
+                        }
+
+                        GorillaDatabase.playlistTrackDao.delete(playlistTrackIds)
+
+                        logInfo("Playlist tracks removed locally")
+
+                        withContext(Dispatchers.Main) {
+                            val newTracks = trackCellAdapter.trackList.filterNot { playlistTrackIds.contains(it.playlistTrack.id) }
+                            trackCellAdapter.submitList(newTracks)
+
+                            setMultiselect(false)
+                        }
+                    }
+                }
+            )
+        }
+    )
 }
 
 data class ReorderPlaylistRequest(
