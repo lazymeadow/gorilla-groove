@@ -20,14 +20,10 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class DbTrackLibraryFragment : TrackListFragment<DbTrack>() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        requireActivity().title_tv.text = "My Library"
-
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        requireActivity().title_tv.text = "My Library"
 
         logInfo("Loading My Library view")
     }

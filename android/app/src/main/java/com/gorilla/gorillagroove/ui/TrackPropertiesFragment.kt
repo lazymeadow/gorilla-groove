@@ -12,6 +12,7 @@ import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.network.track.TrackUpdate
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.TrackService
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,16 +32,16 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     @Inject
     lateinit var mainRepository: MainRepository
 
-    var newName: String? = null
-    var newArtist: String? = null
-    var newFeaturing: String? = null
-    var newAlbum: String? = null
-    var newGenre: String? = null
-    var newTrackNum: Int? = null
-    var newYear: Int? = null
-    var newNote: String? = null
+    private var newName: String? = null
+    private var newArtist: String? = null
+    private var newFeaturing: String? = null
+    private var newAlbum: String? = null
+    private var newGenre: String? = null
+    private var newTrackNum: Int? = null
+    private var newYear: Int? = null
+    private var newNote: String? = null
 
-    var hasChanged: Boolean = false
+    private var hasChanged: Boolean = false
 
     private var menu: Menu? = null
 
@@ -69,6 +70,12 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
 
         populateFragmentText()
         listenForChanges()
+
+        lifecycleScope.launch {
+            TrackService.getAlbumArt(track)?.let { art ->
+                albumArt.setImageBitmap(art)
+            }
+        }
     }
 
     override fun onPause() {
@@ -76,11 +83,28 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         super.onPause()
     }
 
+    private var oldInputMode: Int? = null
+
     override fun onStart() {
         super.onStart()
 
-        // TODO need to try to fix the keyboard situation with (adjustResize)
-        // getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+        // We actually want the keyboard to resize this screen, unlike every other screen in the app (so far)
+        // Save the old input type we were using so we can restore it when the fragment goes away.
+        // Otherwise we will leak this undesirable keyboard behavior to other fragments.
+        oldInputMode = activity?.window?.attributes?.softInputMode
+
+        // This thing is deprecated but I'm using it anyway. Why? Their alternative they outline in the deprecation looks absolutely stupid.
+        // They want you to set up a listener on the root to adjust stuff yourself. Like. No. What are you smoking, Google.
+        // Furthermore, this soft input mode IS VALID IN XML??? If you set this in your AndroidManifest there is no deprecation warning.
+        // So clearly it seems like it's supported, but not supported when set programmatically? That makes no sense
+        @Suppress("DEPRECATION")
+        activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        oldInputMode?.let { activity?.window?.setSoftInputMode(it) }
     }
 
     private fun populateFragmentText() {
@@ -106,15 +130,16 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
     }
 
     private fun update() {
+        // trackNumber and releaseYear need to be set to -1 to clear them out on the API, as null means "no change"
         val request = TrackUpdate(
             trackIds = listOf(track.id),
             name = if (track.name != newName) newName.also { hasChanged = true } else null,
             artist = if (track.artist != newArtist) newArtist.also { hasChanged = true } else null,
             featuring = if (track.featuring != newFeaturing) newFeaturing.also { hasChanged = true } else null,
             album = if (track.album != newAlbum) newAlbum.also { hasChanged = true } else null,
-            trackNumber = if (track.trackNumber != newTrackNum) newTrackNum.also { hasChanged = true } else null,
+            trackNumber = if (track.trackNumber != newTrackNum) { hasChanged = true; newTrackNum ?: -1 } else null,
             genre = if (track.genre != newGenre) newGenre.also { hasChanged = true } else null,
-            releaseYear = if (track.releaseYear != newYear) newYear.also { hasChanged = true } else null,
+            releaseYear = if (track.releaseYear != newYear) { hasChanged = true; newYear ?: -1 } else null,
             note = if (track.note != newNote) newNote.also { hasChanged = true } else null,
             hidden = null,
             albumArtUrl = null,

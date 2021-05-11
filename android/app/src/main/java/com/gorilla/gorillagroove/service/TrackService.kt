@@ -1,5 +1,9 @@
 package com.gorilla.gorillagroove.service
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import com.bumptech.glide.Glide
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.di.Network
@@ -7,6 +11,7 @@ import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.sync.TrackResponse
 import com.gorilla.gorillagroove.ui.ChangeType
+import kotlinx.android.synthetic.main.review_queue_carousel_item.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
@@ -58,6 +63,26 @@ object TrackService {
 
     fun broadcastTrackChange(tracks: List<DbTrack>, changeType: ChangeType) {
         EventBus.getDefault().post(TrackChangeEvent(tracks, changeType))
+    }
+
+    // TODO I made this rather late. It would be nice to reuse this in the other places we get art.
+    // Would need to incorporate a short-term in-memory cache for the AlbumArt view, and art resize for the notification one, I think. Unless that stuff just isn't actually needed.
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun getAlbumArt(track: DbTrack): Bitmap? = withContext(Dispatchers.IO) {
+        TrackCacheService.getCacheItemIfAvailable(track.id, CacheType.ART)?.let { cachedArtFile ->
+            return@withContext BitmapFactory.decodeFile(cachedArtFile.absolutePath)
+        }
+
+        // We're DOING IT LIVE
+        Network.api.getTrackLink(track.id, "LARGE").albumArtLink?.let { artLink ->
+            return@withContext Glide.with(GGApplication.application)
+                .asBitmap()
+                .load(artLink)
+                .submit()
+                .get()
+        }
+
+        return@withContext null
     }
 }
 

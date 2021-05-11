@@ -382,7 +382,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
     protected fun editPropertiesActionSheetItem(tracks: List<DbTrack>): ActionSheetItem? {
         // Edit properties is only (currently) available with one track selected. It's a pain to make it work with more. Ticket is in the Trello
-        if (tracks.size == 1) {
+        if (tracks.size > 1) {
             return null
         }
 

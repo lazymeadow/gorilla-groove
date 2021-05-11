@@ -29,13 +29,13 @@ class UserTrackFragment : TrackListFragment<DbTrack>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         user = requireArguments().getSerializable("USER") as DbUser
 
-        requireActivity().title_tv.text = "${user!!.name}'s Library"
-
         super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        requireActivity().title_tv.text = "${user!!.name}'s Library"
 
         logInfo("Loading User Track view")
     }
