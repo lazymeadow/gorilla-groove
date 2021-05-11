@@ -33,7 +33,7 @@ interface NetworkApi {
     suspend fun getSelf(): UserResponse
 
     @PUT("api/track/simple-update")
-    suspend fun updateTrack(@Body updateTrackJson: TrackUpdate): MultiTrackResponse
+    suspend fun updateTrack(@Body updateTrackJson: TrackUpdateRequest): MultiTrackResponse
 
     @DELETE("api/track")
     suspend fun deleteTracks(@Query("trackIds") trackIds: List<Long>)

@@ -374,8 +374,6 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
                 },
 
                 *getExtraActionSheetItems(tracks).toTypedArray()
-
-
             )
         )
     }
@@ -387,6 +385,9 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         }
 
         return ActionSheetItem("Edit Properties") {
+            // Gotta close the search menu or else the title text won't be visible when this fragment loads for some god forsaken reason and crashes the app
+            searchMenu.collapseActionView()
+
             findNavController().navigate(
                 R.id.trackPropertiesFragment,
                 bundleOf("KEY_TRACK" to tracks.first()),

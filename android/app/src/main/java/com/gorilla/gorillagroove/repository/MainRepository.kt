@@ -18,7 +18,7 @@ import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.OkHttpWebSocket
 import com.gorilla.gorillagroove.network.login.UpdateDeviceVersionRequest
 import com.gorilla.gorillagroove.network.track.TrackLinkResponse
-import com.gorilla.gorillagroove.network.track.TrackUpdate
+import com.gorilla.gorillagroove.network.track.TrackUpdateRequest
 import com.gorilla.gorillagroove.service.CacheType
 import com.gorilla.gorillagroove.service.DynamicTrackAudioCacheSource
 import com.gorilla.gorillagroove.service.GGLog.logDebug
@@ -166,7 +166,7 @@ class MainRepository(
         }
     }
 
-    suspend fun updateTrack(trackUpdate: TrackUpdate): DbTrack? {
+    suspend fun updateTrack(trackUpdate: TrackUpdateRequest): DbTrack? {
         return try {
             val updatedTrack = Network.api.updateTrack(trackUpdate).items.first()
 

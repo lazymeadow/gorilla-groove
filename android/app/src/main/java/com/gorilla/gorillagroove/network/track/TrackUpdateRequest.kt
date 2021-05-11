@@ -1,8 +1,9 @@
 package com.gorilla.gorillagroove.network.track
 
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
 import com.gorilla.gorillagroove.service.sync.TrackResponse
 
-data class TrackUpdate(
+data class TrackUpdateRequest(
     val trackIds: List<Long>,
     val name: String?,
     val artist: String?,
@@ -13,6 +14,8 @@ data class TrackUpdate(
     val genre: String?,
     val note: String?,
     val hidden: Boolean?,
+    val private: Boolean?,
+    val offlineAvailability: OfflineAvailabilityType?,
     val albumArtUrl: String?,
     val cropArtToSquare: Boolean?
 )
