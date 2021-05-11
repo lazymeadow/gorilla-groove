@@ -18,38 +18,28 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class LibraryTrackFragment : TrackListFragment<DbTrack>() {
-
-    private var albumFilter: String? = null
-    private var artistFilter: String? = null
+class DbTrackFragment : TrackListFragment<DbTrack>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        requireActivity().title_tv.text = "My Library"
 
-        arguments?.getString("ALBUM")?.let { albumFilter ->
-            this.albumFilter = albumFilter
-            requireActivity().title_tv.text = albumFilter.takeIf { it.isNotEmpty() } ?: "(No Album)"
-        }
-        arguments?.getString("ARTIST")?.let { artistFilter ->
-            this.artistFilter = artistFilter
-        }
+        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading My Library view")
-
-        requireActivity().title_tv.text = "My Library"
     }
 
     override suspend fun loadTracks(): List<DbTrack> {
         val isHidden = if (showHidden) null else false
+
         return GorillaDatabase.trackDao.findTracksWithSort(
             sortType = activeSort.sortType,
             isHidden = isHidden,
             albumFilter = albumFilter,
-            artistFilter = artistFilter,
+            artistFilter = TrackService.getArtistSqlFilter(artistFilter),
             availableOffline = if (GGSettings.offlineModeEnabled) true else null,
             sortDirection = activeSort.sortDirection
         )

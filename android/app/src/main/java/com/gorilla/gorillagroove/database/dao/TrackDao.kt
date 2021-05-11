@@ -24,12 +24,18 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
             throw IllegalArgumentException("Cannot sort by direction: NONE")
         }
 
+        val escapedArtist = artistFilter?.sqlEscaped()
+
         val statement = """
             SELECT * 
             FROM track 
             WHERE in_review = ${inReview.toInt()}
             AND (${isHidden?.toInt()} IS NULL OR is_hidden = ${isHidden?.toInt()})
-            AND (${artistFilter?.let { 1 }} IS NULL OR artist = '${artistFilter?.sqlEscaped()}' OR featuring = '${artistFilter?.sqlEscaped()}')
+            AND (
+                ${artistFilter?.let { 1 }} IS NULL OR 
+                ('$artistFilter' = '' AND artist = '$escapedArtist' AND featuring = '$escapedArtist') OR
+                ('$artistFilter' <> '' AND (artist LIKE '$escapedArtist' OR featuring LIKE '$escapedArtist'))
+            )
             AND (${albumFilter?.let { 1 }} IS NULL OR album = '${albumFilter?.sqlEscaped()}')
             AND ($availableOffline IS NULL OR (
                 (${availableOffline?.toInt()} = 1 AND song_cached_at IS NOT NULL)
@@ -72,7 +78,11 @@ abstract class TrackDao : BaseRoomDao<DbTrack>("track") {
         SELECT id, album 
         FROM track 
         WHERE in_review = :inReview
-        AND (:artistFilter IS NULL OR (artist LIKE '%' || :artistFilter || '%' OR featuring LIKE '%' || :artistFilter || '%'))
+        AND (
+            :artistFilter IS NULL OR 
+            (:artistFilter = '' AND artist = :artistFilter AND featuring = :artistFilter) OR
+            (:artistFilter <> '' AND (artist LIKE :artistFilter OR featuring LIKE :artistFilter))
+        )
         AND (:isHidden IS NULL OR is_hidden = :isHidden)
         GROUP BY album
         ORDER BY album COLLATE NOCASE ASC    

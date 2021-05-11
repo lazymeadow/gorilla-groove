@@ -32,16 +32,21 @@ class ArtistsAdapter(
     override fun getItemCount() = filteredList.size
 
     override fun onBindViewHolder(holder: ArtistViewHolder, position: Int) {
-        val artist = filteredList[position]
-        holder.artistText.text = if (artist.isEmpty()) "(No Artist)" else artist
+        holder.setArtist(filteredList[position])
     }
 
     inner class ArtistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val artistText: TextView = itemView.textItem
+        private lateinit var artist: String
+
+        // Man I hate how you can't have custom setters on lateinit properties. So dumb.
+        fun setArtist(artist: String) {
+            this.artist = artist
+            itemView.textItem.text = if (artist.isEmpty()) "(No Artist)" else artist
+        }
 
         init {
             itemView.setOnClickListener {
-                onArtistTap(artistText.text.toString())
+                onArtistTap(artist)
             }
         }
     }

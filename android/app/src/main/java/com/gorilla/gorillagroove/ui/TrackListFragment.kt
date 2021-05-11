@@ -48,6 +48,8 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
     protected var activeSort = SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC)
 
     protected var showHidden = false
+    protected var albumFilter: String? = null
+    protected var artistFilter: String? = null
 
     protected var showFilterMenu = true
 
@@ -66,6 +68,14 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         super.onCreate(savedInstanceState)
 
         arguments?.getNullableBoolean("SHOW_HIDDEN")?.let { showHidden = it }
+
+        arguments?.getString("ALBUM")?.let { albumFilter ->
+            this.albumFilter = albumFilter
+            requireActivity().title_tv.text = albumFilter.takeIf { it.isNotEmpty() } ?: "(No Album)"
+        }
+        arguments?.getString("ARTIST")?.let { artistFilter ->
+            this.artistFilter = artistFilter
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

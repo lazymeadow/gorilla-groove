@@ -15,7 +15,7 @@
     </fragment>
     <fragment
         android:id="@+id/libraryTrackFragment"
-        android:name="com.gorilla.gorillagroove.ui.library.LibraryTrackFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.DbTrackFragment"
         android:label="MainFragment" >
         <action
             android:id="@+id/action_mainFragment_to_loginFragment"

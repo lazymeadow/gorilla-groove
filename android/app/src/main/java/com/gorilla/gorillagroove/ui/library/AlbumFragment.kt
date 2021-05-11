@@ -45,7 +45,7 @@ abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
 
         arguments?.getString("ARTIST")?.let { artistFilter ->
             this.artistFilter = artistFilter
-            requireActivity().title_tv.text = artistFilter
+            requireActivity().title_tv.text = artistFilter.takeIf { it.isNotEmpty() } ?: "(No Artist)"
         }
 
         arguments?.getNullableBoolean("SHOW_HIDDEN")?.let { showHidden = it }

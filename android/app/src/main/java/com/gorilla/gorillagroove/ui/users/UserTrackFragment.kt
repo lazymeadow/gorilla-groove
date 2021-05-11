@@ -11,6 +11,7 @@ import com.gorilla.gorillagroove.database.entity.DbUser
 import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.TrackService
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import com.gorilla.gorillagroove.service.sync.EntityPagination
 import com.gorilla.gorillagroove.service.sync.TrackResponse
@@ -25,22 +26,12 @@ import kotlinx.coroutines.withContext
 @AndroidEntryPoint
 class UserTrackFragment : TrackListFragment<DbTrack>() {
 
-    private var albumFilter: String? = null
-    private var artistFilter: String? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         user = requireArguments().getSerializable("USER") as DbUser
 
-        requireArguments().getString("ALBUM")?.let { albumFilter ->
-            this.albumFilter = albumFilter
-        }
-        requireArguments().getString("ARTIST")?.let { artistFilter ->
-            this.artistFilter = artistFilter
-        }
-
         requireActivity().title_tv.text = "${user!!.name}'s Library"
+
+        super.onCreate(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -63,7 +54,6 @@ class UserTrackFragment : TrackListFragment<DbTrack>() {
     }
 
     override suspend fun loadTracks(): List<DbTrack> {
-        val artistFilter = artistFilter
         val albumFilter = albumFilter
 
         return Network.api.getTracks(
@@ -71,9 +61,7 @@ class UserTrackFragment : TrackListFragment<DbTrack>() {
             showHidden = showHidden,
             sortString = getApiSort()
         ).content
-            // Artists often have multiple people on the same track, so we do a .contains there so that filtering for deadmau5 will find all tracks he collaborated on and not just tracks he was on by himself
-            .filter { artistFilter == null || it.artist.contains(artistFilter) || it.featuring.contains(artistFilter) }
-            // However, albums we have no reason to do a contains. So here it is an exact match
+            .filter { TrackService.passesArtistFilter(artistFilter, it) }
             .filter { albumFilter == null || it.album == albumFilter }
             .map { it.asTrack() }
     }

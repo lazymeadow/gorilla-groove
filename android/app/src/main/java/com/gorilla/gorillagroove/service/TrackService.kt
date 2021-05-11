@@ -5,6 +5,7 @@ import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.sync.TrackResponse
 import com.gorilla.gorillagroove.ui.ChangeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,6 +34,26 @@ object TrackService {
         broadcastTrackChange(tracks, ChangeType.DELETED)
 
         return@withContext true
+    }
+
+    // Three cases for "artistFilter"
+    // 1) It's null. We want to get everything. The SQL handles this
+    // 2) It's empty. We want to get tracks with NO artist explicitly.
+    // 3) We have an actual search term. In this case, add % so that SQL will do a wildcard search as we want these to be inclusive
+    fun getArtistSqlFilter(filter: String?): String? {
+        return if (!filter.isNullOrEmpty()) { "%$filter%" } else filter
+    }
+
+    // Same story as the comment on "getArtistSqlFilter", but we use this for filtering live HTTP responses instead of doing it in SQL
+    fun passesArtistFilter(filter: String?, track: TrackResponse): Boolean {
+        return when {
+            // If we have no filter, then get everything
+            filter == null -> true
+            // If we have a filter that is empty, there needs to be no artist
+            filter.isEmpty() -> track.artist.isEmpty() && track.featuring.isEmpty()
+            // Otherwise, do a contains so that we get anything where an artist was found since there can be multiple artists in the field
+            else -> track.artist.contains(filter) || track.featuring.contains(filter)
+        }
     }
 
     fun broadcastTrackChange(tracks: List<DbTrack>, changeType: ChangeType) {
