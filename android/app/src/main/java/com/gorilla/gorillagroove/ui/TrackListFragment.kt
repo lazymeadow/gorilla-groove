@@ -45,7 +45,17 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
     @Inject
     lateinit var mainRepository: MainRepository
 
-    protected var activeSort = SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC)
+    private val sortOptions = listOf(
+        SortMenuOption("Sort by Name", TrackSortType.NAME),
+        SortMenuOption("Sort by Play Count", TrackSortType.PLAY_COUNT, initialSortOnTap = SortDirection.DESC),
+        SortMenuOption("Sort by Date Added", TrackSortType.DATE_ADDED, initialSortOnTap = SortDirection.DESC),
+        SortMenuOption("Sort by Album", TrackSortType.ALBUM),
+        SortMenuOption("Sort by Year", TrackSortType.YEAR),
+    )
+
+    protected var activeSort = sortOptions
+        .first { it.sortType == TrackSortType.NAME }
+        .also { it.sortDirection = it.initialSortOnTap }
 
     protected var showHidden = false
     protected var albumFilter: String? = null
@@ -71,6 +81,15 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
         albumFilter = arguments?.getString("ALBUM")
         artistFilter = arguments?.getString("ARTIST")
+
+        // If we are filtering by artist, then sort by album as a default
+        if (artistFilter != null) {
+            activeSort.sortDirection = SortDirection.NONE
+
+            activeSort = sortOptions
+                .first { it.sortType == TrackSortType.ALBUM }
+                .also { it.sortDirection = it.initialSortOnTap }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -177,11 +196,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
             listOf(
                 *getNavigationOptions(requireView(), LibraryViewType.TRACK, user),
                 MenuDivider(),
-                SortMenuOption("Sort by Name", TrackSortType.NAME, sortDirection = SortDirection.ASC),
-                SortMenuOption("Sort by Play Count", TrackSortType.PLAY_COUNT, initialSortOnTap = SortDirection.DESC),
-                SortMenuOption("Sort by Date Added", TrackSortType.DATE_ADDED, initialSortOnTap = SortDirection.DESC),
-                SortMenuOption("Sort by Album", TrackSortType.ALBUM),
-                SortMenuOption("Sort by Year", TrackSortType.YEAR),
+                *sortOptions.toTypedArray(),
                 MenuDivider(),
                 CheckedMenuOption(title = "Show Hidden Tracks", false) { showHidden = it.isChecked },
             )
