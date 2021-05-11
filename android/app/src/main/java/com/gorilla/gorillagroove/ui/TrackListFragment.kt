@@ -107,9 +107,13 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
             withContext(Dispatchers.Main) {
                 loadingIndicator?.isVisible = false
                 trackCellAdapter.submitList(tracks)
+
+                onTracksLoaded()
             }
         }
     }
+
+    open fun onTracksLoaded() {}
 
     override fun onBackPressed(): Boolean {
         if (addToPlaylistView.isVisible) {

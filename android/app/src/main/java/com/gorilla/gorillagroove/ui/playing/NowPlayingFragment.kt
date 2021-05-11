@@ -7,6 +7,8 @@ import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.ui.TrackListFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_track_list.*
+import kotlin.math.min
 
 @AndroidEntryPoint
 class NowPlayingFragment : TrackListFragment<DbTrack>() {
@@ -25,6 +27,19 @@ class NowPlayingFragment : TrackListFragment<DbTrack>() {
 
     override suspend fun loadTracks(): List<DbTrack> {
         return mainRepository.nowPlayingTracks
+    }
+
+    override fun onTracksLoaded() {
+        super.onTracksLoaded()
+
+        track_rv.post {
+            // Kind of dumb, but there isn't an EASY way to scroll an item to the center of a recyclerview as of the time of writing this.
+            // Scrolling a couple of items past the currently played item is good enough and easy to do.
+            val scrollPosition = min(mainRepository.currentIndex + 2, mainRepository.nowPlayingTracks.size)
+            if (mainRepository.nowPlayingTracks.isNotEmpty()) {
+                track_rv.scrollToPosition(scrollPosition)
+            }
+        }
     }
 
     override fun getExtraActionSheetItems(tracks: List<DbTrack>) = listOfNotNull(
