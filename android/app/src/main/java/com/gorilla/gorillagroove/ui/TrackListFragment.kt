@@ -69,13 +69,8 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
         arguments?.getNullableBoolean("SHOW_HIDDEN")?.let { showHidden = it }
 
-        arguments?.getString("ALBUM")?.let { albumFilter ->
-            this.albumFilter = albumFilter
-            requireActivity().title_tv.text = albumFilter.takeIf { it.isNotEmpty() } ?: "(No Album)"
-        }
-        arguments?.getString("ARTIST")?.let { artistFilter ->
-            this.artistFilter = artistFilter
-        }
+        albumFilter = arguments?.getString("ALBUM")
+        artistFilter = arguments?.getString("ARTIST")
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -99,6 +94,15 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         }
 
         requireActivity().multiselectIcon.visibility = View.VISIBLE
+
+        albumFilter?.let { albumFilter ->
+            requireActivity().title_tv.text = albumFilter.takeIf { it.isNotEmpty() } ?: "(No Album)"
+        }
+        artistFilter?.let { artistFilter ->
+            if (albumFilter == null) {
+                requireActivity().title_tv.text = artistFilter.takeIf { it.isNotEmpty() } ?: "(No Artist)"
+            }
+        }
     }
 
     override fun onStart() {

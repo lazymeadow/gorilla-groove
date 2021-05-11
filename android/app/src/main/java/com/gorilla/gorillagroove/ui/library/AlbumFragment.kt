@@ -43,11 +43,7 @@ abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        arguments?.getString("ARTIST")?.let { artistFilter ->
-            this.artistFilter = artistFilter
-            requireActivity().title_tv.text = artistFilter.takeIf { it.isNotEmpty() } ?: "(No Artist)"
-        }
-
+        artistFilter = arguments?.getString("ARTIST")
         arguments?.getNullableBoolean("SHOW_HIDDEN")?.let { showHidden = it }
     }
 
@@ -71,6 +67,10 @@ abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
         )
 
         loadAlbums()
+
+        artistFilter?.let { artistFilter ->
+            requireActivity().title_tv.text = artistFilter.takeIf { it.isNotEmpty() } ?: "(No Artist)"
+        }
     }
 
     override fun onStart() {
@@ -89,7 +89,11 @@ abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
     private fun loadAlbums() {
         loadingIndicator.isVisible = true
         lifecycleScope.launch(Dispatchers.Default) {
-            val albums = getAlbums()
+            val albums = getAlbums().toMutableList()
+
+            if (albums.size > 1) {
+                albums.add(0, Album("View All", VIEW_ALL))
+            }
 
             withContext(Dispatchers.Main) {
                 loadingIndicator?.isVisible = false
@@ -141,7 +145,7 @@ abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
             searchItem?.collapseActionView()
 
             val bundle = bundleOf(
-                "ALBUM" to album.name,
+                "ALBUM" to if (album.trackId == VIEW_ALL) null else album.name,
                 "ARTIST" to artistFilter,
                 "SHOW_HIDDEN" to showHidden,
                 "USER" to user,
@@ -155,3 +159,5 @@ abstract class AlbumFragment : Fragment(R.layout.fragment_album) {
         layoutManager = LinearLayoutManager(requireContext())
     }
 }
+
+const val VIEW_ALL = 0L

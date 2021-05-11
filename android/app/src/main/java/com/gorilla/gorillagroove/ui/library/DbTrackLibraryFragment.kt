@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class DbTrackFragment : TrackListFragment<DbTrack>() {
+class DbTrackLibraryFragment : TrackListFragment<DbTrack>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requireActivity().title_tv.text = "My Library"

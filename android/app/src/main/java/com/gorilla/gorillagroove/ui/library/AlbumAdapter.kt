@@ -53,6 +53,11 @@ class AlbumAdapter(
             mAlbum = album
             albumText.text = if (album.name.isEmpty()) "(No Album)" else album.name
 
+            // This is true when we have a "View All" special case album that has no track/art associated to it
+            if (album.trackId == VIEW_ALL) {
+                return
+            }
+
             mAlbum.imageData?.let { image ->
                 itemView.albumArt.setImageBitmap(image)
             } ?: run {
