@@ -28,6 +28,7 @@ class MusicServiceConnection(
     val isConnected = KtLiveData(false)
     val playbackState = MutableStateFlow(EMPTY_PLAYBACK_STATE)
     val repeatState = MutableStateFlow(PlaybackStateCompat.REPEAT_MODE_NONE)
+    val shuffleState = MutableStateFlow(PlaybackStateCompat.SHUFFLE_MODE_NONE)
     val nowPlaying = MutableStateFlow(NOTHING_PLAYING)
     val currentSongTimeMillis = MutableStateFlow(0L)
 
@@ -119,6 +120,12 @@ class MusicServiceConnection(
             logInfo("Repeat mode was changed to $repeatMode")
 
             repeatState.value = repeatMode
+        }
+
+        override fun onShuffleModeChanged(shuffleMode: Int) {
+            logInfo("Shuffle mode was changed to $shuffleMode")
+
+            shuffleState.value = shuffleMode
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {

@@ -13,6 +13,7 @@ import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.ext.mediasession.RepeatModeActionProvider
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.gorilla.gorillagroove.GGApplication
@@ -90,6 +91,7 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setPlaybackPreparer(MusicPlaybackPreparer())
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator())
         mediaSessionConnector.setPlayer(exoPlayer)
+        mediaSessionConnector.setCustomActionProviders(RepeatModeActionProvider(this), ShuffleModeActionProvider())
 
         exoPlayer.addListener(musicPlayerEventListener)
 
@@ -248,6 +250,27 @@ class MusicService : MediaBrowserServiceCompat() {
             MEDIA_ROOT_ID -> {
                 result.sendResult(null)
             }
+        }
+    }
+
+    private inner class ShuffleModeActionProvider : MediaSessionConnector.CustomActionProvider {
+        override fun onCustomAction(
+            player: Player,
+            controlDispatcher: ControlDispatcher,
+            action: String,
+            extras: Bundle?
+        ) {
+            controlDispatcher.dispatchSetShuffleModeEnabled(player, !player.shuffleModeEnabled)
+        }
+
+        override fun getCustomAction(player: Player): PlaybackStateCompat.CustomAction? {
+            val icon = resources.getIdentifier("ic_shuffle_24", "drawable", packageName)
+
+            return PlaybackStateCompat.CustomAction.Builder(
+                "ACTION_SHUFFLE_MODE",
+                "actionLabel",
+                icon
+            ).build()
         }
     }
 }

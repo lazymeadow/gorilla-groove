@@ -35,6 +35,8 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     val repeatState: LiveData<Int>
         get() = _repeatState
 
+    val shuffleState = MutableStateFlow(PlaybackStateCompat.SHUFFLE_MODE_NONE)
+
     private val _isBuffering: MutableLiveData<Boolean> = MutableLiveData()
     val isBuffering: LiveData<Boolean>
         get() = _isBuffering
@@ -78,6 +80,10 @@ class PlayerControlsViewModel @ViewModelInject constructor(
 
             launch {
                 connection.repeatState.collect { _repeatState.postValue(it) }
+            }
+
+            launch {
+                connection.shuffleState.collect { shuffleState.value = it }
             }
 
             connection.nowPlaying.collect { newMetadataItem ->
@@ -159,6 +165,17 @@ class PlayerControlsViewModel @ViewModelInject constructor(
             }
             else -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE)
+            }
+        }
+    }
+
+    fun shuffle() {
+        when(shuffleState.value) {
+            PlaybackStateCompat.SHUFFLE_MODE_NONE -> {
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL)
+            }
+            PlaybackStateCompat.SHUFFLE_MODE_ALL -> {
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
             }
         }
     }

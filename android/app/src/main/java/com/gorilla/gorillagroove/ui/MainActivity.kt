@@ -80,6 +80,10 @@ class MainActivity : AppCompatActivity() {
             playerControlsViewModel.repeat()
         }
 
+        shuffle_button.setOnClickListener {
+            playerControlsViewModel.shuffle()
+        }
+
         next_button.setOnClickListener {
             playerControlsViewModel.skipToNext()
         }
@@ -146,11 +150,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun subscribeObservers() {
         lifecycleScope.launch(Dispatchers.Main) {
-            playerControlsViewModel.playbackState.collect {
-                if (it.isPlaying) {
-                    playpause_button.setImageResource(R.drawable.ic_pause_24)
-                } else {
-                    playpause_button.setImageResource(R.drawable.ic_play_arrow_24)
+            launch {
+                playerControlsViewModel.playbackState.collect {
+                    if (it.isPlaying) {
+                        playpause_button.setImageResource(R.drawable.ic_pause_24)
+                    } else {
+                        playpause_button.setImageResource(R.drawable.ic_play_arrow_24)
+                    }
+                }
+            }
+
+            launch {
+                playerControlsViewModel.shuffleState.collect {
+                    if (it == SHUFFLE_MODE_NONE) {
+                        shuffle_button.setColorFilter(ContextCompat.getColor(GGApplication.application, R.color.exo_white), android.graphics.PorterDuff.Mode.SRC_IN)
+                    } else {
+                        shuffle_button.setColorFilter(ContextCompat.getColor(GGApplication.application, R.color.ggSecondary), android.graphics.PorterDuff.Mode.SRC_IN)
+                    }
                 }
             }
         }
