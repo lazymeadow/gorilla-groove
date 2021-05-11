@@ -72,6 +72,10 @@ class TrackCellAdapter<T: TrackReturnable>(
         return trackList.filter { checkedTrackIds.contains(it.asTrack().id) }
     }
 
+    fun clearSelectedTracks() {
+        checkedTrackIds.clear()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(
             R.layout.track_expandable_item, parent, false

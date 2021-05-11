@@ -176,8 +176,12 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
 
         if (enabled) {
             filterMenu.isVisible = false
-        } else if (showFilterMenu) {
-            filterMenu.isVisible = true
+        } else {
+            if (showFilterMenu) {
+                filterMenu.isVisible = true
+            }
+
+            trackCellAdapter.clearSelectedTracks()
         }
     }
 
