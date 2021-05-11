@@ -22,9 +22,7 @@ import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.TrackChangeEvent
 import com.gorilla.gorillagroove.ui.menu.*
-import com.gorilla.gorillagroove.util.GGToast
-import com.gorilla.gorillagroove.util.LocationService
-import com.gorilla.gorillagroove.util.getNullableBoolean
+import com.gorilla.gorillagroove.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.android.synthetic.main.track_expandable_item.*
@@ -53,9 +51,7 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         SortMenuOption("Sort by Year", TrackSortType.YEAR),
     )
 
-    protected var activeSort = sortOptions
-        .first { it.sortType == TrackSortType.NAME }
-        .also { it.sortDirection = it.initialSortOnTap }
+    protected var activeSort = getInitialSort()
 
     protected var showHidden = false
     protected var albumFilter: String? = null
@@ -195,6 +191,13 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         }
     }
 
+    private fun getInitialSort(): SortMenuOption {
+        val lastSortType = sharedPreferences.getString("LAST_SORT_TYPE", null)?.let { valueOfOrNull(it) } ?: TrackSortType.NAME
+        val lastSortDirection = sharedPreferences.getString("LAST_SORT_DIRECTION", null)?.let { valueOfOrNull(it) } ?: SortDirection.ASC
+
+        return sortOptions.first { it.sortType == lastSortType }.also { it.sortDirection = lastSortDirection }
+    }
+
     private fun setupFilterMenu() {
         popoutMenu.setMenuList(
             listOf(
@@ -209,6 +212,12 @@ abstract class TrackListFragment<T: TrackReturnable> : GGFragment(R.layout.fragm
         popoutMenu.onOptionTapped = { menuItem ->
             if (menuItem is SortMenuOption) {
                 activeSort = menuItem
+
+                // Keep this around for later so if the user has a preferred sort they aren't having to flip to it all the time
+                sharedPreferences.edit()
+                    .putString("LAST_SORT_TYPE", menuItem.sortType.toString())
+                    .putString("LAST_SORT_DIRECTION", menuItem.sortDirection.toString())
+                    .apply()
             }
             reset()
         }
