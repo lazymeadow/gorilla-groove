@@ -60,8 +60,6 @@ class GGApplication : Application() {
         logCrit("Unhandled fatal exception encountered!", e)
 
         GGLog.flush()
-
-        // TODO send logs once an actual settings menu has been configured and it can be disabled
     }
 
     companion object {

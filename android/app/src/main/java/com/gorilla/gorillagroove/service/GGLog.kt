@@ -122,6 +122,8 @@ object GGLog {
             return
         }
 
+        flush()
+
         GlobalScope.launch {
             ProblemReportSender.sendProblemReport(false)
         }

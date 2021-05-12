@@ -2,10 +2,12 @@ package com.gorilla.gorillagroove.util
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context.BATTERY_SERVICE
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
+import android.os.BatteryManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
@@ -123,11 +125,17 @@ object LocationService {
             return null
         }
 
-        // TODO use minimum battery setting!
-
         val locationPermission = ActivityCompat.checkSelfPermission(GGApplication.application, Manifest.permission.ACCESS_FINE_LOCATION)
         if (locationPermission != PackageManager.PERMISSION_GRANTED) {
             logWarn("Location is enabled, but permission was not granted.")
+            return null
+        }
+
+        val bm = GGApplication.application.getSystemService(BATTERY_SERVICE) as BatteryManager
+        val batteryLevel = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+        if (batteryLevel < GGSettings.locationMinimumBattery && !bm.isCharging) {
+            logInfo("Not gathering location point. Phone battery is $batteryLevel and must be at least ${GGSettings.locationMinimumBattery} or be charging")
             return null
         }
 
