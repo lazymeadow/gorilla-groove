@@ -11,27 +11,42 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.*
-import com.gorilla.gorillagroove.repository.MainRepository
-import com.gorilla.gorillagroove.util.Constants.MEDIA_ROOT_ID
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.ext.mediasession.RepeatModeActionProvider
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.gorilla.gorillagroove.GGApplication
+import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
 import com.gorilla.gorillagroove.service.GGLog.logWarn
+import com.gorilla.gorillagroove.util.Constants.MEDIA_ROOT_ID
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import javax.inject.Inject
-
 
 private const val TAG = "AppDebug: Music Service"
 
 @AndroidEntryPoint
 class MusicService : MediaBrowserServiceCompat() {
 
-    @Inject
-    lateinit var exoPlayer: SimpleExoPlayer
+    private val exoPlayer = SimpleExoPlayer.Builder(GGApplication.application)
+        .setLoadControl(DefaultLoadControl())
+        .build().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(C.CONTENT_TYPE_MUSIC)
+                    .setUsage(C.USAGE_MEDIA)
+                    .build(),
+                true
+            )
+            setHandleAudioBecomingNoisy(true)
+        }
 
     @Inject
     lateinit var repo: MainRepository
@@ -76,6 +91,7 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setPlaybackPreparer(MusicPlaybackPreparer())
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator())
         mediaSessionConnector.setPlayer(exoPlayer)
+        mediaSessionConnector.setCustomActionProviders(RepeatModeActionProvider(this), ShuffleModeActionProvider())
 
         exoPlayer.addListener(musicPlayerEventListener)
 
@@ -141,7 +157,8 @@ class MusicService : MediaBrowserServiceCompat() {
                 Player.DISCONTINUITY_REASON_INTERNAL -> {
                     //Log.d(TAG, "onPositionDiscontinuity: reason internal")
                 }
-                Player.DISCONTINUITY_REASON_AD_INSERTION -> { }
+                Player.DISCONTINUITY_REASON_AD_INSERTION -> {
+                }
             }
         }
     }
@@ -233,6 +250,27 @@ class MusicService : MediaBrowserServiceCompat() {
             MEDIA_ROOT_ID -> {
                 result.sendResult(null)
             }
+        }
+    }
+
+    private inner class ShuffleModeActionProvider : MediaSessionConnector.CustomActionProvider {
+        override fun onCustomAction(
+            player: Player,
+            controlDispatcher: ControlDispatcher,
+            action: String,
+            extras: Bundle?
+        ) {
+            controlDispatcher.dispatchSetShuffleModeEnabled(player, !player.shuffleModeEnabled)
+        }
+
+        override fun getCustomAction(player: Player): PlaybackStateCompat.CustomAction? {
+            val icon = resources.getIdentifier("ic_shuffle_24", "drawable", packageName)
+
+            return PlaybackStateCompat.CustomAction.Builder(
+                "ACTION_SHUFFLE_MODE",
+                "actionLabel",
+                icon
+            ).build()
         }
     }
 }

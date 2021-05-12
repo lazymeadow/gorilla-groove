@@ -1,33 +1,40 @@
 package com.gorilla.gorillagroove.ui
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
+import android.view.MotionEvent
 import android.view.View
 import android.widget.SeekBar
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.repository.MainRepository
-import com.gorilla.gorillagroove.util.Constants
+import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
+import com.gorilla.gorillagroove.util.showAlertDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.runBlocking
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
 
     @Inject
     lateinit var mainRepository: MainRepository
@@ -41,76 +48,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+
+        setInitialFragment(navHostFragment)
+
         setSupportActionBar(findViewById(R.id.toolbar))
 
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        // setupActionBarWithNavController(navController)
         bottomNavigationView.setupWithNavController(navController)
 
         navHostFragment.findNavController()
-            .addOnDestinationChangedListener { _, destination, _ ->
-                when (destination.id) {
-                    R.id.loginFragment -> {
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        title_tv.text = ""
-                    }
-                    R.id.mainFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "My Library"
-                    }
-                    R.id.playingFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "Now Playing"
-                    }
-                    R.id.usersFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "Users"
-                    }
-                    R.id.playlistsFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "Playlists"
-                    }
-                    R.id.playlistFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                    }
-                    R.id.moreMenuFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "More"
-                    }
-                    R.id.trackPropertiesFragment -> {
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        title_tv.text = "Properties"
-                    }
-                    R.id.problemReportFragment -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "Problem Report"
-                    }
-                    R.id.logViewFragment -> {
-                        bottomNavigationView.visibility = View.GONE
-                        playerControlView.visibility = View.GONE
-                        title_tv.text = "View Logs"
-                    }
-                    else -> {
-                        bottomNavigationView.visibility = View.VISIBLE
-                        playerControlView.visibility = View.VISIBLE
-                        title_tv.text = "var ar jag?"
-                        supportActionBar?.displayOptions
-                    }
-                }
+            // Apply sensible defaults when we navigate to a fragment. As fragments need to customize themselves further, they do when they are loaded
+            .addOnDestinationChangedListener { _, _, _ ->
+                multiselectIcon.visibility = View.GONE
+                bottomNavigationView.visibility = View.VISIBLE
+                playerControlView.visibility = View.VISIBLE
+                toolbar.isVisible = true
             }
 
         subscribeObservers()
@@ -122,6 +78,10 @@ class MainActivity : AppCompatActivity() {
 
         repeat_button.setOnClickListener {
             playerControlsViewModel.repeat()
+        }
+
+        shuffle_button.setOnClickListener {
+            playerControlsViewModel.shuffle()
         }
 
         next_button.setOnClickListener {
@@ -152,9 +112,33 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
-            CoroutineScope(Dispatchers.IO).launch {
+        if (GGApplication.isUserSignedIn) {
+            lifecycleScope.launch(Dispatchers.IO) {
                 mainRepository.postDeviceVersion()
+            }
+        }
+    }
+
+    private fun setInitialFragment(navHostFragment: NavHostFragment) {
+        val graph = navHostFragment.navController.navInflater.inflate(R.navigation.nav_graph)
+
+        graph.startDestination = getStartingFragmentId()
+
+        navHostFragment.navController.graph = graph
+    }
+
+    fun getStartingFragmentId(): Int {
+        return if (!GGApplication.isUserSignedIn) {
+            R.id.loginFragment
+        } else {
+            val syncStatuses = runBlocking(Dispatchers.IO) {
+                GorillaDatabase.syncStatusDao.findAll()
+            }
+
+            if (syncStatuses.isEmpty()) {
+                R.id.firstTimeSyncFragment
+            } else {
+                R.id.libraryTrackFragment
             }
         }
     }
@@ -165,13 +149,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun subscribeObservers() {
-        playerControlsViewModel.playbackState.observe(this, {
-            if (it.isPlaying) {
-                playpause_button.setImageResource(R.drawable.ic_pause_24)
-            } else {
-                playpause_button.setImageResource(R.drawable.ic_play_arrow_24)
+        lifecycleScope.launch(Dispatchers.Main) {
+            launch {
+                playerControlsViewModel.playbackState.collect {
+                    if (it.isPlaying) {
+                        playpause_button.setImageResource(R.drawable.ic_pause_24)
+                    } else {
+                        playpause_button.setImageResource(R.drawable.ic_play_arrow_24)
+                    }
+                }
             }
-        })
+
+            launch {
+                playerControlsViewModel.shuffleState.collect {
+                    if (it == SHUFFLE_MODE_NONE) {
+                        shuffle_button.setColorFilter(ContextCompat.getColor(GGApplication.application, R.color.exo_white), android.graphics.PorterDuff.Mode.SRC_IN)
+                    } else {
+                        shuffle_button.setColorFilter(ContextCompat.getColor(GGApplication.application, R.color.ggSecondary), android.graphics.PorterDuff.Mode.SRC_IN)
+                    }
+                }
+            }
+        }
 
         playerControlsViewModel.repeatState.observe(this, {
             when (it) {
@@ -219,7 +217,58 @@ class MainActivity : AppCompatActivity() {
         playerControlsViewModel.bufferPosition.observe(this, {
             audio_seek_bar.secondaryProgress = it.toInt() / 1000
         })
+    }
 
+    override fun onStart() {
+        super.onStart()
+
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        EventBus.getDefault().unregister(this)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_DOWN) {
+            EventBus.getDefault().post(ev)
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    // For showing alert dialogs from a background action that has no concept of the current activity
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onModalOpenRequest(event: ShowAlertDialogRequest) {
+        showAlertDialog(
+            activity = this,
+            title = event.title,
+            message = event.message,
+            yesText = event.yesText,
+            noText = event.noText,
+            yesAction = event.yesAction,
+            noAction = event.noAction,
+        )
+    }
+
+    override fun onBackPressed() {
+        // If any fragment contained within this activity consumed the back press, don't do anything with it
+        val handled = supportFragmentManager.fragments.handleBackPress()
+
+        if (!handled) {
+            super.onBackPressed()
+        }
+    }
+}
+
+private fun List<Fragment>.handleBackPress(): Boolean {
+    return this.any { fragment ->
+        when (fragment) {
+            is NavHostFragment -> fragment.childFragmentManager.fragments.handleBackPress()
+            is GGFragment -> fragment.onBackPressed()
+            else -> false
+        }
     }
 }
 

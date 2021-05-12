@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.gorilla.gorillagroove">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
         android:name="com.gorilla.gorillagroove.GGApplication"
@@ -14,9 +17,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.Launcher">
 
+<!--        android:windowSoftInputMode="adjustResize|stateHidden"-->
         <activity
             android:name="com.gorilla.gorillagroove.ui.MainActivity"
-            android:windowSoftInputMode="adjustResize|stateHidden">
+            android:windowSoftInputMode="adjustNothing"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,6 +33,12 @@
                 <action android:name="android.media.browse.MediaBroserService"/>
             </intent-filter>
         </service>
+
+        <provider
+            android:name="androidx.work.impl.WorkManagerInitializer"
+            android:authorities="${applicationId}.workmanager-init"
+            tools:node="remove"
+            android:exported="false" />
 
     </application>
 

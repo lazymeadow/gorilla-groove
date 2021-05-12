@@ -5,6 +5,8 @@
         <item name="colorPrimary">@android:color/holo_blue_light</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@android:color/holo_blue_light</item>
+        <item name="android:actionModeBackground">@color/colorPrimaryDark</item>
+        <item name="android:actionMenuTextColor">@color/ggPrimary</item>
     </style>
 
     <!-- Launcher / Splash screen -->
@@ -34,12 +36,19 @@
         <item name="android:textColor">@color/exo_white</item>
         <item name="android:gravity">center</item>
         <item name="android:textSize">16sp</item>
+        <item name="android:background">@drawable/rounded_button_corner</item>
 
-        <item name="android:paddingTop">4dp</item>
-        <item name="android:paddingBottom">4dp</item>
         <item name="android:layout_marginStart">8dp</item>
         <item name="android:layout_marginEnd">8dp</item>
-        <item name="cornerRadius">4dp</item>
+    </style>
+
+    <style name="ActionSheetItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textColor">@color/ggPrimary</item>
+        <item name="android:padding">15dp</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
 </resources>

@@ -2,98 +2,116 @@ package com.gorilla.gorillagroove.ui
 
 import android.os.Bundle
 import android.view.*
-import android.widget.Toast
+import android.widget.TextView
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.Track
-import com.gorilla.gorillagroove.network.track.TrackUpdate
+import com.gorilla.gorillagroove.database.GorillaDatabase
+import com.gorilla.gorillagroove.database.entity.DbTrack
+import com.gorilla.gorillagroove.database.entity.OfflineAvailabilityType
+import com.gorilla.gorillagroove.network.track.TrackUpdateRequest
+import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.util.StateEvent
+import com.gorilla.gorillagroove.service.TrackService
+import com.gorilla.gorillagroove.ui.settings.toReadableByteString
+import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.hideKeyboard
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_track_properties.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
-    private val viewModel: MainViewModel by viewModels()
 
-    var trackId: Long? = null
-    var track: Track? = null
+    private lateinit var track: DbTrack
 
-    //differs
-    var newName: String? = null
-    var newArtist: String? = null
-    var newFeaturing: String? = null
-    var newAlbum: String? = null
-    var newGenre: String? = null
-    var newTrackNum: Int? = null
-    var newYear: Int? = null
-    var newNote: String? = null
+    @Inject
+    lateinit var mainRepository: MainRepository
 
-    var hasChanged: Boolean = false
+    private var newName: String? = null
+    private var newArtist: String? = null
+    private var newFeaturing: String? = null
+    private var newAlbum: String? = null
+    private var newGenre: String? = null
+    private var newTrackNum: Int? = null
+    private var newYear: Int? = null
+    private var newNote: String? = null
+    private var newPrivate: Boolean = false
+    private var newHidden: Boolean = false
+    private var newOfflineAvailability = OfflineAvailabilityType.NORMAL
 
     private var menu: Menu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        trackId = arguments?.getLong("KEY_TRACK_ID")
+        track = arguments?.getSerializable("KEY_TRACK") as? DbTrack ?: run {
+            throw IllegalArgumentException("KEY_TRACK was not supplied to TrackPropertiesFragment!")
+        }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        logInfo("Loading TrackProperties view with track ID: $trackId")
+        logInfo("Loading TrackProperties view with track ID: ${track.id}")
 
-        subscribeObservers()
+        requireActivity().apply {
+            bottomNavigationView.visibility = View.GONE
+            playerControlView.visibility = View.GONE
+            title_tv.text = "Properties"
+        }
 
-        trackId?.let {
-            viewModel.setLibraryEvent(LibraryEvent.GetTrack(it))
+        listenForChanges()
+        populateFragmentText()
+
+        lifecycleScope.launch {
+            TrackService.getAlbumArt(track)?.let { art ->
+                albumArt.setImageBitmap(art)
+            }
         }
     }
 
     override fun onPause() {
-        hideKeyboard(requireActivity())
+        requireActivity().hideKeyboard()
         super.onPause()
     }
 
-    private fun subscribeObservers() {
-        viewModel.selectedTrack.observe(requireActivity(), Observer {
-            when (it.stateEvent) {
-                is StateEvent.Success -> {
-                    it.data?.let { it1 ->
-                        track = it1
-                        populateFragmentText(it1)
-                    }
-                    listenForChanges()
-                    top_level_layout.requestFocus()
-                }
-                is StateEvent.Error -> {
-                    Toast.makeText(requireContext(), "Error occurred", Toast.LENGTH_SHORT).show()
-                }
-                is StateEvent.Loading -> {
-                    //nothing
-                }
-            }
-        })
+    private var oldInputMode: Int? = null
+
+    override fun onStart() {
+        super.onStart()
+
+        // We actually want the keyboard to resize this screen, unlike every other screen in the app (so far)
+        // Save the old input type we were using so we can restore it when the fragment goes away.
+        // Otherwise we will leak this undesirable keyboard behavior to other fragments.
+        oldInputMode = activity?.window?.attributes?.softInputMode
+
+        // This thing is deprecated but I'm using it anyway. Why? Their alternative they outline in the deprecation looks absolutely stupid.
+        // They want you to set up a listener on the root to adjust stuff yourself. Like. No. What are you smoking, Google.
+        // Furthermore, this soft input mode IS VALID IN XML??? If you set this in your AndroidManifest there is no deprecation warning.
+        // So clearly it seems like it's supported, but not supported when set programmatically? That makes no sense
+        @Suppress("DEPRECATION")
+        activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     }
 
-    private fun populateFragmentText(track: Track) {
+    override fun onStop() {
+        super.onStop()
+
+        oldInputMode?.let { activity?.window?.setSoftInputMode(it) }
+    }
+
+    private fun populateFragmentText() {
         et_name.setText(track.name)
         et_artist.setText(track.artist)
         et_featuring.setText(track.featuring)
@@ -101,9 +119,32 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         et_genre.setText(track.genre ?: "")
         et_track_number.setText(track.trackNumber?.toString() ?: "")
         et_year.setText(track.releaseYear?.toString() ?: "")
-        et_bitrate.setText(track.bitRate.toString())
-        et_samplerate.setText(track.sampleRate.toString())
         et_note.setText(track.note ?: "")
+        hiddenCheckbox.isChecked = track.hidden
+        privateCheckbox.isChecked = track.thePrivate
+        fileSizeValue.text = (track.filesizeArt + track.filesizeAudio).toLong().toReadableByteString()
+        isCachedValue.text = if (track.songCachedAt != null) "Yes" else "No"
+
+        newOfflineAvailability = track.offlineAvailability
+        updateOfflineAvailabilityViews()
+    }
+
+    private fun getViewForOfflineType(offlineAvailabilityType: OfflineAvailabilityType): TextView {
+        return when (offlineAvailabilityType) {
+            OfflineAvailabilityType.AVAILABLE_OFFLINE -> offlineAvailabilityAlways
+            OfflineAvailabilityType.NORMAL -> offlineAvailabilityNormal
+            OfflineAvailabilityType.ONLINE_ONLY -> offlineAvailabilityNever
+            else -> throw IllegalStateException("Offline availability type $offlineAvailabilityType not handled")
+        }
+    }
+
+    private fun updateOfflineAvailabilityViews() {
+        listOf(offlineAvailabilityAlways, offlineAvailabilityNormal, offlineAvailabilityNever).forEach {
+            it.setTextColor(GGApplication.application.getColor(R.color.foreground))
+        }
+
+        val availabilityView = getViewForOfflineType(newOfflineAvailability)
+        availabilityView.setTextColor(GGApplication.application.getColor(R.color.ggPrimary))
     }
 
     private fun listenForChanges() {
@@ -115,31 +156,48 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         et_track_number.doOnTextChanged { text, _, _, _ -> newTrackNum = text.toString().toIntOrNull() }
         et_year.doOnTextChanged { text, _, _, _ -> newYear = text.toString().toIntOrNull() }
         et_note.doOnTextChanged { text, _, _, _ -> newNote = text.toString() }
+        hiddenCheckbox.setOnCheckedChangeListener { _, isChecked -> newHidden = isChecked }
+        privateCheckbox.setOnCheckedChangeListener { _, isChecked -> newPrivate = isChecked }
+
+        listOf(OfflineAvailabilityType.AVAILABLE_OFFLINE, OfflineAvailabilityType.NORMAL, OfflineAvailabilityType.ONLINE_ONLY).forEach { type ->
+            getViewForOfflineType(type).setOnClickListener {
+                newOfflineAvailability = type
+                updateOfflineAvailabilityViews()
+            }
+        }
     }
 
-    @ExperimentalCoroutinesApi
     private fun update() {
-        track?.let {
-            val tu = TrackUpdate(
-                trackIds = listOf(it.id),
-                name = if (it.name != newName) newName.also { hasChanged = true } else null,
-                artist = if (it.artist != newArtist) newArtist.also { hasChanged = true } else null,
-                featuring = if (it.featuring != newFeaturing) newFeaturing.also { hasChanged = true } else null,
-                album = if (it.album != newAlbum) newAlbum.also { hasChanged = true } else null,
-                trackNumber = if (it.trackNumber != newTrackNum) newTrackNum.also { hasChanged = true } else null,
-                genre = if (it.genre != newGenre) newGenre.also { hasChanged = true } else null,
-                releaseYear = if (it.releaseYear != newYear) newYear.also { hasChanged = true } else null,
-                note = if (it.note != newNote) newNote.also { hasChanged = true } else null,
-                hidden = null,
-                albumArtUrl = null,
-                cropArtToSquare = null
-            )
-            if (hasChanged) {
-                //Log.d(TAG, "update: making change!")
-                viewModel.setUpdateEvent(UpdateEvent.UpdateTrack(tu))
-            } else {
-                Toast.makeText(requireContext(), "No changes found", Toast.LENGTH_SHORT).show()
+        // trackNumber and releaseYear need to be set to -1 to clear them out on the API, as null means "no change"
+        val request = TrackUpdateRequest(
+            trackIds = listOf(track.id),
+            name = if (track.name != newName) newName else null,
+            artist = if (track.artist != newArtist) newArtist else null,
+            featuring = if (track.featuring != newFeaturing) newFeaturing else null,
+            album = if (track.album != newAlbum) newAlbum else null,
+            trackNumber = if (track.trackNumber != newTrackNum) newTrackNum ?: -1 else null,
+            genre = if (track.genre != newGenre) newGenre else null,
+            releaseYear = if (track.releaseYear != newYear) newYear ?: -1 else null,
+            note = if (track.note != newNote) newNote else null,
+            hidden = if (track.hidden != newHidden) newHidden else null,
+            private = if (track.thePrivate != newPrivate) newPrivate else null,
+            offlineAvailability = if (track.offlineAvailability != newOfflineAvailability) newOfflineAvailability else null,
+            albumArtUrl = null,
+            cropArtToSquare = null
+        )
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            logInfo("User is updating metadata of track: ${track.id}")
+
+            val updatedTrack = mainRepository.updateTrack(request) ?: run {
+                GGToast.show("Failed to update track")
+                return@launch
             }
+
+            logInfo("Finished updating metadata of track: ${track.id}")
+            GorillaDatabase.trackDao.save(updatedTrack)
+
+            withContext(Dispatchers.Main) { activity?.onBackPressed() }
         }
     }
 
@@ -149,7 +207,6 @@ class TrackPropertiesFragment : Fragment(R.layout.fragment_track_properties) {
         this.menu = menu
     }
 
-    @ExperimentalCoroutinesApi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.cancel_action -> {

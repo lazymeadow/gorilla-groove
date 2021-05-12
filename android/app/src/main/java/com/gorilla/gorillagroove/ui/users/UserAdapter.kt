@@ -6,78 +6,65 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.User
-import kotlinx.android.synthetic.main.user_info_item.view.*
+import com.gorilla.gorillagroove.database.entity.DbUser
+import kotlinx.android.synthetic.main.simple_text_info_item.view.*
 import java.util.*
 
 class UserAdapter(
     private val listener: OnUserListener
-) : RecyclerView.Adapter<UserAdapter.PlaylistViewHolder>(), Filterable{
+) : RecyclerView.Adapter<UserAdapter.UserViewHolder>(), Filterable {
 
-    var userList = listOf<User>()
+    var userList = listOf<DbUser>()
 
-
-    fun submitList(users: List<User>) {
+    fun submitList(users: List<DbUser>) {
         userList = users
         notifyDataSetChanged()
-
     }
 
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaylistViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(
-            R.layout.user_info_item, parent, false
+            R.layout.simple_text_info_item, parent, false
         )
-        return PlaylistViewHolder(itemView)
+        return UserViewHolder(itemView)
     }
 
     override fun getItemCount() = userList.size
 
-    override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val currentUser = userList[position]
-        holder.tvUsername.text = currentUser.username
-
+        holder.tvUsername.text = currentUser.name
     }
 
-    inner class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
-        val tvUsername: TextView = itemView.user_name
-
+    inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+        val tvUsername: TextView = itemView.textItem
 
         init {
             itemView.setOnClickListener(this)
-            itemView.setOnLongClickListener(this)
         }
 
         override fun onClick(v: View?) {
             val position = adapterPosition
 
             //in event of animation
-            if(position != RecyclerView.NO_POSITION) {
+            if (position != RecyclerView.NO_POSITION) {
                 listener.onUserClick(position)
             }
-        }
-
-        override fun onLongClick(v: View?): Boolean {
-            val position = adapterPosition
-            if(position != RecyclerView.NO_POSITION) {
-                listener.onUserLongClick(position)
-            }
-            return true
         }
     }
 
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val resultsList : List<User> =
-                if (constraint.isNullOrEmpty()) {
-                    userList
-                } else {
-                    val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
-                    userList.filter {
-                        it.username.toLowerCase(Locale.ROOT).contains(filterPattern)
+                val resultsList: List<DbUser> =
+                    if (constraint.isNullOrEmpty()) {
+                        userList
+                    } else {
+                        val filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim()
+                        userList.filter {
+                            it.name.toLowerCase(Locale.ROOT).contains(filterPattern)
+                        }
                     }
-                }
 
                 val filterResults = FilterResults()
                 filterResults.values = resultsList
@@ -92,6 +79,5 @@ class UserAdapter(
 
     interface OnUserListener {
         fun onUserClick(position: Int)
-        fun onUserLongClick(position: Int) : Boolean
     }
 }

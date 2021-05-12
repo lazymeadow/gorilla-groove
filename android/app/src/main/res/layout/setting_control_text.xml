@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingEnd="8dp"
+    tools:ignore="RtlSymmetry,HardcodedText">
+
+    <TextView
+        android:id="@+id/textControlText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/grey1"
+        android:padding="10dp"
+        android:paddingStart="12dp"
+        android:textAlignment="textStart"
+        android:textColor="@color/foreground"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Minimum Required Battery" />
+
+    <TextView
+        android:id="@+id/controlValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:textColor="@color/debugGrey"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/controlChevron"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="20%" />
+
+    <ImageView
+        android:id="@+id/controlChevron"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:contentDescription="Right Arrow"
+        android:src="@drawable/ic_arrow_forward_ios_black_24dp"
+        app:layout_constraintBottom_toBottomOf="@id/controlValue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/controlValue"
+        app:tint="@color/settingsDividerGrey" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

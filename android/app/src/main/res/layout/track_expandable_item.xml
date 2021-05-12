@@ -1,130 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/line1"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@drawable/table_ripple"
+    android:orientation="horizontal"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    tools:ignore="RtlSymmetry,SmallSp,HardcodedText">
 
-    <LinearLayout
-        android:id="@+id/line1"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/background"
-        android:orientation="horizontal"
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="30dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_vertical"
         android:paddingStart="8dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:padding="4dp"
+        android:paddingStart="8dp">
+
+        <TextView
+            android:id="@+id/tv_artist"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:padding="4dp">
+            android:hyphenationFrequency="none"
+            android:singleLine="true"
+            android:textAlignment="textStart"
+            android:textAllCaps="true"
+            android:textColor="@color/grey6"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toStartOf="@id/tv_length"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Artist" />
 
-            <TextView
-                android:id="@+id/tv_artist"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:hyphenationFrequency="none"
-                android:singleLine="true"
-                android:textAlignment="textStart"
-                android:textAllCaps="true"
-                android:textColor="@color/grey6"
-                android:textSize="11sp"
-                app:layout_constraintEnd_toStartOf="@id/tv_length"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Artist" />
-
-            <TextView
-                android:id="@+id/tv_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:hyphenationFrequency="none"
-                android:singleLine="true"
-                android:textColor="@color/foreground"
-                android:textSize="16sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_artist"
-                tools:text="Title" />
-
-            <TextView
-                android:id="@+id/tv_album"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:hyphenationFrequency="none"
-                android:singleLine="true"
-                android:textColor="@color/grey6"
-                android:textSize="13sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_title"
-                tools:text="Album" />
-
-            <TextView
-                android:id="@+id/tv_length"
-                android:layout_width="35dp"
-                android:layout_height="wrap_content"
-                android:textAlignment="textEnd"
-                android:textColor="@color/grey6"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="12:51" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <ImageButton
-            android:id="@+id/playStatusButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="0"
-            android:background="@null"
-            android:padding="8dp"
-            android:scaleType="fitCenter"
-            android:tint="@color/ggPrimaryLight"
-            android:visibility="invisible"
-            app:srcCompat="@drawable/ic_pause_24" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/menu_button_layout"
-            android:layout_width="50dp"
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="0"
-            android:padding="4dp"
-            android:paddingStart="10dp">
+            android:layout_marginTop="4dp"
+            android:hyphenationFrequency="none"
+            android:singleLine="true"
+            android:textColor="@color/foreground"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_artist"
+            tools:text="Title" />
 
-            <TextView
-                android:id="@+id/tv_options"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="&#8942;"
-                android:textAppearance="?android:textAppearanceLarge"
-                android:textSize="20sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/tv_album"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:hyphenationFrequency="none"
+            android:singleLine="true"
+            android:textColor="@color/grey6"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            tools:text="Album" />
 
-            <CheckBox
-                android:id="@+id/checkbox"
-                android:layout_width="30dp"
-                android:layout_height="50dp"
-                android:layout_gravity="center_vertical"
-                android:visibility="invisible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_length"
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"
+            android:textAlignment="textEnd"
+            android:textColor="@color/grey6"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="12:51" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/dragHandle"
+        android:layout_width="30dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_vertical"
+        android:visibility="invisible"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_drag_handle_black_24dp"
+        app:tint="@color/debugGrey"
+        tools:visibility="visible"
+        android:contentDescription="Drag handle" />
 
-</androidx.cardview.widget.CardView>
+</LinearLayout>

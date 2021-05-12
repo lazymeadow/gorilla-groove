@@ -5,11 +5,20 @@ package com.gorilla.gorillagroove.service
 import android.util.Log
 import com.gorilla.gorillagroove.BuildConfig
 import com.gorilla.gorillagroove.GGApplication
+import com.gorilla.gorillagroove.ui.problemreport.ProblemReportSender
+import com.gorilla.gorillagroove.util.ShowAlertDialogRequest
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintWriter
+import java.time.Instant
+import java.time.Instant.now
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.*
 import kotlin.concurrent.timer
 
@@ -44,14 +53,24 @@ object GGLog {
         }
     }
 
-    fun Any.logVerbose(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.VERBOSE)
-    fun Any.logDebug(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.DEBUG)
-    fun Any.logInfo(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.INFO)
-    fun Any.logWarn(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.WARNING)
-    fun Any.logError(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.ERROR)
-    fun Any.logError(message: String, e: Throwable) = logMessage(this.javaClass.simpleName, message + "\n${Log.getStackTraceString(e)}", LogLevel.ERROR)
-    fun Any.logCrit(message: String) = logMessage(this.javaClass.simpleName, message, LogLevel.CRITICAL)
-    fun Any.logCrit(message: String, e: Throwable) = logMessage(this.javaClass.simpleName, message + "\n${Log.getStackTraceString(e)}", LogLevel.CRITICAL)
+    fun Any.logVerbose(message: String) = logMessage(this.logTag, message, LogLevel.VERBOSE)
+    fun Any.logDebug(message: String) = logMessage(this.logTag, message, LogLevel.DEBUG)
+    fun Any.logInfo(message: String) = logMessage(this.logTag, message, LogLevel.INFO)
+    fun Any.logWarn(message: String) = logMessage(this.logTag, message, LogLevel.WARNING)
+    fun Any.logError(message: String) = logMessage(this.logTag, message, LogLevel.ERROR)
+    fun Any.logError(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${e.logString}", LogLevel.ERROR)
+    fun Any.logCrit(message: String) = logMessage(this.logTag, message, LogLevel.CRITICAL)
+    fun Any.logCrit(message: String, e: Throwable) = logMessage(this.logTag, message + "\n${e.logString}", LogLevel.CRITICAL)
+
+    // I ran into situations where some stuff had no simpleName, but their enclosing classes did.
+    private val Any.logTag: String get() {
+        var currentClass: Class<*> = this.javaClass
+        while (currentClass.simpleName.isEmpty()) {
+            currentClass = currentClass.enclosingClass ?: return "UNKNOWN"
+        }
+
+        return currentClass.simpleName
+    }
 
     private fun logMessage(tag: String, message: String, logLevel: LogLevel) {
         if (logLevel.priority < minimumLogLevel.priority) {
@@ -73,11 +92,71 @@ object GGLog {
             }
         }
 
+        if (logLevel == LogLevel.CRITICAL) {
+            handleCrit(message)
+        }
+
         val fileMessage = "${LocalDateTime.now().format(formatter)} [$tag] [${logLevel.logName}]: $message"
 
         synchronized(formatter) {
             logBuffer.add(fileMessage)
         }
+    }
+
+    @Synchronized
+    private fun handleCrit(error: String) {
+        if (BuildConfig.DEBUG) {
+            return
+        }
+
+        showCriticalPopup(error)
+
+        if (!GGSettings.automaticErrorReportingEnabled) {
+            logInfo("User encountered a critical error but has disabled automatic problem reporting. Not sending this problem report")
+            return
+        }
+
+        val lastAutomaticLogSent = Instant.ofEpochMilli(ProblemReportSender.lastSentAutomatedReport ?: 0)
+        if (ChronoUnit.HOURS.between(lastAutomaticLogSent, now()) < 9) {
+            logInfo("User encountered a critical error but the last report was sent too recently. Not automatically sending this problem report")
+            return
+        }
+
+        flush()
+
+        GlobalScope.launch {
+            ProblemReportSender.sendProblemReport(false)
+        }
+    }
+
+    private var lastPopUpShown = Instant.MIN
+
+    private fun showCriticalPopup(error: String) {
+        if (!GGSettings.showCriticalErrorsEnabled) {
+            logInfo("User encountered a critical error but will not be shown it")
+            return
+        }
+
+        if (ChronoUnit.HOURS.between(lastPopUpShown, now()) < 2) {
+            logInfo("User encountered a critical error, but the last popup was shown too recently. Not displaying this popup")
+            return
+        }
+
+        val notifiedMsg = if (GGSettings.automaticErrorReportingEnabled) " Gorilla Groove staff have been notified." else ""
+        val firstDialogEvent = ShowAlertDialogRequest(
+            title = "Critical Error Encountered",
+            message = "A critical error occurred.$notifiedMsg Show error message?",
+            yesText = "Show",
+            noText = "No thanks",
+            yesAction = {
+                val detailedDialogEvent = ShowAlertDialogRequest(
+                    message = error,
+                    noText = "Oof",
+                )
+                EventBus.getDefault().post(detailedDialogEvent)
+            },
+        )
+        EventBus.getDefault().post(firstDialogEvent)
     }
 
     @Synchronized
@@ -180,4 +259,14 @@ enum class LogLevel(val priority: Int, val logName: String) {
     WARNING(3, "warn"),
     ERROR(5, "error"),
     CRITICAL(6, "crit")
+}
+
+private val Throwable.logString: String get() {
+    // Retrofit throws worthless exceptions if you try to just log them like any other exception. So special case those so we get ACTUAL useful information out of it
+    return if (this is HttpException) {
+        val errorBody = response()?.errorBody()?.string() ?: "No http error provided"
+        "HttpMessage: $errorBody"
+    } else {
+        Log.getStackTraceString(this)
+    }
 }

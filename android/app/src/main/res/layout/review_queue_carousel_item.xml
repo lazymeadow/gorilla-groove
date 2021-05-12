@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="10dp"
+    tools:ignore="HardcodedText, RtlSymmetry">
+
+    <ImageView
+        android:id="@+id/albumArtPlaceholder"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:contentDescription="Album Art"
+        android:padding="70dp"
+        android:src="@drawable/ic_music"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:contentDescription="Album Art"
+        app:layout_constraintBottom_toBottomOf="@id/albumArtPlaceholder"
+        app:layout_constraintEnd_toEndOf="@id/albumArtPlaceholder"
+        app:layout_constraintStart_toStartOf="@id/albumArtPlaceholder"
+        app:layout_constraintTop_toTopOf="@id/albumArtPlaceholder" />
+
+    <ImageView
+        android:id="@+id/playOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:background="@color/reviewPlayButtonBackground"
+        android:contentDescription="Play button"
+        android:padding="70dp"
+        android:src="@drawable/ic_play_arrow_24"
+        app:layout_constraintBottom_toBottomOf="@id/albumArtPlaceholder"
+        app:layout_constraintEnd_toEndOf="@id/albumArtPlaceholder"
+        app:layout_constraintStart_toStartOf="@id/albumArtPlaceholder"
+        app:layout_constraintTop_toTopOf="@id/albumArtPlaceholder"
+        app:tint="@color/foreground" />
+
+    <TextView
+        android:id="@+id/trackText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:singleLine="true"
+        android:textAlignment="center"
+        android:textColor="@color/foreground"
+        android:textSize="18sp"
+        app:layout_constraintTop_toBottomOf="@id/albumArtPlaceholder"
+        tools:text="Dawn ft. London Thor - Slippy" />
+
+    <ImageView
+        android:id="@+id/thumbsDown"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="20dp"
+        android:contentDescription="Thumbs down"
+        android:src="@drawable/ic_thumb_down_black_24dp"
+        app:layout_constraintEnd_toStartOf="@id/thumbsUp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/trackText"
+        app:tint="@color/rejectColor" />
+
+    <ImageView
+        android:id="@+id/thumbsUp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="15dp"
+        android:contentDescription="Thumbs up"
+        android:src="@drawable/ic_thumb_up_black_24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/thumbsDown"
+        app:layout_constraintTop_toBottomOf="@id/trackText"
+        app:tint="@color/acceptColor" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,8 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:ignore="HardcodedText">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -14,6 +16,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/multiselectIcon"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginStart="13dp"
+            android:layout_marginEnd="13dp"
+            android:contentDescription="Multiselect"
+            android:src="@drawable/ic_filter_none_black_24dp"
+            app:tint="@color/ggPrimary" />
 
         <TextView
             android:id="@+id/title_tv"
@@ -41,7 +53,6 @@
         app:layout_constraintBottom_toTopOf="@id/playerControlView"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         app:layout_constraintVertical_bias="0.0"
-        app:navGraph="@navigation/nav_graph"
         tools:layout_editor_absoluteX="16dp">
 
     </androidx.fragment.app.FragmentContainerView>
@@ -73,6 +84,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:background="@null"
+                android:contentDescription="Toggle Play"
                 android:scaleType="fitCenter"
                 android:tint="@color/exo_white"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -90,6 +102,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:background="@null"
+                android:contentDescription="Next Track"
                 android:padding="11dp"
                 android:scaleType="fitCenter"
                 android:tint="@color/exo_white"
@@ -105,6 +118,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:background="@null"
+                android:contentDescription="Previous Track"
                 android:padding="11dp"
                 android:scaleType="fitCenter"
                 android:tint="@color/exo_white"
@@ -121,6 +135,7 @@
                 android:layout_height="50dp"
                 android:layout_marginStart="10dp"
                 android:background="@null"
+                android:contentDescription="Repeat"
                 android:padding="11dp"
                 android:scaleType="fitCenter"
                 android:tint="@color/exo_white"
@@ -134,6 +149,7 @@
                 android:layout_height="50dp"
                 android:layout_marginEnd="10dp"
                 android:background="@null"
+                android:contentDescription="Shuffle"
                 android:padding="11dp"
                 android:scaleType="fitCenter"
                 android:tint="@color/exo_white"

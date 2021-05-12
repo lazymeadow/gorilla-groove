@@ -1,39 +1,82 @@
 package com.gorilla.gorillagroove.ui.users
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.gorilla.gorillagroove.R
-import com.gorilla.gorillagroove.model.User
+import com.gorilla.gorillagroove.database.GorillaDatabase
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.MainViewModel
-import com.gorilla.gorillagroove.ui.UsersEvent
 import com.gorilla.gorillagroove.ui.createDivider
-import com.gorilla.gorillagroove.util.StateEvent
-import dagger.hilt.android.AndroidEntryPoint
+import com.gorilla.gorillagroove.ui.menu.CheckedMenuOption
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_track_list.*
 import kotlinx.android.synthetic.main.fragment_users.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.android.synthetic.main.multiselect_list.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
-@AndroidEntryPoint
 class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListener {
 
-    val TAG = "AppDebug"
-    private val viewModel: MainViewModel by viewModels()
-    lateinit var userAdapter: UserAdapter
+    private lateinit var userAdapter: UserAdapter
 
-    @ExperimentalCoroutinesApi
+    private lateinit var filterOption: MenuItem
+
+    private var showAllUsers = false
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Users view")
 
+        setHasOptionsMenu(true)
         setupRecyclerView()
-        subscribeObservers()
-        viewModel.setUsersEvent(UsersEvent.GetAllUsers)
+
+        view.popoutMenu.setMenuList(
+            listOf(
+                CheckedMenuOption(title = "Show Inactive", showAllUsers) {
+                    showAllUsers = it.isChecked
+
+                    reload()
+                },
+            )
+        )
+
+        requireActivity().title_tv.text = "Users"
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        reload()
+    }
+
+    private fun reload() {
+        lifecycleScope.launch(Dispatchers.Default) {
+            val users = GorillaDatabase.userDao.getOtherUsers()
+                // Do not show users that haven't logged in for the last ~3 months unless we really want to see them
+                .filter { user ->
+                    if (showAllUsers) {
+                        return@filter true
+                    }
+
+                    val lastLogin = user.lastLogin ?: Instant.MIN
+                    return@filter ChronoUnit.DAYS.between(lastLogin, Instant.now()) < 90
+                }
+
+            withContext(Dispatchers.Main) {
+                userAdapter.submitList(users)
+            }
+        }
     }
 
     private fun setupRecyclerView() = users_rv.apply {
@@ -43,32 +86,36 @@ class UsersFragment : Fragment(R.layout.fragment_users), UserAdapter.OnUserListe
         layoutManager = LinearLayoutManager(requireContext())
     }
 
-    private fun subscribeObservers() {
-        viewModel.users.observe(requireActivity(), Observer {
-            when (it.stateEvent) {
-                is StateEvent.Success -> {
-//                    displayProgressBar(false)
-                    userAdapter.submitList(it.data as List<User>)
-                }
-                is StateEvent.Error -> {
-//                    displayProgressBar(false)
-                    Toast.makeText(requireContext(), "Error occurred", Toast.LENGTH_SHORT).show()
-                }
-                is StateEvent.Loading -> {
-//                    displayProgressBar(true)
-                }
-            }
-        })
-    }
-
     override fun onUserClick(position: Int) {
-        //Log.d(TAG, "onUserClick: clicked ${userAdapter.userList[position].username}")
+        val user = userAdapter.userList[position]
+
+        val bundle = bundleOf("USER" to user)
+
+        findNavController().navigate(R.id.userTrackFragment, bundle)
     }
 
-    override fun onUserLongClick(position: Int): Boolean {
-        //Log.d(TAG, "onUserLongClick: long clicked ${userAdapter.userList[position].username}")
-        return true
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.app_bar_menu, menu)
+
+        filterOption = menu.findItem(R.id.action_filter_menu)
+        menu.findItem(R.id.action_search).isVisible = false
+        filterOption.isVisible = true
+
+        filterOption.setOnMenuItemClickListener {
+            view?.popoutMenu?.toggleVisibility(ignoreIfRecent = true)
+            true
+        }
     }
 
-
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        super.onOptionsItemSelected(item)
+        return when (item.itemId) {
+            R.id.action_filter_menu -> {
+                view?.popoutMenu?.toggleVisibility(ignoreIfRecent = true)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 }

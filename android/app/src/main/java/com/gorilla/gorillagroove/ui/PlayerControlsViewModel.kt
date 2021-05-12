@@ -1,21 +1,20 @@
 package com.gorilla.gorillagroove.ui
 
-import android.os.Bundle
 import android.os.SystemClock
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import com.gorilla.gorillagroove.model.Track
+import androidx.lifecycle.*
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.repository.MainRepository
 import com.gorilla.gorillagroove.service.EMPTY_PLAYBACK_STATE
 import com.gorilla.gorillagroove.service.MusicServiceConnection
-import com.gorilla.gorillagroove.util.Constants
 import com.gorilla.gorillagroove.util.KtLiveData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class PlayerControlsViewModel @ViewModelInject constructor(
     private val repository: MainRepository,
@@ -30,13 +29,13 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     val currentTrackItem: LiveData<MediaMetadataCompat>
         get() = _currentTrackItem
 
-    private val _playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
-    val playbackState: LiveData<PlaybackStateCompat>
-        get() = _playbackState
+    val playbackState = MutableStateFlow(EMPTY_PLAYBACK_STATE)
 
     private val _repeatState: MutableLiveData<Int> = MutableLiveData()
     val repeatState: LiveData<Int>
         get() = _repeatState
+
+    val shuffleState = MutableStateFlow(PlaybackStateCompat.SHUFFLE_MODE_NONE)
 
     private val _isBuffering: MutableLiveData<Boolean> = MutableLiveData()
     val isBuffering: LiveData<Boolean>
@@ -51,10 +50,7 @@ class PlayerControlsViewModel @ViewModelInject constructor(
     private fun sendPlayStatusToServer() {
         if (isPlaying && currentMetadata != null) {
             currentMetadata?.description?.let { currTrack ->
-//                //Log.d(TAG, "Sending Now Playing to server: ${currTrack.title}: ")
-                repository.sendNowPlayingToServer(
-                    currTrack
-                )
+                repository.sendNowPlayingToServer(currTrack)
             }
         } else if (!isPlaying && currentMetadata != null) {
             repository.sendStoppedPlayingToServer()
@@ -64,87 +60,86 @@ class PlayerControlsViewModel @ViewModelInject constructor(
 
     }
 
-    private val playbackStateObserver = Observer<PlaybackStateCompat> {
-        _playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
-
-//        when(it.state) {
-//            PlaybackStateCompat.STATE_PLAYING -> ////Log.d(TAG, "STATE: PLAYING")
-//            PlaybackStateCompat.STATE_PAUSED -> ////Log.d(TAG, "STATE: PAUSED")
-//            PlaybackStateCompat.STATE_STOPPED -> ////Log.d(TAG, "STATE: STOPPED")
-//            PlaybackStateCompat.STATE_BUFFERING -> ////Log.d(TAG, "STATE: BUFFERING")
-//        }
-
-        when {
-            it.isPlaying -> {
-                isPlaying = true
-                sendPlayStatusToServer()
+    private val musicServiceConnection = musicServiceConnection.also { connection ->
+        viewModelScope.launch(Dispatchers.Main) {
+            launch {
+                connection.playbackState.collect {
+                    playbackState.value = it
+                    when {
+                        it.isPlaying -> {
+                            isPlaying = true
+                            sendPlayStatusToServer()
+                        }
+                        it.isPaused -> {
+                            isPlaying = false
+                            sendPlayStatusToServer()
+                        }
+                    }
+                }
             }
 
-            it.isPaused -> {
-                isPlaying = false
-                sendPlayStatusToServer()
+            launch {
+                connection.repeatState.collect { _repeatState.postValue(it) }
             }
-        }
-    }
 
-    private val repeatStateObserver = Observer<Int> {
-        _repeatState.postValue(it)
-    }
+            launch {
+                connection.shuffleState.collect { shuffleState.value = it }
+            }
 
-    private val currentTimeObserver = Observer<Long> { newTime ->
-        if (mediaPosition.value != newTime) {
-            mediaPosition.postValue(newTime)
-        }
-    }
+            connection.nowPlaying.collect { newMetadataItem ->
+                _currentTrackItem.postValue(newMetadataItem)
 
-    private val mediaMetadataObserver = Observer<MediaMetadataCompat> { newMetadataItem ->
-        _currentTrackItem.postValue(newMetadataItem)
-
-        if (newMetadataItem.description?.mediaId != "") {
-            if (currentMetadata?.description?.mediaId != newMetadataItem.description?.mediaId) {
-                currentMetadata = newMetadataItem
-                sendPlayStatusToServer()
-                newMetadataItem.description.mediaId?.toLongOrNull()?.let { newMediaId ->
-                    val trackInNP = repository.nowPlayingTracks.find { track -> newMediaId == track.id }
-                    val index = repository.nowPlayingTracks.indexOf(trackInNP)
-                    repository.currentIndex = index
+                if (newMetadataItem.description?.mediaId != "") {
+                    if (currentMetadata?.description?.mediaId != newMetadataItem.description?.mediaId) {
+                        currentMetadata = newMetadataItem
+                        sendPlayStatusToServer()
+                        newMetadataItem.description.mediaId?.toLongOrNull()?.let { newMediaId ->
+                            val trackInNP = repository.nowPlayingTracks.find { track -> newMediaId == track.id }
+                            val index = repository.nowPlayingTracks.indexOf(trackInNP)
+                            repository.currentIndex = index
 
 //                    ////Log.d(TAG, "current index: ${repository.currentIndex}")
+                        }
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch(Dispatchers.Main) {
+            connection.currentSongTimeMillis.collect { newTime ->
+                if (mediaPosition.value != newTime) {
+                    mediaPosition.postValue(newTime)
                 }
             }
         }
     }
 
-    private val musicServiceConnection = musicServiceConnection.also {
-        it.playbackState.observeForever(playbackStateObserver)
-        it.nowPlaying.observeForever(mediaMetadataObserver)
-        it.repeatState.observeForever(repeatStateObserver)
-        it.currentSongTimeMillis.observeForever(currentTimeObserver)
+    fun playMedia(startingIndex: Int, tracks: List<DbTrack>) {
+        val startingTrack = tracks[startingIndex]
+
+        repository.playTracks(tracks)
+
+        transportControls.playFromMediaId(startingTrack.id.toString(), null)
     }
 
-    // TODO Feels like it makes more sense to have the fragments pass a list of tracks and the position that they want to start from.
-    // The fragments already have the list of tracks / the playlist. Why not just supply them? Then you don't have to look them up again.
-    // You also then wouldn't need to even provide the "calling fragment". Seems like we are providing information to this view model for no real reason.
-    fun playMedia(track: Track, callingFragment: String, playlistId: Long? = null) {
-        repository.changeMediaSource(callingFragment, playlistId)
+    fun playNow(track: DbTrack) {
+//        repository.playTracks(listOf(track))
 
-        val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
-        transportControls.playFromMediaId(track.id.toString(), extras)
-    }
-
-    fun playNow(track: Track, callingFragment: String) {
-        val extras = Bundle().also { it.putString(Constants.KEY_CALLING_FRAGMENT, callingFragment) }
-        transportControls.playFromMediaId(track.id.toString(), extras)
+        transportControls.playFromMediaId(track.id.toString(), null)
     }
 
     fun playPause(): Boolean {
-        return if (_playbackState.value.isPaused) {
+        return if (playbackState.value.isPaused) {
             transportControls.play()
             true
         } else {
             transportControls.pause()
             false
         }
+    }
+
+    fun pause() {
+        transportControls.pause()
     }
 
     fun seekTo(position: Long) {
@@ -164,23 +159,38 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         when (_repeatState.value) {
             PlaybackStateCompat.REPEAT_MODE_NONE -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE)
+
+                // "Fixes" Exoplayer issue with shuffle without repeat being busted. See comment in shuffle()
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
             }
             PlaybackStateCompat.REPEAT_MODE_ONE -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
             }
             else -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE)
+
+                // "Fixes" Exoplayer issue with shuffle without repeat being busted. See comment in shuffle()
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
             }
         }
     }
 
+    fun shuffle() {
+        when(shuffleState.value) {
+            PlaybackStateCompat.SHUFFLE_MODE_NONE -> {
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL)
+                // Shuffle doesn't work properly without repeat being enabled. Exoplayer just chooses to stop playing early otherwise...
+                // https://stackoverflow.com/questions/56937283/exoplayer-shuffle-doesnt-reproduce-all-the-songs
+                transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
+            }
+            PlaybackStateCompat.SHUFFLE_MODE_ALL -> {
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
+            }
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
-        musicServiceConnection.playbackState.removeObserver(playbackStateObserver)
-        musicServiceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
-        musicServiceConnection.repeatState.removeObserver(repeatStateObserver)
-        musicServiceConnection.currentSongTimeMillis.observeForever(currentTimeObserver)
         updatePosition = false
     }
 

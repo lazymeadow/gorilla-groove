@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/loginFragment">
+    tools:ignore="InvalidNavigation">
 
     <fragment
         android:id="@+id/loginFragment"
@@ -10,11 +11,11 @@
         android:label="LoginFragment" >
         <action
             android:id="@+id/action_loginFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
-        android:id="@+id/mainFragment"
-        android:name="com.gorilla.gorillagroove.ui.library.LibraryFragment"
+        android:id="@+id/libraryTrackFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.DbTrackLibraryFragment"
         android:label="MainFragment" >
         <action
             android:id="@+id/action_mainFragment_to_loginFragment"
@@ -36,31 +37,50 @@
             app:destination="@id/trackPropertiesFragment" />
     </fragment>
     <fragment
+        android:id="@+id/dbArtistsFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.DbArtistsFragment"
+        android:label="DbArtistsFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/dbAlbumFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.DbAlbumFragment"
+        android:label="DbAlbumFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/userAlbumFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UserAlbumFragment"
+        android:label="UserAlbumFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/userArtistsFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UserArtistsFragment"
+        android:label="UserArtistsFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/albumFragment"
+        android:name="com.gorilla.gorillagroove.ui.library.AlbumFragment"
+        android:label="AlbumFragment" >
+    </fragment>
+    <fragment
         android:id="@+id/playingFragment"
         android:name="com.gorilla.gorillagroove.ui.playing.NowPlayingFragment"
         android:label="PlayingFragment" >
         <action
             android:id="@+id/action_playingFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
         android:id="@+id/playlistsFragment"
         android:name="com.gorilla.gorillagroove.ui.playlists.PlaylistsFragment"
         android:label="PlaylistsFragment" >
-        <action
-            android:id="@+id/action_playlistsFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
-        <action
-            android:id="@+id/action_playlistsFragment_to_playlistFragment"
-            app:destination="@id/playlistFragment" />
     </fragment>
     <fragment
         android:id="@+id/moreMenuFragment"
-        android:name="com.gorilla.gorillagroove.ui.settings.MoreMenuFragment"
+        android:name="com.gorilla.gorillagroove.ui.MoreMenuFragment"
         android:label="SettingsFragment" >
         <action
             android:id="@+id/action_settingsFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_loginFragment"
             app:destination="@id/loginFragment" />
@@ -71,19 +91,15 @@
         android:label="UsersFragment" >
         <action
             android:id="@+id/action_usersFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
-        android:id="@+id/playlistFragment"
+        android:id="@+id/playlistTrackFragment"
         android:name="com.gorilla.gorillagroove.ui.playlists.PlaylistTrackFragment"
-        android:label="PlaylistFragment" >
-
+        android:label="PlaylistTrackFragment" >
         <argument
             android:name="playlistKeyId"
             android:defaultValue="None"/>
-        <action
-            android:id="@+id/action_playlistFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
     </fragment>
     <fragment
         android:id="@+id/trackPropertiesFragment"
@@ -91,7 +107,7 @@
         android:label="TrackPropertiesFragment" >
         <action
             android:id="@+id/action_trackPropertiesFragment_to_mainFragment"
-            app:destination="@id/mainFragment" />
+            app:destination="@id/libraryTrackFragment" />
     </fragment>
     <fragment
         android:id="@+id/problemReportFragment"
@@ -102,5 +118,40 @@
         android:id="@+id/logViewFragment"
         android:name="com.gorilla.gorillagroove.ui.problemreport.LogViewFragment"
         android:label="LogViewFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.gorilla.gorillagroove.ui.settings.SettingsFragment"
+        android:label="SettingsFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/reviewQueueFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.ReviewQueueFragment"
+        android:label="ReviewQueueFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/editReviewSourcesFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.EditReviewSourcesFragment"
+        android:label="EditReviewSourcesFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/addReviewSourceFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.AddReviewSourceFragment"
+        android:label="AddReviewSourceFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/spotifySearchResultsFragment"
+        android:name="com.gorilla.gorillagroove.ui.reviewqueue.SpotifySearchResultsFragment"
+        android:label="SpotifySearchResultsFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/firstTimeSyncFragment"
+        android:name="com.gorilla.gorillagroove.ui.login.FirstTimeSyncFragment"
+        android:label="FirstTimeSyncFragment" >
+    </fragment>
+    <fragment
+        android:id="@+id/userTrackFragment"
+        android:name="com.gorilla.gorillagroove.ui.users.UserTrackFragment"
+        android:label="UserTrackFragment" >
     </fragment>
 </navigation>

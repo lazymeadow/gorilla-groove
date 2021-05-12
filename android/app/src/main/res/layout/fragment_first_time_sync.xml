@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginStart="30dp"
+    android:layout_marginEnd="30dp"
+    tools:ignore="HardcodedText">
+
+    <ImageView
+        android:id="@+id/libraryIcon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_music"
+        app:layout_constraintBottom_toTopOf="@id/libraryProgressBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@color/foreground" />
+
+    <TextView
+        android:id="@+id/libraryText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="120dp"
+        android:text="Library"
+        android:textColor="@color/foreground"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@id/libraryIcon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/libraryIcon" />
+
+    <ProgressBar
+        android:id="@+id/libraryProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/libraryPercentage"
+        app:layout_constraintEnd_toStartOf="@id/libraryPercentage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/libraryPercentage"
+        tools:progress="40" />
+
+    <TextView
+        android:id="@+id/libraryPercentage"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        android:text="0%"
+        android:textAlignment="textEnd"
+        android:textColor="@color/foreground"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toTopOf="@id/playlistsIcon"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="40%" />
+
+    <ImageView
+        android:id="@+id/playlistsIcon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_playlists_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.45"
+        app:tint="@color/foreground" />
+
+    <TextView
+        android:id="@+id/playlistsText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="120dp"
+        android:text="Playlists"
+        android:textColor="@color/foreground"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@id/playlistsIcon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/playlistsIcon" />
+
+    <ProgressBar
+        android:id="@+id/playlistsProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/playlistsPercentage"
+        app:layout_constraintEnd_toStartOf="@id/playlistsPercentage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/playlistsPercentage"
+        tools:progress="20" />
+
+    <TextView
+        android:id="@+id/playlistsPercentage"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="2dp"
+        android:text="0%"
+        android:textAlignment="textEnd"
+        android:textColor="@color/foreground"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playlistsIcon"
+        tools:text="20%" />
+
+    <ImageView
+        android:id="@+id/extrasIcon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="20dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_graphic_eq_black_24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playlistsPercentage"
+        app:tint="@color/foreground"
+        tools:tint="@color/ggPrimary" />
+
+    <TextView
+        android:id="@+id/extrasText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="120dp"
+        android:text="Extras"
+        android:textColor="@color/foreground"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@id/extrasIcon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/extrasIcon" />
+
+    <ProgressBar
+        android:id="@+id/extrasProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/extrasPercentage"
+        app:layout_constraintEnd_toStartOf="@id/extrasPercentage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/extrasPercentage"
+        tools:progress="100" />
+
+    <TextView
+        android:id="@+id/extrasPercentage"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="2dp"
+        android:text="0%"
+        android:textAlignment="textEnd"
+        android:textColor="@color/foreground"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/extrasIcon"
+        tools:text="100%"
+        tools:textColor="@color/ggPrimary" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

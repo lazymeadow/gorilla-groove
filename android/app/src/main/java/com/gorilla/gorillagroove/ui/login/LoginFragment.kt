@@ -1,81 +1,102 @@
 package com.gorilla.gorillagroove.ui.login
 
 import android.annotation.SuppressLint
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.provider.Settings.Secure
 import android.view.View
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.BuildConfig
+import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.network.login.LoginRequest
+import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.LoginStateEvent
 import com.gorilla.gorillagroove.ui.MainActivity
-import com.gorilla.gorillagroove.ui.MainViewModel
-import com.gorilla.gorillagroove.util.Constants
-import com.gorilla.gorillagroove.util.Constants.KEY_FIRST_TIME_TOGGLE
-import com.gorilla.gorillagroove.util.CurrentDevice
-import com.gorilla.gorillagroove.util.StateEvent
-import com.gorilla.gorillagroove.util.hideKeyboard
-import dagger.hilt.android.AndroidEntryPoint
+import com.gorilla.gorillagroove.util.*
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_login.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import java.util.*
-import javax.inject.Inject
 
 
-@AndroidEntryPoint
 class LoginFragment : Fragment(R.layout.fragment_login) {
 
-    private val viewModel: MainViewModel by viewModels()
-
-    @Inject
-    lateinit var sharedPref: SharedPreferences
-
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Login view")
 
         // If we have an auth token then they launched the app while logged in. Redirect to the main screen.
-        if (sharedPref.contains(Constants.KEY_USER_TOKEN)) {
-            val navOptions = NavOptions.Builder()
-                .setPopUpTo(R.id.mainFragment, true)
-                .build()
-
-            findNavController().navigate(
-                R.id.action_loginFragment_to_mainFragment,
-                savedInstanceState,
-                navOptions
-            )
+        if (GGApplication.isUserSignedIn) {
+            navigateToMainApp()
 
             return
         }
 
-        edit_text_email.requestFocus()
-
-        button_login.setOnClickListener {
-            val deviceId = fetchDeviceUUID()
-
-            val loginRequest = LoginRequest(
-                email = edit_text_email.text.toString(),
-                password = edit_text_password.text.toString(),
-                deviceId = deviceId.toString(),
-                preferredDeviceName = CurrentDevice.getDeviceName(context),
-                version = BuildConfig.VERSION_NAME,
-                deviceType = "ANDROID"
-            )
-            viewModel.setLoginStateEvent(LoginStateEvent.LoginEvent(loginRequest))
-
+        requireActivity().apply {
+            bottomNavigationView.visibility = View.GONE
+            playerControlView.visibility = View.GONE
+            toolbar.isVisible = false
+            title_tv.text = ""
         }
-        subscribeObservers()
+
+        loginEmail.requestFocus()
+
+        loginPassword.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                login()
+                true
+            } else {
+                false
+            }
+        }
+
+        loginButton.setOnClickListener { login() }
+
+        appVersion.text = BuildConfig.VERSION_NAME
+    }
+
+    private fun login() {
+        view?.hideKeyboard()
+
+        val deviceId = fetchDeviceUUID()
+
+        val loginRequest = LoginRequest(
+            email = loginEmail.text.toString(),
+            password = loginPassword.text.toString(),
+            deviceId = deviceId.toString(),
+            preferredDeviceName = CurrentDevice.getDeviceName(context),
+            version = BuildConfig.VERSION_NAME,
+            deviceType = "ANDROID"
+        )
+
+        displayProgressBar(true)
+
+        requireActivity().hideKeyboard()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val response = Network.api.login(loginRequest)
+
+                sharedPreferences.edit().putString(Constants.KEY_USER_TOKEN, response.token).apply()
+
+                withContext(Dispatchers.Main) {
+                    navigateToMainApp()
+                }
+            } catch (e: Throwable) {
+                logError("Failed to log in!", e)
+                withContext(Dispatchers.Main) {
+                    displayProgressBar(false)
+                    GGToast.show("Failed to sign in")
+                }
+            }
+        }
     }
 
     @SuppressLint("HardwareIds")
@@ -84,43 +105,27 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         return UUID.nameUUIDFromBytes(androidId.toByteArray(charset("utf8")))
     }
 
-    private fun subscribeObservers() {
-        viewModel.loginState.observe(requireActivity(), Observer {
-            when (it.stateEvent) {
-                is StateEvent.AuthSuccess -> {
-                    displayProgressBar(false)
-                    hideKeyboard(activity as MainActivity)
-
-                    writePersonalDataToSharedPref()
-
-                    findNavController().navigate(R.id.action_loginFragment_to_mainFragment)
-                }
-                is StateEvent.Loading -> {
-                    displayProgressBar(true)
-                }
-                is StateEvent.Error -> {
-                    displayProgressBar(false)
-                    Toast.makeText(requireContext(), "Invalid Login", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
-    }
-
     private fun displayProgressBar(isDisplayed: Boolean) {
         if (isDisplayed) {
             progress_bar_login.visibility = View.VISIBLE
             progress_bar_login.bringToFront()
+            progress_bar_login.requestFocus()
         } else {
             progress_bar_login.visibility = View.GONE
         }
     }
 
-    private fun writePersonalDataToSharedPref() {
+    private fun navigateToMainApp() {
+        val fragmentId = (requireActivity() as MainActivity).getStartingFragmentId()
 
-        sharedPref.edit()
-            .putBoolean(KEY_FIRST_TIME_TOGGLE, false)
-            .apply()
+        val navOptions = NavOptions.Builder()
+            .setPopUpTo(fragmentId, true)
+            .build()
 
+        findNavController().navigate(
+            fragmentId,
+            null,
+            navOptions
+        )
     }
-
 }

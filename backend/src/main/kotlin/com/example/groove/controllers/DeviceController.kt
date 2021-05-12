@@ -140,7 +140,7 @@ class DeviceController(
 		}
 
 		if (body.version != device.applicationVersion) {
-			logger.info("User updated from version ${device.applicationVersion} to ${body.version}")
+			logger.info("User ${user.name} updated ${device.deviceType} from version ${device.applicationVersion} to ${body.version}")
 		}
 
 		deviceService.createOrUpdateDevice(

@@ -1,52 +1,46 @@
 package com.gorilla.gorillagroove.ui.problemreport
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.gorilla.gorillagroove.GGApplication
 import com.gorilla.gorillagroove.R
 import com.gorilla.gorillagroove.database.GorillaDatabase
-import com.gorilla.gorillagroove.repository.MainRepository
+import com.gorilla.gorillagroove.di.Network
 import com.gorilla.gorillagroove.service.GGLog
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGLog.logWarn
+import com.gorilla.gorillagroove.service.GGSettings
 import com.gorilla.gorillagroove.util.GGToast
 import com.gorilla.gorillagroove.util.getNullableLong
-import dagger.hilt.android.AndroidEntryPoint
+import com.gorilla.gorillagroove.util.sharedPreferences
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_problem_report.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.*
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import javax.inject.Inject
 
 private const val LAST_MANUAL_REPORT_KEY = "last_manual_report"
 private const val LAST_AUTOMATED_REPORT_KEY = "last_automated_report"
 
-@AndroidEntryPoint
 class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
-
-    @Inject
-    lateinit var sharedPrefs: SharedPreferences
-
-    @Inject
-    lateinit var mainRepository: MainRepository
-
-    private val cacheDirPath: String by lazy { "${GGApplication.application.cacheDir.absolutePath}/tmp" }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Problem Report view")
 
-        sharedPrefs.edit().remove(LAST_MANUAL_REPORT_KEY).apply()
+        requireActivity().title_tv.text = "Problem Report"
 
         sendReportButton.setOnClickListener { sendProblemReport() }
         viewLogsButton.setOnClickListener { findNavController().navigate(R.id.logViewFragment) }
@@ -54,11 +48,27 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
         displayLastSentReportMessage()
     }
 
+    private fun sendProblemReport() {
+        sendReportButton.isEnabled = false
+
+        lifecycleScope.launch {
+            val success = ProblemReportSender.sendProblemReport(true)
+
+            if (success) {
+                displayLastSentReportMessage()
+                GGToast.show("Problem report uploaded")
+            } else {
+                sendReportButton.isEnabled = true
+                GGToast.show("Could not upload problem report")
+            }
+        }
+    }
+
     private fun displayLastSentReportMessage() {
         val currentTime = System.currentTimeMillis()
 
-        val lastManualReportMillis = sharedPrefs.getNullableLong(LAST_MANUAL_REPORT_KEY)
-        val lastAutomatedReportMillis = sharedPrefs.getNullableLong(LAST_AUTOMATED_REPORT_KEY)
+        val lastManualReportMillis = sharedPreferences.getNullableLong(LAST_MANUAL_REPORT_KEY)
+        val lastAutomatedReportMillis = sharedPreferences.getNullableLong(LAST_AUTOMATED_REPORT_KEY)
 
         val lastManualReport = lastManualReportMillis?.let { "Your last manual problem report was sent ${it.toTimeAgoString(currentTime)}" }
         val lastAutomatedReport = lastAutomatedReportMillis?.let { "The last automated problem report was sent ${it.toTimeAgoString(currentTime)}" }
@@ -75,79 +85,6 @@ class ProblemReportFragment : Fragment(R.layout.fragment_problem_report) {
         }
 
         viewLogsButton.requestLayout()
-    }
-
-    private fun sendProblemReport() {
-        logInfo("Uploading problem report")
-
-        sendReportButton.isEnabled = false
-
-        val context = GGApplication.application
-
-        val cacheDir = File(cacheDirPath)
-        cacheDir.mkdirs()
-
-        val tmpLogFile = File("$cacheDirPath/log.txt")
-        tmpLogFile.createNewFile()
-
-        val logContent = GGLog.getLogContent()
-        tmpLogFile.printWriter().use { writer ->
-            logContent.forEach { writer.append(it + "\n") }
-        }
-
-        val database = context.getDatabasePath(GorillaDatabase.DATABASE_NAME)
-
-        val tmpDatabase = File("$cacheDirPath/db.sqlite")
-        database.copyTo(tmpDatabase, overwrite = true)
-
-        val zip = createZipWithFiles(tmpLogFile, tmpDatabase)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                mainRepository.uploadCrashReport(zip)
-
-                sharedPrefs.edit().putLong(LAST_MANUAL_REPORT_KEY, System.currentTimeMillis()).apply()
-
-                withContext(Dispatchers.Main) {
-                    displayLastSentReportMessage()
-                    GGToast.show("Problem report uploaded")
-                }
-
-                logInfo("Problem report uploaded successfully")
-            } catch (e: Throwable) {
-                logError("Failed to upload problem report")
-
-                withContext(Dispatchers.Main) {
-                    sendReportButton.isEnabled = true
-                    GGToast.show("Could not upload problem report")
-                }
-
-            } finally {
-                tmpLogFile.delete()
-                tmpDatabase.delete()
-                zip.delete()
-            }
-        }
-    }
-
-    private fun createZipWithFiles(vararg files: File): File {
-        val outputPath = "$cacheDirPath/crash-report.zip"
-        File(outputPath).delete()
-
-        ZipOutputStream(BufferedOutputStream(FileOutputStream(outputPath))).use { out ->
-            files.forEach { file ->
-                FileInputStream(file).use { fi ->
-                    BufferedInputStream(fi).use { origin ->
-                        val filePath = file.absolutePath
-                        val entry = ZipEntry(filePath.substring(filePath.lastIndexOf("/")))
-                        out.putNextEntry(entry)
-                        origin.copyTo(out, 1024)
-                    }
-                }
-            }
-        }
-
-        return File(outputPath)
     }
 }
 
@@ -184,5 +121,91 @@ private fun Int.toEnglishWord(): String {
         8 -> "eight"
         9 -> "nine"
         else -> this.toString()
+    }
+}
+
+object ProblemReportSender {
+
+    private val cacheDirPath: String by lazy { "${GGApplication.application.cacheDir.absolutePath}/tmp" }
+
+    val lastSentAutomatedReport get() = sharedPreferences.getNullableLong(LAST_AUTOMATED_REPORT_KEY)
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    @Synchronized
+    suspend fun sendProblemReport(isManual: Boolean): Boolean = withContext(Dispatchers.IO) {
+        logInfo("Uploading problem report")
+
+        if (GGSettings.offlineModeEnabled) {
+            logWarn("Not uploading crash report due to offline mode being enabled")
+            return@withContext false
+        }
+
+        val cacheDir = File(cacheDirPath)
+        cacheDir.mkdirs()
+
+        val tmpLogFile = File("$cacheDirPath/log.txt")
+        tmpLogFile.createNewFile()
+
+        val logContent = GGLog.getLogContent()
+        tmpLogFile.printWriter().use { writer ->
+            logContent.forEach { writer.append(it + "\n") }
+        }
+
+        val database = GorillaDatabase.getDatabaseFile()
+
+        val tmpDatabase = File("$cacheDirPath/db.sqlite")
+        database.copyTo(tmpDatabase, overwrite = true)
+
+        val zip = createZipWithFiles(tmpLogFile, tmpDatabase)
+
+        try {
+            val multipartFile = MultipartBody.Part.createFormData(
+                "file",
+                "crash-report.zip",
+                zip.asRequestBody()
+            )
+
+            try {
+                Network.api.uploadCrashReport(multipartFile)
+            } catch (e: Throwable) {
+                logError("Could not upload crash report!", e)
+                throw e
+            }
+
+            val key = if (isManual) LAST_MANUAL_REPORT_KEY else LAST_AUTOMATED_REPORT_KEY
+            sharedPreferences.edit().putLong(key, System.currentTimeMillis()).apply()
+
+            logInfo("Problem report uploaded successfully")
+
+            return@withContext true
+        } catch (e: Throwable) {
+            logError("Failed to upload problem report")
+
+            return@withContext false
+        } finally {
+            tmpLogFile.delete()
+            tmpDatabase.delete()
+            zip.delete()
+        }
+    }
+
+    private fun createZipWithFiles(vararg files: File): File {
+        val outputPath = "$cacheDirPath/crash-report.zip"
+        File(outputPath).delete()
+
+        ZipOutputStream(BufferedOutputStream(FileOutputStream(outputPath))).use { out ->
+            files.forEach { file ->
+                FileInputStream(file).use { fi ->
+                    BufferedInputStream(fi).use { origin ->
+                        val filePath = file.absolutePath
+                        val entry = ZipEntry(filePath.substring(filePath.lastIndexOf("/")))
+                        out.putNextEntry(entry)
+                        origin.copyTo(out, 1024)
+                    }
+                }
+            }
+        }
+
+        return File(outputPath)
     }
 }

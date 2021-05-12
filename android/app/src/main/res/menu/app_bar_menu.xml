@@ -1,33 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:ignore="AlwaysShowAction,MenuTitle,HardcodedText">
+
+    <item android:id="@+id/action_play_now"
+        android:icon="@drawable/ic_play_arrow_24"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item android:id="@+id/action_multiselect_menu"
+        android:icon="@drawable/ic_more_vert_black_24dp"
+        android:visible="false"
+        app:showAsAction="always"/>
+
+    <item android:id="@+id/action_edit_menu"
+        android:icon="@drawable/ic_edit_black_24dp"
+        android:visible="false"
+        app:showAsAction="always"/>
+
+    <item android:id="@+id/action_done_menu"
+        android:title="Save"
+        android:visible="false"
+        app:showAsAction="always"/>
 
     <item
         android:id="@+id/action_search"
-        android:icon="@android:drawable/ic_menu_search"
+        android:icon="@drawable/ic_search_black_24dp"
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
-        android:title="Search"/>
+        android:title="Search" />
 
-    <item android:id="@+id/action_sort_az"
-        android:title="Sort a-z"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_sort_id"
-        android:title="Sort id"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_sort_date_added_oldest"
-        android:title="Sort Date: Old"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_sort_date_added_newest"
-        android:title="Sort Date: New"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_sort_artist_az"
-        android:title="Sort Artist: a-z"
-        app:showAsAction="never"/>
+    <item android:id="@+id/action_filter_menu"
+        android:icon="@drawable/ic_tune_black_24dp"
+        app:showAsAction="always" />
 
-
-    <item android:id="@+id/action_update_tracks"
-        android:icon="@drawable/ic_refresh_24"
-        android:title="Update Library"
-        app:showAsAction="ifRoom"/>
 </menu>

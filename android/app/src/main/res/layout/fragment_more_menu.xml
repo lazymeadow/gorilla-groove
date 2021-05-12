@@ -8,52 +8,129 @@
     tools:ignore="HardcodedText">
 
     <ImageView
-        android:id="@+id/updateTrackIcon"
+        android:id="@+id/addIcon"
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_marginStart="13dp"
         android:layout_marginEnd="13dp"
         android:src="@drawable/ic_add_24"
-        app:layout_constraintBottom_toBottomOf="@id/updateTracksButton"
-        app:layout_constraintEnd_toStartOf="@id/updateTracksButton"
+        app:layout_constraintBottom_toBottomOf="@id/addText"
+        app:layout_constraintEnd_toStartOf="@id/addText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/updateTracksButton"
+        app:layout_constraintTop_toTopOf="@id/addText"
+        android:importantForAccessibility="no"
         app:tint="@color/foreground" />
+
     <Button
-        android:id="@+id/updateTracksButton"
+        android:id="@+id/addText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/background"
-        android:text="Update Tracks"
+        android:text="Add Songs"
         android:textAlignment="textStart"
         android:textAllCaps="false"
         android:textSize="17sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/updateTrackIcon"
+        app:layout_constraintStart_toEndOf="@id/addIcon"
         app:layout_constraintTop_toTopOf="parent" />
+
     <View
-        android:id="@+id/updateTracksDivider"
+        android:id="@+id/addDivider"
         android:layout_width="0dp"
         android:layout_height="1dp"
         android:background="@color/grey1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/logoutDivider"
-        app:layout_constraintTop_toBottomOf="@id/updateTracksButton" />
+        app:layout_constraintTop_toBottomOf="@id/addText" />
 
     <ImageView
-        android:id="@+id/problemReportIcon"
+        android:id="@+id/usersIcon"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:src="@drawable/ic_users_24"
+        app:layout_constraintBottom_toBottomOf="@id/usersText"
+        app:layout_constraintEnd_toStartOf="@id/usersText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/addDivider"
+        android:importantForAccessibility="no"
+        app:tint="@color/foreground" />
+
+    <Button
+        android:id="@+id/usersText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:text="Users"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/usersIcon"
+        app:layout_constraintTop_toBottomOf="@id/addDivider" />
+
+    <View
+        android:id="@+id/usersDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/grey1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/logoutDivider"
+        app:layout_constraintTop_toBottomOf="@id/usersText" />
+
+    <ImageView
+        android:id="@+id/settingsIcon"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginEnd="13dp"
+        android:src="@drawable/ic_settings_24"
+        app:layout_constraintBottom_toBottomOf="@id/settingsText"
+        app:layout_constraintEnd_toStartOf="@id/settingsText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/settingsText"
+        android:importantForAccessibility="no"
+        app:tint="@color/foreground" />
+
+    <Button
+        android:id="@+id/settingsText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:text="Settings"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/settingsIcon"
+        app:layout_constraintTop_toBottomOf="@id/usersDivider" />
+
+    <View
+        android:id="@+id/settingsDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/grey1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/logoutDivider"
+        app:layout_constraintTop_toBottomOf="@id/settingsText" />
+
+    <ImageView
+        android:id="@+id/menuIcon"
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_marginStart="13dp"
         android:layout_marginEnd="13dp"
         android:src="@drawable/ic_warning_amber_24px"
-        app:layout_constraintBottom_toBottomOf="@id/openProblemReportButton"
-        app:layout_constraintEnd_toStartOf="@id/openProblemReportButton"
+        app:layout_constraintBottom_toBottomOf="@id/menuText"
+        app:layout_constraintEnd_toStartOf="@id/menuText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/openProblemReportButton"
+        app:layout_constraintTop_toTopOf="@id/menuText"
+        android:importantForAccessibility="no"
         app:tint="@color/foreground" />
+
     <Button
-        android:id="@+id/openProblemReportButton"
+        android:id="@+id/menuText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/background"
@@ -62,16 +139,17 @@
         android:textAllCaps="false"
         android:textSize="17sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/problemReportIcon"
-        app:layout_constraintTop_toBottomOf="@id/updateTracksDivider" />
+        app:layout_constraintStart_toEndOf="@id/menuIcon"
+        app:layout_constraintTop_toBottomOf="@id/settingsDivider" />
+
     <View
-        android:id="@+id/openProblemReportDivider"
+        android:id="@+id/divider"
         android:layout_width="0dp"
         android:layout_height="1dp"
         android:background="@color/grey1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/logoutDivider"
-        app:layout_constraintTop_toBottomOf="@id/openProblemReportButton" />
+        app:layout_constraintTop_toBottomOf="@id/menuText" />
 
     <ImageView
         android:id="@+id/logoutIcon"
@@ -84,7 +162,9 @@
         app:layout_constraintEnd_toStartOf="@id/logoutButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/logoutButton"
+        android:importantForAccessibility="no"
         app:tint="@color/foreground" />
+
     <Button
         android:id="@+id/logoutButton"
         android:layout_width="0dp"
@@ -96,7 +176,8 @@
         android:textSize="17sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/logoutIcon"
-        app:layout_constraintTop_toBottomOf="@id/openProblemReportDivider" />
+        app:layout_constraintTop_toBottomOf="@id/divider" />
+
     <View
         android:id="@+id/logoutDivider"
         android:layout_width="0dp"

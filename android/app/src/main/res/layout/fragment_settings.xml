@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="HardcodedText, RtlSymmetry">
+
+    <data>
+
+        <variable
+            name="vm"
+            type="com.gorilla.gorillagroove.ui.settings.SettingsViewModel" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:paddingBottom="8dp"
+            android:orientation="vertical">
+
+            <com.gorilla.gorillagroove.ui.settings.SettingsGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:title="Offline Mode">
+
+                <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:checked="@{vm.offlineModeEnabled}"
+                    app:onSwitchChanged="@{vm.onOfflineModeChanged}"
+                    app:title="Enabled" />
+
+            </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
+
+            <com.gorilla.gorillagroove.ui.settings.SettingsGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:title="Save location with track history">
+
+                <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:checked="@{vm.locationEnabled}"
+                    app:onSwitchChanged="@{vm.onLocationChanged}"
+                    app:title="Enabled" />
+
+                <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:modalSuffix="%"
+                    app:onTextChanged="@{vm.onMinimumBatteryChanged}"
+                    app:text="@{vm.minimumRequiredBattery}"
+                    app:title="Minimum Required Battery" />
+
+            </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
+
+
+            <com.gorilla.gorillagroove.ui.settings.SettingsGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:title="Offline storage">
+
+                <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:checked="@{vm.offlineStorageEnabled}"
+                    app:onSwitchChanged="@{vm.onOfflineStorageEnabledChanged}"
+                    app:title="Enabled" />
+
+                <com.gorilla.gorillagroove.ui.settings.ListSelectSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:onOptionPicked="@{vm.onOfflineDownloadConditionPicked}"
+                    app:options="@{vm.offlineDownloadOptions}"
+                    app:text="@{vm.offlineDownloadCondition.displayName}"
+                    app:title="Download Offline Music" />
+
+                <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:modalSuffix="GB"
+                    app:onTextChanged="@{vm.onMaximumOfflineStorageChanged}"
+                    app:text="@{vm.maximumOfflineStorage}"
+                    app:title="Maximum Offline Storage" />
+
+                <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:text="@{vm.offlineStorageUsed}"
+                    app:title="Offline Storage Used" />
+
+                <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:text="@{vm.alwaysOfflineTracksCached}"
+                    app:title="Always Offline Tracks Cached" />
+
+                <com.gorilla.gorillagroove.ui.settings.TextSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:text="@{vm.tracksTemporarilyCached.toString()}"
+                    app:title="Tracks Temporarily Cached" />
+
+            </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
+
+            <com.gorilla.gorillagroove.ui.settings.SettingsGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:title="Error Reporting">
+
+                <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:checked="@{vm.automaticErrorReporting}"
+                    app:onSwitchChanged="@{vm.onAutomaticErrorReportingChanged}"
+                    app:title="Automatic Error Reporting" />
+
+                <com.gorilla.gorillagroove.ui.settings.SwitchSettingItem
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:checked="@{vm.showCriticalErrors}"
+                    app:onSwitchChanged="@{vm.onShowCriticalErrorsChanged}"
+                    app:title="Show Critical Errors" />
+
+            </com.gorilla.gorillagroove.ui.settings.SettingsGroup>
+
+        </LinearLayout>
+    </ScrollView>
+</layout>

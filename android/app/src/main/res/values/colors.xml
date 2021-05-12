@@ -10,12 +10,20 @@
     <color name="ggPrimaryLight">#60B7ED</color>
     <color name="ggSecondary">#91F9E2</color>
     <color name="navBarUnselected">#99BDD0</color>
+    <color name="actionSheetBackground">#EE111111</color>
+    <color name="darkHighlight">#222222</color>
     <color name="grey1">#333333</color>
+    <color name="settingsDividerGrey">#777777</color>
     <color name="grey6">#F2F2F2</color>
     <color name="debugGrey">#AAAAAA</color>
     <color name="background">#000000</color>
     <color name="foreground">#FFFFFF</color>
 
+    <color name="reviewPlayButtonBackground">#DD222222</color>
+
     <color name="dangerRed">#F44336</color>
     <color name="warningYellow">#FFC107</color>
+
+    <color name="acceptColor">#5BB47E</color>
+    <color name="rejectColor">#CC6666</color>
 </resources>

@@ -14,9 +14,11 @@ import android.support.v4.media.session.PlaybackStateCompat
 import com.gorilla.gorillagroove.service.GGLog.logDebug
 import com.gorilla.gorillagroove.service.GGLog.logError
 import com.gorilla.gorillagroove.service.GGLog.logInfo
+import com.gorilla.gorillagroove.service.GGLog.logVerbose
 import com.gorilla.gorillagroove.service.GGLog.logWarn
 import com.gorilla.gorillagroove.ui.currentPlayBackPosition
 import com.gorilla.gorillagroove.util.KtLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MusicServiceConnection(
     context: Context,
@@ -24,11 +26,11 @@ class MusicServiceConnection(
 ) {
 
     val isConnected = KtLiveData(false)
-    val networkFailure = KtLiveData(false)
-    val playbackState = KtLiveData(EMPTY_PLAYBACK_STATE)
-    val repeatState = KtLiveData(PlaybackStateCompat.REPEAT_MODE_NONE)
-    val nowPlaying = KtLiveData(NOTHING_PLAYING)
-    val currentSongTimeMillis = KtLiveData(0L)
+    val playbackState = MutableStateFlow(EMPTY_PLAYBACK_STATE)
+    val repeatState = MutableStateFlow(PlaybackStateCompat.REPEAT_MODE_NONE)
+    val shuffleState = MutableStateFlow(PlaybackStateCompat.SHUFFLE_MODE_NONE)
+    val nowPlaying = MutableStateFlow(NOTHING_PLAYING)
+    val currentSongTimeMillis = MutableStateFlow(0L)
 
     val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
@@ -43,6 +45,7 @@ class MusicServiceConnection(
     }
 
     // The exoplayer somehow doesn't have the ability to add a periodic time observer. So this is legitimately the "recommended" way to do it. Stupid.
+    // FIXME convert this to use an actual timer
     private val handler = Handler()
     private val runnable: Runnable by lazy {
         Runnable {
@@ -51,7 +54,7 @@ class MusicServiceConnection(
             val nextSongTime = playbackState.value.currentPlayBackPosition
 
             if (currentSongTimeMillis.value != nextSongTime) {
-                currentSongTimeMillis.postValue(nextSongTime)
+                currentSongTimeMillis.value = nextSongTime
             }
         }
     }
@@ -89,6 +92,7 @@ class MusicServiceConnection(
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
 
+        private var lastState = 0
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             val stateId = state?.state ?: -1
 
@@ -103,30 +107,39 @@ class MusicServiceConnection(
                 else -> "UNKNOWN ($stateId)"
             }
 
-            logDebug("MediaControllerCallback playback state changed to $stateString")
+            // For whatever reason this seems to trigger a lot with the same state. Annoying in the logs
+            if (stateId != lastState) {
+                logDebug("MediaControllerCallback playback state changed to $stateString")
+                lastState = stateId
+            }
 
-            playbackState.postValue(state ?: EMPTY_PLAYBACK_STATE)
+            playbackState.value = state ?: EMPTY_PLAYBACK_STATE
         }
 
         override fun onRepeatModeChanged(repeatMode: Int) {
             logInfo("Repeat mode was changed to $repeatMode")
 
-            repeatState.postValue(repeatMode)
+            repeatState.value = repeatMode
+        }
+
+        override fun onShuffleModeChanged(shuffleMode: Int) {
+            logInfo("Shuffle mode was changed to $shuffleMode")
+
+            shuffleState.value = shuffleMode
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            logDebug("Media metadata was changed")
+            logVerbose("Media metadata was changed")
 
-            nowPlaying.postValue(
-                if (metadata?.id == null) {
-                    NOTHING_PLAYING
-                } else {
-                    metadata
-                }
-            )
+            nowPlaying.value = if (metadata?.id == null) {
+                NOTHING_PLAYING
+            } else {
+                metadata
+            }
         }
+
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
-            logDebug("Media queue was changed")
+            logVerbose("Media queue was changed")
         }
 
         override fun onSessionEvent(event: String?, extras: Bundle?) {
@@ -134,7 +147,6 @@ class MusicServiceConnection(
             when (event) {
                 NETWORK_FAILURE -> {
                     logWarn("Network failure session event encountered")
-                    networkFailure.postValue(true)
                 }
             }
         }

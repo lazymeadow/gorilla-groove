@@ -2,36 +2,54 @@ package com.gorilla.gorillagroove.ui.playing
 
 import android.os.Bundle
 import android.view.View
-import androidx.lifecycle.Observer
+import com.gorilla.gorillagroove.database.entity.DbTrack
 import com.gorilla.gorillagroove.service.GGLog.logInfo
-import com.gorilla.gorillagroove.ui.NowPlayingEvent
 import com.gorilla.gorillagroove.ui.TrackListFragment
-import com.gorilla.gorillagroove.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_track_list.*
+import kotlin.math.min
 
 @AndroidEntryPoint
-class NowPlayingFragment : TrackListFragment() {
+class NowPlayingFragment : TrackListFragment<DbTrack>() {
 
-    @ExperimentalCoroutinesApi
+    init {
+        showFilterMenu = false
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         logInfo("Loading Now Playing view")
 
-        subscribeObservers()
-        viewModel.setNowPlayingEvent(NowPlayingEvent.GetNowPlayingTracksEvent)
+        requireActivity().title_tv.text = "Now Playing"
     }
 
-    private fun subscribeObservers() {
-        viewModel.nowPlayingTracks.observe(requireActivity(), Observer {
-            trackCellAdapter.submitList(it)
-            trackCellAdapter.notifyDataSetChanged()
-        })
+    override suspend fun loadTracks(): List<DbTrack> {
+        return mainRepository.nowPlayingTracks
     }
 
-    override fun onTrackClick(position: Int) {
-        val clickedTrack = trackCellAdapter.filteredList[position]
-        playerControlsViewModel.playMedia(clickedTrack, Constants.CALLING_FRAGMENT_NOW_PLAYING)
+    override fun onTracksLoaded() {
+        super.onTracksLoaded()
+
+        track_rv.post {
+            // Kind of dumb, but there isn't an EASY way to scroll an item to the center of a recyclerview as of the time of writing this.
+            // Scrolling a couple of items past the currently played item is good enough and easy to do.
+            val scrollPosition = min(mainRepository.currentIndex + 2, mainRepository.nowPlayingTracks.size)
+            if (mainRepository.nowPlayingTracks.isNotEmpty()) {
+                track_rv.scrollToPosition(scrollPosition)
+            }
+        }
     }
+
+    override fun getExtraActionSheetItems(tracks: List<DbTrack>) = listOfNotNull(
+        editPropertiesActionSheetItem(tracks),
+        recommendActionSheetItem(tracks),
+        addToPlaylistActionSheetItem(tracks),
+
+//        ActionSheetItem("Remove") {
+//            // It's in the Trello.
+//            // The fact that your currently playing stuff is fragmented across both the MainRepository and PlayerControlsViewModel makes this kind of annoying to do and it's not exactly a super important feature
+//        }
+    )
 }
