@@ -38,16 +38,6 @@ class DynamicTrackAudioCacheSource(val trackId: Long) : DataSource.Factory {
     override fun createDataSource(): DataSource {
         val fileDataSource = FileDataSource()
 
-        val cacheDataSource = CacheDataSource(
-            cache,
-            defaultDataSource,
-            fileDataSource,
-            CacheDataSink(cache, C.LENGTH_UNSET.toLong()),
-            CacheDataSource.FLAG_BLOCK_ON_CACHE or CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR,
-            null,
-            CacheKeyProvider()
-        )
-
         fileDataSource.addTransferListener(object : TransferListener {
             override fun onTransferEnd(source: DataSource, dataSpec: DataSpec, isNetwork: Boolean) {
                 val cacheKey = dataSpec.key ?: run {
@@ -118,7 +108,15 @@ class DynamicTrackAudioCacheSource(val trackId: Long) : DataSource.Factory {
             override fun onTransferStart(source: DataSource, dataSpec: DataSpec, isNetwork: Boolean) {}
         })
 
-        return cacheDataSource
+        return CacheDataSource(
+            cache,
+            defaultDataSource,
+            fileDataSource,
+            CacheDataSink(cache, C.LENGTH_UNSET.toLong()),
+            CacheDataSource.FLAG_BLOCK_ON_CACHE or CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR,
+            null,
+            CacheKeyProvider()
+        )
     }
 
     fun getCacheFile(key: String): File {
