@@ -1,11 +1,9 @@
 package com.gorilla.gorillagroove.util
 
-import android.R.id.edit
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Rect
 import android.text.Editable
-import android.text.InputType
 import android.text.InputType.*
 import android.text.TextWatcher
 import android.util.TypedValue

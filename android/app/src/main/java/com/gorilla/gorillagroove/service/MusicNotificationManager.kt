@@ -85,7 +85,6 @@ class MusicNotificationManager(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
-
             val iconUri = mediaController.metadata.description.iconUri
 
             return if (currentIconUri != iconUri || currentBitmap == null) {
@@ -99,6 +98,10 @@ class MusicNotificationManager(
             } else {
                 currentBitmap
             }
+        }
+
+        override fun getCurrentSubText(player: Player): CharSequence? {
+            return mediaController.metadata.description.subtitle
         }
 
         private suspend fun resolveUriAsBitmap(iconUri: Uri?): Bitmap? = withContext(Dispatchers.IO) {
