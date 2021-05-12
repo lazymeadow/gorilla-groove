@@ -159,12 +159,18 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         when (_repeatState.value) {
             PlaybackStateCompat.REPEAT_MODE_NONE -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE)
+
+                // "Fixes" Exoplayer issue with shuffle without repeat being busted. See comment in shuffle()
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
             }
             PlaybackStateCompat.REPEAT_MODE_ONE -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
             }
             else -> {
                 transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE)
+
+                // "Fixes" Exoplayer issue with shuffle without repeat being busted. See comment in shuffle()
+                transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
             }
         }
     }
@@ -173,6 +179,9 @@ class PlayerControlsViewModel @ViewModelInject constructor(
         when(shuffleState.value) {
             PlaybackStateCompat.SHUFFLE_MODE_NONE -> {
                 transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL)
+                // Shuffle doesn't work properly without repeat being enabled. Exoplayer just chooses to stop playing early otherwise...
+                // https://stackoverflow.com/questions/56937283/exoplayer-shuffle-doesnt-reproduce-all-the-songs
+                transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
             }
             PlaybackStateCompat.SHUFFLE_MODE_ALL -> {
                 transportControls.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE)
