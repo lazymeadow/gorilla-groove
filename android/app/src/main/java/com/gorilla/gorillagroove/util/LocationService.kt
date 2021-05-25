@@ -34,6 +34,8 @@ import kotlinx.coroutines.withTimeout
 
 object LocationService {
     fun requestLocationPermissionIfNeeded(activity: Activity) {
+        // TODO apparently this isn't legal on the play store to OPTIONALLY ask for location for OPTIONAL features
+        return
         if (!GGSettings.locationConfigured) {
             logInfo("User has not configured whether or not location should be enabled. Prompting with dialog")
             showAlertDialog(
@@ -121,6 +123,8 @@ object LocationService {
     }
 
     suspend fun getCurrentLocation(): Location? {
+        // TODO apparently this isn't legal on the play store to OPTIONALLY ask for location for OPTIONAL features
+        return null
         if (!GGSettings.locationConfigured || !GGSettings.locationEnabled) {
             return null
         }
