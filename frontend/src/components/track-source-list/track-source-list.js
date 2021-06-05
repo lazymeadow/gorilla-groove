@@ -268,7 +268,10 @@ export default function TrackSourceList(props) {
 									title={tooltip}
 									className={`tree-child ${entryClass} ${partyClass}`}
 									key={entry.id}
-									onClick={() => selectEntry(node.section, entry, cellId)}
+									onClick={(event) => {
+										event.stopPropagation();
+										selectEntry(node.section, entry, cellId)
+									}}
 								>
 									<EditableDiv
 										editable={editedId === cellId && node.section === TrackView.PLAYLIST}
