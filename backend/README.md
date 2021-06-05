@@ -4,7 +4,7 @@
 
 Copy `/config/application.properties.cfg` to `/config/application.properties`. 
 
-Environment specific setup will go in here. Some of the items in that file will need to be configured for the server to run successfully.
+Environment specific setup will go in here. Some items in that file will need to be configured for the server to run successfully.
 
 ### Database
 Gorilla Groove uses MySQL, and is always intended to run on the latest version. Right now that is MySQL 8.
@@ -17,14 +17,18 @@ If your MySQL is running on localhost with port 3306, then you are done. If it i
 
 ### FFmpeg
 
-FFmpeg is used to convert files to OGG format. It will need to be installed from https://www.ffmpeg.org/download.html
+FFmpeg is used to convert files to OGG format. It will need to be installed from https://www.ffmpeg.org/download.html. If given a choice, install the "full" release build.
 Once installed, edit `/config/application.properties` and setup `spring.data.ffmpeg.binary.location` to be the location to the FFmpeg binaries.
+
+### YouTube Downloader
+
+Importing songs from YouTube uses youtube-dl. Go to their website and download the latest executable. Put it in an appropriate location on your hard drive (the default is `C:\Program Files\YT Downloader\`, if you need some inspiration), then edit `/config/application.properties` and setup `spring.data.youtubedl.binary.location` to be the location of the YT Downloader executable.
 
 ## Running
 
-If using Java 10, add `--add-modules java.xml.bind` to the JVM arguments or you will see a ClassNotFoundException for JAXB
+If using Java 10, add `--add-modules java.xml.bind` to the JVM arguments, or you will see a ClassNotFoundException for JAXB
 
-When the projects starts up, it will use Flyway to migrate the database to the latest version.
+When the project starts up, it will use Flyway to migrate the database to the latest version.
 
 ### User Accounts
 
@@ -34,7 +38,7 @@ By default the migrations add a user with the email "dude@dude.dude" and the pas
 You may, however, add your own user. 
 The first way is to add it directly to the `user` DB table. The password will need to be encoded with BCrypt
 
-However it is recommended to log in with the "dude" user and create any additional users through the UI
+However, it is recommended to log in with the "dude" user and create any additional users through the UI
 
 (See the README in the UI directory for how to set it up)
 
