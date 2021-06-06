@@ -1,17 +1,38 @@
 import React, {useState} from 'react';
 import {withRouter} from 'react-router-dom';
+import {deleteKey} from '../../util/local-storage';
+import {getDeviceIdentifier} from '../../../src/services/version';
+import {DeviceType} from '../../../src/enums/device-type';
+import {addCookie} from '../../util/cookie';
+import {Api} from '../../util/api';
 
 
-const Login = ({}) => {
+const Login = ({history}) => {
 	const [forgotPassword, setForgotPassword] = useState(false);
 
-	const submitLogin = (event) => {
+	const submitLogin = async (event) => {
 		event.preventDefault();
 		event.stopPropagation();
 
 		const form = event.target;
 
-		console.log('login attempt', form.email.value, form.password.value);
+		const params = {
+			email: form.email.value,
+			password: form.password.value,
+			deviceId: getDeviceIdentifier(),
+			version: __VERSION__,
+			deviceType: DeviceType.WEB
+		};
+
+		try {
+			const {token, email} = await Api.post('authentication/login', params);
+			const ninetyDays = 7776000;
+			addCookie('cookieToken', token, ninetyDays);
+			addCookie('loggedInEmail', email, ninetyDays);
+			history.push('/');
+		} catch (error) {
+			console.error(error);
+		}
 	};
 
 	// const submitPasswordReset = (event) => {
@@ -59,8 +80,8 @@ const Login = ({}) => {
 			{forgotPassword ? renderForgotPasswordForm() : renderLoginForm()}
 			<div className={'leave-beta'}>
 				<button className={'small'} onClick={() => {
-					localStorage.removeItem('beta-client');
-					window.location.reload();
+					deleteKey('beta-client');
+					history.push('/');
 				}}>
 					Leave beta
 				</button>

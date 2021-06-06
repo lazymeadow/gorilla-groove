@@ -1,7 +1,7 @@
 import React from 'react';
 import {BrowserRouter, Switch, Route} from 'react-router-dom';
 import Login from './Login/Login';
-import MainPage from './MainPage';
+import MainPage from './MainPage/MainPage';
 
 
 const GorillaGrooveRoot = () => {

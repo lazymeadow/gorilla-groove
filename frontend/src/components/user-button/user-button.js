@@ -14,6 +14,7 @@ import {toast} from "react-toastify";
 import {MusicContext} from "../../services/music-provider";
 import CrashReport from "../crash-report/crash-report";
 import {clearMediaSession} from "../../media-key";
+import * as LocalStorage from '../../local-storage'
 
 const originalTitle = document.title;
 
@@ -48,7 +49,7 @@ export default function UserButton() {
 	};
 
 	const handleTurnOnBetaClient = () => {
-		localStorage.setItem("beta-client", true);
+		LocalStorage.setBoolean('beta-client', true);
 		window.location.reload();
 	}
 

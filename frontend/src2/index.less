@@ -9,10 +9,11 @@
 @grey5: #E0E0E0;
 @grey6: #F2F2F2;
 
-@text-white: rgba(255, 255, 255, .87);
+@text-white: rgba(255, 255, 255, 0.87);
 @text-black: rgba(0, 0, 0, .87);
 
 @import 'components/Login/login';
+@import 'components/MainPage/main';
 
 .blue-background() {
   background-color: @dark-blue;
@@ -24,7 +25,7 @@
   color: @text-white;
 }
 
-body.beta {
+body.beta {  // TODO: remove this namespacing
   .blue-background();
 
   #root {
@@ -54,7 +55,17 @@ body.beta {
   button {
     border: none;
     border-radius: 2px;
-    padding: 10px;
+    padding: 10px 16px;
+    background-color: @grey4;
+    color: @text-black;
+
+    &:hover {
+      background-color: lighten(@grey4, 5%);
+    }
+
+    &:focus-visible {
+      outline: 1px solid @text-white;
+    }
 
     &.small {
       padding: 4px 12px;
@@ -65,6 +76,10 @@ body.beta {
       background-color: @blue;
       color: white;
       font-weight: bold;
+
+      &:hover {
+        background-color: lighten(@blue, 5%);
+      }
     }
 
     &.link {
@@ -73,7 +88,7 @@ body.beta {
       padding: 0;
       cursor: pointer;
 
-      &:hover {
+      &:hover, &:focus-visible {
         text-decoration: underline;
       }
     }
@@ -84,8 +99,10 @@ body.beta {
     padding: 2px 8px;
     border-radius: 2px;
     line-height: 20px;
-  }
 
-  .login();
+    &:focus-visible {
+      outline: 3px solid @blue;
+    }
+  }
 }
 
