@@ -1,4 +1,28 @@
+@keyframes spin {
+  from {
+    transform:rotate(0deg);
+  }
+  to {
+    transform:rotate(360deg);
+  }
+}
+
 body.beta { // TODO: remove this namespacing
+  .init {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    img {
+      flex: 0 0 auto;
+
+      animation-name: spin;
+      animation-duration: 1500ms;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+    }
+  }
+
   .main {
     display: flex;
     flex-direction: column;
