@@ -21,3 +21,12 @@ export function getDeviceIdentifier() {
 
 	return newId;
 }
+
+
+/**
+ * Verifies basic information to determine client side if the user is logged in.
+ * @returns {boolean}
+ */
+export function isLoggedIn() {
+	return document.cookie.indexOf('cookieToken') !== -1;
+}

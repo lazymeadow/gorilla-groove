@@ -1,13 +1,18 @@
 import React, {useState} from 'react';
-import {withRouter} from 'react-router-dom';
+import {Redirect, withRouter} from 'react-router-dom';
 import {getDeviceIdentifier} from '../../../src/services/version';
 import {DeviceType} from '../../../src/enums/device-type';
 import {addCookie} from '../../util/cookie';
 import {Api} from '../../util/api';
+import {isLoggedIn} from '../../util';
 
 
 const Login = ({history}) => {
+	if (isLoggedIn()) {
+		return <Redirect to={'/'}/>;
+	}
 	const [forgotPassword, setForgotPassword] = useState(false);
+
 
 	const submitLogin = async (event) => {
 		event.preventDefault();

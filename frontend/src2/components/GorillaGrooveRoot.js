@@ -1,10 +1,18 @@
 import React from 'react';
-import {BrowserRouter, Route, Switch} from 'react-router-dom';
+import {BrowserRouter, Redirect, Route, Switch} from 'react-router-dom';
 import Login from './Login/Login';
 import MainPage from './MainPage/MainPage';
+import {isLoggedIn} from '../util';
 
 
 const GorillaGrooveRoot = ({onLeaveBeta}) => {
+	const PrivateRoute = (props) => {
+		if (!isLoggedIn()) {
+			return <Redirect to={'/login'}/>;
+		}
+		return <Route {...props} />;
+	};
+
 	return (
 		<>
 			<div className={'beta-warning'}>
@@ -18,7 +26,7 @@ const GorillaGrooveRoot = ({onLeaveBeta}) => {
 			<BrowserRouter>
 				<Switch>
 					<Route path='/login' component={Login}/>
-					<Route path='/' component={MainPage}/>
+					<PrivateRoute path='/' component={MainPage}/>
 					<Route render={() => <h1>Yo dawg where the page at</h1>}/>
 				</Switch>
 			</BrowserRouter>

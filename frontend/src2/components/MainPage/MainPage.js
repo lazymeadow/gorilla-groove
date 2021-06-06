@@ -24,7 +24,7 @@ const MainPage = ({history}) => {
 		<div className={'main'}>
 			<div>
 				<div className={'nav'}>
-					<Logo />
+					<Logo/>
 					<p>This is where things will live, such as</p>
 					<button className={'link'} onClick={handleLogOut}>
 						Log out
