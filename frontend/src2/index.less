@@ -9,14 +9,65 @@
 @grey5: #E0E0E0;
 @grey6: #F2F2F2;
 
-@text-white: rgba(255, 255, 255, .77);
+@text-white: rgba(255, 255, 255, .87);
 @text-black: rgba(0, 0, 0, .87);
 
-body.beta {
+@import 'components/Login/login';
+
+.blue-background() {
+  background-color: @dark-blue;
+  color: white;
+}
+
+.grey-background() {
   background-color: @grey1;
   color: @text-white;
-  .login {
-    background-color: @dark-blue;
+}
+
+body.beta {
+  .blue-background();
+
+  #root {
+    display: flex;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
   }
+
+  button {
+    border: none;
+    border-radius: 2px;
+    padding: 10px;
+
+    &.small {
+      padding: 4px 12px;
+      min-width: 50px;
+    }
+
+    &.primary {
+      background-color: @blue;
+      color: white;
+      font-weight: bold;
+    }
+
+    &.link {
+      background-color: transparent;
+      color: white;
+      padding: 0;
+      cursor: pointer;
+    }
+  }
+
+  input {
+    border: none;
+    padding: 2px 8px;
+    border-radius: 2px;
+    line-height: 20px;
+  }
+
+  .login();
 }
 
