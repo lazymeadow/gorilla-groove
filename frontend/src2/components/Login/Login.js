@@ -11,8 +11,8 @@ const Login = ({}) => {
 
 		const form = event.target;
 
-		console.log('login attempt', form.email.value, form.password.value)
-	}
+		console.log('login attempt', form.email.value, form.password.value);
+	};
 
 	// const submitPasswordReset = (event) => {
 	// 	event.preventDefault();
@@ -25,41 +25,45 @@ const Login = ({}) => {
 				<form onSubmit={submitLogin}>
 					<div className={'form-group'}>
 						<label htmlFor={'email'}>Email</label>
-						<input id={'email'} name={'email'} type={'email'} />
+						<input id={'email'} name={'email'} type={'email'}/>
 					</div>
 					<div className={'form-group'}>
 						<label htmlFor={'password'}>Password</label>
 						<input id={'password'} name={'password'} type={'password'}/>
 					</div>
-					<button className={'primary'} type={'submit'}>Let's groove</button>
+					<div className={'form-buttons'}>
+						<button className={'primary'} type={'submit'}>Let's groove</button>
+					</div>
 				</form>
-				<p><button className={'link'} onClick={() => setForgotPassword(true)}>Forgot your password?</button></p>
+				<p>
+					<button className={'link'} onClick={() => setForgotPassword(true)}>Forgot your password?</button>
+				</p>
 			</>
-		)
-	}
+		);
+	};
 
 	const renderForgotPasswordForm = () => {
 		return (
 			<>
-			<p>
-				J/K this doesn't work yet, come back later.
-			</p>
+				<p>
+					J/K this doesn't work yet, come back later.
+				</p>
 				<button className={'link'} onClick={() => setForgotPassword(false)}>Go back</button>
 			</>
-		)
-	}
+		);
+	};
 
 	return (
 		<div className={'login'}>
-				<h1>Gorilla Groove</h1>
+			<h1>Gorilla Groove</h1>
 			{forgotPassword ? renderForgotPasswordForm() : renderLoginForm()}
 			<div className={'leave-beta'}>
-			<button className={'small'} onClick={() => {
-				localStorage.removeItem('beta-client');
-				window.location.reload();
-			}}>
-				Leave beta
-			</button>
+				<button className={'small'} onClick={() => {
+					localStorage.removeItem('beta-client');
+					window.location.reload();
+				}}>
+					Leave beta
+				</button>
 			</div>
 		</div>
 	);

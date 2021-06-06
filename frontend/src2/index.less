@@ -37,6 +37,20 @@ body.beta {
     left: 0;
   }
 
+  form {
+    .form-group {
+      display: flex;
+      align-self: stretch;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .form-buttons {
+      padding-top: 12px;
+    }
+  }
+
   button {
     border: none;
     border-radius: 2px;
@@ -58,6 +72,10 @@ body.beta {
       color: white;
       padding: 0;
       cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 
