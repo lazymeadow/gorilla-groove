@@ -27,14 +27,6 @@ const MainPage = ({history}) => {
 					Log out
 				</button>
 			</div>
-			<div>
-				<button className={'small'} onClick={() => {
-					deleteKey('beta-client');
-					history.push('/');
-				}}>
-					Leave Beta
-				</button>
-			</div>
 		</div>
 	);
 };

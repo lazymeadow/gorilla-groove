@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import {withRouter} from 'react-router-dom';
-import {deleteKey} from '../../util/local-storage';
 import {getDeviceIdentifier} from '../../../src/services/version';
 import {DeviceType} from '../../../src/enums/device-type';
 import {addCookie} from '../../util/cookie';
@@ -56,9 +55,7 @@ const Login = ({history}) => {
 						<button className={'primary'} type={'submit'}>Let's groove</button>
 					</div>
 				</form>
-				<p>
-					<button className={'link'} onClick={() => setForgotPassword(true)}>Forgot your password?</button>
-				</p>
+				<button className={'link'} onClick={() => setForgotPassword(true)}>Forgot your password?</button>
 			</>
 		);
 	};
@@ -77,15 +74,8 @@ const Login = ({history}) => {
 	return (
 		<div className={'login'}>
 			<h1>Gorilla Groove</h1>
+			<h2>Ultimate</h2>
 			{forgotPassword ? renderForgotPasswordForm() : renderLoginForm()}
-			<div className={'leave-beta'}>
-				<button className={'small'} onClick={() => {
-					deleteKey('beta-client');
-					history.push('/');
-				}}>
-					Leave beta
-				</button>
-			</div>
 		</div>
 	);
 };

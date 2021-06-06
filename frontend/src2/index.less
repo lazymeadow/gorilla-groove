@@ -28,6 +28,24 @@
 body.beta {  // TODO: remove this namespacing
   .blue-background();
 
+  .beta-warning {position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background-color: #fff;
+    color: #000;
+    padding: 8px;
+    box-shadow: 0 0 5px 0 #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .75em;
+
+    p {
+      margin: 0;
+    }
+  }
+
   #root {
     display: flex;
     height: 100%;
@@ -85,7 +103,7 @@ body.beta {  // TODO: remove this namespacing
     &.link {
       background-color: transparent;
       color: white;
-      padding: 0;
+      padding: 2px;
       cursor: pointer;
 
       &:hover, &:focus-visible {

@@ -14,8 +14,13 @@ else {
 	RootComponent = SiteWrapper;
 }
 
+function handleLeaveBeta () {
+	LocalStorage.deleteKey('beta-client');
+	window.location.reload();
+}
+
 
 ReactDOM.render(
-	<RootComponent/>,
+	<RootComponent onLeaveBeta={handleLeaveBeta}/>,
 	document.getElementById('root')
 );
