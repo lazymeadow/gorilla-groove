@@ -13,25 +13,25 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("api/playlist")
 class PlaylistController(
-		private val playlistService: PlaylistService
+	private val playlistService: PlaylistService
 ) {
 
 	@GetMapping
-    fun getPlaylists(): List<Playlist> {
+	fun getPlaylists(): List<Playlist> {
 		return playlistService.getPlaylists(loadLoggedInUser())
-    }
+	}
 
 	@PostMapping
-    fun createPlaylist(@RequestBody createPlaylistDTO: CreatePlaylistDTO): Playlist {
+	fun createPlaylist(@RequestBody createPlaylistDTO: CreatePlaylistDTO): Playlist {
 		val user = loadLoggedInUser()
 		logger.info("User ${user.name} is creating a playlist with name ${createPlaylistDTO.name}")
 		return playlistService.createPlaylist(user, createPlaylistDTO.name)
-    }
+	}
 
 	@PutMapping("/{playlistId}")
 	fun editPlaylist(
-			@PathVariable playlistId: Long,
-			@RequestBody createPlaylistDTO: CreatePlaylistDTO
+		@PathVariable playlistId: Long,
+		@RequestBody createPlaylistDTO: CreatePlaylistDTO
 	): Playlist {
 		val user = loadLoggedInUser()
 		logger.info("User ${user.name} is editing playlist $playlistId")
@@ -63,16 +63,28 @@ class PlaylistController(
 	}
 
 	@GetMapping("/track")
-    fun getPlaylistTracks(
-			@RequestParam(value = "playlistId") playlistId: Long,
-			@RequestParam(value = "name") name: String?,
-			@RequestParam(value = "artist") artist: String?,
-			@RequestParam(value = "album") album: String?,
-			@RequestParam(value = "searchTerm") searchTerm: String?,
-			pageable: Pageable
+	fun getPlaylistTracks(
+		@RequestParam(value = "playlistId") playlistId: Long,
+		@RequestParam(value = "name") name: String?,
+		@RequestParam(value = "artist") artist: String?,
+		@RequestParam(value = "album") album: String?,
+		@RequestParam(value = "searchTerm") searchTerm: String?,
+		pageable: Pageable
 	): Page<PlaylistTrack> {
 		return playlistService.getTracks(name, artist, album, playlistId, searchTerm, pageable)
-    }
+	}
+
+	@GetMapping("/track/mapping")
+	fun getPlaylistTrackMappings() = PlaylistTrackMappingResponse(
+		items = playlistService.getMappings().map { playlistTrack ->
+			PlaylistTrackResponseItem(
+				id = playlistTrack.id,
+				playlistId = playlistTrack.playlistId,
+				trackId = playlistTrack.track.id,
+				sortOrder = playlistTrack.sortOrder,
+			)
+		}
+	)
 
 	@PutMapping("/track/sort-order")
 	fun setPlaylistTrackOrder(
@@ -83,24 +95,35 @@ class PlaylistController(
 	}
 
 	data class CreatePlaylistDTO(
-			val name: String
+		val name: String
 	)
 
 	data class AddPlaylistTrackDTO(
-			val playlistIds: List<Long>,
-			val trackIds: List<Long>
+		val playlistIds: List<Long>,
+		val trackIds: List<Long>
 	)
 
 	data class ReorderPlaylistRequest(
-			val playlistId: Long,
-			val playlistTrackIds: List<Long>
+		val playlistId: Long,
+		val playlistTrackIds: List<Long>
 	)
 
 	data class PlaylistTrackResponse(
-			val items: List<PlaylistTrack>
+		val items: List<PlaylistTrack>
 	)
 
 	companion object {
 		private val logger = logger()
 	}
 }
+
+data class PlaylistTrackMappingResponse(
+	val items: List<PlaylistTrackResponseItem>,
+)
+
+data class PlaylistTrackResponseItem(
+    val id: Long,
+	val playlistId: Long,
+	val trackId: Long,
+    val sortOrder: Int,
+)

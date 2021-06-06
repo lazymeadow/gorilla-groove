@@ -27,15 +27,15 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 			"      OR pt.track.note LIKE %:searchTerm%)"
 	)
 	fun getTracks(
-			@Param("name") name: String? = null,
-			@Param("artist") artist: String? = null,
-			@Param("album") album: String? = null,
-			@Param("playlist") playlist: Playlist,
-			@Param("searchTerm") searchTerm: String? = null,
-			pageable: Pageable = Pageable.unpaged()
+		@Param("name") name: String? = null,
+		@Param("artist") artist: String? = null,
+		@Param("album") album: String? = null,
+		@Param("playlist") playlist: Playlist,
+		@Param("searchTerm") searchTerm: String? = null,
+		pageable: Pageable = Pageable.unpaged()
 	): Page<PlaylistTrack>
 
-		@Query("""
+	@Query("""
 			SELECT pt
 			FROM PlaylistTrack pt
 			WHERE pt.updatedAt > :minimum
@@ -47,15 +47,29 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 			  WHERE pu.user.id = :userId
 			)
 			ORDER BY pt.id
-			""")
+	""")
 	// Filter out things that were created AND deleted in the same time frame
 	// Order by ID so the pagination is predictable
 	fun getPlaylistTracksUpdatedBetweenTimestamp(
-				@Param("userId") userId: Long,
-				@Param("minimum") minimum: Timestamp,
-				@Param("maximum") maximum: Timestamp,
-				pageable: Pageable
+		@Param("userId") userId: Long,
+		@Param("minimum") minimum: Timestamp,
+		@Param("maximum") maximum: Timestamp,
+		pageable: Pageable
 	): Page<PlaylistTrack>
+
+	@Query("""
+			SELECT pt
+			FROM PlaylistTrack pt
+			WHERE pt.deleted = FALSE
+			AND pt.playlist.id IN (
+			  SELECT pu.playlist.id
+			  FROM PlaylistUser pu
+			  WHERE pu.user.id = :userId
+			)
+	""")
+	fun getAllActiveForUser(
+		@Param("userId") userId: Long,
+	): List<PlaylistTrack>
 
 	@Query("""
 			SELECT max(pt.updatedAt)
@@ -65,7 +79,7 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 			  FROM PlaylistUser pu
 			  WHERE pu.user.id = :userId
 			)
-			""")
+	""")
 	override fun getLastModifiedRow(userId: Long): Timestamp?
 
 	@Query("""
@@ -73,7 +87,7 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 			FROM PlaylistTrack pt
 			WHERE pt.playlist.id = :id
 			AND pt.deleted = FALSE
-			""")
+	""")
 	fun getHighestSortOrderOnPlaylist(id: Long): Int?
 
 	@Modifying
@@ -83,8 +97,8 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 		WHERE pt.track.id IN (:ids)
 	""")
 	fun softDeletePlaylistTracksByTrackIds(
-			updatedAt: Timestamp,
-			ids: List<Long>
+		updatedAt: Timestamp,
+		ids: List<Long>
 	)
 
 	@Modifying
@@ -94,8 +108,8 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 		WHERE pt.playlist.id IN (:ids)
 	""")
 	fun softDeletePlaylistTracksByPlaylistIds(
-			updatedAt: Timestamp,
-			ids: List<Long>
+		updatedAt: Timestamp,
+		ids: List<Long>
 	)
 
 	@Modifying
@@ -105,7 +119,7 @@ interface PlaylistTrackRepository : JpaRepository<PlaylistTrack, Long>, RemoteSy
 		WHERE pt.id IN (:ids)
 	""")
 	fun softDeleteByIds(
-			updatedAt: Timestamp,
-			ids: List<Long>
+		updatedAt: Timestamp,
+		ids: List<Long>
 	)
 }
