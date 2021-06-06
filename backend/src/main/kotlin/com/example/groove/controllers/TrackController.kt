@@ -23,54 +23,63 @@ import javax.servlet.http.HttpServletRequest
 @RestController
 @RequestMapping("api/track")
 class TrackController(
-		private val trackService: TrackService,
-		private val metadataRequestService: MetadataRequestService
+	private val trackService: TrackService,
+	private val metadataRequestService: MetadataRequestService
 ) {
 
 	//example: http://localhost:8080/api/track?page=0&size=1&sort=name,asc
 	@GetMapping
+	@Deprecated("Used by frontend 1.0 and being removed in 2.0")
 	fun getTracks(
-			@RequestParam("userId") userId: Long?,
-			@RequestParam("name") name: String?,
-			@RequestParam("artist") artist: String?,
-			@RequestParam("album") album: String?,
-			@RequestParam("searchTerm") searchTerm: String?,
-			@RequestParam("showHidden") showHidden: Boolean?,
-			@RequestParam("excludedPlaylistId") excludedPlaylistId: Long?,
-			pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
+		@RequestParam("userId") userId: Long?,
+		@RequestParam("name") name: String?,
+		@RequestParam("artist") artist: String?,
+		@RequestParam("album") album: String?,
+		@RequestParam("searchTerm") searchTerm: String?,
+		@RequestParam("showHidden") showHidden: Boolean?,
+		@RequestParam("excludedPlaylistId") excludedPlaylistId: Long?,
+		pageable: Pageable // The page is magic, and allows the frontend to use 3 optional params: page, size, and sort
 	): Page<Track> {
 		return trackService.getTracks(
-				name = name,
-				artist = artist,
-				album = album,
-				userId = userId,
-				searchTerm = searchTerm,
-				showHidden = showHidden ?: false,
-				excludedPlaylistId = excludedPlaylistId,
-				pageable = pageable
+			name = name,
+			artist = artist,
+			album = album,
+			userId = userId,
+			searchTerm = searchTerm,
+			showHidden = showHidden ?: false,
+			excludedPlaylistId = excludedPlaylistId,
+			pageable = pageable
 		)
 	}
+
+    // Used by frontend 2.0
+	@GetMapping("/all")
+	fun getAllTracksForUser(
+		@RequestParam("userId") userId: Long?,
+	) = MultiTrackResponse(
+		items = trackService.getAllTracksForUser(userId = userId ?: loadLoggedInUser().id)
+	)
 
 	// This endpoint is laughably narrow in scope. But I don't know for sure how this is going to evolve later
 	@GetMapping("/all-count-since-timestamp")
 	fun getAllTrackCountSinceTimestamp(
-			@RequestParam("timestamp") unixTimestamp: Long
+		@RequestParam("timestamp") unixTimestamp: Long
 	): Int {
 		return trackService.getAllTrackCountSinceTimestamp(Timestamp(unixTimestamp))
 	}
 
 	@PostMapping("/mark-listened")
 	fun markSongAsListenedTo(
-			@RequestBody markSongListenedDTO: MarkTrackAsListenedToDTO,
-			request: HttpServletRequest
+		@RequestBody markSongListenedDTO: MarkTrackAsListenedToDTO,
+		request: HttpServletRequest
 	): ResponseEntity<String> {
 		val user = loadLoggedInUser()
 		val ipAddress = request.getHeader("x-forwarded-for")
 		logger.info("User ${user.name} listened to track with ID: ${markSongListenedDTO.trackId} at ${markSongListenedDTO.timeListenedAt}")
 
 		val deviceId = markSongListenedDTO.deviceId
-				?: user.currentAuthToken!!.device?.deviceId
-				?: throw IllegalArgumentException("A device must be specified on either the request, or the logged in user's current token!")
+			?: user.currentAuthToken!!.device?.deviceId
+			?: throw IllegalArgumentException("A device must be specified on either the request, or the logged in user's current token!")
 
 		// Clients pass in the time that they listened to something (mostly so that offline listening on mobile can still
 		// report an accurate play history when they go back online). This is just a sanity check to make sure that plays
@@ -83,9 +92,9 @@ class TrackController(
 		}
 
 		trackService.markSongListenedTo(
-				deviceId = deviceId,
-				remoteIp = ipAddress,
-				data = markSongListenedDTO
+			deviceId = deviceId,
+			remoteIp = ipAddress,
+			data = markSongListenedDTO
 		)
 
 		return ResponseEntity(HttpStatus.OK)
@@ -117,8 +126,8 @@ class TrackController(
 	// Can't seem to deserialize a multipart file alongside other data using @RequestBody. So this is my dumb solution
 	@PutMapping
 	fun updateTrackData(
-			@RequestParam("albumArt") albumArt: MultipartFile?,
-			@RequestParam("updateTrackJson") updateTrackJson: String
+		@RequestParam("albumArt") albumArt: MultipartFile?,
+		@RequestParam("updateTrackJson") updateTrackJson: String
 	): ResponseEntity<String> {
 		val mapper = createMapper()
 		val updateTrackDTO = mapper.readValue(updateTrackJson, UpdateTrackDTO::class.java)
@@ -174,8 +183,8 @@ class TrackController(
 
 	@PostMapping("/{trackId}/volume-adjust")
 	fun adjustVolume(
-			@PathVariable trackId: Long,
-			@RequestBody volumeAdjustDTO: VolumeAdjustDTO
+		@PathVariable trackId: Long,
+		@RequestBody volumeAdjustDTO: VolumeAdjustDTO
 	) {
 		logger.info("User ${loadLoggedInUser().name} is editing the volume of a track $trackId by ${volumeAdjustDTO.volumeAdjustAmount}")
 
@@ -195,8 +204,8 @@ class TrackController(
 		val (updatedTracks, failedTrackIds) =  metadataRequestService.requestTrackMetadata(metadataUpdateRequestDTO, loadLoggedInUser())
 
 		return DataUpdateResponseDTO(
-				successfulUpdates = updatedTracks,
-				failedUpdateIds = failedTrackIds
+			successfulUpdates = updatedTracks,
+			failedUpdateIds = failedTrackIds
 		)
 	}
 
@@ -207,8 +216,8 @@ class TrackController(
 
 	@GetMapping("/preview/public/{trackId}")
 	fun getInfoForTrackAnonymous(
-			@PathVariable trackId: Long,
-			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
+		@PathVariable trackId: Long,
+		@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
 	): PublicTrackInfoDTO {
 		logger.info("Public track info requested for track $trackId, format $audioFormat")
 		return trackService.getPublicTrackInfo(trackId, true, audioFormat)
@@ -219,16 +228,16 @@ class TrackController(
 	// endpoint for authenticated users and one for not, and make the clients deal with it
 	@GetMapping("/preview/{trackId}")
 	fun getInfoForTrack(
-			@PathVariable trackId: Long,
-			@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
+		@PathVariable trackId: Long,
+		@RequestParam(defaultValue = "OGG") audioFormat: AudioFormat
 	): PublicTrackInfoDTO {
 		logger.info("Private track info requested for track $trackId, format $audioFormat by user ${loadLoggedInUser().name}")
 		return trackService.getPublicTrackInfo(trackId, false, audioFormat)
 	}
 
 	data class SetPrivateDTO(
-			val trackIds: List<Long>,
-			val isPrivate: Boolean
+		val trackIds: List<Long>,
+		val isPrivate: Boolean
 	)
 
 	companion object {
@@ -239,15 +248,15 @@ class TrackController(
 data class MultiTrackIdDTO(val trackIds: List<Long>)
 
 data class MarkTrackAsListenedToDTO(
-		val trackId: Long,
-		@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
-		val deviceId: String?,
-		val timeListenedAt: ZonedDateTime = ZonedDateTime.now(),
-		val ianaTimezone: String = "America/Boise",
-		val latitude: Double?,
-		val longitude: Double?
+	val trackId: Long,
+	@Deprecated("This should not be getting passed in via this request going forward. The device ID is stored with the auth token and no longer needs to be")
+	val deviceId: String?,
+	val timeListenedAt: ZonedDateTime = ZonedDateTime.now(),
+	val ianaTimezone: String = "America/Boise",
+	val latitude: Double?,
+	val longitude: Double?
 )
 
 data class MultiTrackResponse(
-		val items: List<Track>
+	val items: List<Track>
 )

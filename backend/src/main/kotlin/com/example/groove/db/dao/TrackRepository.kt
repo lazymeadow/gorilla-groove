@@ -43,6 +43,18 @@ interface TrackRepository : CrudRepository<Track, Long>, RemoteSyncableDao {
 	): Page<Track>
 
 	@Query("""
+		SELECT t
+		FROM Track t
+		WHERE t.user.id = :userId
+		AND t.deleted = FALSE
+		AND (:loadPrivate IS TRUE OR t.private = FALSE)
+	""")
+	fun getAllTracksForUser(
+		@Param("userId") userId: Long,
+		@Param("loadPrivate") loadPrivate: Boolean = false,
+	): List<Track>
+
+	@Query("""
 			SELECT t
 			FROM Track t
 			WHERE t.user.id = :userId

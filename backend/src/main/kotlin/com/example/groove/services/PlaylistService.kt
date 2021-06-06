@@ -100,6 +100,11 @@ class PlaylistService(
 		return playlistTrackRepository.getTracks(name, artist, album, playlist, searchTerm, pageable)
 	}
 
+	@Transactional(readOnly = true)
+	fun getMappings(): List<PlaylistTrack> {
+		return playlistTrackRepository.getAllActiveForUser(loadLoggedInUser().id)
+	}
+
 	@Synchronized
 	@Transactional
 	fun reorderPlaylist(playlistId: Long, playlistTrackIds: List<Long>) {

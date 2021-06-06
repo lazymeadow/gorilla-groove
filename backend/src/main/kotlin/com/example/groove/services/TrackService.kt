@@ -18,9 +18,7 @@ import com.example.groove.util.logger
 import com.example.groove.util.toTimestamp
 
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -31,63 +29,59 @@ import java.time.ZoneOffset
 
 @Service
 class TrackService(
-		private val trackRepository: TrackRepository,
-		private val trackHistoryRepository: TrackHistoryRepository,
-		private val deviceRepository: DeviceRepository,
-		private val fileStorageService: FileStorageService,
-		private val songIngestionService: SongIngestionService,
-		private val youtubeDownloadService: YoutubeDownloadService,
-		private val playlistService: PlaylistService,
-		private val imageService: ImageService,
-		private val trackLinkRepository: TrackLinkRepository
+	private val trackRepository: TrackRepository,
+	private val trackHistoryRepository: TrackHistoryRepository,
+	private val deviceRepository: DeviceRepository,
+	private val fileStorageService: FileStorageService,
+	private val songIngestionService: SongIngestionService,
+	private val youtubeDownloadService: YoutubeDownloadService,
+	private val playlistService: PlaylistService,
+	private val imageService: ImageService,
+	private val trackLinkRepository: TrackLinkRepository
 ) {
 
 	@Transactional(readOnly = true)
 	fun getTracks(
-			name: String?,
-			artist: String?,
-			album: String?,
-			userId: Long?,
-			searchTerm: String?,
-			showHidden: Boolean,
-			excludedPlaylistId: Long?,
-			pageable: Pageable
+		name: String?,
+		artist: String?,
+		album: String?,
+		userId: Long?,
+		searchTerm: String?,
+		showHidden: Boolean,
+		excludedPlaylistId: Long?,
+		pageable: Pageable
 	): Page<Track> {
 		val loggedInId = loadLoggedInUser().id
 		val idToLoad = userId ?: loggedInId
 		val loadPrivate = loggedInId == idToLoad
 
-		// The clients have an old name for the "addedToLibrary" key and
-		// we need to convert it if they are using it to sort
-		val newSort = pageable.sort.toString()
-				.split(",")
-				.map { sortKeyDir ->
-					val (key, dir) = sortKeyDir.split(": ")
-					val convertedKey = if (key == "createdAt") "addedToLibrary" else key
-					Sort.Order(Sort.Direction.fromString(dir), convertedKey)
-				}.toMutableList()
-
-		val page = PageRequest.of(pageable.pageNumber, pageable.pageSize, Sort.by(newSort))
-
 		// The user can provide an ID of a playlist they DON'T want to see tracks from.
 		// This makes it easier to add tracks to an existing playlist when you aren't sure if the tracks are already added
 		val excludedTrackIds = excludedPlaylistId?.let { playlistId ->
 			playlistService.getTracks(playlistId = playlistId)
-					.content
-					.map { it.track.id }
+				.content
+				.map { it.track.id }
 		}
 
 		return trackRepository.getTracks(
-				name = name,
-				artist = artist,
-				album = album,
-				userId = idToLoad,
-				loadPrivate = loadPrivate,
-				loadHidden = showHidden,
-				searchTerm = searchTerm,
-				excludedTrackIds = excludedTrackIds,
-				pageable = page
+			name = name,
+			artist = artist,
+			album = album,
+			userId = idToLoad,
+			loadPrivate = loadPrivate,
+			loadHidden = showHidden,
+			searchTerm = searchTerm,
+			excludedTrackIds = excludedTrackIds,
+			pageable = pageable
 		)
+	}
+
+	@Transactional(readOnly = true)
+	fun getAllTracksForUser(userId: Long): List<Track> {
+		val loggedInId = loadLoggedInUser().id
+		val loadPrivate = loggedInId == userId
+
+		return trackRepository.getAllTracksForUser(userId = userId, loadPrivate = loadPrivate)
 	}
 
 	@Transactional(readOnly = true)
@@ -133,7 +127,7 @@ class TrackService(
 		track.updatedAt = now()
 
 		val savedDevice = deviceRepository.findByDeviceIdAndUser(deviceId, user.id)
-				?: throw IllegalArgumentException("No device found with ID $deviceId for user ${user.name} when saving track history!")
+			?: throw IllegalArgumentException("No device found with ID $deviceId for user ${user.name} when saving track history!")
 
 		// Device we used might have been merged into another device. If it was, use the parent device
 		// TODO can be removed when auth-token devices are the only devices! They are pre-merged
@@ -143,25 +137,25 @@ class TrackService(
 //		trackHistoryService.checkValidListeningTimestampForDevice(data.timeListenedAt.toInstant(), track, device)
 
 		val localTimeNoTz = data.timeListenedAt
-				// Put the timezone to be the one the user provided
-				.withZoneSameInstant(ZoneId.of(data.ianaTimezone))
-				// Now KEEP the time the same, but change it to be UTC. This is because MySQL wants to convert all our
-				// dates to be UTC and it'll erase our actual time when we do so. So preempt it by pre-UTC-ifying our
-				// timezone WHILE keeping the time unchanged so it isn't lost
-				.withZoneSameLocal(ZoneOffset.UTC)
-				.toLocalDateTime()
+			// Put the timezone to be the one the user provided
+			.withZoneSameInstant(ZoneId.of(data.ianaTimezone))
+			// Now KEEP the time the same, but change it to be UTC. This is because MySQL wants to convert all our
+			// dates to be UTC and it'll erase our actual time when we do so. So preempt it by pre-UTC-ifying our
+			// timezone WHILE keeping the time unchanged so it isn't lost
+			.withZoneSameLocal(ZoneOffset.UTC)
+			.toLocalDateTime()
 
 		val trackHistory = TrackHistory(
-				track = track,
-				device = device,
-				originalDeviceId = device.id,
-				ipAddress = remoteIp,
-				listenedInReview = track.inReview,
-				utcListenedAt = data.timeListenedAt.toInstant().toTimestamp(),
-				localTimeListenedAt = localTimeNoTz.toString(),
-				ianaTimezone = data.ianaTimezone,
-				latitude = data.latitude,
-				longitude = data.longitude
+			track = track,
+			device = device,
+			originalDeviceId = device.id,
+			ipAddress = remoteIp,
+			listenedInReview = track.inReview,
+			utcListenedAt = data.timeListenedAt.toInstant().toTimestamp(),
+			localTimeListenedAt = localTimeNoTz.toString(),
+			ianaTimezone = data.ianaTimezone,
+			latitude = data.latitude,
+			longitude = data.longitude
 		)
 		trackHistoryRepository.save(trackHistory)
 	}
@@ -275,15 +269,15 @@ class TrackService(
 		return tracksToImport.map { track ->
 			val now = now()
 			val forkedTrack = track!!.copy(
-					id = 0,
-					user = user,
-					createdAt = now,
-					updatedAt = now,
-					addedToLibrary = now,
-					playCount = 0,
-					lastPlayed = null,
-					hidden = false,
-					originalTrack = track
+				id = 0,
+				user = user,
+				createdAt = now,
+				updatedAt = now,
+				addedToLibrary = now,
+				playCount = 0,
+				lastPlayed = null,
+				hidden = false,
+				originalTrack = track
 			)
 
 			trackRepository.save(forkedTrack)
@@ -306,15 +300,15 @@ class TrackService(
 
 		val now = now()
 		val forkedTrack = track.copy(
-				id = 0,
-				user = user,
-				createdAt = now,
-				updatedAt = now,
-				addedToLibrary = now,
-				playCount = 0,
-				lastPlayed = null,
-				hidden = false,
-				originalTrack = track
+			id = 0,
+			user = user,
+			createdAt = now,
+			updatedAt = now,
+			addedToLibrary = now,
+			playCount = 0,
+			lastPlayed = null,
+			hidden = false,
+			originalTrack = track
 		)
 
 		trackRepository.save(forkedTrack)
@@ -333,13 +327,13 @@ class TrackService(
 		val track = trackRepository.get(trackId)!!
 
 		return PublicTrackInfoDTO(
-				trackLink = trackLink,
-				albumArtLink = albumLink,
-				name = track.name,
-				artist = track.artist,
-				album = track.album,
-				releaseYear = track.releaseYear,
-				length = track.length
+			trackLink = trackLink,
+			albumArtLink = albumLink,
+			name = track.name,
+			artist = track.artist,
+			album = track.album,
+			releaseYear = track.releaseYear,
+			length = track.length
 		)
 	}
 
@@ -371,26 +365,26 @@ class TrackService(
 	// This track is being given to someone for review. Copy the track with the target user as
 	// the new owner. Save it, and copy the album art
 	fun saveTrackForUserReview(
-			user: User,
-			track: Track,
-			reviewSource: ReviewSource,
-			setAsCopied: Boolean = false
+		user: User,
+		track: Track,
+		reviewSource: ReviewSource,
+		setAsCopied: Boolean = false
 	): Track {
 		logger.info("Making a copy of track ${track.id} for user ${user.name} to review")
 		return track.copy(
-				id = 0,
-				user = user,
-				reviewSource = reviewSource,
-				lastReviewed = now(),
-				inReview = true,
-				private = false,
-				hidden = false,
-				addedToLibrary = null,
-				createdAt = now(),
-				updatedAt = now(),
-				playCount = 0,
-				lastPlayed = null,
-				originalTrack = if (setAsCopied) track else null
+			id = 0,
+			user = user,
+			reviewSource = reviewSource,
+			lastReviewed = now(),
+			inReview = true,
+			private = false,
+			hidden = false,
+			addedToLibrary = null,
+			createdAt = now(),
+			updatedAt = now(),
+			playCount = 0,
+			lastPlayed = null,
+			originalTrack = if (setAsCopied) track else null
 		).also { trackCopy ->
 			trackRepository.save(trackCopy)
 			fileStorageService.copyAllAlbumArt(track.id, trackCopy.id)
@@ -410,11 +404,11 @@ class TrackService(
 }
 
 data class PublicTrackInfoDTO(
-		val trackLink: String,
-		val albumArtLink: String?,
-		val name: String,
-		val artist: String,
-		val album: String,
-		val releaseYear: Int?,
-		val length: Int
+	val trackLink: String,
+	val albumArtLink: String?,
+	val name: String,
+	val artist: String,
+	val album: String,
+	val releaseYear: Int?,
+	val length: Int
 )
