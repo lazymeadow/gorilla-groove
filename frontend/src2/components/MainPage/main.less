@@ -1,12 +1,3 @@
-@keyframes spin {
-  from {
-    transform:rotate(0deg);
-  }
-  to {
-    transform:rotate(360deg);
-  }
-}
-
 body.beta { // TODO: remove this namespacing
   .init {
     display: flex;
@@ -16,10 +7,7 @@ body.beta { // TODO: remove this namespacing
     img {
       flex: 0 0 auto;
 
-      animation-name: spin;
-      animation-duration: 1500ms;
-      animation-iteration-count: infinite;
-      animation-timing-function: linear;
+      .animation-spin();
     }
   }
 
@@ -30,17 +18,22 @@ body.beta { // TODO: remove this namespacing
     & > div:not(.footer) {
       flex: 1 0 auto;
       display: flex;
+      overflow: hidden;
+      height: calc(100% - 180px);  // height of footer
 
       .nav {
         .panel-shadow();
-        padding: 8px;
-        width: 250px;
+        width: 230px;
+        padding: 10px;
+        flex: 0 0 auto;
       }
 
       .panel {
         background-color: @grey1;
         flex: 1 0 auto;
         padding: 8px;
+        overflow: auto;
+        width: calc(100% - 276px);  // width of nav + self padding, for some reason
       }
     }
 
@@ -48,7 +41,16 @@ body.beta { // TODO: remove this namespacing
       height: 180px;
       background-color: @grey1;
       .panel-shadow();
-      padding: 8px;
+      padding: 6px;
+      display: flex;
+
+      & div.album-art {
+        flex: 0 0 180px;  // same size as footer
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        margin-right: 12px;
+      }
     }
   }
 }
