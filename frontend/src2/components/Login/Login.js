@@ -73,9 +73,11 @@ const Login = ({history}) => {
 
 	return (
 		<div className={'login'}>
-			<h1>Gorilla Groove</h1>
-			<h2>Ultimate</h2>
-			{forgotPassword ? renderForgotPasswordForm() : renderLoginForm()}
+			<div>
+				<h1>Gorilla Groove</h1>
+				<h2>Ultimate</h2>
+				{forgotPassword ? renderForgotPasswordForm() : renderLoginForm()}
+			</div>
 		</div>
 	);
 };
